@@ -129,5 +129,14 @@
    "mean": 11.98
   }
  },
- "T4_run_soft": "20261121-113059 (site 0067dcd, main at 418615f as base)"
+ "T4_run_soft": "20261121-113059 (site 0067dcd, main at 418615f as base)",
+ "slab_tone": {
+  "tool": "tools/slab-contrast.py: 24x6 px block medians over rows 705-850, cols 300-1620 of a 1920x1080 T4 picture, less the mean of the surrounding 7x7 blocks, then MAD x 1.4826 (the art reviewer's measure from 2026-11-21; pass line >= 14.0; replaces the 16x16 block deviation)",
+  "cam06_summer_day": {
+   "before_474": 14.66,
+   "e8c59ec_main": 12.46,
+   "pr503_first_version": 14.53,
+   "soft_final": 14.52
+  }
+ }
 }
