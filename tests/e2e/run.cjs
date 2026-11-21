@@ -127,6 +127,70 @@ const scenarios = {
   } },
   // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
   // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  // The walk is not his while the title is up (#462): the keys, the arrows and the stick do nothing under it, whether the page
+  // opened on the path or (`?in=`) in a hall. Held for some frames, S leaves him where he stands; stepping in, it walks him.
+  "title-holds": { tier: 2, async run(b, base) {
+    for (const [name, query] of [["on the path", "q=low&debug=0"], ["in the great hall (?in=main)", "q=low&debug=0&in=main"]]) {
+      const t = await open(b, base, query + BARE, { enter: false });
+      expect(await t.page.isVisible("#title"), `${name}: the title should be up`);
+      const at = () => t.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, frames: y.frames, room: y.room }; });
+      const before = await at();
+      await t.page.keyboard.down("s"); await t.frames(40);
+      const during = await at();
+      await t.page.keyboard.up("s");
+      expect(during.frames > before.frames + 20, `${name}: the page should have drawn frames while S was held: ` + JSON.stringify([before, during]));
+      expect(Math.hypot(during.x - before.x, during.z - before.z) < 0.001 && during.room === before.room, `${name}: he walked under the title: ` + JSON.stringify([before, during]));
+      await t.page.keyboard.down("ArrowDown"); await t.frames(30); await t.page.keyboard.up("ArrowDown");
+      const arrows = await at(); expect(Math.hypot(arrows.x - before.x, arrows.z - before.z) < 0.001, `${name}: he walked on the arrow under the title: ` + JSON.stringify([before, arrows]));
+      // Nor does he turn: A and D turn him and the view with him, R turns the view back behind him (#462); under the title the view stays as it is.
+      const yawBefore = await t.page.evaluate(() => window.__yard().yaw);
+      await t.page.keyboard.down("a"); await t.frames(30); await t.page.keyboard.up("a");
+      await t.page.keyboard.down("d"); await t.frames(30); await t.page.keyboard.up("d"); await t.page.keyboard.press("r"); await t.frames(10);
+      const yawAfter = await t.page.evaluate(() => window.__yard().yaw);
+      expect(Math.abs(yawAfter - yawBefore) < 1e-6, `${name}: the view turned under the title (A, D or R): ` + JSON.stringify([yawBefore, yawAfter]));
+      // A tap on the ground: the title covers the picture, so a real click lands on it; and one made to reach the picture all the same sets no way and walks nobody.
+      const w = await t.page.evaluate(() => innerWidth), h = await t.page.evaluate(() => innerHeight);
+      await t.page.mouse.click(w / 2, h * 0.8);
+      await t.page.evaluate(() => { document.getElementById("title").style.pointerEvents = "none"; });   // (now a real click reaches the picture under the title)
+      await t.page.mouse.click(w / 2, h * 0.85);
+      await t.page.evaluate(() => { document.getElementById("title").style.pointerEvents = ""; });
+      await t.frames(30);
+      const tapped = await t.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, target: y.target, route: y.route }; });
+      expect(Math.hypot(tapped.x - before.x, tapped.z - before.z) < 0.001 && !tapped.target && !tapped.route, `${name}: a tap on the ground walked him under the title: ` + JSON.stringify([before, tapped]));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    // Under the opening after 入山 a key held does not walk him either: while it is still playing (read before and after) he has not moved.
+    { const o = await open(b, base, "q=low&debug=0" + BARE, { enter: false });
+      await o.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await o.page.click("#enterBtn");
+      await o.page.waitForFunction(() => window.__opening().active, null, { timeout: 60000 });
+      const where = () => o.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, on: window.__opening().active }; });
+      const start = await where(); await o.page.keyboard.down("s");
+      for (let i = 0; i < 6; i++) { await o.frames(2); const p1 = await where(); if (!p1.on) break; const p2 = await where(); if (p2.on) expect(Math.hypot(p2.x - start.x, p2.z - start.z) < 0.001, "he walked while the opening was playing: " + JSON.stringify([start, p2])); }
+      await o.page.keyboard.up("s"); await o.close(); }
+    // T05 has no title of its own and no opening: the gate must be open from the first frame, and every way of walking works there (#462).
+    { const f = await open(b, base, "q=low&debug=0&level=t05&fast=1" + BARE);
+      expect(await f.page.evaluate(() => window.__level().id === "t05" && document.body.classList.contains("entered") && !window.__opening().active), "T05 should be walkable from the start (no title, no opening held)");
+      const pose = () => f.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, yaw: y.yaw, target: y.target }; });
+      const p0 = await pose(); await f.page.keyboard.down("w"); await f.frames(30); await f.page.keyboard.up("w");
+      const p1 = await pose(); expect(Math.hypot(p1.x - p0.x, p1.z - p0.z) > 0.2, "T05: W should walk him: " + JSON.stringify([p0, p1]));
+      await f.page.keyboard.down("a"); await f.frames(30); await f.page.keyboard.up("a");
+      const p2 = await pose(); expect(Math.abs(p2.yaw - p1.yaw) > 0.01, "T05: A should turn him: " + JSON.stringify([p1, p2]));
+      await f.page.keyboard.press("r"); await f.frames(10);
+      const vw = await f.page.evaluate(() => innerWidth), vh = await f.page.evaluate(() => innerHeight);
+      await f.page.mouse.click(vw / 2, vh * 0.72); await f.frames(20);
+      const p3 = await pose(); expect(p3.target !== null || Math.hypot(p3.x - p2.x, p3.z - p2.z) > 0.05, "T05: a tap on the ground should walk him: " + JSON.stringify([p2, p3]));
+      expect(f.errors.length === 0, f.errors.join("\n")); await f.close(); }
+    // Stepped in, the same key walks him.
+    const t = await open(b, base, "q=low&debug=0&fast=1" + BARE, { enter: false });
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
+    await t.page.waitForFunction(() => document.body.classList.contains("entered")); await t.page.keyboard.press("Escape");
+    await t.page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 });
+    const a = await t.page.evaluate(() => { const y = window.__yard(); return [y.x, y.z]; });
+    await t.page.keyboard.down("w"); await t.frames(30); await t.page.keyboard.up("w");
+    const c = await t.page.evaluate(() => { const y = window.__yard(); return [y.x, y.z]; });
+    expect(Math.hypot(c[0] - a[0], c[1] - a[1]) > 0.2, "stepped in, W should walk him: " + JSON.stringify([a, c]));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The title stands clear of the novice (#461). The walk's own picture is the title's backdrop and he stands in the middle of it,
   // a little low; the name, the line about the visit and the seal are above his head, going in below his feet. At the four shapes
   // of a screen (16:9, 4:3, 9:16, 19.5:9) and a small phone on its side, for a first visitor, one coming back (with seals and a
