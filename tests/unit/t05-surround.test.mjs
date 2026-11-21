@@ -61,6 +61,7 @@ test("over the wall tops, 0.5° to 3° up, 40% to 80% of what is not the temple'
   for (const [name, dirs] of Object.entries(JUDGED)) for (const dir of dirs) {
     const s = share(PLACES[name], BEARING[dir]);
     table.push(`${name} ${dir}: ${(s.fill * 100).toFixed(0)}% (outside ${s.out}, sky ${s.sky}, the temple's own ${s.own})`);
+    if (process.env.SHOW) console.log(table.at(-1));
     assert.ok(s.free >= 0.25, `${name} ${dir}: only ${(s.free * 100).toFixed(0)}% of the rays are free of the temple's own buildings, so it cannot be judged: it must be one that can`);
     assert.ok(s.fill >= 0.4, `${name} ${dir}: ${(s.fill * 100).toFixed(0)}% of the band over the wall is the town's, under the 40% the art director set`);
     assert.ok(s.fill <= 0.8, `${name} ${dir}: ${(s.fill * 100).toFixed(0)}% is the town's, over the 80% (a hedge, not a band of trees)`);

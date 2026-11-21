@@ -74,6 +74,7 @@ function plan(C) {
     if (Math.abs(x) > cx && z < LIMITS.nearHallZ + 1 && z > C.zN - 8) h = Math.min(h, LIMITS.nearHall - 0.5 * rnd());
     if (onTowerLine(x, z, 2)) h = Math.min(h, LIMITS.tower.max - 0.2 - 0.3 * rnd());
     h = Math.min(h, LIMITS.eave - 0.8, eaveCap(x, z));
+    if (opts.full) h *= 0.92 + 0.08 * rnd();   // (the cypresses of the rows kept low stand at 92-100% of what is allowed, not along a ruled line)
     trees.push(Object.freeze({ kind, x: +x.toFixed(2), z: +z.toFixed(2), h: +h.toFixed(2), r: +(h * pick(0.032, 0.042)).toFixed(2), row, yaw: +(rnd() * Math.PI * 2).toFixed(2), full: !!opts.full }));
   };
   // a house: eaves at 3 m, a gable roof, the ridge along x or along z
@@ -93,9 +94,9 @@ function plan(C) {
     run(C.zN, cs, 9, (z) => house(sx * (cx + 20 + rnd() * 4), z, 0));
     run(C.zN, cs, 13, (z) => house(sx * (cx + 32 + rnd() * 6), z, 1));
     // south of the court's south wall, beside the terrace
-    run(SECOND.hw + 2.5, cx + 18, 3.3, (a) => tree(sx * a, cs + 1.6 + rnd() * 3, 0, { pine: 0.9, full: true }));
-    run(SECOND.hw + 4, cx + 22, 3.8, (a) => tree(sx * a, cs + 8 + rnd() * 5, 1, { pine: 0.9, full: true }));
-    run(SECOND.hw + 6, cx + 26, 4.2, (a) => tree(sx * a, cs + 15 + rnd() * 5, 1, { pine: 0.9, full: true }));
+    run(SECOND.hw + 2.5, cx + 18, 2.9, (a) => tree(sx * a, cs + 1.6 + rnd() * 3, 0, { pine: 0.9, full: true }));
+    run(SECOND.hw + 4, cx + 22, 3.3, (a) => tree(sx * a, cs + 8 + rnd() * 5, 1, { pine: 0.9, full: true }));
+    run(SECOND.hw + 6, cx + 26, 3.7, (a) => tree(sx * a, cs + 15 + rnd() * 5, 1, { pine: 0.9, full: true }));
     run(SECOND.hw + 4, cx + 18, 11, (a) => house(sx * a, cs + 16 + rnd() * 4, 0));
     // beside the terrace and the way (the arrival looks east and west along these)
     run(cs + 12, 224, sx > 0 ? 13 : 9, (z) => tree(sx * (Math.max(SECOND.hw, lx) + 1.8 + rnd() * 3), z, z < 140 ? 1 : 0, { pine: 0.5 }));
@@ -134,7 +135,7 @@ function pine(t, trunk, crown) {
   if (t.full) {
     // a columnar cypress (the old cypresses of a temple court): one long narrowing drum with a tip, not the pine's stacked cones. It stays low (the great hall's eave
     // line is the ceiling in the pictures that keep the roof clean) and it fills the band that a pine would leave to its thin tip; seen against the sky it is a dark pencil.
-    const R = h * 0.26, hd = h * 0.76;
+    const R = h * (0.25 + 0.04 * ((Math.abs(Math.round(x * 7 + z * 3)) % 7) / 6)), hd = h * 0.76;   // (the girth changes a little from tree to tree, from where it stands)
     crown.push(new THREE.CylinderGeometry(R * 0.72, R, hd, 8).translate(x, y0 + h * 0.12 + hd / 2, z), cone(R * 0.72, h * 0.12, y0 + h * 0.12 + hd, x, z, 8));
     return;
   }
