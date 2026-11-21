@@ -307,8 +307,9 @@ export function createGame(y) {
       const was = held, wake = was === null; letGo();
       if (!wake && seenBefore && performance.now() - was < HOLD) give("tap");
     };
-    const pd = (e) => down("p" + e.pointerId), pu = (e) => up("p" + e.pointerId);
-    el.addEventListener("pointerdown", pd); el.addEventListener("pointerup", pu); el.addEventListener("pointercancel", pu);
+    // The pointer is captured on the press, so a finger slid off the window still ends here; and a press that is lost any other way (capture taken, focus gone) is let go, not left held.
+    const pd = (e) => { down("p" + e.pointerId); try { el.setPointerCapture(e.pointerId); } catch {} }, pu = (e) => up("p" + e.pointerId), lost = (e) => { if (pressed === "p" + e.pointerId) letGo(); }, blur = () => letGo();
+    el.addEventListener("pointerdown", pd); el.addEventListener("pointerup", pu); el.addEventListener("pointercancel", pu); el.addEventListener("lostpointercapture", lost); window.addEventListener("blur", blur);
     const key = (e) => { if (e.key !== "Escape" && e.key !== "Enter" && e.key !== " ") return; e.preventDefault(); e.stopPropagation(); if (!e.repeat) down("k" + e.key); };
     const keyUp = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") up("k" + e.key); };
     window.addEventListener("keydown", key, true); window.addEventListener("keyup", keyUp, true);
@@ -325,7 +326,7 @@ export function createGame(y) {
         }
       });
     } finally { awake.free(); }
-    cancelAnimationFrame(raf); el.removeEventListener("pointerdown", pd); el.removeEventListener("pointerup", pu); el.removeEventListener("pointercancel", pu);
+    cancelAnimationFrame(raf); el.removeEventListener("pointerdown", pd); el.removeEventListener("pointerup", pu); el.removeEventListener("pointercancel", pu); el.removeEventListener("lostpointercapture", lost); window.removeEventListener("blur", blur);
     window.removeEventListener("keydown", key, true); window.removeEventListener("keyup", keyUp, true); document.removeEventListener("visibilitychange", seen); letGo();
     if (skip || !on()) { passClose(); y.direct(null); }   // passed over, or walked away: the eye comes home by the usual swing (rites.close left it where it was)
     line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; if (!replay) ended++;

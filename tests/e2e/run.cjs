@@ -1793,6 +1793,25 @@ const scenarios = {
     await t.until(async () => (await wake()).includes("release"), 15000, "the wake lock was not let go after the close");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The wake tap that skipped the close (#473), as little as it takes to show it, using only what the page had before the fix (`__rites`, `__ending`):
+  // the close is half way, the screen goes dark for five seconds and comes back, and a press 1.5 s later must not pass it over.
+  // Red on a page without the guard (the old one let anything through after 900 ms), green with it.
+  "ending-wake": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
+      let hidden = false, skew = 0; const now = performance.now.bind(performance); performance.now = () => now() + skew;
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => (hidden ? "hidden" : "visible") });
+      window.__freeze = (ms) => { hidden = true; document.dispatchEvent(new Event("visibilitychange")); skew += ms; hidden = false; document.dispatchEvent(new Event("visibilitychange")); window.__thawAt = performance.now(); };
+    } });
+    const R = () => t.page.evaluate(() => window.__rites());
+    await t.page.evaluate(() => { void window.__ending(); });
+    await t.until(async () => (await R()).closing === true, 60000, "the close never began");
+    await t.page.evaluate(() => { window.__riteClock(0); window.__freeze(5000); });   // (the close is held where it is: what is tried is the press, not the clock)
+    await t.until(async () => t.page.evaluate(() => performance.now() - window.__thawAt >= 1500), 30000, "waiting 1.5 s after the thaw"); await t.frames(2);
+    await t.page.mouse.move(120, 120); await t.page.mouse.down(); await t.page.mouse.up(); await t.frames(3);
+    const r = await R(); expect(r.closing === true && r.ended === 0, "the press that woke the screen passed the close over: " + JSON.stringify({ closing: r.closing, ended: r.ended }));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // 收尾的略过 (#473): a tap that wakes a dark screen never passes the close over, however late after the page is back it lands
   // (hidden, or only a gap in the frames: some in-app browsers send no visibilitychange); the first watch is passed over only by
   // holding for a second and a half, and letting go half way carries on; once seen, a tap does it; 再看一回 plays it again
@@ -1824,6 +1843,9 @@ const scenarios = {
     await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the ring did not fill while held");
     expect(await t.page.evaluate(() => document.getElementById("endingHold").getAttribute("aria-valuenow") !== null), "the ring says nothing to a screen reader");
     await t.page.mouse.up(); p = await P(); expect((await R()).closing === true && p.progress === 0 && !p.holding, "letting go half way did not carry on: " + JSON.stringify(p));
+    // a press that is lost (the window loses focus while held) is let go, and the next press counts
+    await t.page.mouse.down(); await t.until(async () => (await P()).holding, 20000, "a press was not held"); await t.page.evaluate(() => window.dispatchEvent(new Event("blur")));
+    p = await P(); expect(!p.holding && p.progress === 0, "a press lost with the window's focus stayed held: " + JSON.stringify(p)); await t.page.mouse.up();
     // holding all the way passes it over
     await t.page.mouse.down(); await settle(); await t.page.mouse.up();
     const after = await book();
