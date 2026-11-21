@@ -106,13 +106,15 @@ export function createPilgrimageUI({ ui, level, memory = false, visit, stand, ca
 
   // ---- a hold on Q ----
   const ring = $("pilgrimHold");
+  let fade = 0;
   let clock = null;   // a test holds the clock still (`__pilgrimage({ clock })`); null is the page's own
   let raf = 0;
   const hold = createHold({
     now: () => (clock === null ? performance.now() : clock),
-    onProgress(p) { if (!ring) return; ring.hidden = false; ring.style.setProperty("--p", p.toFixed(3)); ring.setAttribute("aria-valuenow", String(Math.round(p * 100))); },
-    onFull() { if (ring) ring.hidden = true; open("hold"); },
-    onCancel() { if (ring) { ring.hidden = true; ring.style.setProperty("--p", "0"); ring.setAttribute("aria-valuenow", "0"); } },
+    onProgress(p) { if (!ring) return; clearTimeout(fade); ring.hidden = false; ring.classList.add("on"); ring.style.setProperty("--p", p.toFixed(3)); ring.setAttribute("aria-valuenow", String(Math.round(p * 100))); },
+    onFull() { if (ring) { clearTimeout(fade); ring.classList.remove("on"); ring.hidden = true; } open("hold"); },
+    // let go on the way: the ring fades in a fifth of a second (the stylesheet's), and is put away when it has
+    onCancel() { if (!ring) return; ring.classList.remove("on"); ring.setAttribute("aria-valuenow", "0"); clearTimeout(fade); fade = setTimeout(() => { ring.hidden = true; ring.style.setProperty("--p", "0"); }, 220); },
   });
   const loop = () => { raf = 0; if (!hold.state().active) return; if (!canHold()) { hold.up(); return; } hold.tick(); if (hold.state().active) raf = requestAnimationFrame(loop); };
   addEventListener("keydown", (e) => {
@@ -128,7 +130,7 @@ export function createPilgrimageUI({ ui, level, memory = false, visit, stand, ca
 
   const state = () => ({
     level: level.id, listed, record: rec.read(), visible: visible(), body: document.body.classList.contains("pilgrim"), open: ui.isOpen("pilgrim"), going,
-    entries: mapEntries(rec.read(), listed, level.id, PLACES), hold: { ...hold.state(), shown: !!ring && !ring.hidden, valuenow: ring ? Number(ring.getAttribute("aria-valuenow")) : null, clock },
+    entries: mapEntries(rec.read(), listed, level.id, PLACES), hold: { ...hold.state(), shown: !!ring && !ring.hidden && ring.classList.contains("on"), valuenow: ring ? Number(ring.getAttribute("aria-valuenow")) : null, clock },
     ink: inkState(),
   });
   // For the tests and the debug panel: close a temple (or wipe the record), set the hold's clock, open the map, go.

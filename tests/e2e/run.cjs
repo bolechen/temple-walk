@@ -980,6 +980,10 @@ const scenarios = {
     expect(dom.here.includes("江南") && dom.here.includes("此刻在此") && dom.here.includes("上回") && dom.here.includes("秋") && dom.current === "location", "the temple he is in should be marked, with its region and the season: " + dom.here);
     expect(dom.go === 0 && dom.fog === 1, "the other temple should be a fog, nothing to go to: " + JSON.stringify({ go: dom.go, fog: dom.fog }));
     expect(!/关外|奉明|t05/i.test(dom.fogHtml) && !dom.page.includes("关外") && !dom.page.includes("奉明"), "a temple not yet visited should not be named anywhere in the page: " + dom.fogHtml);
+    // (art review of #455) no box anywhere on the map, and no ring on the temple he is in: the ring is for what can be pressed
+    { const look = await t.page.evaluate(() => { const L = document.getElementById("pilgrimList"), here = L.querySelector(".here");
+        return { bordered: [...L.querySelectorAll("*")].filter((e) => { const c = getComputedStyle(e); return parseFloat(c.borderTopWidth) > 0 || parseFloat(c.borderLeftWidth) > 0; }).length, hereRing: getComputedStyle(here, "::before").content, hereAfter: getComputedStyle(here, "::after").content }; });
+      expect(look.bordered === 0 && look.hereRing === "none" && look.hereAfter === "none", "the map should have no box, and the temple he is in no ring: " + JSON.stringify(look)); }
     await t.page.click("#pilgrimList .fog", { force: true }); await t.frames(2); expect(!(await P()).going && (await t.page.evaluate((k) => sessionStorage.getItem(k), CROSS)) === null, "a fog should not be a place to go");
     await mapShut(); expect((await stack()).includes("menu") && !(await stack()).includes("pilgrim"), "Esc should put the map away and leave the menu: " + (await stack())); await menu(false);
 
@@ -996,6 +1000,19 @@ const scenarios = {
     await P({ clock: 600 }); await t.until(async () => (await P()).hold.valuenow === 60, 30000, "the ring should say how full it is (aria-valuenow)");
     await t.page.keyboard.up("q"); await t.until(async () => { const h = (await P()).hold; return !h.active && !h.shown; }, 30000, "letting go should put the ring away");
     await P({ clock: 5000 }); await t.frames(4); expect(!(await P()).open && !(await shown("#pilgrim")), "letting go on the way should open nothing, however long after");
+    // (art review of #455) the ring stands outside the book's small seal at the top left, away from him: at four shapes of picture its box (and its word's), and his grown by 8 px, do not meet
+    await P({ clock: 20000 });
+    for (const [w, h] of [[1280, 720], [1024, 768], [390, 844], [844, 390]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      await t.page.keyboard.down("q"); await t.until(async () => (await P()).hold.shown, 30000, `no ring at ${w}x${h}`);
+      const m = await t.page.evaluate(() => { const rs = [document.getElementById("pilgrimHold"), document.querySelector("#pilgrimHold span")].map((e) => e.getBoundingClientRect()), b = window.__probe().monkBox;
+        return { ring: [Math.min(...rs.map((r) => r.left)), Math.min(...rs.map((r) => r.top)), Math.max(...rs.map((r) => r.right)), Math.max(...rs.map((r) => r.bottom))].map(Math.round), size: Math.round(rs[0].width), box: b, w: innerWidth, h: innerHeight }; });
+      expect(m.box && m.size === 52, `${w}x${h}: the ring should be 52 px and he in the picture: ` + JSON.stringify(m));
+      const [x0, y0, bw, bh] = m.box, [rx0, ry0, rx1, ry1] = m.ring, meet = rx0 < x0 + bw + 8 && rx1 > x0 - 8 && ry0 < y0 + bh + 8 && ry1 > y0 - 8;
+      expect(!meet && rx0 >= 0 && ry0 >= 0 && rx1 <= w && ry1 <= h, `${w}x${h}: the ring should be clear of him and on the screen: ` + JSON.stringify(m));
+      await t.page.keyboard.up("q"); await t.until(async () => !(await P()).hold.shown, 30000, `${w}x${h}: the ring did not fade`);
+    }
+    await t.page.setViewportSize({ width: 420, height: 800 }); await t.frames(2);
     await P({ clock: 10000 }); await t.page.keyboard.down("q"); await t.until(async () => (await P()).hold.active, 30000, "the second hold did not begin");
     await P({ clock: 10999 }); await t.until(async () => (await P()).hold.valuenow === 100, 30000, "the ring should be full to the eye a millisecond short"); expect(!(await P()).open && (await P()).hold.active, "a millisecond short of a second should open nothing");
     await P({ clock: 11000 }); await mapOpen("by a held Q"); p = await P(); expect(!p.hold.active && !p.hold.shown, "the ring should be put away when the map opens: " + JSON.stringify(p.hold));
@@ -1034,8 +1051,14 @@ const scenarios = {
       await t.page.evaluate(() => { const q = window.__places.bell; if (q) window.__poseNear(q.at[0] + 0.3, q.at[1] - 0.3, 0, 0); window.__mood("autumn", "dusk"); });
       await P({ mark: to, season: "winter" }); await P({ open: true }); await mapOpen(`on the way to ${to}`);
       const entries = await t.page.evaluate(() => [...document.querySelectorAll("#pilgrimList .go")].map((b) => b.dataset.to)); expect(entries.join() === to && (await t.page.locator("#pilgrimList .fog").count()) === 0, `${label}: the temple to go to should be a button and nothing a fog: ` + entries);
-      if (reduced) await t.page.emulateMedia({ reducedMotion: "reduce" });
       const sel = `#pilgrimList .go[data-to="${to}"]`;
+      // (art review of #455) the seals stand on one line; pointed at, the temple that can be gone to shows a ring at least 1.5 times its seal across, and no box
+      { const tops = await t.page.evaluate(() => [...document.querySelectorAll("#pilgrimList img")].map((i) => Math.round(i.getBoundingClientRect().top)));
+        expect(tops.length === 2 && tops[0] === tops[1], `${label}: the two seals should stand on one line: ` + tops);
+        await t.page.hover(sel);
+        await t.until(() => t.page.evaluate((q) => { const c = getComputedStyle(document.querySelector(q), "::after"); return +c.opacity > 0.5 && parseFloat(c.width) >= 96; }, sel), 30000, `${label}: a ring should come out round the seal of a temple that can be gone to`);
+        expect(await t.page.evaluate((q) => { const c = getComputedStyle(document.querySelector(q)); return parseFloat(c.borderTopWidth) === 0 && c.backgroundColor === "rgba(0, 0, 0, 0)"; }, sel), `${label}: no box and no ground on it`); }
+      if (reduced) await t.page.emulateMedia({ reducedMotion: "reduce" });
       await Promise.all([t.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), t.page.click(sel)]);
       // Frame by frame from the first frame the new page draws: the curtain stays over it, and the picture taken meanwhile is ink.
       const ink = []; let samples = 0;

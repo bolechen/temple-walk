@@ -762,27 +762,33 @@ body.directing #joya { opacity: .45; }
 .pilgrim-card { width: min(92vw, 520px); box-sizing: border-box; padding: 30px 30px 16px; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; color: var(--ink-1); }
 .pilgrim-card h2 { margin: 0 0 6px; text-align: center; font: 400 32px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; }
 #pilgrimHint { margin: 0 0 14px; text-align: center; font: 400 var(--t-s)/1.7 var(--kai); letter-spacing: .12em; color: var(--ink-3); }
-#pilgrimList { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 18px; }
+#pilgrimList { margin: 0; padding: 14px 0 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 18px; }
 #pilgrimList li { display: grid; justify-items: center; align-content: start; width: 112px; }
-/* A place to go is one press: its seal, its region and when it was last closed. */
-#pilgrimList .go, #pilgrimList .here, #pilgrimList .fog { box-sizing: border-box; width: 100%; min-height: 132px; padding: 8px 4px 10px; border: 0; background: none; display: grid; justify-items: center; align-content: start; gap: 6px; color: var(--ink-1); font: 400 var(--t-m)/1.3 var(--kai); letter-spacing: .2em; text-indent: .2em; }
-#pilgrimList .go { cursor: pointer; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
-#pilgrimList .go:hover, #pilgrimList .go:focus-visible { background: rgba(168,50,31,.08); }
-#pilgrimList .go:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
-#pilgrimList img { display: block; width: 64px; height: 64px; }
+/* The three kinds of place share one frame, so that the seals (and the fog where a seal would be) stand on one line: a place to go, the one he is in, one not yet visited. None has a box. */
+#pilgrimList .go, #pilgrimList .here, #pilgrimList .fog { position: relative; box-sizing: border-box; width: 100%; min-height: 132px; margin: 0; padding: 8px 4px 10px; border: 0; background: none; display: grid; justify-items: center; align-content: start; gap: 6px; color: var(--ink-1); font: 400 var(--t-m)/1.3 var(--kai); letter-spacing: .2em; text-indent: .2em; }
+#pilgrimList img, #pilgrimList .fog i { display: block; width: 64px; height: 64px; }
+/* A place to go is one press: its seal, its region (with the stroke under it that every button of this paper has, so that a touch screen, which has no pointing, shows it can be pressed) and when it was last closed. Pointed at, focused or pressed, the vermilion ring comes out round the seal, as it does on the book's own seals (.seal-go). */
+#pilgrimList .go { cursor: pointer; outline: 0; -webkit-tap-highlight-color: transparent; }
+#pilgrimList .go::after { content: ""; position: absolute; top: -10px; left: 50%; width: 100px; height: 100px; margin-left: -50px; pointer-events: none; border-radius: 50%; background: var(--enso-red, none) center / 100% 100% no-repeat; opacity: 0; transform: scale(.9); transition: opacity .25s ease, transform .25s ease; }
+#pilgrimList .go:hover::after, #pilgrimList .go:focus-visible::after, #pilgrimList .go:active::after { opacity: .9; transform: scale(1); }
+#pilgrimList .go .region { position: relative; display: block; padding-bottom: 6px; }
+#pilgrimList .go .region::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 0; height: 7px; pointer-events: none; background: var(--brush-ink, linear-gradient(var(--ink-3), var(--ink-3)) 0 50% / 100% 1px no-repeat) center / 100% 100% no-repeat; opacity: .55; }
 #pilgrimList .when { font: 400 var(--t-xs)/1.4 var(--serif); letter-spacing: .08em; text-indent: 0; color: var(--ink-3); }
-/* The one he stands in is marked with a ring of vermilion, and is not a button. */
-#pilgrimList .here { position: relative; }
-#pilgrimList .here::before { content: ""; position: absolute; top: 2px; left: 50%; width: 76px; height: 76px; margin-left: -38px; border-radius: 50%; background: var(--enso-red, none) center / 100% 100% no-repeat; border: 2px solid rgba(168,50,31,.55); box-sizing: border-box; pointer-events: none; }
-#pilgrimList .here img { margin-top: 6px; }
+/* The one he stands in has no ring (the ring is for what can be pressed): only the vermilion words say so. */
 #pilgrimList .mark { font: 400 var(--t-xs)/1.4 var(--kai); letter-spacing: .16em; text-indent: .16em; color: #8a2a1e; }
-/* A place not yet visited is a fog in the distance: no name, no seal, nothing to press. */
+/* A place not yet visited is a band of mist on the mountainside, in the distance: a few light strokes of ink, wider than tall, thickest at a third or less; no name, no seal, nothing to press. */
 #pilgrimList .fog { cursor: default; }
-#pilgrimList .fog i { display: block; width: 64px; height: 64px; margin-top: 6px; border-radius: 50%; background: radial-gradient(closest-side, rgba(90,84,74,.5), rgba(90,84,74,.26) 55%, rgba(90,84,74,0)); filter: blur(5px); }
+#pilgrimList .fog i { width: 96px; filter: blur(2.5px); background:
+  radial-gradient(ellipse 46px 6px at 54% 26%, rgba(70,64,54,.26), rgba(70,64,54,.1) 60%, rgba(70,64,54,0) 100%),
+  radial-gradient(ellipse 38px 5px at 38% 52%, rgba(70,64,54,.2), rgba(70,64,54,.08) 60%, rgba(70,64,54,0) 100%),
+  radial-gradient(ellipse 43px 5px at 64% 76%, rgba(70,64,54,.16), rgba(70,64,54,.06) 60%, rgba(70,64,54,0) 100%); }
 #pilgrimNote { min-height: 1.4em; margin: 10px 0 0; text-align: center; font: 400 var(--t-s)/1.5 var(--kai); letter-spacing: .12em; color: var(--ink-3); }
 .pilgrim-card footer { position: sticky; bottom: -16px; display: flex; justify-content: center; margin: 8px 0 -8px; padding: 14px 0 10px; background: var(--paper-tile, linear-gradient(transparent, transparent)), linear-gradient(to top, var(--paper-lo) 72%, rgba(228,220,203,0)); }
-@media (max-width: 400px) { .pilgrim-card { padding: 26px 20px 16px; } .pilgrim-card h2 { font-size: 28px; } #pilgrimList li { width: 100px; } }
-/* A ring of ink that fills while Q is held (a second), over the middle of the view: it opens the map when full and is gone if let go. */
-#pilgrimHold { position: absolute; z-index: 7; left: 50%; top: 42%; width: 104px; height: 104px; margin: -52px 0 0 -52px; display: grid; place-items: center; pointer-events: none; --p: 0; }
-#pilgrimHold i { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(rgba(237,232,220,.95) calc(var(--p) * 1turn), rgba(237,232,220,.16) 0); -webkit-mask: radial-gradient(closest-side, transparent 80%, #000 82%); mask: radial-gradient(closest-side, transparent 80%, #000 82%); filter: drop-shadow(0 0 6px rgba(0,0,0,.6)); }
-#pilgrimHold span { font: 400 var(--t-s)/1 var(--kai); letter-spacing: .24em; text-indent: .24em; color: var(--on); text-shadow: var(--lift); }
+@media (max-width: 400px) { .pilgrim-card { padding: 26px 20px 16px; } .pilgrim-card h2 { font-size: 28px; } #pilgrimList li { width: 100px; } #pilgrimList .fog i { width: 88px; } }
+@media (prefers-reduced-motion: reduce) { #pilgrimList .go::after { transition: none; } }
+/* The ring a held Q fills (a second): outside the book's small seal at the top left, because the map is what the book turns to, and because the middle of the picture is where he stands. The same stroke as every ring of this interface (paper.js's, --enso-light as the mask), 52 px like the button's, drawn from twelve o'clock clockwise as it fills, what is not yet drawn the same stroke at two parts in ten; the word beside it, not in it. Let go, it fades in a fifth of a second. */
+#pilgrimHold { position: absolute; z-index: 7; left: calc(max(22px, env(safe-area-inset-left, 0px)) + 22px - 26px); top: calc(50px + env(safe-area-inset-top, 0px) + 22px - 26px); width: 52px; height: 52px; display: block; pointer-events: none; opacity: 0; transition: opacity .2s linear; --p: 0; }
+#pilgrimHold.on { opacity: 1; }
+#pilgrimHold i { position: absolute; inset: 0; background: conic-gradient(from 0deg, rgba(237,232,220,.95) calc(var(--p) * 1turn), rgba(237,232,220,.2) 0); -webkit-mask: var(--enso-light, radial-gradient(closest-side, transparent 80%, #000 82%)) center / 100% 100% no-repeat; mask: var(--enso-light, radial-gradient(closest-side, transparent 80%, #000 82%)) center / 100% 100% no-repeat; filter: drop-shadow(0 0 5px rgba(0,0,0,.55)); }
+#pilgrimHold span { position: absolute; left: 0; top: 56px; white-space: nowrap; font: 400 var(--t-xs)/1.2 var(--kai); letter-spacing: .16em; color: var(--on); text-shadow: var(--lift); }
+@media (prefers-reduced-motion: reduce) { #pilgrimHold { transition: none; } }
