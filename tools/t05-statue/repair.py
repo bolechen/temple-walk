@@ -25,6 +25,12 @@
 #           by a Gaussian of its distance from c measured in the radii r (0.05 at one radius), then back by `back`; and
 #           nothing above `below` (eased over `fade`), so the nose over a mouth is left as it is. File units; the figure's
 #           frame here (x across, −y toward the viewer, z up).
+#   groove  {"points": [[x, y, z], …], "depth", "width", "dimples": {"r", "d"}}: carve a shallow groove back along a
+#           line of points (the mouth's slit as it was, #463 round four): each point within `width` of the line goes back
+#           (+y) by up to `depth` (a Gaussian across the line), and at the line's two ends a small dimple d deep within r
+#   facex   {"y0", "fade", "k", "rx", "front", "ymin", "fadeLow"}: narrow the lower face across by k about the middle, whole below y0 − fade
+#           and nothing at y0 (the cheekbones), only within rx of the middle and in front of `front` (−y beyond it: the
+#           ears and the back of the head stay)
 #   push    move what lies within r of the seed along `dir` by up to `d` (falloff as above): to straighten a finger or
 #           part a fingertip from the throne.
 # Each op prints how many points it moved and the largest move, so the edit is written down and can be redone.
@@ -60,6 +66,31 @@ def region(seed, r):
   w = np.where(keep, 0.5 - 0.5 * np.cos(np.pi * np.clip(1 - d / r, 0, 1)), 0.0)   # 1 at the seed, 0 at r
   return keep, w
 for op in spec["ops"]:
+  if op["op"] == "groove":
+    before = co.copy(); L = np.array(op["points"], float); dep, wid = op["depth"], op["width"]
+    # distance of each point to the polyline, in the x–z plane of the face (the groove runs across, seen from the front)
+    best = np.full(len(co), np.inf); near_y = np.zeros(len(co))
+    sel = np.nonzero((co[:, 0] > L[:, 0].min() - 3 * wid) & (co[:, 0] < L[:, 0].max() + 3 * wid) & (co[:, 2] > L[:, 2].min() - 4 * wid) & (co[:, 2] < L[:, 2].max() + 4 * wid))[0]
+    P = co[sel][:, [0, 2]]
+    for a, b in zip(L[:-1], L[1:]):
+      A, Bv = a[[0, 2]], b[[0, 2]]; t = np.clip(((P - A) @ (Bv - A)) / max((Bv - A) @ (Bv - A), 1e-12), 0, 1)
+      d = np.linalg.norm(P - (A + t[:, None] * (Bv - A)), axis=1); ny = a[1] + t * (b[1] - a[1])
+      m = d < best[sel]; best[sel[m]] = d[m]; near_y[sel[m]] = ny[m]
+    # only the front surface near the line's own depth, not the inside of the mouth or the cheek behind
+    front = np.abs(co[:, 1] - near_y) < 6 * wid
+    g = np.where(front, np.exp(-0.5 * (best / (wid / 2)) ** 2), 0); co[:, 1] += dep * g
+    if op.get("dimples"):
+      for e in (L[0], L[-1]):
+        dd = np.linalg.norm(co - e, axis=1); gd = np.exp(-3 * (dd / op["dimples"]["r"]) ** 2); co[:, 1] += op["dimples"]["d"] * gd
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "groove", "note": op.get("note", ""), "points": int((mv > 1e-6).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
+  if op["op"] == "facex":
+    before = co.copy(); z = co[:, 2]; f = op["fade"]
+    t = np.clip((op["y0"] - z) / f, 0, 1) * (np.abs(co[:, 0]) < op["rx"]) * (co[:, 1] < op["front"])
+    if "ymin" in op: t *= np.clip((z - op["ymin"]) / op.get("fadeLow", 1e-6), 0, 1)   # and easing out again down the neck
+    co[:, 0] *= 1 + (op["k"] - 1) * t
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "facex", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   if op["op"] == "scale":
     before = co.copy(); c = np.array(op["c"], float); r = np.array(op["r"], float); S = np.array(op["s"], float)
     d = (co - c) / [r[0], r[2], r[1]]; g = np.exp(-3 * (d * d).sum(1))

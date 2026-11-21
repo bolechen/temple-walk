@@ -71,8 +71,11 @@ if "anchors-from" in opt:
   c = r["corners"]; a["lipHalf"] = round((abs(c["L"]) + abs(c["R"])) / 2, 3)
   # the lip's paint covers the carved lips, from 2.5 cm over the upper lip's foremost point to 1.5 cm under the lower's, and
   # out to the corners (a rim of skin round a narrower painted lip read as a pout: the 3D review's third round)
-  top, bot = r["slit"] + (r["points"]["upperLip"][0] - r["points"]["slit"][0]) + 0.025, r["slit"] - (r["points"]["slit"][0] - r["points"]["lowerLip"][0]) - 0.015
-  a["mouth"] = [a["mouth"][0], round((top + bot) / 2, 3), a["mouth"][2]]; a["lipH"] = round((top - bot) / 2, 3); a["lipHalf"] = round((abs(c["L"]) + abs(c["R"])) / 2, 3)
+  # r7: the lips are thin, told by the groove and the colour; the paint is the concept's lip, 0.28 of the mouth's width
+  # tall (vermilion over width, concept-points.json), centred a little under the slit, no wider than the corners, its
+  # soft edge 2 mm (paint.js); nothing more round it (the 3D review's fourth round: a pink halo outside the lip)
+  wv = abs(c["L"]) + abs(c["R"]); a["lipH"] = round(0.14 * wv, 3); a["lipHalf"] = round(wv / 2, 3)
+  a["mouth"] = [a["mouth"][0], round(r["slit"] - 0.15 * a["lipH"], 3), a["mouth"][2]]
   for k in ("jawMin", "chinMin"): a[k][1] = round(a[k][1] + (a["mouth"][1] - (mouth0[1] + drop)), 3)   # and with the mouth's own move from the bow to the measured slit
   colour = opt.get("colour", f"{name}-t05")
   json.dump(src, open(os.path.join(root, "tools/t05-hall/paint", colour + ".json"), "w"), ensure_ascii=False, indent=1)

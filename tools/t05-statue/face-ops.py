@@ -51,4 +51,29 @@ if R.get("fill"):
   d_m = f["sulcus"] * w * R["fill"]["k"]
   ops.append({"op": "push", "note": f"the hollow under the lip filled by {R['fill']['k']} of its depth ({round(f['sulcus'] * w, 3)} m), radius {R['fill']['r']} mouth widths (face-ops.py)",
               "seed": B(0.0, sm_y, z_at(0, sm_y)), "r": round(R["fill"]["r"] * w / s, 5), "dir": [0, -1, 0], "d": round(d_m / s, 5)})
+# r7 (the 3D review's fourth round: "a thin lip, told by its slit and its colour, not by its volume"): the lips' volume and
+# the philtrum's pad taken down, the lower face narrowed below the cheekbones, then a shallow groove carved back along the
+# slit as it was before (measured here, on the bowed mesh before these ops) with a small dimple at each corner
+span = pts["browY"] - slit
+if R.get("flatten"):
+  Fl = R["flatten"]
+  ops.append({"op": "attenuate", "note": f"the lips' volume kept to {Fl['k']} of itself, radius {Fl['r']} w, smoothed over {Fl['sr']} w (face-ops.py)",
+              "seed": B(0.0, slit, z_at(0, slit)), "r": round(Fl["r"] * w / s, 5), "sr": round(Fl["sr"] * w / s, 5), "k": Fl["k"], "iter": Fl.get("iter", 800)})
+if R.get("philtrumPad"):
+  Pp = R["philtrumPad"]; py = (slit + (P["upperLip"][0] - P["slit"][0]) + sn_y) / 2
+  ops.append({"op": "attenuate", "note": f"the philtrum's pad kept to {Pp['k']} of itself (face-ops.py)", "seed": B(0.0, py, z_at(0, py)),
+              "r": round(Pp["r"] * w / s, 5), "sr": round(Pp["sr"] * w / s, 5), "k": Pp["k"], "iter": Pp.get("iter", 500)})
+if R.get("facex"):
+  Fx = R["facex"]; cheek = slit + Fx["cheek"] * span
+  ops.append({"op": "facex", "note": f"the lower face narrowed ×{Fx['k']} across below the cheekbones (y {round(cheek, 3)}), easing over {Fx['fade']} of the brow-to-mouth span, and out again down the neck (face-ops.py)",
+              "y0": round(cheek / s, 5), "fade": round(Fx["fade"] * span / s, 5), "k": Fx["k"], "rx": round(1.0 / s, 5), "front": round(0.45 / s, 5),
+              "ymin": round((slit - Fx["neck"] * span) / s, 5), "fadeLow": round(0.25 * span / s, 5)})
+if R.get("groove"):
+  G = R["groove"]; line = []
+  for x in np.linspace(f["corners"]["R"], f["corners"]["L"], 15):
+    yy = np.arange(slit - 0.03, slit + 0.0301, 0.002); zz = np.array([z_at(x, y) for y in yy])
+    kk = np.polyfit(yy, zz, 1); ys = float(yy[np.argmax(np.polyval(kk, yy) - zz)]); line.append(B(float(x) * R["mouth"]["s"][0], ys, z_at(x, ys)))
+  ops.append({"op": "groove", "note": f"a groove {G['depth']} w deep and {G['width']} w wide carved back along the slit as it was, corner dimples {G['dimple']['d']} w deep (face-ops.py)",
+              "points": line, "depth": round(G["depth"] * w / s, 5), "width": round(G["width"] * w / s, 5),
+              "dimples": {"r": round(G["dimple"]["r"] * w / s, 5), "d": round(G["dimple"]["d"] * w / s, 5)}})
 print(json.dumps(ops, ensure_ascii=False, indent=1))

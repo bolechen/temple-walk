@@ -83,7 +83,9 @@ else:
   def front(xy):
     xy = np.atleast_2d(np.asarray(xy, float)); o = np.c_[xy, np.full(len(xy), 20.0)]
     loc, idx, _ = ray.intersects_location(o, np.tile([0, 0, -1.0], (len(xy), 1)), multiple_hits=False)
-    z = np.full(len(xy), np.nan); z[idx] = loc[:, 2]; return z
+    z = np.full(len(xy), np.nan)
+    if len(idx): z[idx] = np.asarray(loc).reshape(-1, 3)[:, 2]
+    return z
   mx_, my_ = spec["mouth"]; by = spec["browY"]
   ys = np.arange(my_ - 0.5, by + 0.15, 0.003); zs = front(np.c_[np.full_like(ys, mx_), ys])
   tl = np.radians(spec.get("tilt", 0))
@@ -108,13 +110,20 @@ else:
   w = abs(corner["L"] - corner["R"])
   # the face's width at the slit: out from the middle while the surface goes on without a step (the ears, behind, are cut
   # off from the cheek by one)
-  def edge(sg):
-    x, zp = mx_, front([[mx_, slit]])[0]
+  def edge(sg, yy=None):
+    yy = slit if yy is None else yy
+    x, zp = mx_, front([[mx_, yy]])[0]
     while True:
-      z = front([[x + sg * 0.01, slit]])[0]
-      if np.isnan(z) or abs(z - zp) > 0.15: return x   # a step of 15 cm in 1 cm: off the cheek, onto an ear behind it
+      z = front([[x + sg * 0.01, yy]])[0]
+      # a step of 15 cm in 1 cm, or a surface 0.35 m behind the front: off the cheek, onto an ear behind it
+      if np.isnan(z) or abs(z - zp) > 0.15 or z < spec.get("earZ", -0.35): return x
       x += sg * 0.01; zp = z
   faceW = edge(1) - edge(-1)
+  # the jaw's width over the cheekbones' (the 3D review's fourth round: the lower face read wide and round): the face's
+  # width a quarter of the slit-to-brow span below the slit, over its width 0.3 of the span above it (the cheekbones, at the
+  # height of the nose's wings; higher, a bowed head brings the ears into the line)
+  sp = by - slit; yj, yc = slit - 0.25 * sp, slit + 0.3 * sp
+  jawW, cheekW = edge(1, yj) - edge(-1, yj), edge(1, yc) - edge(-1, yc)
   out = profile_ratios(ys, zs_t, slit, by, w, win=sw / max(by - slit, 1e-6) if "slitWin" in spec else 0.08)
   # the carved eye's slit under each eye anchor: where the upper lid overhangs, the surface seen from the front steps
   # back; across the eye (±0.12 m) the step's height, fitted with a line, gives the slit's height at the eye's middle
@@ -132,5 +141,6 @@ else:
       kk = np.polyfit(np.array(xs_) - ex, hs, 1); out_sign = 1 if ex > 0 else -1
       eyes[k] = {"y": round(float(np.polyval(kk, 0)), 3), "rise": round(float(kk[0] * out_sign), 3), "points": len(xs_)}
   out["eyes"] = eyes
+  out.update({"jawCheek": round(jawW / cheekW, 3), "jawW_m": round(jawW, 3), "cheekW_m": round(cheekW, 3)})
   out.update({"mouthW": round(w / faceW, 3), "w_m": round(w, 3), "faceW_m": round(faceW, 3), "corners": corner, "slit": round(slit, 3)})
 print(json.dumps(out))
