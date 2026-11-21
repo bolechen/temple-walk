@@ -147,7 +147,12 @@ const scenarios = {
         if (mb && !e.closest(".title-links")) { const [x, y, w, h] = mb; if (hit(r, { left: x, top: y, right: x + w, bottom: y + h }, 8)) out.monk.push(name); }
         if (!e.closest(".title-links") && links.some((l) => hit(r, l, 0))) out.links.push(name);
       }
-      const again = document.getElementById("againBtn"); if (again && vis(again)) out.again = Math.round(innerHeight - again.getBoundingClientRect().bottom);
+      // the foot of what stands under his feet, the line about the visit (at most two lines) and the name's room under the row of links
+      const low = ["enterBtn", "againBtn", "titleSeals"].map((id) => document.getElementById(id)).filter((e) => e && vis(e));
+      if (low.length) out.again = Math.round(innerHeight - Math.max(...low.map((e) => e.getBoundingClientRect().bottom)));
+      const seals = document.getElementById("titleSeals"); out.sealsH = seals && vis(seals) ? Math.round(seals.getBoundingClientRect().height) : 0;
+      const h1 = document.querySelector("#title h1").getBoundingClientRect(); out.h1 = [Math.round(h1.top), Math.round(h1.height)];
+      out.linksBottom = links.length ? Math.round(Math.max(...links.map((l) => l.bottom))) : 0;
       return out;
     };
     const look = async (t, label, w, h, opts = {}) => {
@@ -159,7 +164,9 @@ const scenarios = {
       expect(r.box && r.box[3] > h * 0.1, `${label} ${w}x${h}: the novice should be in the picture behind the title: ` + JSON.stringify(r));
       expect(r.n > 3 && r.monk.length === 0, `${label} ${w}x${h}: the title stands on him (${r.monk.join(", ")}): ` + JSON.stringify(r));
       expect(r.links.length === 0, `${label} ${w}x${h}: the title meets the row of links (${r.links.join(", ")}): ` + JSON.stringify(r));
-      if (opts.again) expect(r.again === null || h > 460 || r.again >= 24, `${label} ${w}x${h}: beginning again is ${r.again} px from the foot of the picture`);
+      if (opts.again) expect(r.again === null || r.again >= 24, `${label} ${w}x${h}: what stands under his feet ends ${r.again} px from the foot of the picture: ` + JSON.stringify(r));
+      expect(r.sealsH <= 46, `${label} ${w}x${h}: the line about the visit is more than two lines (${r.sealsH} px): ` + JSON.stringify(r));
+      if (h <= 460) expect(r.h1[1] >= 44 && r.h1[0] >= r.linksBottom + 16, `${label} ${w}x${h}: the name should be at least 44 px high and 16 px under the links: ` + JSON.stringify(r));
     };
     for (const [name, init] of [["a first visitor", null], ["one coming back", RETURN]]) {
       const t = await open(b, base, "q=low&debug=0", { enter: false, ...(init ? { init } : {}) });
