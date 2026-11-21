@@ -488,14 +488,20 @@ export function createMonk() {
   // body (in the robe built here, the sleeves, collar and sash come after them; a sculpted robe is all body).
   function setupHem(count) {
     rp = robe.geometry.attributes.position.array; rsi = robe.geometry.attributes.skinIndex.array; rsw = robe.geometry.attributes.skinWeight.array; hem.length = 0;
+    // every bone a hem point hangs from, the thighs included, is posed when the hem is skinned
+    const used = new Set([IDX.hips, ...SK]);
     for (let i = 0; i < count; i++) {
       const y = rp[i * 3 + 1]; if (y > 0.5) continue;
       const w = []; let W = 0; for (let k = 0; k < 4; k++) { const b = SK.indexOf(rsi[i * 4 + k]); if (b >= 0 && rsw[i * 4 + k] > 0) { w.push([b, rsw[i * 4 + k]]); W += rsw[i * 4 + k]; } }
-      if (W > 0.05) hem.push({ i, drop: Math.max(0.05, 0.6 - y), w, W });
+      if (W > HEM_SHARE) { hem.push({ i, drop: Math.max(0.05, 0.6 - y), w, W }); for (let k = 0; k < 4; k++) if (rsw[i * 4 + k] > 0) used.add(rsi[i * 4 + k]); }
     }
+    hemBones.length = 0; hemBones.push(...used);
   }
+  // A point is lifted only if the skirt's bones carry a fair share of it (#163): a made body's skirt front is weighted to
+  // the thighs as well (tools/novice-tripo.mjs), and a point a thigh carries is carried off the step by that thigh;
+  // shortening the skirt's bones for it would only pull the whole skirt up to the waist without moving it.
+  const HEM_SHARE = 0.3, hemBones = [], mats = [];
   setupHem(torsoCount);
-  const mats = bones.map(() => new THREE.Matrix4()), hemBones = [IDX.hips, ...SK];
   const skinPoint = (i, out) => {
     const x = rp[i * 3], y = rp[i * 3 + 1], z = rp[i * 3 + 2]; out.set(0, 0, 0);
     for (let k = 0; k < 4; k++) { const w = rsw[i * 4 + k]; if (!w) continue; const e = mats[rsi[i * 4 + k]].elements; out.x += w * (e[0] * x + e[4] * y + e[8] * z + e[12]); out.y += w * (e[1] * x + e[5] * y + e[9] * z + e[13]); out.z += w * (e[2] * x + e[6] * y + e[10] * z + e[14]); }
@@ -507,7 +513,7 @@ export function createMonk() {
     let high = -Infinity; for (let k = 0; k < 16; k++) { tv.set(Math.sin((k * TAU) / 16) * 0.21, 0, Math.cos((k * TAU) / 16) * 0.21); group.localToWorld(tv); high = Math.max(high, surfaceAt(tv.x, tv.z)); }
     if (high < B.robeFront.getWorldPosition(tv).y - 0.42) return;   // nothing near the hem to clear
     for (let it = 0; it < 3; it++) {
-      B.hips.updateMatrixWorld(true); for (const b of hemBones) mats[b].multiplyMatrices(bones[b].matrixWorld, skeleton.boneInverses[b]);
+      B.hips.updateMatrixWorld(true); for (const b of hemBones) (mats[b] ||= new THREE.Matrix4()).multiplyMatrices(skeleton.bones[b].matrixWorld, skeleton.boneInverses[b]);
       const need = [0, 0, 0, 0]; let any = false;
       for (const h of hem) { skinPoint(h.i, tv); const L = surfaceAt(tv.x, tv.z) + 0.007 - tv.y; if (L <= 0) continue; any = true; for (const [b] of h.w) need[b] = Math.max(need[b], L / (h.drop * h.W)); }
       if (!any) break;
@@ -617,6 +623,8 @@ export function createMonk() {
     // or `o.straps` false leaves the beads or the hat's straps where they were laid for the robe built here; `o.skinMaterial`
     // draws the skin with a material of its own.
     get helpers() { return helpers.map((h) => h.name); },
+    /** How long each skirt bone hangs this frame (front, left, back, right; 1 is its full length): the hem's lift shortens them. */
+    get skirt() { return SKIRT.map((n) => +B[n].scale.y.toFixed(3)); },
     get helperRig() { return helpers; },   // each helper's bone, the bone carrying it, the arm it follows, its share and the way the arm hung (for the tests)
     dress(geometries, material, robeColor, o = {}) {
       for (const name of ["skin", "robe", "legs", "shoes"]) { const g = geometries[name]; if (!g?.attributes.skinIndex || !g.attributes.skinWeight) throw new Error(`the sculpted ${name} is not skinned`); }

@@ -15,13 +15,14 @@ const WALK = STAIR.tread * STAIR.steps, SKIRT = ["robeFront", "robeBack", "robeL
 
 // A walk of `n` treads (0: level) at `speed`, frame by frame as yard.js moves him; `each(m, frame)` sees every frame after
 // the first two metres, once the stride is under way.
-function walk({ n = 0, dir = 1, speed = WALK, dt = 1 / 60, make = createMonk }, each) {
-  const m = make(), fl = n ? flight(n, dir) : { lead: 4, run: 0, surface: () => 0, eye: () => 0 };
+// `at`: where in the world the flight's foot is (the page's flights are far from the origin, and the novice's own frame is not the world's).
+function walk({ n = 0, dir = 1, speed = WALK, dt = 1 / 60, make = createMonk, at = [0, 0] }, each) {
+  const m = make(), fl = n ? flight(n, dir) : { lead: 4, run: 0, surface: () => 0, eye: () => 0 }, [ox, oz] = at;
   let z = 0.2, t = 0, frame = 0;
   while (z < fl.lead + fl.run + 3) {
-    z += speed * dt; t += dt; m.group.position.set(0, fl.surface(z), z);
+    z += speed * dt; t += dt; m.group.position.set(ox, fl.surface(z), oz + z);
     const on = n && z > fl.lead - 0.3 && z < fl.lead + fl.run + 0.3;
-    m.update(dt, speed, false, t, (x, zz) => fl.surface(zz), { heightAt: (x, zz) => fl.eye(zz), stairs: !!on });
+    m.update(dt, speed, false, t, (x, zz) => fl.surface(zz - oz), { heightAt: (x, zz) => fl.eye(zz - oz), stairs: !!on });
     m.group.updateMatrixWorld(true);
     if (z > 2) each(m, frame++);
   }
@@ -126,4 +127,41 @@ test("on a flight the skirt's back swings lightly and is never thrown flat", () 
 test("on a flight, up or down, the trousers the robe covers are hidden but for the tip of the raised knee", () => {
   for (const dir of [1, -1]) { const x = exposed({ n: 10, dir }); assert.ok(x.worst <= 4, `${dir > 0 ? "up" : "down"}: ${x.worst} of ${x.of} trouser points in the open (${x.where}); before the cap, 17 going up`); console.log(`# code ${dir > 0 ? "up" : "down"}: ${x.worst} of ${x.of} out, ${x.pierced} of ${x.frames} frames through (at most ${x.mostThrough})`); }
   for (const dir of [1, -1]) { const t = exposed({ n: 10, dir, make: BODIES[1][1] }); console.log(`# Tripo ${dir > 0 ? "up" : "down"}: ${t.worst} of ${t.of} covered points out, ${t.pierced} of ${t.frames} frames through the cloth (at most ${t.mostThrough} points)`); }
+});
+
+// #163, the third art review: going down, the Tripo body's skirt drew up to the waist at its sides and back on every
+// step, the trousers' whole seat showing, while its front kept its length. The hem's lift skinned the skirt with only
+// the pelvis's and the skirt bones' matrices, and that skirt's front is weighted to the thighs too: those points came
+// out in the novice's own frame, metres under the stair, and every skirt bone was shortened to its floor. Measured as
+// the review measured it: how far the skirt reaches below the pelvis at his sides and at his back (the review's side
+// view and back view), against the same standing, on every frame of a flight up and down, never less than 0.8; and no
+// point of the robe is in the stone.
+test("on a flight, up or down and anywhere in the world, the skirt's sides and back keep at least 0.8 of their standing length and stay out of the stone", () => {
+  const sectors = { left: [1, 0], right: [-1, 0], back: [0, -1] };
+  const reachBelow = (m) => {
+    m.group.updateMatrixWorld(true); m.skeleton.update();
+    const robe = m.parts.robe, P = robe.geometry.attributes.position, v = new THREE.Vector3(), hips = m.bones.hips.getWorldPosition(new THREE.Vector3()), inv = m.group.matrixWorld.clone().invert(), r = {};
+    for (const k in sectors) r[k] = 0;
+    for (let i = 0; i < P.count; i += 2) {
+      robe.getVertexPosition(i, v).applyMatrix4(robe.matrixWorld); const y = v.y; v.applyMatrix4(inv); const d = Math.hypot(v.x, v.z); if (d < 0.05) continue;
+      for (const [k, [sx, sz]] of Object.entries(sectors)) if ((v.x * sx + v.z * sz) / d > Math.cos(0.35)) r[k] = Math.max(r[k], hips.y - y);
+    }
+    return r;
+  };
+  for (const [name, make] of BODIES) {
+    const stand = make(); const s0 = reachBelow(stand);
+    for (const dir of [1, -1]) {
+      let worst = { k: "", ratio: 9, frame: -1 }, deepest = 0;
+      walk({ n: 10, dir, make, at: [31.5, -47.2] }, (m, frame) => {
+        if (frame % 3) return;
+        const r = reachBelow(m); for (const k in sectors) { const ratio = r[k] / s0[k]; if (ratio < worst.ratio) worst = { k, ratio, frame }; }
+        const robe = m.parts.robe, P = robe.geometry.attributes.position, v = new THREE.Vector3(), fl = flight(10, dir);
+        for (let i = 0; i < P.count; i += 4) { robe.getVertexPosition(i, v).applyMatrix4(robe.matrixWorld); deepest = Math.max(deepest, fl.surface(v.z + 47.2) - v.y); }
+      });
+      const tag = `${name} ${dir > 0 ? "up" : "down"}`;
+      console.log(`# ${tag}: skirt reach at least ${worst.ratio.toFixed(2)} of standing (${worst.k}, frame ${worst.frame}); deepest into the stone ${(deepest * 100).toFixed(1)} cm`);
+      assert.ok(worst.ratio >= 0.8, `${tag}: the skirt's ${worst.k} reached only ${worst.ratio.toFixed(2)} of its standing length below the pelvis (frame ${worst.frame})`);
+      assert.ok(deepest < 0.01, `${tag}: the robe ${(deepest * 100).toFixed(1)} cm into the stone`);
+    }
+  }
 });
