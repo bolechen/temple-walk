@@ -17,6 +17,31 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded.
+// (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
+// He does not walk here: he is set down outside the door behind the veil and stands, so `fast` only shortens the veil's
+// pauses. The halls go in two halves (`half`), each well under one machine's share of the night's run.
+async function exitFrames(b, base, half) {
+  const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom&fast=1", { viewport: { width: 480, height: 320 } });   // (fast: the veil through a door pauses a sixth as long)
+  await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
+  const all = await t.page.evaluate(() => window.__halls.map((h) => h.id)), halls = all.slice(half * Math.ceil(all.length / 2), (half + 1) * Math.ceil(all.length / 2)), log = {}, bad = [];
+  for (const id of halls) {
+    await t.page.evaluate((h) => window.__inside(h), id); await t.page.waitForFunction((h) => window.__yard().room === h, id, { polling: 50, timeout: 120000 });   // (waited on directly: t.until looks only every 1.2 s)
+    { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f + 5, f0, { polling: 20, timeout: 120000 }); }
+    await t.page.evaluate(() => window.__inside(null));
+    await t.page.waitForFunction(() => !window.__yard().inside, null, { polling: 10, timeout: 120000 });
+    const rows = [];
+    for (let i = 0; i < 60; i++) {
+      const r = await t.page.evaluate(() => { const f = window.__frame(); return { f: f.frames, box: !!f.monkBox, op: +f.opacity.toFixed(2), dist: +f.dist.toFixed(2) }; });
+      rows.push(r); if (!r.box || r.op < 0.6) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
+      await t.page.waitForFunction((f) => window.__yard().frames > f, r.f, { polling: 10, timeout: 120000 });
+    }
+    log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length };
+  }
+  console.log("    exitframe", JSON.stringify(log));
+  expect(bad.length === 0, `coming out of a door he left the picture or faded ${bad.length} times: ` + bad.slice(0, 6).join(" | "));
+  expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+}
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
@@ -713,29 +738,9 @@ const scenarios = {
     console.log("    eyeroom", JSON.stringify({ tris: fromHall.tris, door: f.eye.map((v) => +v.toFixed(2)), wall: g.map((v) => +v.toFixed(2)), round: samples }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded.
-  // (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
-  exitframe: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom&fast=1", { viewport: { width: 480, height: 320 } });   // (fast: the veil through a door pauses a sixth as long)
-    await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
-    const halls = await t.page.evaluate(() => window.__halls.map((h) => h.id)), log = {}, bad = [];
-    for (const id of halls) {
-      await t.page.evaluate((h) => window.__inside(h), id); await t.page.waitForFunction((h) => window.__yard().room === h, id, { polling: 50, timeout: 120000 });   // (waited on directly: t.until looks only every 1.2 s)
-      { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f + 5, f0, { polling: 20, timeout: 120000 }); }
-      await t.page.evaluate(() => window.__inside(null));
-      await t.page.waitForFunction(() => !window.__yard().inside, null, { polling: 10, timeout: 120000 });
-      const rows = [];
-      for (let i = 0; i < 60; i++) {
-        const r = await t.page.evaluate(() => { const f = window.__frame(); return { f: f.frames, box: !!f.monkBox, op: +f.opacity.toFixed(2), dist: +f.dist.toFixed(2) }; });
-        rows.push(r); if (!r.box || r.op < 0.6) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
-        await t.page.waitForFunction((f) => window.__yard().frames > f, r.f, { polling: 10, timeout: 120000 });
-      }
-      log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length };
-    }
-    console.log("    exitframe", JSON.stringify(log));
-    expect(bad.length === 0, `coming out of a door he left the picture or faded ${bad.length} times: ` + bad.slice(0, 6).join(" | "));
-    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
-  } },
+  // Out of every hall's door, in two halves (#396): exitFrames above.
+  exitframe: { tier: 3, run: (b, base) => exitFrames(b, base, 0) },
+  "exitframe-b": { tier: 3, run: (b, base) => exitFrames(b, base, 1) },
   halls: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
     const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));
