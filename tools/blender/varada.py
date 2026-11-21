@@ -351,7 +351,7 @@ if Kn.get("mode") == "surface":
   if opt.get("stage") == "knee":   # the knee alone, in the stage frame, with the sheet's grid for looking at
     for o in bpy.context.scene.objects: o.select_set(o == ob)
     bpy.ops.export_scene.gltf(filepath=os.path.join(out, "knee.glb"), export_format="GLB", use_selection=True)
-    np.savez(os.path.join(out, "knee-grid.npz"), xs=xs, ys=ys, GZ=GZ, lay=lay, core=core, okS=okS, hasF=hasF, Dn=Dn, ring=ring)
+    np.savez(os.path.join(out, "knee-grid.npz"), xs=xs, ys=ys, GZ=GZ, lay=lay, core=core, okS=okS, hasF=hasF, Dn=Dn, ring=ring, r0=(cyl or {}).get("r0", 1.0))
     json.dump(log, open(os.path.join(out, "varada.json"), "w"), indent=1); sys.exit(0)
   inb = np.zeros(len(st), bool); Kn = dict(Kn); Kn["relax"] = 0; Kn["weld"] = 0; Kn["skip"] = True
 if not Kn.get("skip"):   # round 1's mirrored patch (knee.mode absent)
