@@ -2,7 +2,7 @@
 // bell up the mountain that opens the walk (audio.js `mountainBell`: low-passed, light, answered by the hillside) and the
 // great bell struck with the log (`strike("bell")`). Music is not made here: tools/music.mjs writes that.
 //   node tools/marketing-audio.mjs <out.wav> <seconds> '[["far",0.5],["bell",21.0],["bell",27.5]]'
-import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url"; import { createRequire } from "node:module";
+import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url"; import { createRequire } from "node:module";
 const { chromium } = createRequire(import.meta.url)("playwright"), here = path.dirname(fileURLToPath(import.meta.url)), app = path.join(here, "..", "app");
 const [outFile, secs, events] = process.argv.slice(2), ev = JSON.parse(events);
 const page = `<!doctype html><meta charset="utf-8"><script type="module">
@@ -20,14 +20,8 @@ window.render = async (secs, ev) => {
 };
 window.chunk = (i, n) => { const a = window.__pcm.subarray(i, i + n); let s = ""; for (let k = 0; k < a.length; k += 0x8000) s += String.fromCharCode.apply(null, a.subarray(k, k + 0x8000)); return btoa(s); };
 </script>`;
-const types = { ".js": "text/javascript", ".html": "text/html" };
-const srv = http.createServer((req, res) => {
-  const u = decodeURIComponent(req.url.split("?")[0]);
-  if (u === "/") { res.writeHead(200, { "content-type": "text/html" }); return res.end(page); }
-  const p = path.resolve(app, "." + path.posix.normalize(u)); if (!p.startsWith(app + path.sep) || !fs.existsSync(p)) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
-await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+const { serve } = createRequire(import.meta.url)("./site.cjs");
+const srv = await serve(app, { api: false, handler: (req, res, u) => u === "/" && (res.writeHead(200, { "content-type": "text/html" }), res.end(page), true) });
 const b = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] }), tab = await b.newPage();
 await tab.goto(`http://127.0.0.1:${srv.address().port}/`); await tab.waitForFunction(() => window.render);
 const r = await tab.evaluate(([s, e]) => window.render(s, e), [Number(secs), ev]), parts = [];

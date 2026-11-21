@@ -1,0 +1,4560 @@
+
+> temple-walk@0.6.0 test /home/user/temple-walk
+> node --test tests/unit/*.test.mjs
+
+TAP version 13
+# Subtest: public milestones reach Umami as short strings
+ok 1 - public milestones reach Umami as short strings
+  ---
+  duration_ms: 2.074884
+  type: 'test'
+  ...
+# Subtest: every event says which language it was read in, and an event's own data does not lose it
+ok 2 - every event says which language it was read in, and an event's own data does not lose it
+  ---
+  duration_ms: 0.193538
+  type: 'test'
+  ...
+# Subtest: previews, tests and a missing tracker stay silent
+ok 3 - previews, tests and a missing tracker stay silent
+  ---
+  duration_ms: 0.17325
+  type: 'test'
+  ...
+# Subtest: an event is remembered for the tests even where it is not sent
+ok 4 - an event is remembered for the tests even where it is not sent
+  ---
+  duration_ms: 0.128704
+  type: 'test'
+  ...
+# Subtest: the app is the game's window: the Pake settings carried over, maximised, title bar hidden, dark
+ok 5 - the app is the game's window: the Pake settings carried over, maximised, title bar hidden, dark
+  ---
+  duration_ms: 1.385729
+  type: 'test'
+  ...
+# Subtest: the window's size and the update check are in the generated main.go
+ok 6 - the window's size and the update check are in the generated main.go
+  ---
+  duration_ms: 0.333937
+  type: 'test'
+  ...
+# Subtest: the app is the trial build: web channel by default, canary deploy always, so no counter; a store channel is named
+ok 7 - the app is the trial build: web channel by default, canary deploy always, so no counter; a store channel is named
+  ---
+  duration_ms: 0.493734
+  type: 'test'
+  ...
+# Subtest: a store channel's site holding the counter, sponsor address or tags, or payment code is refused, by name and by bytes
+ok 8 - a store channel's site holding the counter, sponsor address or tags, or payment code is refused, by name and by bytes
+  ---
+  duration_ms: 6.780451
+  type: 'test'
+  ...
+# Subtest: a web site may hold the sponsor sheet but never the counter, and must hold the sheet
+ok 9 - a web site may hold the sponsor sheet but never the counter, and must hold the sheet
+  ---
+  duration_ms: 1.29723
+  type: 'test'
+  ...
+# Subtest: --skip-build refuses a dist/ whose channel does not match --channel, with the command that fixes it
+ok 10 - --skip-build refuses a dist/ whose channel does not match --channel, with the command that fixes it
+  ---
+  duration_ms: 4.089087
+  type: 'test'
+  ...
+# Subtest: the site built as the app is built holds no counter, and for a store channel no sponsor sheet or code (built for real, scanned as the package is)
+ok 11 - the site built as the app is built holds no counter, and for a store channel no sponsor sheet or code (built for real, scanned as the package is)
+  ---
+  duration_ms: 2179.555011
+  type: 'test'
+  ...
+# Subtest: the build's outputs are found, and a build without an app is refused
+ok 12 - the build's outputs are found, and a build without an app is refused
+  ---
+  duration_ms: 1.206568
+  type: 'test'
+  ...
+# Subtest: an archive or manifest that is missing is reported as not built, not an error
+ok 13 - an archive or manifest that is missing is reported as not built, not an error
+  ---
+  duration_ms: 9.631721
+  type: 'test'
+  ...
+# Subtest: a placeholder public key leaves updates out, so the build skips the update files cleanly
+ok 14 - a placeholder public key leaves updates out, so the build skips the update files cleanly
+  ---
+  duration_ms: 0.375274
+  type: 'test'
+  ...
+# Subtest: mygo.json on disk carries the public key and the feed, and no secret
+ok 15 - mygo.json on disk carries the public key and the feed, and no secret
+  ---
+  duration_ms: 0.240586
+  type: 'test'
+  ...
+# Subtest: the register's file column is read as the paths it names
+ok 16 - the register's file column is read as the paths it names
+  ---
+  duration_ms: 1.206095
+  type: 'test'
+  ...
+# Subtest: every asset file under app/ that goes into the site has a row in the register
+ok 17 - every asset file under app/ that goes into the site has a row in the register
+  ---
+  duration_ms: 6.367289
+  type: 'test'
+  ...
+# Subtest: every file under app/ that the register names is there
+ok 18 - every file under app/ that the register names is there
+  ---
+  duration_ms: 0.488571
+  type: 'test'
+  ...
+# Subtest: every row says whether it may be sold with the game, whether it must be credited, where its terms are and when they were read
+ok 19 - every row says whether it may be sold with the game, whether it must be credited, where its terms are and when they were read
+  ---
+  duration_ms: 0.465143
+  type: 'test'
+  ...
+# Subtest: holding asks the screen once, and lets it go when the passage ends
+ok 20 - holding asks the screen once, and lets it go when the passage ends
+  ---
+  duration_ms: 4.971573
+  type: 'test'
+  ...
+# Subtest: a lock dropped by the system is asked for again only when the page is seen
+ok 21 - a lock dropped by the system is asked for again only when the page is seen
+  ---
+  duration_ms: 2.171551
+  type: 'test'
+  ...
+# Subtest: a browser without wake locks, or one that refuses, leaves the screen to itself
+ok 22 - a browser without wake locks, or one that refuses, leaves the screen to itself
+  ---
+  duration_ms: 3.091277
+  type: 'test'
+  ...
+# Subtest: freed while the ask is in flight, the lock is let go as it arrives
+ok 23 - freed while the ask is in flight, the lock is let go as it arrives
+  ---
+  duration_ms: 0.729318
+  type: 'test'
+  ...
+# Subtest: in the grove the culms can knock only in the strongest part of a gust
+ok 24 - in the grove the culms can knock only in the strongest part of a gust
+  ---
+  duration_ms: 0.94066
+  type: 'test'
+  ...
+# Subtest: out of the bamboo at the start (the courts, the thinner stands higher up) they never knock
+ok 25 - out of the bamboo at the start (the courts, the thinner stands higher up) they never knock
+  ---
+  duration_ms: 0.609031
+  type: 'test'
+  ...
+# Subtest: birds sing in the bamboo and on the path up, never within the walls, the halls or the summit's court
+ok 26 - birds sing in the bamboo and on the path up, never within the walls, the halls or the summit's court
+  ---
+  duration_ms: 0.435073
+  type: 'test'
+  ...
+# Subtest: most at first light, fewer by day, a last few at dusk, none at night, few in winter
+ok 27 - most at first light, fewer by day, a last few at dusk, none at night, few in winter
+  ---
+  duration_ms: 0.252093
+  type: 'test'
+  ...
+# Subtest: the gust heard at a moment is the gust the leaves and the smoke are drawn by at that moment
+ok 28 - the gust heard at a moment is the gust the leaves and the smoke are drawn by at that moment
+  ---
+  duration_ms: 0.37004
+  type: 'test'
+  ...
+# Subtest: the bell rings on the music's key, its hum is the last thing heard, and the high partials die first
+ok 29 - the bell rings on the music's key, its hum is the last thing heard, and the high partials die first
+  ---
+  duration_ms: 0.79094
+  type: 'test'
+  ...
+# Subtest: geometry helpers
+ok 30 - geometry helpers
+  ---
+  duration_ms: 16.685749
+  type: 'test'
+  ...
+# Subtest: a hall, built from its numbers, is whole
+ok 31 - a hall, built from its numbers, is whole
+  ---
+  duration_ms: 112.888929
+  type: 'test'
+  ...
+# Subtest: every kind of building the plan uses can be built
+ok 32 - every kind of building the plan uses can be built
+  ---
+  duration_ms: 257.091961
+  type: 'test'
+  ...
+# Subtest: merging what never moves keeps every triangle and leaves the marked meshes alone
+ok 33 - merging what never moves keeps every triangle and leaves the marked meshes alone
+  ---
+  duration_ms: 10.372138
+  type: 'test'
+  ...
+# Subtest: the novice stands, walks and prays without coming apart
+ok 34 - the novice stands, walks and prays without coming apart
+  ---
+  duration_ms: 235.078253
+  type: 'test'
+  ...
+# Subtest: first: trackpad click-drag looks right/down, matching locked mouse
+ok 35 - first: trackpad click-drag looks right/down, matching locked mouse
+  ---
+  duration_ms: 5.58316
+  type: 'test'
+  ...
+# Subtest: third: trackpad click-drag looks right/down, matching locked mouse
+ok 36 - third: trackpad click-drag looks right/down, matching locked mouse
+  ---
+  duration_ms: 2.067501
+  type: 'test'
+  ...
+# Subtest: photo: neither a click-drag nor the locked mouse turns the camera
+ok 37 - photo: neither a click-drag nor the locked mouse turns the camera
+  ---
+  duration_ms: 3.837555
+  type: 'test'
+  ...
+# Subtest: locked mouse button drag is applied only once
+ok 38 - locked mouse button drag is applied only once
+  ---
+  duration_ms: 1.145316
+  type: 'test'
+  ...
+# Subtest: touch drag has the same camera direction and small taps do not rotate
+ok 39 - touch drag has the same camera direction and small taps do not rotate
+  ---
+  duration_ms: 1.058922
+  type: 'test'
+  ...
+# Subtest: the visitor's own settings turn the head faster and, if asked, the other way up
+ok 40 - the visitor's own settings turn the head faster and, if asked, the other way up
+  ---
+  duration_ms: 4.42115
+  type: 'test'
+  ...
+# Subtest: first person: indoors the eye lifts to the ceiling, outdoors no higher than before; the view from behind is unchanged
+ok 41 - first person: indoors the eye lifts to the ceiling, outdoors no higher than before; the view from behind is unchanged
+  ---
+  duration_ms: 4.33149
+  type: 'test'
+  ...
+# Subtest: a held mouse turns about as far as 《小王子》 turns it, and a drag keeps near the pointer
+ok 42 - a held mouse turns about as far as 《小王子》 turns it, and a drag keeps near the pointer
+  ---
+  duration_ms: 1.886331
+  type: 'test'
+  ...
+# Subtest: one report larger than any hand gives (the browser re-centring the hidden pointer) does not swing the view
+ok 43 - one report larger than any hand gives (the browser re-centring the hidden pointer) does not swing the view
+  ---
+  duration_ms: 1.088716
+  type: 'test'
+  ...
+# Subtest: a drag or a held mouse sends the eye back from a place's shot; a tap does not
+ok 44 - a drag or a held mouse sends the eye back from a place's shot; a tap does not
+  ---
+  duration_ms: 6.213238
+  type: 'test'
+  ...
+# Subtest: the middle button turns the view back; while it swings a drag or a held mouse is not taken; a hand's turn is told
+ok 45 - the middle button turns the view back; while it swings a drag or a held mouse is not taken; a hand's turn is told
+  ---
+  duration_ms: 1.962887
+  type: 'test'
+  ...
+# Subtest: the key swings the view behind him by the short way, no faster than the director's 144° a second, and stops there
+ok 46 - the key swings the view behind him by the short way, no faster than the director's 144° a second, and stops there
+  ---
+  duration_ms: 2.233444
+  type: 'test'
+  ...
+# Subtest: behind him is looking the way he faces
+ok 47 - behind him is looking the way he faces
+  ---
+  duration_ms: 0.215566
+  type: 'test'
+  ...
+# Subtest: walking on, the view drifts round behind the way he goes only after the hand has left it a while, and slowly
+ok 48 - walking on, the view drifts round behind the way he goes only after the hand has left it a while, and slowly
+  ---
+  duration_ms: 0.863366
+  type: 'test'
+  ...
+# Subtest: a hand on the view stops the drift at once and starts the wait again; standing still it does not turn
+ok 49 - a hand on the view stops the drift at once and starts the wait again; standing still it does not turn
+  ---
+  duration_ms: 1.199644
+  type: 'test'
+  ...
+# Subtest: walking by keys or the stick it does not turn: they walk by the view, and it would chase the way he goes round and round
+ok 50 - walking by keys or the stick it does not turn: they walk by the view, and it would chase the way he goes round and round
+  ---
+  duration_ms: 3.108204
+  type: 'test'
+  ...
+# Subtest: it is the real one's shape and size: 2.7 m to the cap, a small gourd over it, 1.12 m across the belly, three feet and two ears
+ok 51 - it is the real one's shape and size: 2.7 m to the cap, a small gourd over it, 1.12 m across the belly, three feet and two ears
+  ---
+  duration_ms: 7.12732
+  type: 'test'
+  ...
+# Subtest: what is cast on it: the date in one line, the couplet five and five
+ok 52 - what is cast on it: the date in one line, the couplet five and five
+  ---
+  duration_ms: 1.135311
+  type: 'test'
+  ...
+# Subtest: he is kept off it as far as it reaches up to the top of his head, and no farther than a hand's breadth more
+ok 53 - he is kept off it as far as it reaches up to the top of his head, and no farther than a hand's breadth more
+  ---
+  duration_ms: 2.266083
+  type: 'test'
+  ...
+# Subtest: the eye that follows him is never inside it: round it, it on his left
+ok 54 - the eye that follows him is never inside it: round it, it on his left
+  ---
+  duration_ms: 354.262728
+  type: 'test'
+  ...
+# Subtest: the eye that follows him is never inside it: round it, it on his right
+ok 55 - the eye that follows him is never inside it: round it, it on his right
+  ---
+  duration_ms: 260.457981
+  type: 'test'
+  ...
+# Subtest: the eye that follows him is never inside it: away from it, north and then south
+ok 56 - the eye that follows him is never inside it: away from it, north and then south
+  ---
+  duration_ms: 396.295152
+  type: 'test'
+  ...
+# Subtest: the eye that follows him is never inside it: up the axis past it
+ok 57 - the eye that follows him is never inside it: up the axis past it
+  ---
+  duration_ms: 369.170667
+  type: 'test'
+  ...
+# Subtest: the eye may not stand anywhere inside it, from its feet to its gourd, and may stand just off it and over it
+ok 58 - the eye may not stand anywhere inside it, from its feet to its gourd, and may stand just off it and over it
+  ---
+  duration_ms: 0.456985
+  type: 'test'
+  ...
+# Subtest: every season and hour says how hard the breeze blows and how much incense burns: most at dawn, two or three ends at night
+ok 59 - every season and hour says how hard the breeze blows and how much incense burns: most at dawn, two or three ends at night
+  ---
+  duration_ms: 0.814893
+  type: 'test'
+  ...
+# Subtest: the smoke leans the way the breeze carries the falling things, and only as it rises
+ok 60 - the smoke leans the way the breeze carries the falling things, and only as it rises
+  ---
+  duration_ms: 2.231763
+  type: 'test'
+  ...
+# Subtest: snow lies on the eaves and the cap and not on the warm body, mouth or ears
+ok 61 - snow lies on the eaves and the cap and not on the warm body, mouth or ears
+  ---
+  duration_ms: 3.334113
+  type: 'test'
+  ...
+# Subtest: the incense, the ash and the season's leaves and petals are in the censer, and add no draw
+ok 62 - the incense, the ash and the season's leaves and petals are in the censer, and add no draw
+  ---
+  duration_ms: 2.389812
+  type: 'test'
+  ...
+# Subtest: each foot's top ring is inside the belly, at least 3 cm under its surface
+ok 63 - each foot's top ring is inside the belly, at least 3 cm under its surface
+  ---
+  duration_ms: 3.70339
+  type: 'test'
+  ...
+# Subtest: the web build holds the sponsor page's address, once, in the file that builds the sheet
+ok 64 - the web build holds the sponsor page's address, once, in the file that builds the sheet
+  ---
+  duration_ms: 1985.206376
+  type: 'test'
+  ...
+# Subtest: the web build carries the payment code once, and the steam and platform builds not at all (by name, by hash, or named in a script)
+ok 65 - the web build carries the payment code once, and the steam and platform builds not at all (by name, by hash, or named in a script)
+  ---
+  duration_ms: 2999.387096
+  type: 'test'
+  ...
+# Subtest: the steam and platform builds hold neither the address nor its tags in any text file
+ok 66 - the steam and platform builds hold neither the address nor its tags in any text file
+  ---
+  duration_ms: 2204.305225
+  type: 'test'
+  ...
+# Subtest: a channel the build does not know fails it
+ok 67 - a channel the build does not know fails it
+  ---
+  duration_ms: 156.138154
+  type: 'test'
+  ...
+# Subtest: every flight of three steps or more is looked under
+ok 68 - every flight of three steps or more is looked under
+  ---
+  duration_ms: 0.833654
+  type: 'test'
+  ...
+# Subtest: no cheek stone's foot stands over a slot of air: it comes down on the ground or on a stone under it
+ok 69 - no cheek stone's foot stands over a slot of air: it comes down on the ground or on a stone under it
+  ---
+  duration_ms: 818.619472
+  type: 'test'
+  ...
+# Subtest: a change under app/ builds; so do the files the build or the browser tests are made of
+ok 70 - a change under app/ builds; so do the files the build or the browser tests are made of
+  ---
+  duration_ms: 1.278506
+  type: 'test'
+  ...
+# Subtest: papers, notes and tools that are not the build's do not build
+ok 71 - papers, notes and tools that are not the build's do not build
+  ---
+  duration_ms: 0.151689
+  type: 'test'
+  ...
+# Subtest: papers with package.json build; and what cannot be known builds
+ok 72 - papers with package.json build; and what cannot be known builds
+  ---
+  duration_ms: 0.589038
+  type: 'test'
+  ...
+# Subtest: the floor is baked when the site changes and when what the bake is made of changes
+ok 73 - the floor is baked when the site changes and when what the bake is made of changes
+  ---
+  duration_ms: 0.224156
+  type: 'test'
+  ...
+# Subtest: every path that starts the nightly regression run on a push is one that builds the site
+ok 74 - every path that starts the nightly regression run on a push is one that builds the site
+  ---
+  duration_ms: 0.465639
+  type: 'test'
+  ...
+# Subtest: the base of a push is the last deploy that succeeded, never the run before or the run itself
+ok 75 - the base of a push is the last deploy that succeeded, never the run before or the run itself
+  ---
+  duration_ms: 0.244538
+  type: 'test'
+  ...
+# Subtest: a site change followed by a papers-only commit is still a site change against the last deploy
+ok 76 - a site change followed by a papers-only commit is still a site change against the last deploy
+  ---
+  duration_ms: 0.172319
+  type: 'test'
+  ...
+# Subtest: papers alone skip the heavy unit tests; anything else, and anything unknown, runs them
+ok 77 - papers alone skip the heavy unit tests; anything else, and anything unknown, runs them
+  ---
+  duration_ms: 0.216133
+  type: 'test'
+  ...
+# Subtest: the tests run for papers alone exist
+ok 78 - the tests run for papers alone exist
+  ---
+  duration_ms: 0.467874
+  type: 'test'
+  ...
+# Subtest: pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side
+ok 79 - pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side
+  ---
+  duration_ms: 1.582782
+  type: 'test'
+  ...
+# Subtest: no pull request reads the evidence over the network to compare hashes; the nightly run does
+ok 80 - no pull request reads the evidence over the network to compare hashes; the nightly run does
+  ---
+  duration_ms: 0.394006
+  type: 'test'
+  ...
+# Subtest: pages.yml: main goes to the canary, after the quick scenarios, and never to production
+ok 81 - pages.yml: main goes to the canary, after the quick scenarios, and never to production
+  ---
+  duration_ms: 0.395481
+  type: 'test'
+  ...
+# Subtest: e2e.yml no longer repeats the scenarios that stop the publication
+ok 82 - e2e.yml no longer repeats the scenarios that stop the publication
+  ---
+  duration_ms: 0.139014
+  type: 'test'
+  ...
+# Subtest: deploy-tag.yml: only a version tag is put live, to a named place, by release-please and by hand, and a dry run deploys nothing
+ok 83 - deploy-tag.yml: only a version tag is put live, to a named place, by release-please and by hand, and a dry run deploys nothing
+  ---
+  duration_ms: 0.528487
+  type: 'test'
+  ...
+# Subtest: release-please.yml deploys production when, and only when, a version was made
+ok 84 - release-please.yml deploys production when, and only when, a version was made
+  ---
+  duration_ms: 0.131586
+  type: 'test'
+  ...
+# Subtest: the reach is the top of his own jump
+ok 85 - the reach is the top of his own jump
+  ---
+  duration_ms: 0.787358
+  type: 'test'
+  ...
+# Subtest: every unrailed edge whose platform he can reach is climbable from below, along an arc that clears the edge; the rest are not
+ok 86 - every unrailed edge whose platform he can reach is climbable from below, along an arc that clears the edge; the rest are not
+  ---
+  duration_ms: 12.814142
+  type: 'test'
+  ...
+# Subtest: not from the side or the back, not from the platform, not walking, not into a blocked landing
+ok 87 - not from the side or the back, not from the platform, not walking, not into a blocked landing
+  ---
+  duration_ms: 0.613926
+  type: 'test'
+  ...
+# Subtest: up and down again: from each climbable edge, the hop down from where he came down leads back to the ground
+ok 88 - up and down again: from each climbable edge, the hop down from where he came down leads back to the ground
+  ---
+  duration_ms: 5.455935
+  type: 'test'
+  ...
+# Subtest: the half-way pavilion's platform is reached on foot from the landing; there is no ground below its other sides
+ok 89 - the half-way pavilion's platform is reached on foot from the landing; there is no ground below its other sides
+  ---
+  duration_ms: 1.301947
+  type: 'test'
+  ...
+# Subtest: MP4 where the browser writes it, WebM where it does not, nothing where it can do neither
+ok 90 - MP4 where the browser writes it, WebM where it does not, nothing where it can do neither
+  ---
+  duration_ms: 0.870557
+  type: 'test'
+  ...
+# Subtest: the film's long side is 960 on every tier, the short side from the frame, both even
+ok 91 - the film's long side is 960 on every tier, the short side from the frame, both even
+  ---
+  duration_ms: 0.802675
+  type: 'test'
+  ...
+# Subtest: twelve seconds by default, never more than fifteen with the signature's tail in them
+ok 92 - twelve seconds by default, never more than fifteen with the signature's tail in them
+  ---
+  duration_ms: 0.126484
+  type: 'test'
+  ...
+# Subtest: the signature is absent until the scene ends, then rises smoothly to full
+ok 93 - the signature is absent until the scene ends, then rises smoothly to full
+  ---
+  duration_ms: 0.15414
+  type: 'test'
+  ...
+# Subtest: what is said when the browser cannot share: hold on a touch screen, the button elsewhere, nothing when it can (\#344 takes this over)
+ok 94 - what is said when the browser cannot share: hold on a touch screen, the button elsewhere, nothing when it can (\#344 takes this over)
+  ---
+  duration_ms: 0.171087
+  type: 'test'
+  ...
+# Subtest: the file's name keeps to what a file system and a share sheet take
+ok 95 - the file's name keeps to what a file system and a share sheet take
+  ---
+  duration_ms: 1.706518
+  type: 'test'
+  ...
+# Subtest: community images resolve beside the remote configuration
+ok 96 - community images resolve beside the remote configuration
+  ---
+  duration_ms: 1.290986
+  type: 'test'
+  ...
+# Subtest: community invitations stop at the exact expiry and can be disabled without an image
+ok 97 - community invitations stop at the exact expiry and can be disabled without an image
+  ---
+  duration_ms: 0.240982
+  type: 'test'
+  ...
+# Subtest: malformed configuration and unsafe image URLs never produce an invitation
+ok 98 - malformed configuration and unsafe image URLs never produce an invitation
+  ---
+  duration_ms: 0.275259
+  type: 'test'
+  ...
+# Subtest: the 14 ColBase pictures say they were edited, and no other museum's picture is made to
+ok 99 - the 14 ColBase pictures say they were edited, and no other museum's picture is made to
+  ---
+  duration_ms: 0.881924
+  type: 'test'
+  ...
+# Subtest: the processing line is written as ColBase's own example is, with the item's address, in all four languages
+ok 100 - the processing line is written as ColBase's own example is, with the item's address, in all four languages
+  ---
+  duration_ms: 0.579764
+  type: 'test'
+  ...
+# Subtest: the page of thanks names every source the audit asks for, and links the licence summary
+ok 101 - the page of thanks names every source the audit asks for, and links the licence summary
+  ---
+  duration_ms: 1.145937
+  type: 'test'
+  ...
+# Subtest: every typeface cut for the page is credited with its copyright line, and the two renamed ones say what they are called
+ok 102 - every typeface cut for the page is credited with its copyright line, and the two renamed ones say what they are called
+  ---
+  duration_ms: 0.606968
+  type: 'test'
+  ...
+# Subtest: the licence summary on disk is what tools/notices.mjs writes
+ok 103 - the licence summary on disk is what tools/notices.mjs writes
+  ---
+  duration_ms: 77.874534
+  type: 'test'
+  ...
+# Subtest: frames a second come from the walk's own counter, and nothing odd gives a number
+ok 104 - frames a second come from the walk's own counter, and nothing odd gives a number
+  ---
+  duration_ms: 0.81663
+  type: 'test'
+  ...
+# Subtest: the readings say where he stands, how the frame goes and on what tier
+ok 105 - the readings say where he stands, how the frame goes and on what tier
+  ---
+  duration_ms: 0.350084
+  type: 'test'
+  ...
+# Subtest: locking a tier loads the page again with q set, keeping every other parameter as written
+ok 106 - locking a tier loads the page again with q set, keeping every other parameter as written
+  ---
+  duration_ms: 0.790502
+  type: 'test'
+  ...
+# Subtest: a room's view is stood at its room's centre line, which is the door he enters at
+ok 107 - a room's view is stood at its room's centre line, which is the door he enters at
+  ---
+  duration_ms: 1143.252513
+  type: 'test'
+  ...
+# Subtest: the room views are the level's own: ?level when it has a table, else the prologue
+ok 108 - the room views are the level's own: ?level when it has a table, else the prologue
+  ---
+  duration_ms: 0.434357
+  type: 'test'
+  ...
+# Subtest: every switch the page offers has a name on the panel
+ok 109 - every switch the page offers has a name on the panel
+  ---
+  duration_ms: 0.342212
+  type: 'test'
+  ...
+# Subtest: the panel opens by itself on the dev server and a preview, on the canary only with ?debug=1, and is fetched nowhere else
+ok 110 - the panel opens by itself on the dev server and a preview, on the canary only with ?debug=1, and is fetched nowhere else
+  ---
+  duration_ms: 0.553845
+  type: 'test'
+  ...
+# Subtest: its key is one the walk does not use
+ok 111 - its key is one the walk does not use
+  ---
+  duration_ms: 0.121626
+  type: 'test'
+  ...
+# Subtest: the panel's key listens in the capture phase, so focus on a control cannot swallow it
+ok 112 - the panel's key listens in the capture phase, so focus on a control cannot swallow it
+  ---
+  duration_ms: 0.363477
+  type: 'test'
+  ...
+# Subtest: the level's completion is its seals, the next observance and the visit so far
+ok 113 - the level's completion is its seals, the next observance and the visit so far
+  ---
+  duration_ms: 0.422564
+  type: 'test'
+  ...
+# Subtest: the dev server and a preview open the panel by themselves, and ?debug=0 shuts it
+ok 114 - the dev server and a preview open the panel by themselves, and ?debug=0 shuts it
+  ---
+  duration_ms: 0.787312
+  type: 'test'
+  ...
+# Subtest: the canary opens it only when the address asks with ?debug=1
+ok 115 - the canary opens it only when the address asks with ?debug=1
+  ---
+  duration_ms: 0.212501
+  type: 'test'
+  ...
+# Subtest: the public page never opens it, whatever the address says
+ok 116 - the public page never opens it, whatever the address says
+  ---
+  duration_ms: 0.189737
+  type: 'test'
+  ...
+# Subtest: deployOf: the three targets, preview when nobody said, and nothing else
+ok 117 - deployOf: the three targets, preview when nobody said, and nothing else
+  ---
+  duration_ms: 1.447295
+  type: 'test'
+  ...
+# Subtest: only the production build holds the counter's address and may be indexed; canary and preview hold neither, and the unnamed build is a preview
+ok 118 - only the production build holds the counter's address and may be indexed; canary and preview hold neither, and the unnamed build is a preview
+  ---
+  duration_ms: 3870.347948
+  type: 'test'
+  ...
+# Subtest: the canary build opens no debug panel and no workbench address that production does not
+ok 119 - the canary build opens no debug panel and no workbench address that production does not
+  ---
+  duration_ms: 1834.115733
+  type: 'test'
+  ...
+# Subtest: the three builds send the same cache headers: hashed files for a year, the page and version.json always asked
+ok 120 - the three builds send the same cache headers: hashed files for a year, the page and version.json always asked
+  ---
+  duration_ms: 2930.53641
+  type: 'test'
+  ...
+# Subtest: the address is replaced, not pushed, at most every so often and only when he has moved
+ok 121 - the address is replaced, not pushed, at most every so often and only when he has moved
+  ---
+  duration_ms: 1.267349
+  type: 'test'
+  ...
+# Subtest: nothing is written while he passes through a door, and the next frame may write at once
+ok 122 - nothing is written while he passes through a door, and the next frame may write at once
+  ---
+  duration_ms: 1.445259
+  type: 'test'
+  ...
+# Subtest: the link to copy is the whole address of this view
+ok 123 - the link to copy is the whole address of this view
+  ---
+  duration_ms: 0.245732
+  type: 'test'
+  ...
+# Subtest: the page loads it only on the dev server, so the published build carries none of it
+ok 124 - the page loads it only on the dev server, so the published build carries none of it
+  ---
+  duration_ms: 1.398506
+  type: 'test'
+  ...
+# Subtest: every observance has a shot, and the shots and their views are all there
+ok 125 - every observance has a shot, and the shots and their views are all there
+  ---
+  duration_ms: 1.266886
+  type: 'test'
+  ...
+# Subtest: no shot stands in a wall, under an eave, in a column or in the ground, from its first moment to the end of its drift
+ok 126 - no shot stands in a wall, under an eave, in a column or in the ground, from its first moment to the end of its drift
+  ---
+  duration_ms: 2.292207
+  type: 'test'
+  ...
+# Subtest: he and what his hands are at stay inside the safe area, on a wide screen, a laptop's and a phone held either way
+ok 127 - he and what his hands are at stay inside the safe area, on a wide screen, a laptop's and a phone held either way
+  ---
+  duration_ms: 3.252654
+  type: 'test'
+  ...
+# Subtest: resting on a shot, the eye turns of itself no more than a degree a second
+ok 128 - resting on a shot, the eye turns of itself no more than a degree a second
+  ---
+  duration_ms: 3.812795
+  type: 'test'
+  ...
+# Subtest: a slow frame turns the picture further but not faster: the way home is held to a rate, not to a turn a frame
+ok 129 - a slow frame turns the picture further but not faster: the way home is held to a rate, not to a turn a frame
+  ---
+  duration_ms: 50.192274
+  type: 'test'
+  ...
+# Subtest: every swing there and back is made, never cut: within the turn and speed limits, and never through anything
+ok 130 - every swing there and back is made, never cut: within the turn and speed limits, and never through anything
+  ---
+  duration_ms: 1954.913571
+  type: 'test'
+  ...
+# Subtest: the route: the short way when it is clear and slower when it turns far, round, over or past him when it is not; the ink only for reduced motion
+ok 131 - the route: the short way when it is clear and slower when it turns far, round, over or past him when it is not; the ink only for reduced motion
+  ---
+  duration_ms: 12.820897
+  type: 'test'
+  ...
+# Subtest: the ink closes, holds while the eye is moved, and opens; sent back while it is closing, nothing moves
+ok 132 - the ink closes, holds while the eye is moved, and opens; sent back while it is closing, nothing moves
+  ---
+  duration_ms: 0.88422
+  type: 'test'
+  ...
+# Subtest: turned off, it does nothing; sent back half way, it comes back from where it is; let go, it is gone at once
+ok 133 - turned off, it does nothing; sent back half way, it comes back from where it is; let go, it is gone at once
+  ---
+  duration_ms: 6.396273
+  type: 'test'
+  ...
+# Subtest: a swing round him from behind his shoulder never comes nearer than it started
+ok 134 - a swing round him from behind his shoulder never comes nearer than it started
+  ---
+  duration_ms: 0.378371
+  type: 'test'
+  ...
+# Subtest: the well is not gone to: the eye stays with him there (until \#99)
+ok 135 - the well is not gone to: the eye stays with him there (until \#99)
+  ---
+  duration_ms: 0.279393
+  type: 'test'
+  ...
+# Subtest: an observance over before its swing has arrived lets it arrive, rest a beat, and come home; a step turns it at once
+ok 136 - an observance over before its swing has arrived lets it arrive, rest a beat, and come home; a step turns it at once
+  ---
+  duration_ms: 146.65177
+  type: 'test'
+  ...
+# Subtest: a swing's way is worked out a little at a time: the planner pauses after a bounded amount of work
+ok 137 - a swing's way is worked out a little at a time: the planner pauses after a bounded amount of work
+  ---
+  duration_ms: 1434.453022
+  type: 'test'
+  ...
+# Subtest: a shot made from the eye's own pose is that pose on any screen, and drifts within the limits
+ok 138 - a shot made from the eye's own pose is that pose on any screen, and drifts within the limits
+  ---
+  duration_ms: 1.993544
+  type: 'test'
+  ...
+# Subtest: the old wait threw on the report as it is now
+ok 139 - the old wait threw on the report as it is now
+  ---
+  duration_ms: 1.127795
+  type: 'test'
+  ...
+# Subtest: it waits for every wanted hall to fade in, or to give up
+ok 140 - it waits for every wanted hall to fade in, or to give up
+  ---
+  duration_ms: 0.257451
+  type: 'test'
+  ...
+# Subtest: its source runs on its own, as the page is handed it
+ok 141 - its source runs on its own, as the page is handed it
+  ---
+  duration_ms: 0.196699
+  type: 'test'
+  ...
+# Subtest: every hall that can be entered has a doorway that paints its own room
+ok 142 - every hall that can be entered has a doorway that paints its own room
+  ---
+  duration_ms: 2.083063
+  type: 'test'
+  ...
+# Subtest: through the door, the room's altar and its back wall are seen behind the hall's front and within its walls
+ok 143 - through the door, the room's altar and its back wall are seen behind the hall's front and within its walls
+  ---
+  duration_ms: 0.613498
+  type: 'test'
+  ...
+# Subtest: a room is taken only when he comes near its hall, not when the page opens
+ok 144 - a room is taken only when he comes near its hall, not when the page opens
+  ---
+  duration_ms: 0.875837
+  type: 'test'
+  ...
+# Subtest: drawn live, every point of a room falls on the pixel where the door shows it, and nothing on the court's side of the door is drawn
+ok 145 - drawn live, every point of a room falls on the pixel where the door shows it, and nothing on the court's side of the door is drawn
+  ---
+  duration_ms: 4.256017
+  type: 'test'
+  ...
+# Subtest: the room drawn live is off unless the address asks for it; the larger face waits for its pictures
+ok 146 - the room drawn live is off unless the address asks for it; the larger face waits for its pictures
+  ---
+  duration_ms: 2.02082
+  type: 'test'
+  ...
+# Subtest: reproduced 0.45m tea porch blocker has a deliberate drop route
+ok 147 - reproduced 0.45m tea porch blocker has a deliberate drop route
+  ---
+  duration_ms: 3.317746
+  type: 'test'
+  ...
+# Subtest: railed main hall, wrong facing, indoors and ordinary ground do not offer a jump
+ok 148 - railed main hall, wrong facing, indoors and ordinary ground do not offer a jump
+  ---
+  duration_ms: 0.322563
+  type: 'test'
+  ...
+# Subtest: obstructed or unstable landing is rejected
+ok 149 - obstructed or unstable landing is rejected
+  ---
+  duration_ms: 0.211691
+  type: 'test'
+  ...
+# Subtest: hop arc clears the back foot before it descends through the platform edge
+ok 150 - hop arc clears the back foot before it descends through the platform edge
+  ---
+  duration_ms: 2.951308
+  type: 'test'
+  ...
+# Subtest: large drops have no route
+ok 151 - large drops have no route
+  ---
+  duration_ms: 0.164884
+  type: 'test'
+  ...
+# Subtest: landing body clearance includes diagonal corners
+ok 152 - landing body clearance includes diagonal corners
+  ---
+  duration_ms: 0.172152
+  type: 'test'
+  ...
+# Subtest: too short to step onto a stool, he hops up onto it with his own jump and comes down on its top
+ok 153 - too short to step onto a stool, he hops up onto it with his own jump and comes down on its top
+  ---
+  duration_ms: 0.430369
+  type: 'test'
+  ...
+# Subtest: with nothing held, a step back is what it asks for
+ok 154 - with nothing held, a step back is what it asks for
+  ---
+  duration_ms: 1.319506
+  type: 'test'
+  ...
+# Subtest: the far bell inside the near bell's stepping back leaves it at 0.18 and the return at the later end
+ok 155 - the far bell inside the near bell's stepping back leaves it at 0.18 and the return at the later end
+  ---
+  duration_ms: 0.149992
+  type: 'test'
+  ...
+# Subtest: the drum inside the near bell's stepping back does not lift it, and does not shorten it
+ok 156 - the drum inside the near bell's stepping back does not lift it, and does not shorten it
+  ---
+  duration_ms: 0.107853
+  type: 'test'
+  ...
+# Subtest: a deeper step back inside a lighter one goes deeper
+ok 157 - a deeper step back inside a lighter one goes deeper
+  ---
+  duration_ms: 0.10791
+  type: 'test'
+  ...
+# Subtest: every scenario of the suite is on exactly one machine
+ok 158 - every scenario of the suite is on exactly one machine
+  ---
+  duration_ms: 2.128793
+  type: 'test'
+  ...
+# Subtest: the answer is the same on every machine and for any order of the list
+ok 159 - the answer is the same on every machine and for any order of the list
+  ---
+  duration_ms: 0.908025
+  type: 'test'
+  ...
+# Subtest: no machine runs much longer than another, and none runs longer than the target leaves room for
+ok 160 - no machine runs much longer than another, and none runs longer than the target leaves room for
+  ---
+  duration_ms: 0.43431
+  type: 'test'
+  ...
+# Subtest: the first machine, which also runs the quick checks, is given less of the list
+ok 161 - the first machine, which also runs the quick checks, is given less of the list
+  ---
+  duration_ms: 6.0075
+  type: 'test'
+  ...
+# Subtest: a scenario nobody has timed yet is counted as the median one, and still goes somewhere
+ok 162 - a scenario nobody has timed yet is counted as the median one, and still goes somewhere
+  ---
+  duration_ms: 0.424047
+  type: 'test'
+  ...
+# Subtest: durations.json names scenarios that exist: a renamed one is not left timed under its old name
+ok 163 - durations.json names scenarios that exist: a renamed one is not left timed under its old name
+  ---
+  duration_ms: 1.509124
+  type: 'test'
+  ...
+# Subtest: a shard that is not one of the machines is refused, and none asked for is none
+ok 164 - a shard that is not one of the machines is refused, and none asked for is none
+  ---
+  duration_ms: 2.965399
+  type: 'test'
+  ...
+# Subtest: a scenario that no longer fits adds a machine, instead of stopping the tests (\#376)
+ok 165 - a scenario that no longer fits adds a machine, instead of stopping the tests (\#376)
+  ---
+  duration_ms: 9.878849
+  type: 'test'
+  ...
+# Subtest: e2e.yml: the machines are counted by the plan, the command shares by the same count, the evidence reads stay on one, and a branch's run does not cancel the nightly one
+ok 166 - e2e.yml: the machines are counted by the plan, the command shares by the same count, the evidence reads stay on one, and a branch's run does not cancel the nightly one
+  ---
+  duration_ms: 0.520907
+  type: 'test'
+  ...
+# Subtest: `node tests/e2e/shards.cjs matrix` writes what a workflow reads
+ok 167 - `node tests/e2e/shards.cjs matrix` writes what a workflow reads
+  ---
+  duration_ms: 34.563708
+  type: 'test'
+  ...
+# Subtest: hallexit lets a pass settle before coming out
+ok 168 - hallexit lets a pass settle before coming out
+  ---
+  duration_ms: 0.848506
+  type: 'test'
+  ...
+# Subtest: hallexit waits on frames for the route after a tap from the porch
+ok 169 - hallexit waits on frames for the route after a tap from the porch
+  ---
+  duration_ms: 0.160339
+  type: 'test'
+  ...
+# Subtest: a three-argument occlusion is baked as before, whatever the normals say
+ok 170 - a three-argument occlusion is baked as before, whatever the normals say
+  ---
+  duration_ms: 5.595444
+  type: 'test'
+  ...
+# Subtest: everything not lit from the court keeps its occlusion point for point
+ok 171 - everything not lit from the court keeps its occlusion point for point
+  ---
+  duration_ms: 296.42833
+  type: 'test'
+  ...
+# Subtest: only the sets, the beams and plate on the column heads, and the eave purlin are lit from the court
+ok 172 - only the sets, the beams and plate on the column heads, and the eave purlin are lit from the court
+  ---
+  duration_ms: 146.320101
+  type: 'test'
+  ...
+# Subtest: under the eave the faces turned down and out are lit back; up to the boards they stay dark; beyond the eave nothing changes
+ok 173 - under the eave the faces turned down and out are lit back; up to the boards they stay dark; beyond the eave nothing changes
+  ---
+  duration_ms: 66.99215
+  type: 'test'
+  ...
+# Subtest: the Guanyin hall and its porch edges are where the test thinks they are
+ok 174 - the Guanyin hall and its porch edges are where the test thinks they are
+  ---
+  duration_ms: 0.790729
+  type: 'test'
+  ...
+# Subtest: from anywhere along the Guanyin hall's open front he can hop down
+ok 175 - from anywhere along the Guanyin hall's open front he can hop down
+  ---
+  duration_ms: 18.815691
+  type: 'test'
+  ...
+# Subtest: there is room to walk between the Guanyin porch and the lamp stand
+ok 176 - there is room to walk between the Guanyin porch and the lamp stand
+  ---
+  duration_ms: 0.357973
+  type: 'test'
+  ...
+# Subtest: the following eye stays out of the Guanyin hall: porch, eave lip, alley and the walk behind
+ok 177 - the following eye stays out of the Guanyin hall: porch, eave lip, alley and the walk behind
+  ---
+  duration_ms: 2178.504696
+  type: 'test'
+  ...
+# Subtest: the width the plan allows him is the width of the model, in every pose it takes (built in code)
+ok 178 - the width the plan allows him is the width of the model, in every pose it takes (built in code)
+  ---
+  duration_ms: 5537.147579
+  type: 'test'
+  ...
+# Subtest: the width the plan allows him is the width of the model, in every pose it takes (sculpted)
+ok 179 - the width the plan allows him is the width of the model, in every pose it takes (sculpted)
+  ---
+  duration_ms: 7122.544567
+  type: 'test'
+  ...
+# Subtest: no column lets his sleeve in, and he can still pass between columns and along every porch
+ok 180 - no column lets his sleeve in, and he can still pass between columns and along every porch
+  ---
+  duration_ms: 188.28451
+  type: 'test'
+  ...
+# Subtest: the tea house's two tables are in the way, and are walked round on the porch
+ok 181 - the tea house's two tables are in the way, and are walked round on the porch
+  ---
+  duration_ms: 1.499863
+  type: 'test'
+  ...
+# Subtest: a hall is entered at its sill: his robe at the door, not through it
+ok 182 - a hall is entered at its sill: his robe at the door, not through it
+  ---
+  duration_ms: 1.688347
+  type: 'test'
+  ...
+# Subtest: what stands on the ground is closed to him: the sutra pillars, the court's tea table and stools, the lamp stand, the well
+ok 183 - what stands on the ground is closed to him: the sutra pillars, the court's tea table and stools, the lamp stand, the well
+  ---
+  duration_ms: 0.283292
+  type: 'test'
+  ...
+# Subtest: stairs are walked between their cheek stones, and the stones are closed to him at their feet
+ok 184 - stairs are walked between their cheek stones, and the stones are closed to him at their feet
+  ---
+  duration_ms: 2.986478
+  type: 'test'
+  ...
+# Subtest: every tree in the courts is in the way, by its trunk and his width, and none grows through a platform
+ok 185 - every tree in the courts is in the way, by its trunk and his width, and none grows through a platform
+  ---
+  duration_ms: 0.74362
+  type: 'test'
+  ...
+# Subtest: a jump at either tea table, from any side, walking or hurrying, neither lands in it nor passes through it
+ok 186 - a jump at either tea table, from any side, walking or hurrying, neither lands in it nor passes through it
+  ---
+  duration_ms: 41.461617
+  type: 'test'
+  ...
+# Subtest: below the knee: the tea house's cushions are walked round, and the gate's sill and the summit mat are floors his shoes come down on
+ok 187 - below the knee: the tea house's cushions are walked round, and the gate's sill and the summit mat are floors his shoes come down on
+  ---
+  duration_ms: 2.444808
+  type: 'test'
+  ...
+# Subtest: every mirror key is the address after `base`, and no key repeats
+ok 188 - every mirror key is the address after `base`, and no key repeats
+  ---
+  duration_ms: 15.274605
+  type: 'test'
+  ...
+# Subtest: fallback and base are both full addresses ending in a slash
+ok 189 - fallback and base are both full addresses ending in a slash
+  ---
+  duration_ms: 0.168609
+  type: 'test'
+  ...
+# Subtest: a mirror without its four secrets says which are missing and sends nothing
+ok 190 - a mirror without its four secrets says which are missing and sends nothing
+  ---
+  duration_ms: 1.367292
+  type: 'test'
+  ...
+# Subtest: a path written as a name that points under an evidence folder is in the repository or in a manifest
+ok 191 - a path written as a name that points under an evidence folder is in the repository or in a manifest
+  ---
+  duration_ms: 28.132466
+  type: 'test'
+  ...
+# Subtest: a Markdown link or image to a picture or film is a full address or a file that is there
+ok 192 - a Markdown link or image to a picture or film is a full address or a file that is there
+  ---
+  duration_ms: 17.401079
+  type: 'test'
+  ...
+# Subtest: the address is made in one place, from the config's base and the pinned commit
+ok 193 - the address is made in one place, from the config's base and the pinned commit
+  ---
+  duration_ms: 1.227451
+  type: 'test'
+  ...
+# Subtest: a folder under docs/<level>/evidence is kept in the store as <level>/<rest>
+ok 194 - a folder under docs/<level>/evidence is kept in the store as <level>/<rest>
+  ---
+  duration_ms: 0.332965
+  type: 'test'
+  ...
+# Subtest: a manifest is well-formed or says why not
+ok 195 - a manifest is well-formed or says why not
+  ---
+  duration_ms: 0.925819
+  type: 'test'
+  ...
+# Subtest: text stays in git; pictures and films are evidence
+ok 196 - text stays in git; pictures and films are evidence
+  ---
+  duration_ms: 0.208098
+  type: 'test'
+  ...
+# Subtest: CI's check: nothing over 1 MB under an evidence folder; bad manifests fail
+ok 197 - CI's check: nothing over 1 MB under an evidence folder; bad manifests fail
+  ---
+  duration_ms: 10.350444
+  type: 'test'
+  ...
+# Subtest: the repository itself passes the check
+ok 198 - the repository itself passes the check
+  ---
+  duration_ms: 13.861598
+  type: 'test'
+  ...
+# Subtest: push refuses a name the manifest holds with other bytes, before sending anything
+ok 199 - push refuses a name the manifest holds with other bytes, before sending anything
+  ---
+  duration_ms: 2.233827
+  type: 'test'
+  ...
+# Subtest: verify asks again for a body cut off halfway, and still fails one that arrives whole and wrong
+ok 200 - verify asks again for a body cut off halfway, and still fails one that arrives whole and wrong
+  ---
+  duration_ms: 323.313427
+  type: 'test'
+  ...
+# Subtest: from the head of each terrace stair the eye never steps out past the terrace's edge, whichever way he faces
+ok 201 - from the head of each terrace stair the eye never steps out past the terrace's edge, whichever way he faces
+  ---
+  duration_ms: 472.973144
+  type: 'test'
+  ...
+# Subtest: the view from the summit stair's head (cam 0.63,-118.95, yaw 1.502) keeps the eye on the terrace
+ok 202 - the view from the summit stair's head (cam 0.63,-118.95, yaw 1.502) keeps the eye on the terrace
+  ---
+  duration_ms: 1.065261
+  type: 'test'
+  ...
+# Subtest: under a terrace's retaining wall the eye does not climb the stair above to look at his feet (cam 2.1,-66.63, yaw -2.794, pitch -0.459 once stood at 10 m and lost him)
+ok 203 - under a terrace's retaining wall the eye does not climb the stair above to look at his feet (cam 2.1,-66.63, yaw -2.794, pitch -0.459 once stood at 10 m and lost him)
+  ---
+  duration_ms: 68.165938
+  type: 'test'
+  ...
+# Subtest: the eye stays inside chan's room, his back to every wall, and on the way in and out
+ok 204 - the eye stays inside chan's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 11060.274392
+  type: 'test'
+  ...
+# Subtest: the eye stays inside tea's room, his back to every wall, and on the way in and out
+ok 205 - the eye stays inside tea's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 11906.467981
+  type: 'test'
+  ...
+# Subtest: the eye stays inside main's room, his back to every wall, and on the way in and out
+ok 206 - the eye stays inside main's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 18001.068204
+  type: 'test'
+  ...
+# Subtest: the eye stays inside library's room, his back to every wall, and on the way in and out
+ok 207 - the eye stays inside library's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 11990.177197
+  type: 'test'
+  ...
+# Subtest: the eye stays inside yaoshi's room, his back to every wall, and on the way in and out
+ok 208 - the eye stays inside yaoshi's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 10886.511775
+  type: 'test'
+  ...
+# Subtest: the eye stays inside dahui's room, his back to every wall, and on the way in and out
+ok 209 - the eye stays inside dahui's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 8402.324295
+  type: 'test'
+  ...
+# Subtest: the eye stays inside guanyin's room, his back to every wall, and on the way in and out
+ok 210 - the eye stays inside guanyin's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 12848.13388
+  type: 'test'
+  ...
+# Subtest: the eye stays inside lingxiao's room, his back to every wall, and on the way in and out
+ok 211 - the eye stays inside lingxiao's room, his back to every wall, and on the way in and out
+  ---
+  duration_ms: 14341.911945
+  type: 'test'
+  ...
+# Subtest: the eye's space is the same gathered from a room as from the courts, less only what ?off= switches off
+ok 212 - the eye's space is the same gathered from a room as from the courts, less only what ?off= switches off
+  ---
+  duration_ms: 93.703095
+  type: 'test'
+  ...
+# Subtest: coming out of every hall, the eye stays outside its door
+ok 213 - coming out of every hall, the eye stays outside its door
+  ---
+  duration_ms: 3890.648646
+  type: 'test'
+  ...
+# Subtest: leaf: no density 15 m or more from any maple/ginkgo
+ok 214 - leaf: no density 15 m or more from any maple/ginkgo
+  ---
+  duration_ms: 8.547788
+  type: 'test'
+  ...
+# Subtest: leaf: thickest under a tree, and thicker than the old even cloud
+ok 215 - leaf: thickest under a tree, and thicker than the old even cloud
+  ---
+  duration_ms: 0.27262
+  type: 'test'
+  ...
+# Subtest: petal: no density 15 m or more from any maple
+ok 216 - petal: no density 15 m or more from any maple
+  ---
+  duration_ms: 1345.224211
+  type: 'test'
+  ...
+# Subtest: petal: thickest under a tree, and thicker than the old even cloud
+ok 217 - petal: thickest under a tree, and thicker than the old even cloud
+  ---
+  duration_ms: 0.180248
+  type: 'test'
+  ...
+# Subtest: the bamboo start and the stair are far from every maple and ginkgo
+ok 218 - the bamboo start and the stair are far from every maple and ginkgo
+  ---
+  duration_ms: 0.241637
+  type: 'test'
+  ...
+# Subtest: under the great hall's front eave nothing falls, in the open court under a maple it does
+ok 219 - under the great hall's front eave nothing falls, in the open court under a maple it does
+  ---
+  duration_ms: 962.072
+  type: 'test'
+  ...
+# Subtest: 200 bamboo leaves tracked to the ground: they lie within 5 cm of it for at least 3 s, then fade, and never go through it
+ok 220 - 200 bamboo leaves tracked to the ground: they lie within 5 cm of it for at least 3 s, then fade, and never go through it
+  ---
+  duration_ms: 37.509253
+  type: 'test'
+  ...
+# Subtest: a tree's leaf comes down onto the ground, never through it, and is gone from the air within SETTLE
+ok 221 - a tree's leaf comes down onto the ground, never through it, and is gone from the air within SETTLE
+  ---
+  duration_ms: 23.953335
+  type: 'test'
+  ...
+# Subtest: the ground under the leaves is the walker's: the stair's treads, the court's paving, the terraces
+ok 222 - the ground under the leaves is the walker's: the stair's treads, the court's paving, the terraces
+  ---
+  duration_ms: 0.610301
+  type: 'test'
+  ...
+# Subtest: the grove's leaves come only from the grove, and the maples' none from it
+ok 223 - the grove's leaves come only from the grove, and the maples' none from it
+  ---
+  duration_ms: 3.684388
+  type: 'test'
+  ...
+# Subtest: under the crown the cloud shows far more than the old even share
+ok 224 - under the crown the cloud shows far more than the old even share
+  ---
+  duration_ms: 0.172605
+  type: 'test'
+  ...
+# Subtest: the identity table leaves every colour where it was
+ok 225 - the identity table leaves every colour where it was
+  ---
+  duration_ms: 32.970797
+  type: 'test'
+  ...
+# Subtest: every mood's table keeps grey in order: darker stays darker, nothing turns over
+ok 226 - every mood's table keeps grey in order: darker stays darker, nothing turns over
+  ---
+  duration_ms: 1.590764
+  type: 'test'
+  ...
+# Subtest: the soft shadow replaces three's PCF function and keeps it beside, and refuses a chunk it does not know
+ok 227 - the soft shadow replaces three's PCF function and keeps it beside, and refuses a chunk it does not know
+  ---
+  duration_ms: 0.498816
+  type: 'test'
+  ...
+# Subtest: the layered mist is the mean of its density along the line, and plain air with no layer
+ok 228 - the layered mist is the mean of its density along the line, and plain air with no layer
+  ---
+  duration_ms: 3.953049
+  type: 'test'
+  ...
+# Subtest: every material is handed the mist's layers as it is compiled, and keeps telling its programs apart
+ok 229 - every material is handed the mist's layers as it is compiled, and keeps telling its programs apart
+  ---
+  duration_ms: 0.765265
+  type: 'test'
+  ...
+# Subtest: the birds go up from the old trees near the bell, away from it, and are gone within their time
+ok 230 - the birds go up from the old trees near the bell, away from it, and are gone within their time
+  ---
+  duration_ms: 3.26591
+  type: 'test'
+  ...
+# Subtest: the eye does not jump: the measured route, bamboo to the first court
+ok 231 - the eye does not jump: the measured route, bamboo to the first court
+  ---
+  duration_ms: 1971.986828
+  type: 'test'
+  ...
+# Subtest: the eye does not jump: round the first court, close past the bell and drum towers
+ok 232 - the eye does not jump: round the first court, close past the bell and drum towers
+  ---
+  duration_ms: 1277.100726
+  type: 'test'
+  ...
+# Subtest: the eye does not jump: up the axis of the first court to the main hall's stair
+ok 233 - the eye does not jump: up the axis of the first court to the main hall's stair
+  ---
+  duration_ms: 830.715906
+  type: 'test'
+  ...
+# Subtest: the eye does not jump: up the stair to the second terrace and on to the Guanyin hall's steps
+ok 234 - the eye does not jump: up the stair to the second terrace and on to the Guanyin hall's steps
+  ---
+  duration_ms: 622.008591
+  type: 'test'
+  ...
+# Subtest: a column passing between him and the eye is let pass; a wall coming between brings it in
+ok 235 - a column passing between him and the eye is let pass; a wall coming between brings it in
+  ---
+  duration_ms: 6.571083
+  type: 'test'
+  ...
+# Subtest: swinging the view round where he stands does not throw the eye about
+ok 236 - swinging the view round where he stands does not throw the eye about
+  ---
+  duration_ms: 31918.149709
+  type: 'test'
+  ...
+# Subtest: frame a at 16:9 holds him where it says, on every route
+ok 237 - frame a at 16:9 holds him where it says, on every route
+  ---
+  duration_ms: 2912.024457
+  type: 'test'
+  ...
+# Subtest: frame a at 4:3 holds him where it says, on every route
+ok 238 - frame a at 4:3 holds him where it says, on every route
+  ---
+  duration_ms: 2793.962175
+  type: 'test'
+  ...
+# Subtest: frame a at 9:19.5 holds him where it says, on every route
+ok 239 - frame a at 9:19.5 holds him where it says, on every route
+  ---
+  duration_ms: 2830.16603
+  type: 'test'
+  ...
+# Subtest: frame b at 16:9 holds him where it says, on every route
+ok 240 - frame b at 16:9 holds him where it says, on every route
+  ---
+  duration_ms: 1749.394836
+  type: 'test'
+  ...
+# Subtest: frame b at 4:3 holds him where it says, on every route
+ok 241 - frame b at 4:3 holds him where it says, on every route
+  ---
+  duration_ms: 1699.917959
+  type: 'test'
+  ...
+# Subtest: frame b at 9:19.5 holds him where it says, on every route
+ok 242 - frame b at 9:19.5 holds him where it says, on every route
+  ---
+  duration_ms: 1745.695847
+  type: 'test'
+  ...
+# Subtest: the default eye holds him in the middle, and on the stair his whole body is in the picture
+ok 243 - the default eye holds him in the middle, and on the stair his whole body is in the picture
+  ---
+  duration_ms: 4361.955364
+  type: 'test'
+  ...
+# Subtest: the default eye never jumps: from behind the censer north past it
+ok 244 - the default eye never jumps: from behind the censer north past it
+  ---
+  duration_ms: 152.489195
+  type: 'test'
+  ...
+# Subtest: the default eye never jumps: in through the gate's middle bay
+ok 245 - the default eye never jumps: in through the gate's middle bay
+  ---
+  duration_ms: 175.504126
+  type: 'test'
+  ...
+# Subtest: on a flight of steps the view does not nod with each tread
+ok 246 - on a flight of steps the view does not nod with each tread
+  ---
+  duration_ms: 489.604077
+  type: 'test'
+  ...
+# Subtest: every font file is declared here, so a new one has to say whether its original reserves a name
+ok 247 - every font file is declared here, so a new one has to say whether its original reserves a name
+  ---
+  duration_ms: 4.840165
+  type: 'test'
+  ...
+# Subtest: the reader finds the names of a .woff2
+ok 248 - the reader finds the names of a .woff2
+  ---
+  duration_ms: 6.554744
+  type: 'test'
+  ...
+# Subtest: no font file names itself with a Reserved Font Name of its original
+ok 249 - no font file names itself with a Reserved Font Name of its original
+  ---
+  duration_ms: 69.849675
+  type: 'test'
+  ...
+# Subtest: the files that were renamed still carry their original's copyright notice and licence
+ok 250 - the files that were renamed still carry their original's copyright notice and licence
+  ---
+  duration_ms: 13.035315
+  type: 'test'
+  ...
+# Subtest: the middle seal does not say the temple's name again, and no seal lies on a character of it
+ok 251 - the middle seal does not say the temple's name again, and no seal lies on a character of it
+  ---
+  duration_ms: 28.516849
+  type: 'test'
+  ...
+# Subtest: the page's big things lie apart and inside the frame
+ok 252 - the page's big things lie apart and inside the frame
+  ---
+  duration_ms: 69.201929
+  type: 'test'
+  ...
+# Subtest: the code is the main site's address, whichever language, and a decoder reads it back
+ok 253 - the code is the main site's address, whichever language, and a decoder reads it back
+  ---
+  duration_ms: 154.123655
+  type: 'test'
+  ...
+# Subtest: the foot and the code never read the address that drew the picture
+ok 254 - the foot and the code never read the address that drew the picture
+  ---
+  duration_ms: 1.663617
+  type: 'test'
+  ...
+# Subtest: the line under the code is written in every language
+ok 255 - the line under the code is written in every language
+  ---
+  duration_ms: 0.232753
+  type: 'test'
+  ...
+# Subtest: the shortest way round a wall, from start to goal
+ok 256 - the shortest way round a wall, from start to goal
+  ---
+  duration_ms: 2.687847
+  type: 'test'
+  ...
+# Subtest: a goal that cannot be reached: the nearest cell it came to, not reached
+ok 257 - a goal that cannot be reached: the nearest cell it came to, not reached
+  ---
+  duration_ms: 0.263349
+  type: 'test'
+  ...
+# Subtest: the search stops after `cap` cells, and gives the frame back whenever `pause` asks
+ok 258 - the search stops after `cap` cells, and gives the frame back whenever `pause` asks
+  ---
+  duration_ms: 1.121262
+  type: 'test'
+  ...
+# Subtest: a step's tag and fixed price are kept with it; a cheaper plain step later takes the tag away
+ok 259 - a step's tag and fixed price are kept with it; a cheaper plain step later takes the tag away
+  ---
+  duration_ms: 0.278595
+  type: 'test'
+  ...
+# Subtest: route.js and director.js search with grid.js and keep no heap or A* of their own
+ok 260 - route.js and director.js search with grid.js and keep no heap or A* of their own
+  ---
+  duration_ms: 0.611165
+  type: 'test'
+  ...
+# Subtest: the address chooses the walker: the baked floor everywhere by default, the written plan with ?walker=old
+ok 261 - the address chooses the walker: the baked floor everywhere by default, the written plan with ?walker=old
+  ---
+  duration_ms: 3.074866
+  type: 'test'
+  ...
+# Subtest: on every flight of the plan, up and down, the floor never jumps, he is never stuck, and the eye climbs it as a slope
+ok 262 - on every flight of the plan, up and down, the floor never jumps, he is never stuck, and the eye climbs it as a slope
+  ---
+  duration_ms: 51.877877
+  type: 'test'
+  ...
+# Subtest: every named place can be walked to on the baked floor from where he comes in: places, seats, doors, views, each frame, the offering box, the stair's foot, the indoor cameras, the balcony's door
+ok 263 - every named place can be walked to on the baked floor from where he comes in: places, seats, doors, views, each frame, the offering box, the stair's foot, the indoor cameras, the balcony's door
+  ---
+  duration_ms: 0.68049
+  type: 'test'
+  ...
+# Subtest: \#148: round every hall the platform can be walked, on every side that is drawn wide enough for him
+ok 264 - \#148: round every hall the platform can be walked, on every side that is drawn wide enough for him
+  ---
+  duration_ms: 211.036127
+  type: 'test'
+  ...
+# Subtest: the porch edges are found in the grid (\#143): every written edge has one, at its height, along its line; none on a railed platform
+ok 265 - the porch edges are found in the grid (\#143): every written edge has one, at its height, along its line; none on a railed platform
+  ---
+  duration_ms: 0.957979
+  type: 'test'
+  ...
+# Subtest: every cushion and stool drawn in the courts and the rooms is a seat (\#144)
+ok 266 - every cushion and stool drawn in the courts and the rooms is a seat (\#144)
+  ---
+  duration_ms: 975.748862
+  type: 'test'
+  ...
+# Subtest: a kept place or a ?cam address that falls in a shut cell moves to the nearest open spot within half a metre, or back to the start: out of doors, in a room, on the balcony
+ok 267 - a kept place or a ?cam address that falls in a shut cell moves to the nearest open spot within half a metre, or back to the start: out of doors, in a room, on the balcony
+  ---
+  duration_ms: 877.390876
+  type: 'test'
+  ...
+# Subtest: every place a seal is earned and every spot outside a hall's door has open floor within half a metre, in its own grid
+ok 268 - every place a seal is earned and every spot outside a hall's door has open floor within half a metre, in its own grid
+  ---
+  duration_ms: 0.385692
+  type: 'test'
+  ...
+# Subtest: on every grid every open cell is walked to from where he comes in and walks back, and every hop down lands on one
+ok 269 - on every grid every open cell is walked to from where he comes in and walks back, and every hop down lands on one
+  ---
+  duration_ms: 344.593879
+  type: 'test'
+  ...
+# Subtest: behind the tea house: its platform's back is walked, the lane behind it is walked from both ends, and he hops down into it
+ok 270 - behind the tea house: its platform's back is walked, the lane behind it is walked from both ends, and he hops down into it
+  ---
+  duration_ms: 0.665077
+  type: 'test'
+  ...
+# Subtest: the page keeps only the rows and columns a floor was reached in, cell for cell
+ok 271 - the page keeps only the rows and columns a floor was reached in, cell for cell
+  ---
+  duration_ms: 107.842749
+  type: 'test'
+  ...
+# Subtest: wherever he may stand, out of doors, in a room or on the balcony, the eye rides within a tread of the floor under him
+ok 272 - wherever he may stand, out of doors, in a room or on the balcony, the eye rides within a tread of the floor under him
+  ---
+  duration_ms: 344.699921
+  type: 'test'
+  ...
+# Subtest: everywhere on the grid a stair is where the floor steps by a tread: the gait, the pace and the eye ask the floor his feet stand on
+ok 273 - everywhere on the grid a stair is where the floor steps by a tread: the gait, the pace and the eye ask the floor his feet stand on
+  ---
+  duration_ms: 1188.438509
+  type: 'test'
+  ...
+# Subtest: the balcony: only its own floor while he is up, inside the railing; from the ground below, never its floor
+ok 274 - the balcony: only its own floor while he is up, inside the railing; from the ground below, never its floor
+  ---
+  duration_ms: 21.217244
+  type: 'test'
+  ...
+# Subtest: in every room he can walk round each column, and the grid stops him his reach off it
+ok 275 - in every room he can walk round each column, and the grid stops him his reach off it
+  ---
+  duration_ms: 2.216298
+  type: 'test'
+  ...
+# Subtest: \#272: the great hall's two back flights come down into the court behind it, and lead to the floor he arrives on
+ok 276 - \#272: the great hall's two back flights come down into the court behind it, and lead to the floor he arrives on
+  ---
+  duration_ms: 130.012924
+  type: 'test'
+  ...
+# Subtest: \#278: round each corner of the summit pavilion's gallery, along the railing from either side, he gets on along the next
+ok 277 - \#278: round each corner of the summit pavilion's gallery, along the railing from either side, he gets on along the next
+  ---
+  duration_ms: 2.568146
+  type: 'test'
+  ...
+# Subtest: \#294: from as far as 0.9 m either side of the middle of every hall's door, holding on at it, he comes in
+ok 278 - \#294: from as far as 0.9 m either side of the middle of every hall's door, holding on at it, he comes in
+  ---
+  duration_ms: 2.044524
+  type: 'test'
+  ...
+# Subtest: \#294: from against the frame, just past the door's line 0.7 or 0.9 m off its middle, holding on at it, he comes in
+ok 279 - \#294: from against the frame, just past the door's line 0.7 or 0.9 m off its middle, holding on at it, he comes in
+  ---
+  duration_ms: 13.070621
+  type: 'test'
+  ...
+# Subtest: \#294: off the tea house's porch, the gate's and a hall's low platform he steps down by walking out; along the edge he does not
+ok 280 - \#294: off the tea house's porch, the gate's and a hall's low platform he steps down by walking out; along the edge he does not
+  ---
+  duration_ms: 1.839883
+  type: 'test'
+  ...
+# Subtest: \#294: held at a slant into a wall or a column he slides along it, straight into a wall he stands, and before a door he never goes to and fro
+ok 281 - \#294: held at a slant into a wall or a column he slides along it, straight into a wall he stands, and before a door he never goes to and fro
+  ---
+  duration_ms: 12.634335
+  type: 'test'
+  ...
+# Subtest: every hall has a camera for its furniture and one for its ceiling
+ok 282 - every hall has a camera for its furniture and one for its ceiling
+  ---
+  duration_ms: 2.477457
+  type: 'test'
+  ...
+# Subtest: every indoor camera stands on open floor in its own room
+ok 283 - every indoor camera stands on open floor in its own room
+  ---
+  duration_ms: 0.467467
+  type: 'test'
+  ...
+# Subtest: the address of a hall view opens that hall at that pose
+ok 284 - the address of a hall view opens that hall at that pose
+  ---
+  duration_ms: 0.432713
+  type: 'test'
+  ...
+# Subtest: the locked T00 acceptance cameras are untouched
+ok 285 - the locked T00 acceptance cameras are untouched
+  ---
+  duration_ms: 0.281725
+  type: 'test'
+  ...
+# Subtest: the tool finds the level's own table, T00 by default, with each room's offset added
+ok 286 - the tool finds the level's own table, T00 by default, with each room's offset added
+  ---
+  duration_ms: 2292.068251
+  type: 'test'
+  ...
+# Subtest: a level without a table, or a name that is not a plain folder, is refused with the levels that have one
+ok 287 - a level without a table, or a name that is not a plain folder, is refused with the levels that have one
+  ---
+  duration_ms: 0.940563
+  type: 'test'
+  ...
+# Subtest: on a touch screen the controls are told one at a time, as the hand comes to them
+ok 288 - on a touch screen the controls are told one at a time, as the hand comes to them
+  ---
+  duration_ms: 1.924613
+  type: 'test'
+  ...
+# Subtest: a visitor who never drags is told of two fingers after a good stretch of the path
+ok 289 - a visitor who never drags is told of two fingers after a good stretch of the path
+  ---
+  duration_ms: 0.388184
+  type: 'test'
+  ...
+# Subtest: a drag made while the first line still shows is kept: two fingers are told once that line has gone
+ok 290 - a drag made while the first line still shows is kept: two fingers are told once that line has gone
+  ---
+  duration_ms: 0.2562
+  type: 'test'
+  ...
+# Subtest: a drag made before the first line, as one that passes over the opening, still brings two fingers after it
+ok 291 - a drag made before the first line, as one that passes over the opening, still brings two fingers after it
+  ---
+  duration_ms: 0.16658
+  type: 'test'
+  ...
+# Subtest: a visitor whose two fingers have already moved the eye is not told of two fingers
+ok 292 - a visitor whose two fingers have already moved the eye is not told of two fingers
+  ---
+  duration_ms: 0.238879
+  type: 'test'
+  ...
+# Subtest: the line held at the foot of the far view is not taken by another tip, and the tip is not lost
+ok 293 - the line held at the foot of the far view is not taken by another tip, and the tip is not lost
+  ---
+  duration_ms: 0.459558
+  type: 'test'
+  ...
+# Subtest: below the horizon, from every sampled place, the first opaque thing is land or hill
+ok 294 - below the horizon, from every sampled place, the first opaque thing is land or hill
+  ---
+  duration_ms: 10424.495603
+  type: 'test'
+  ...
+# Subtest: the hills have no seam: height and colour inputs are continuous where the angle wraps
+ok 295 - the hills have no seam: height and colour inputs are continuous where the angle wraps
+  ---
+  duration_ms: 0.389834
+  type: 'test'
+  ...
+# Subtest: the language: asked for in the address, else chosen before, else the browser's own, else Chinese
+ok 296 - the language: asked for in the address, else chosen before, else the browser's own, else Chinese
+  ---
+  duration_ms: 1.90849
+  type: 'test'
+  ...
+# Subtest: how the language was come by is told apart: asked for, kept from before, recognised, or nothing to go on
+ok 297 - how the language was come by is told apart: asked for, kept from before, recognised, or nothing to go on
+  ---
+  duration_ms: 0.336881
+  type: 'test'
+  ...
+# Subtest: a language chosen by hand is kept, and the page that opens next learns where it came from, once
+ok 298 - a language chosen by hand is kept, and the page that opens next learns where it came from, once
+  ---
+  duration_ms: 1.570939
+  type: 'test'
+  ...
+# Subtest: a line is the Chinese as written unless another language is asked for; its blanks are filled in any language
+ok 299 - a line is the Chinese as written unless another language is asked for; its blanks are filled in any language
+  ---
+  duration_ms: 0.392916
+  type: 'test'
+  ...
+# Subtest: every line the page may show has its Japanese and its English
+ok 300 - every line the page may show has its Japanese and its English
+  ---
+  duration_ms: 10.210087
+  type: 'test'
+  ...
+# Subtest: each translation keeps the blanks of its Chinese, and the markup in it
+ok 301 - each translation keeps the blanks of its Chinese, and the markup in it
+  ---
+  duration_ms: 5.123972
+  type: 'test'
+  ...
+# Subtest: the lines are written for their language: no Chinese-only characters left in the English, kana nowhere but the Japanese
+ok 302 - the lines are written for their language: no Chinese-only characters left in the English, kana nowhere but the Japanese
+  ---
+  duration_ms: 4.421745
+  type: 'test'
+  ...
+# Subtest: each language draws first in its own faces and falls back to the Chinese ones
+ok 303 - each language draws first in its own faces and falls back to the Chinese ones
+  ---
+  duration_ms: 0.463331
+  type: 'test'
+  ...
+# Subtest: every work in the halls has its Japanese and English card, field for field, and the record shows through where none is
+ok 304 - every work in the halls has its Japanese and English card, field for field, and the record shows through where none is
+  ---
+  duration_ms: 4.396748
+  type: 'test'
+  ...
+# Subtest: three halls offer incense, the great hall's place keeps the seal's own id
+ok 305 - three halls offer incense, the great hall's place keeps the seal's own id
+  ---
+  duration_ms: 1.448449
+  type: 'test'
+  ...
+# Subtest: an older save, one number, is the great hall's; nothing is lost and nothing throws
+ok 306 - an older save, one number, is the great hall's; nothing is lost and nothing throws
+  ---
+  duration_ms: 0.437279
+  type: 'test'
+  ...
+# Subtest: each hall's sticks burn from the time they were set, on a clock that is the wall's
+ok 307 - each hall's sticks burn from the time they were set, on a clock that is the wall's
+  ---
+  duration_ms: 0.227313
+  type: 'test'
+  ...
+# Subtest: the pool's water is its own clear material, below the rim and inside it
+ok 308 - the pool's water is its own clear material, below the rim and inside it
+  ---
+  duration_ms: 46.771242
+  type: 'test'
+  ...
+# Subtest: the stele stands behind the pool on its plinth and faces back toward the stair
+ok 309 - the stele stands behind the pool on its plinth and faces back toward the stair
+  ---
+  duration_ms: 0.47303
+  type: 'test'
+  ...
+# Subtest: every column carries a beam on its cap block, and every beam rests on a column or in a wall
+ok 310 - every column carries a beam on its cap block, and every beam rests on a column or in a wall
+  ---
+  duration_ms: 1.528919
+  type: 'test'
+  ...
+# Subtest: each room has as many bays across as its building shows outside, and the ceiling its rank calls for
+ok 311 - each room has as many bays across as its building shows outside, and the ceiling its rank calls for
+  ---
+  duration_ms: 0.28472
+  type: 'test'
+  ...
+# Subtest: no column stands in furniture, and every frame and the altar can be walked to from the door
+ok 312 - no column stands in furniture, and every frame and the altar can be walked to from the door
+  ---
+  duration_ms: 197.866037
+  type: 'test'
+  ...
+# Subtest: under an open roof the gable walls rise with the boards, from the eaves to the ridge, and close the join
+ok 313 - under an open roof the gable walls rise with the boards, from the eaves to the ridge, and close the join
+  ---
+  duration_ms: 0.617122
+  type: 'test'
+  ...
+# Subtest: no vertex in any room is NaN or infinite (one bad vertex blacks out the whole picture through the bloom)
+ok 314 - no vertex in any room is NaN or infinite (one bad vertex blacks out the whole picture through the bloom)
+  ---
+  duration_ms: 26.740904
+  type: 'test'
+  ...
+# Subtest: every free column in every hall stops him, from all eight directions, a body's width off its shaft
+ok 315 - every free column in every hall stops him, from all eight directions, a body's width off its shaft
+  ---
+  duration_ms: 1.479557
+  type: 'test'
+  ...
+# Subtest: there are seven seals, each with everything the page shows
+ok 316 - there are seven seals, each with everything the page shows
+  ---
+  duration_ms: 1.710709
+  type: 'test'
+  ...
+# Subtest: a new visitor's book is empty and points at the bell
+ok 317 - a new visitor's book is empty and points at the bell
+  ---
+  duration_ms: 1.509292
+  type: 'test'
+  ...
+# Subtest: the bell must be struck three times
+ok 318 - the bell must be struck three times
+  ---
+  duration_ms: 0.551864
+  type: 'test'
+  ...
+# Subtest: a seal is earned once, in any order, and unknown seals are refused
+ok 319 - a seal is earned once, in any order, and unknown seals are refused
+  ---
+  duration_ms: 0.263368
+  type: 'test'
+  ...
+# Subtest: the library's line is kept with its seal
+ok 320 - the library's line is kept with its seal
+  ---
+  duration_ms: 0.245984
+  type: 'test'
+  ...
+# Subtest: the book is full when all seven are earned, and remembers when
+ok 321 - the book is full when all seven are earned, and remembers when
+  ---
+  duration_ms: 0.395694
+  type: 'test'
+  ...
+# Subtest: the book survives leaving and coming back
+ok 322 - the book survives leaving and coming back
+  ---
+  duration_ms: 0.463324
+  type: 'test'
+  ...
+# Subtest: a damaged or foreign book is replaced by a fresh one rather than breaking the visit
+ok 323 - a damaged or foreign book is replaced by a fresh one rather than breaking the visit
+  ---
+  duration_ms: 0.534538
+  type: 'test'
+  ...
+# Subtest: a store that refuses to remember does not stop the visit
+ok 324 - a store that refuses to remember does not stop the visit
+  ---
+  duration_ms: 0.451004
+  type: 'test'
+  ...
+# Subtest: every line the library can give has a text and a source, and the choice is steady
+ok 325 - every line the library can give has a text and a source, and the choice is steady
+  ---
+  duration_ms: 0.676157
+  type: 'test'
+  ...
+# Subtest: standing in a place's circle finds it; standing between two finds the nearer
+ok 326 - standing in a place's circle finds it; standing between two finds the nearer
+  ---
+  duration_ms: 0.294298
+  type: 'test'
+  ...
+# Subtest: the seasons open when the book is first filled, are told of once, and stay open when the book is begun again
+ok 327 - the seasons open when the book is first filled, are told of once, and stay open when the book is begun again
+  ---
+  duration_ms: 1.30557
+  type: 'test'
+  ...
+# Subtest: a book filled before the seasons were kept still opens them
+ok 328 - a book filled before the seasons were kept still opens them
+  ---
+  duration_ms: 0.177863
+  type: 'test'
+  ...
+# Subtest: the prologue closes on the summit whatever else is held, once, and the book still fills afterwards
+ok 329 - the prologue closes on the summit whatever else is held, once, and the book still fills afterwards
+  ---
+  duration_ms: 0.213822
+  type: 'test'
+  ...
+# Subtest: an older book keeps its seals, and one whose close was seen before this version is not shown it again
+ok 330 - an older book keeps its seals, and one whose close was seen before this version is not shown it again
+  ---
+  duration_ms: 0.157172
+  type: 'test'
+  ...
+# Subtest: beginning the book again lets the summit close the new walk
+ok 331 - beginning the book again lets the summit close the new walk
+  ---
+  duration_ms: 0.070584
+  type: 'test'
+  ...
+# Subtest: the close is shown once in each season: after a change of season the summit closes the prologue again
+ok 332 - the close is shown once in each season: after a change of season the summit closes the prologue again
+  ---
+  duration_ms: 0.139808
+  type: 'test'
+  ...
+# Subtest: a close recorded before seasons were kept belongs to the season the visitor is in when it is next read
+ok 333 - a close recorded before seasons were kept belongs to the season the visitor is in when it is next read
+  ---
+  duration_ms: 0.111753
+  type: 'test'
+  ...
+# Subtest: a book for the workbench (?seals=) is written from a list, all seven or none, and unknown names are left out
+ok 334 - a book for the workbench (?seals=) is written from a list, all seven or none, and unknown names are left out
+  ---
+  duration_ms: 0.37913
+  type: 'test'
+  ...
+# Subtest: the prologue is walked by day until the book has been filled once
+ok 335 - the prologue is walked by day until the book has been filled once
+  ---
+  duration_ms: 0.313294
+  type: 'test'
+  ...
+# Subtest: the book speaks of the walk only once there is one, and of under a minute as under a minute
+ok 336 - the book speaks of the walk only once there is one, and of under a minute as under a minute
+  ---
+  duration_ms: 0.167487
+  type: 'test'
+  ...
+# Subtest: the full book's seal is owed until it has been shown once, and the debt is kept across a reload
+ok 337 - the full book's seal is owed until it has been shown once, and the debt is kept across a reload
+  ---
+  duration_ms: 1.709257
+  type: 'test'
+  ...
+# Subtest: a book filled before the seal was kept separately has had it
+ok 338 - a book filled before the seal was kept separately has had it
+  ---
+  duration_ms: 0.177563
+  type: 'test'
+  ...
+# Subtest: in the default way A and D turn, W and S walk, the side arrows step sideways
+ok 339 - in the default way A and D turn, W and S walk, the side arrows step sideways
+  ---
+  duration_ms: 1.968474
+  type: 'test'
+  ...
+# Subtest: in the old way A and D step sideways as before, and nothing turns
+ok 340 - in the old way A and D step sideways as before, and nothing turns
+  ---
+  duration_ms: 0.302718
+  type: 'test'
+  ...
+# Subtest: the stick walks where it is pushed in either way, and never turns
+ok 341 - the stick walks where it is pushed in either way, and never turns
+  ---
+  duration_ms: 0.220015
+  type: 'test'
+  ...
+# Subtest: held, the turn gathers to its rate and no faster; let go, it stops within a moment, never past
+ok 342 - held, the turn gathers to its rate and no faster; let go, it stops within a moment, never past
+  ---
+  duration_ms: 2.197437
+  type: 'test'
+  ...
+# Subtest: the visitor's own speed setting scales the rate
+ok 343 - the visitor's own speed setting scales the rate
+  ---
+  duration_ms: 0.33723
+  type: 'test'
+  ...
+# Subtest: every picture on the plan and in the halls is drawn on one side only
+ok 344 - every picture on the plan and in the halls is drawn on one side only
+  ---
+  duration_ms: 2712.064306
+  type: 'test'
+  ...
+# Subtest: a tool's --level names a level, or the prologue, and nothing else
+ok 345 - a tool's --level names a level, or the prologue, and nothing else
+  ---
+  duration_ms: 1.5972
+  type: 'test'
+  ...
+# Subtest: a level's floor and its list of pictures are named by the level
+ok 346 - a level's floor and its list of pictures are named by the level
+  ---
+  duration_ms: 1.09872
+  type: 'test'
+  ...
+# Subtest: the bake's scene builds what the level says, and names no temple
+ok 347 - the bake's scene builds what the level says, and names no temple
+  ---
+  duration_ms: 1.750445
+  type: 'test'
+  ...
+# Subtest: every level tells the bake how far its courts reach and how its place is divided
+ok 348 - every level tells the bake how far its courts reach and how its place is divided
+  ---
+  duration_ms: 1.289483
+  type: 'test'
+  ...
+# Subtest: the tools stop on a name that is no level, and say which there are
+ok 349 - the tools stop on a name that is no level, and say which there are
+  ---
+  duration_ms: 451.695073
+  type: 'test'
+  ...
+# Subtest: a level's doorway bake makes way only for its own pictures
+ok 350 - a level's doorway bake makes way only for its own pictures
+  ---
+  duration_ms: 22.998123
+  type: 'test'
+  ...
+# Subtest: CI keeps every level's floor and pictures and compares each level's floor
+ok 351 - CI keeps every level's floor and pictures and compares each level's floor
+  ---
+  duration_ms: 0.540399
+  type: 'test'
+  ...
+# Subtest: the prologue says it keeps a place, plays its opening and raises its title
+ok 352 - the prologue says it keeps a place, plays its opening and raises its title
+  ---
+  duration_ms: 0.734243
+  type: 'test'
+  ...
+# Subtest: only a level that keeps a place reads and writes it
+ok 353 - only a level that keeps a place reads and writes it
+  ---
+  duration_ms: 0.451914
+  type: 'test'
+  ...
+# Subtest: only a level that has the opening plays it
+ok 354 - only a level that has the opening plays it
+  ---
+  duration_ms: 1.005494
+  type: 'test'
+  ...
+# Subtest: every level folder with a level.js is in the list, and nothing else is
+ok 355 - every level folder with a level.js is in the list, and nothing else is
+  ---
+  duration_ms: 1.341696
+  type: 'test'
+  ...
+# Subtest: an address names a level, or walks the prologue
+ok 356 - an address names a level, or walks the prologue
+  ---
+  duration_ms: 0.321631
+  type: 'test'
+  ...
+# Subtest: each level loads, and its id is its folder's name
+ok 357 - each level loads, and its id is its folder's name
+  ---
+  duration_ms: 0.15386
+  type: 'test'
+  ...
+# Subtest: the prologue's level says what its plan says
+ok 358 - the prologue's level says what its plan says
+  ---
+  duration_ms: 0.523747
+  type: 'test'
+  ...
+# Subtest: the address says where he stands, as the page reads it back
+ok 359 - the address says where he stands, as the page reads it back
+  ---
+  duration_ms: 1.462311
+  type: 'test'
+  ...
+# Subtest: a named view gives way to the exact place, and other parameters are kept
+ok 360 - a named view gives way to the exact place, and other parameters are kept
+  ---
+  duration_ms: 1.354726
+  type: 'test'
+  ...
+# Subtest: inside a hall the address names it; outside it does not
+ok 361 - inside a hall the address names it; outside it does not
+  ---
+  duration_ms: 0.299941
+  type: 'test'
+  ...
+# Subtest: up on a balcony the address names it, and the console's link asks the dev server to follow him
+ok 362 - up on a balcony the address names it, and the console's link asks the dev server to follow him
+  ---
+  duration_ms: 0.275877
+  type: 'test'
+  ...
+# Subtest: a head turned round and round is kept within one turn
+ok 363 - a head turned round and round is kept within one turn
+  ---
+  duration_ms: 0.257893
+  type: 'test'
+  ...
+# Subtest: the place written down is one he can stand on, at the height he stood, however near an edge he was
+ok 364 - the place written down is one he can stand on, at the height he stood, however near an edge he was
+  ---
+  duration_ms: 0.194715
+  type: 'test'
+  ...
+# Subtest: the console's link is built without the dev server's module
+ok 365 - the console's link is built without the dev server's module
+  ---
+  duration_ms: 1.18592
+  type: 'test'
+  ...
+# still where they came down after a minute: 100 of 100
+# under the maple: {"60":73,"180":155.8439121209085,"600":250.91880008997396,"900":275.4931537461234,"last":900} {"kept":1000,"heap":1838.32,"landed":9382,"heaped":8382,"kicked":0,"blown":0,"stopped":0,"full":0,"faded":6543.68,"centre":[-8,32],"span":32,"cells":128}
+# landings 6119 in the gustiest third 0.63 in the stillest 0.06
+# low tier: still where they came down after a minute: 100 of 100
+# Subtest: a leaf that touches the ground stays where it came down: of 100 tracked, nine in ten or more still lie there a minute later
+ok 366 - a leaf that touches the ground stays where it came down: of 100 tracked, nine in ten or more still lie there a minute later
+  ---
+  duration_ms: 1716.49961
+  type: 'test'
+  ...
+# Subtest: standing under the maple the leaves on the ground grow, then hold where the old ones sink away as fast as new ones come
+ok 367 - standing under the maple the leaves on the ground grow, then hold where the old ones sink away as fast as new ones come
+  ---
+  duration_ms: 5388.506811
+  type: 'test'
+  ...
+# Subtest: the pool keeps a fixed number of leaves each in its place; the oldest gives up its place to the heap, and the heaps sink away
+ok 368 - the pool keeps a fixed number of leaves each in its place; the oldest gives up its place to the heap, and the heaps sink away
+  ---
+  duration_ms: 136.204833
+  type: 'test'
+  ...
+# Subtest: his feet scuff the leaves aside, a little
+ok 369 - his feet scuff the leaves aside, a little
+  ---
+  duration_ms: 1.248842
+  type: 'test'
+  ...
+# Subtest: a tree's leaf does not lie on the ground in the air's cloud: it settles over SETTLE; a bamboo leaf still lies
+ok 370 - a tree's leaf does not lie on the ground in the air's cloud: it settles over SETTLE; a bamboo leaf still lies
+  ---
+  duration_ms: 0.592928
+  type: 'test'
+  ...
+# Subtest: the record follows him and forgets what it leaves behind, as the prints do
+ok 371 - the record follows him and forgets what it leaves behind, as the prints do
+  ---
+  duration_ms: 0.665725
+  type: 'test'
+  ...
+# Subtest: the paving's texture says where each kept leaf lies, to a sixteenth of its cell
+ok 372 - the paving's texture says where each kept leaf lies, to a sixteenth of its cell
+  ---
+  duration_ms: 0.393387
+  type: 'test'
+  ...
+# Subtest: the trees let go with the gusts: over ten minutes most leaves come down in the gustiest third of the time, few in the stillest
+ok 373 - the trees let go with the gusts: over ten minutes most leaves come down in the gustiest third of the time, few in the stillest
+  ---
+  duration_ms: 3594.292624
+  type: 'test'
+  ...
+# Subtest: the low tier keeps no heaps: when its pool is full the oldest leaf fades where it lies over GONE seconds, never at once
+ok 374 - the low tier keeps no heaps: when its pool is full the oldest leaf fades where it lies over GONE seconds, never at once
+  ---
+  duration_ms: 2.709268
+  type: 'test'
+  ...
+# Subtest: on the low tier too, of 100 leaves tracked nine in ten or more still lie where they came down a minute later
+ok 375 - on the low tier too, of 100 leaves tracked nine in ten or more still lie where they came down a minute later
+  ---
+  duration_ms: 1324.651422
+  type: 'test'
+  ...
+# Subtest: wrangler's 'Current Version ID' is read from what the deploy printed
+ok 376 - wrangler's 'Current Version ID' is read from what the deploy printed
+  ---
+  duration_ms: 1.397616
+  type: 'test'
+  ...
+# Subtest: the page says the tag's commit: confirmed by the page, and wrangler is not asked
+ok 377 - the page says the tag's commit: confirmed by the page, and wrangler is not asked
+  ---
+  duration_ms: 0.638715
+  type: 'test'
+  ...
+# Subtest: the public address gives a runner a challenge page (0.6.0's case): Cloudflare's own list confirms, and the notes say why
+ok 378 - the public address gives a runner a challenge page (0.6.0's case): Cloudflare's own list confirms, and the notes say why
+  ---
+  duration_ms: 8.9097
+  type: 'test'
+  ...
+# Subtest: an empty answer, a page that is not JSON, a challenge page served as 200, a build older than version.json: none counts as an answer
+ok 379 - an empty answer, a page that is not JSON, a challenge page served as 200, a build older than version.json: none counts as an answer
+  ---
+  duration_ms: 1.154107
+  type: 'test'
+  ...
+# Subtest: neither way can say: red, with both reasons, and the failure is not swallowed
+ok 380 - neither way can say: red, with both reasons, and the failure is not swallowed
+  ---
+  duration_ms: 0.596703
+  type: 'test'
+  ...
+# Subtest: a version at less than 100 % is not the live one
+ok 381 - a version at less than 100 % is not the live one
+  ---
+  duration_ms: 0.165163
+  type: 'test'
+  ...
+# Subtest: the page names another commit: asked again, the edge may be catching up; if it stays, red, and Cloudflare's list does not save it
+ok 382 - the page names another commit: asked again, the edge may be catching up; if it stays, red, and Cloudflare's list does not save it
+  ---
+  duration_ms: 0.395652
+  type: 'test'
+  ...
+# Subtest: an unreadable page is asked twice, not for a minute: blocked does not get better by waiting
+ok 383 - an unreadable page is asked twice, not for a minute: blocked does not get better by waiting
+  ---
+  duration_ms: 0.225749
+  type: 'test'
+  ...
+# Subtest: Cloudflare's newest deployment is the one with the latest created_on, whatever the order of the list
+ok 384 - Cloudflare's newest deployment is the one with the latest created_on, whatever the order of the list
+  ---
+  duration_ms: 0.92401
+  type: 'test'
+  ...
+# Subtest: deploy-tag.yml: the deploy's failure is not hidden by the tee, the check is the script's, and a dry run only reads
+ok 385 - deploy-tag.yml: the deploy's failure is not hidden by the tee, the check is the script's, and a dry run only reads
+  ---
+  duration_ms: 2.033056
+  type: 'test'
+  ...
+# Subtest: deploy-tag.yml: what one call builds is named by what it is for, so that another call's deploy cannot take it
+ok 386 - deploy-tag.yml: what one call builds is named by what it is for, so that another call's deploy cannot take it
+  ---
+  duration_ms: 0.39413
+  type: 'test'
+  ...
+# Subtest: loading follows completed work, yields to paint and reserves 100 for readiness
+ok 387 - loading follows completed work, yields to paint and reserves 100 for readiness
+  ---
+  duration_ms: 3.610985
+  type: 'test'
+  ...
+# Subtest: late texture callbacks cannot move progress backwards
+ok 388 - late texture callbacks cannot move progress backwards
+  ---
+  duration_ms: 0.755335
+  type: 'test'
+  ...
+# Subtest: startup errors expose retry and cannot be reported as complete
+ok 389 - startup errors expose retry and cannot be reported as complete
+  ---
+  duration_ms: 1.056138
+  type: 'test'
+  ...
+# Subtest: errors after startup do not reopen the loading screen
+ok 390 - errors after startup do not reopen the loading screen
+  ---
+  duration_ms: 0.744047
+  type: 'test'
+  ...
+# Subtest: a failed public load is counted once and a local failure is not
+ok 391 - a failed public load is counted once and a local failure is not
+  ---
+  duration_ms: 2.069505
+  type: 'test'
+  ...
+# Subtest: a failed load names the asset and the step it stopped at
+ok 392 - a failed load names the asset and the step it stopped at
+  ---
+  duration_ms: 1.576658
+  type: 'test'
+  ...
+# Subtest: a picture that fails without bubbling is remembered, not failed, and named by the next failure
+ok 393 - a picture that fails without bubbling is remembered, not failed, and named by the next failure
+  ---
+  duration_ms: 3.090498
+  type: 'test'
+  ...
+# Subtest: a script that throws is named by its file and line, a rejected fetch by the file in its message
+ok 394 - a script that throws is named by its file and line, a rejected fetch by the file in its message
+  ---
+  duration_ms: 1.826055
+  type: 'test'
+  ...
+# Subtest: a browser without WebGL is told why, is offered no retry, and is counted apart
+ok 395 - a browser without WebGL is told why, is offered no retry, and is counted apart
+  ---
+  duration_ms: 1.273558
+  type: 'test'
+  ...
+# Subtest: every spot he can stand on up on the pavilion's balcony, and its door, is the summit
+ok 396 - every spot he can stand on up on the pavilion's balcony, and its door, is the summit
+  ---
+  duration_ms: 23.077842
+  type: 'test'
+  ...
+# Subtest: inside the pavilion's ground floor the music is the hall's, wherever he stands
+ok 397 - inside the pavilion's ground floor the music is the hall's, wherever he stands
+  ---
+  duration_ms: 0.161871
+  type: 'test'
+  ...
+# Subtest: the keeper takes the summit only after two seconds, so a read at the instant he arrives still says hall
+ok 398 - the keeper takes the summit only after two seconds, so a read at the instant he arrives still says hall
+  ---
+  duration_ms: 0.226694
+  type: 'test'
+  ...
+# Subtest: the pavilion's top storey is registered as a gallery to walk round
+ok 399 - the pavilion's top storey is registered as a gallery to walk round
+  ---
+  duration_ms: 0.848414
+  type: 'test'
+  ...
+# Subtest: the gallery is floor only while he is up there
+ok 400 - the gallery is floor only while he is up there
+  ---
+  duration_ms: 2.167342
+  type: 'test'
+  ...
+# Subtest: round the gallery: one piece, every corner turned, room enough before each column
+ok 401 - round the gallery: one piece, every corner turned, room enough before each column
+  ---
+  duration_ms: 142.933537
+  type: 'test'
+  ...
+# Subtest: he cannot get off the gallery: walking, hurrying or jumping outward ends on it
+ok 402 - he cannot get off the gallery: walking, hurrying or jumping outward ends on it
+  ---
+  duration_ms: 8731.67242
+  type: 'test'
+  ...
+# Subtest: up there the eye stays inside the railing and out of the wall
+ok 403 - up there the eye stays inside the railing and out of the wall
+  ---
+  duration_ms: 0.428107
+  type: 'test'
+  ...
+# Subtest: each run of the top storey's railing has an odd number of bays, so no post stands in the middle
+ok 404 - each run of the top storey's railing has an odd number of bays, so no post stands in the middle
+  ---
+  duration_ms: 0.16827
+  type: 'test'
+  ...
+# Subtest: the second storey's skirt roof, as the eye knows it, stays below the top storey's floor
+ok 405 - the second storey's skirt roof, as the eye knows it, stays below the top storey's floor
+  ---
+  duration_ms: 0.218404
+  type: 'test'
+  ...
+# Subtest: a child's eyes clear the hand rail
+ok 406 - a child's eyes clear the hand rail
+  ---
+  duration_ms: 0.09293
+  type: 'test'
+  ...
+# Subtest: the ground-floor room has a stair in its north-west corner, out of the way of every frame and the door
+ok 407 - the ground-floor room has a stair in its north-west corner, out of the way of every frame and the door
+  ---
+  duration_ms: 229.236628
+  type: 'test'
+  ...
+# Subtest: a place kept upstairs is kept as upstairs
+ok 408 - a place kept upstairs is kept as upstairs
+  ---
+  duration_ms: 0.690709
+  type: 'test'
+  ...
+# Subtest: he has a humanoid skeleton under a root bone, with bones for what hangs off him
+ok 409 - he has a humanoid skeleton under a root bone, with bones for what hangs off him
+  ---
+  duration_ms: 207.091594
+  type: 'test'
+  ...
+# Subtest: he is bound in an A-pose: arms 30–45° from his sides, legs straight down
+ok 410 - he is bound in an A-pose: arms 30–45° from his sides, legs straight down
+  ---
+  duration_ms: 131.327637
+  type: 'test'
+  ...
+# Subtest: skin and cloth are skinned to the skeleton, the weights whole; nothing else hangs loose
+ok 411 - skin and cloth are skinned to the skeleton, the weights whole; nothing else hangs loose
+  ---
+  duration_ms: 63.180581
+  type: 'test'
+  ...
+# Subtest: the robe is weighted where it hangs: the chest above, the hem on the skirt's own bones
+ok 412 - the robe is weighted where it hangs: the chest above, the hem on the skirt's own bones
+  ---
+  duration_ms: 42.073782
+  type: 'test'
+  ...
+# Subtest: walking: a sole is always on the floor, each foot steps through, the knees fold the right way
+ok 413 - walking: a sole is always on the floor, each foot steps through, the knees fold the right way
+  ---
+  duration_ms: 92.603957
+  type: 'test'
+  ...
+# Subtest: to pray he brings his palms together before his chest
+ok 414 - to pray he brings his palms together before his chest
+  ---
+  duration_ms: 57.604579
+  type: 'test'
+  ...
+# Subtest: on a stool he sits as on a chair: thighs level, knees bent, feet hanging together, hands on his thighs
+ok 415 - on a stool he sits as on a chair: thighs level, knees bent, feet hanging together, hands on his thighs
+  ---
+  duration_ms: 89.189378
+  type: 'test'
+  ...
+# Subtest: on a cushion he sits cross-legged upon it: knees out and low, shins before him, hands in his lap, left over right
+ok 416 - on a cushion he sits cross-legged upon it: knees out and low, shins before him, hands in his lap, left over right
+  ---
+  duration_ms: 63.47512
+  type: 'test'
+  ...
+# Subtest: what hangs off him swings: the skirt trails his walk and flares as he turns
+ok 417 - what hangs off him swings: the skirt trails his walk and flares as he turns
+  ---
+  duration_ms: 44.164009
+  type: 'test'
+  ...
+# Subtest: the robe covers the trousers above its hem, standing and through a walking stride
+ok 418 - the robe covers the trousers above its hem, standing and through a walking stride
+  ---
+  duration_ms: 1074.58209
+  type: 'test'
+  ...
+# Subtest: at the side edge of a stair, where the ground under one shoe is metres lower, his body stays on the treads (it once sank 2 m into them and he vanished: cam 2.1,-66.63)
+ok 419 - at the side edge of a stair, where the ground under one shoe is metres lower, his body stays on the treads (it once sank 2 m into them and he vanished: cam 2.1,-66.63)
+  ---
+  duration_ms: 55.234878
+  type: 'test'
+  ...
+# Subtest: each shoe that comes down says how late in the frame it did, so its sound keeps time on a slow frame
+ok 420 - each shoe that comes down says how late in the frame it did, so its sound keeps time on a slow frame
+  ---
+  duration_ms: 149.621668
+  type: 'test'
+  ...
+# Subtest: getting up from a stool, his shoes never go under the floor
+ok 421 - getting up from a stool, his shoes never go under the floor
+  ---
+  duration_ms: 84.509994
+  type: 'test'
+  ...
+# Subtest: getting up from a cushion, his shoes never go under the floor
+ok 422 - getting up from a cushion, his shoes never go under the floor
+  ---
+  duration_ms: 64.642132
+  type: 'test'
+  ...
+# Subtest: at the tea table his knees go under the top and clear the rail beneath its edge
+ok 423 - at the tea table his knees go under the top and clear the rail beneath its edge
+  ---
+  duration_ms: 76.761939
+  type: 'test'
+  ...
+# Subtest: on a tea house cushion his knees go under the end of the table and clear its legs
+ok 424 - on a tea house cushion his knees go under the end of the table and clear its legs
+  ---
+  duration_ms: 113.602932
+  type: 'test'
+  ...
+# Subtest: from a stool, a few steps, and onto a cushion: nothing of him goes under the floor
+ok 425 - from a stool, a few steps, and onto a cushion: nothing of him goes under the floor
+  ---
+  duration_ms: 1319.974163
+  type: 'test'
+  ...
+# Subtest: his shadow stays on the ground when he is in the air, fainter and a little wider, and is as before when he stands
+ok 426 - his shadow stays on the ground when he is in the air, fainter and a little wider, and is as before when he stands
+  ---
+  duration_ms: 66.703071
+  type: 'test'
+  ...
+# Subtest: every season at every hour is a complete mood
+ok 427 - every season at every hour is a complete mood
+  ---
+  duration_ms: 2.576495
+  type: 'test'
+  ...
+# Subtest: the seasons differ where they should
+ok 428 - the seasons differ where they should
+  ---
+  duration_ms: 0.215583
+  type: 'test'
+  ...
+# Subtest: the hours differ where they should
+ok 429 - the hours differ where they should
+  ---
+  duration_ms: 0.276639
+  type: 'test'
+  ...
+# Subtest: an unknown season or hour falls back instead of throwing
+ok 430 - an unknown season or hour falls back instead of throwing
+  ---
+  duration_ms: 0.097998
+  type: 'test'
+  ...
+# Subtest: the present moment is a real season and hour
+ok 431 - the present moment is a real season and hour
+  ---
+  duration_ms: 0.485775
+  type: 'test'
+  ...
+# Subtest: every season at every hour has the film's finish
+ok 432 - every season at every hour has the film's finish
+  ---
+  duration_ms: 0.414849
+  type: 'test'
+  ...
+# Subtest: summer by day, the picture the place is judged by (J01), is left as it was by the finish
+ok 433 - summer by day, the picture the place is judged by (J01), is left as it was by the finish
+  ---
+  duration_ms: 1.48057
+  type: 'test'
+  ...
+# Subtest: at dusk the lamps burn brighter under cloud than on a clear evening, and never brighter than at night
+ok 434 - at dusk the lamps burn brighter under cloud than on a clear evening, and never brighter than at night
+  ---
+  duration_ms: 0.240506
+  type: 'test'
+  ...
+# Subtest: moodNow takes a clock, and the hour changes across each boundary
+ok 435 - moodNow takes a clock, and the hour changes across each boundary
+  ---
+  duration_ms: 0.448998
+  type: 'test'
+  ...
+# Subtest: a visit that follows the clock moves on at the boundary; a chosen hour stays
+ok 436 - a visit that follows the clock moves on at the boundary; a chosen hour stays
+  ---
+  duration_ms: 0.398192
+  type: 'test'
+  ...
+# Subtest: the hour chosen by hand is kept only in memory
+ok 437 - the hour chosen by hand is kept only in memory
+  ---
+  duration_ms: 1.416714
+  type: 'test'
+  ...
+# Subtest: a hall takes the wind down by at least 12 dB in all, and at least 20 dB above 2 kHz
+ok 438 - a hall takes the wind down by at least 12 dB in all, and at least 20 dB above 2 kHz
+  ---
+  duration_ms: 775.886946
+  type: 'test'
+  ...
+# Subtest: the low-pass is where the owner's brief puts it: 500 to 900 Hz, and flat below
+ok 439 - the low-pass is where the owner's brief puts it: 500 to 900 Hz, and flat below
+  ---
+  duration_ms: 4.984186
+  type: 'test'
+  ...
+# Subtest: out of doors the air is open: no gain change, nothing taken from the top
+ok 440 - out of doors the air is open: no gain change, nothing taken from the top
+  ---
+  duration_ms: 0.164584
+  type: 'test'
+  ...
+# Subtest: the leaf rustle is not made at all in a hall, and the rest of the wind is the same as out of doors
+ok 441 - the leaf rustle is not made at all in a hall, and the rest of the wind is the same as out of doors
+  ---
+  duration_ms: 0.155643
+  type: 'test'
+  ...
+# Subtest: a change of room settles within 1 dB in 0.7 to 1.5 s, going in and coming out
+ok 442 - a change of room settles within 1 dB in 0.7 to 1.5 s, going in and coming out
+  ---
+  duration_ms: 0.316352
+  type: 'test'
+  ...
+# Subtest: the courts and the stair sit WIND_CUT_DB under the old wind, the bamboo at the start as it was, the terraces between
+ok 443 - the courts and the stair sit WIND_CUT_DB under the old wind, the bamboo at the start as it was, the terraces between
+  ---
+  duration_ms: 0.167099
+  type: 'test'
+  ...
+# Subtest: dist/ holds a third-party licence summary that names the six libraries
+ok 444 - dist/ holds a third-party licence summary that names the six libraries
+  ---
+  duration_ms: 0.901987
+  type: 'test'
+  ...
+# Subtest: the summary has each library's full licence text, not only its name
+ok 445 - the summary has each library's full licence text, not only its name
+  ---
+  duration_ms: 0.409987
+  type: 'test'
+  ...
+# Subtest: the Basis transcoder's own folder carries Basis's Apache-2.0 LICENSE and its NOTICE, not three.js's MIT
+ok 446 - the Basis transcoder's own folder carries Basis's Apache-2.0 LICENSE and its NOTICE, not three.js's MIT
+  ---
+  duration_ms: 0.232903
+  type: 'test'
+  ...
+# Subtest: made for this skeleton: four parts, joints numbered as monk.js's bones, two textures
+ok 447 - made for this skeleton: four parts, joints numbered as monk.js's bones, two textures # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.818227
+  type: 'test'
+  ...
+# Subtest: within budget: at most 1.5 times the sculpted body's triangles, at most 1.5 MB
+ok 448 - within budget: at most 1.5 times the sculpted body's triangles, at most 1.5 MB # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.138302
+  type: 'test'
+  ...
+# Subtest: he stands 1.18 m tall, soles on the floor, centred; every weight whole and on a bone that is there
+ok 449 - he stands 1.18 m tall, soles on the floor, centred; every weight whole and on a bone that is there # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.10284
+  type: 'test'
+  ...
+# Subtest: the sash's end hangs on sashTail, at his left front; the rest of the robe does not
+ok 450 - the sash's end hangs on sashTail, at his left front; the rest of the robe does not # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.088213
+  type: 'test'
+  ...
+# Subtest: his hands go with his hands, both forearms with their forearms, his shoes with his feet
+ok 451 - his hands go with his hands, both forearms with their forearms, his shoes with his feet # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.082219
+  type: 'test'
+  ...
+# Subtest: every copy of one point takes the same weights (the sash's free edge apart)
+ok 452 - every copy of one point takes the same weights (the sash's free edge apart) # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.071859
+  type: 'test'
+  ...
+# Subtest: copies stay within a millimetre standing, through a stride and up a flight
+ok 453 - copies stay within a millimetre standing, through a stride and up a flight # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.063956
+  type: 'test'
+  ...
+# Subtest: copies stay within a millimetre sitting on a stool and cross-legged on a cushion, and with palms together
+ok 454 - copies stay within a millimetre sitting on a stool and cross-legged on a cushion, and with palms together # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.058251
+  type: 'test'
+  ...
+# Subtest: nothing he wears is black: the faces the completion made under the robe are coloured
+ok 455 - nothing he wears is black: the faces the completion made under the robe are coloured # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.19382
+  type: 'test'
+  ...
+# Subtest: no triangle of the trousers is half on the plain colour and half on the texture (\#246: red and cream zigzags)
+ok 456 - no triangle of the trousers is half on the plain colour and half on the texture (\#246: red and cream zigzags) # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.2591
+  type: 'test'
+  ...
+# Subtest: copies stay within a millimetre with the arms raised to the brow, and on the back foot through a stride
+ok 457 - copies stay within a millimetre with the arms raised to the brow, and on the back foot through a stride # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.101306
+  type: 'test'
+  ...
+# Subtest: the cloth is not drawn out under the raised arms, nor round the back foot's ankle
+ok 458 - the cloth is not drawn out under the raised arms, nor round the back foot's ankle # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.049896
+  type: 'test'
+  ...
+# Subtest: the helper under each arm turns half as far as the arm swings, from the shoulder's ball
+ok 459 - the helper under each arm turns half as far as the arm swings, from the shoulder's ball # SKIP no /home/user/temple-walk/tools/out/novice-tripo.glb: run tools/novice-tripo.mjs first
+  ---
+  duration_ms: 0.038435
+  type: 'test'
+  ...
+# Subtest: the file is made for this skeleton: its joints are numbered as monk.js's bones are
+ok 460 - the file is made for this skeleton: its joints are numbered as monk.js's bones are
+  ---
+  duration_ms: 181.890797
+  type: 'test'
+  ...
+# Subtest: he stands 1.18 m tall on the floor, centred, as wide as the one built in code
+ok 461 - he stands 1.18 m tall on the floor, centred, as wide as the one built in code
+  ---
+  duration_ms: 145.941124
+  type: 'test'
+  ...
+# Subtest: the four parts are skinned to the skeleton, every weight whole, and he wears them
+ok 462 - the four parts are skinned to the skeleton, every weight whole, and he wears them
+  ---
+  duration_ms: 93.357585
+  type: 'test'
+  ...
+# Subtest: the robe is weighted where it hangs, as the one built in code is: the chest above, the hem on the skirt's bones
+ok 463 - the robe is weighted where it hangs, as the one built in code is: the chest above, the hem on the skirt's bones
+  ---
+  duration_ms: 70.542528
+  type: 'test'
+  ...
+# Subtest: his forearms and hands go with his arms, his head with his head, his shoes with his feet
+ok 464 - his forearms and hands go with his arms, his head with his head, his shoes with his feet
+  ---
+  duration_ms: 72.663084
+  type: 'test'
+  ...
+# Subtest: walking: a sole is always on the floor, through the whole stride
+ok 465 - walking: a sole is always on the floor, through the whole stride
+  ---
+  duration_ms: 133.123283
+  type: 'test'
+  ...
+# Subtest: the robe covers the trousers above its hem, standing and through a walking stride
+ok 466 - the robe covers the trousers above its hem, standing and through a walking stride
+  ---
+  duration_ms: 6103.85896
+  type: 'test'
+  ...
+# Subtest: a body that is not made for this skeleton is refused, and he stays as he was
+ok 467 - a body that is not made for this skeleton is refused, and he stays as he was
+  ---
+  duration_ms: 52.774357
+  type: 'test'
+  ...
+# Subtest: every copy of one point takes the same weights, across a seam and where one part meets another
+ok 468 - every copy of one point takes the same weights, across a seam and where one part meets another
+  ---
+  duration_ms: 152.833648
+  type: 'test'
+  ...
+# Subtest: copies that start at one point stay within a millimetre standing, through a whole stride and up a flight
+ok 469 - copies that start at one point stay within a millimetre standing, through a whole stride and up a flight
+  ---
+  duration_ms: 881.752119
+  type: 'test'
+  ...
+# Subtest: the sponsor page's address, per language, carries the standard campaign tags and the language as content
+ok 470 - the sponsor page's address, per language, carries the standard campaign tags and the language as content
+  ---
+  duration_ms: 1.860358
+  type: 'test'
+  ...
+# Subtest: the channel is one of three, the public page by default, and a wrong name fails the build
+ok 471 - the channel is one of three, the public page by default, and a wrong name fails the build
+  ---
+  duration_ms: 0.570243
+  type: 'test'
+  ...
+# Subtest: the great hall has a 功德箱 beside the offering table, standable before, with a slot above the floor, and it blocks nothing it should not
+ok 472 - the great hall has a 功德箱 beside the offering table, standable before, with a slot above the floor, and it blocks nothing it should not
+  ---
+  duration_ms: 993.60687
+  type: 'test'
+  ...
+# Subtest: standing where it is offered, the pinch of his fingers over the slot is within his arm's reach, a bow of at most 0.6 leaning him in
+ok 473 - standing where it is offered, the pinch of his fingers over the slot is within his arm's reach, a bow of at most 0.6 leaning him in
+  ---
+  duration_ms: 857.82569
+  type: 'test'
+  ...
+# Subtest: the coin is never more than 3 cm from his fingertips as the hand takes it to the slot
+ok 474 - the coin is never more than 3 cm from his fingertips as the hand takes it to the slot
+  ---
+  duration_ms: 917.362171
+  type: 'test'
+  ...
+# Subtest: the hand is let go over the middle of the slot (within 1 cm), the coin the height of HOLD over the lid, and the wrist asked for is within his arm's reach all the way
+ok 475 - the hand is let go over the middle of the slot (within 1 cm), the coin the height of HOLD over the lid, and the wrist asked for is within his arm's reach all the way
+  ---
+  duration_ms: 1616.455597
+  type: 'test'
+  ...
+# Subtest: the coin does not go through the lid and does not hang in the air: it is over the lid with room to spare, and falls to its top in a tenth of a second
+ok 476 - the coin does not go through the lid and does not hang in the air: it is over the lid with room to spare, and falls to its top in a tenth of a second
+  ---
+  duration_ms: 1536.764428
+  type: 'test'
+  ...
+# Subtest: who sees the opening: a first visit only, again after 从头走起, never a test or tool that names its own place
+ok 477 - who sees the opening: a first visit only, again after 从头走起, never a test or tool that names its own place
+  ---
+  duration_ms: 1.856286
+  type: 'test'
+  ...
+# Subtest: every point of the way stands clear of walls, eaves, columns, railings and the ground
+ok 478 - every point of the way stands clear of walls, eaves, columns, railings and the ground
+  ---
+  duration_ms: 28.269517
+  type: 'test'
+  ...
+# Subtest: it keeps over the tops of the bamboo, except down the clear way of the path, so that no culm crosses the picture
+ok 479 - it keeps over the tops of the bamboo, except down the clear way of the path, so that no culm crosses the picture
+  ---
+  duration_ms: 7.746365
+  type: 'test'
+  ...
+# Subtest: it never turns or moves faster in a frame than a swing of the director's may
+ok 480 - it never turns or moves faster in a frame than a swing of the director's may
+  ---
+  duration_ms: 2.469797
+  type: 'test'
+  ...
+# Subtest: it starts on the summit and ends on the eye that follows him, to the centimetre and the degree
+ok 481 - it starts on the summit and ends on the eye that follows him, to the centimetre and the degree
+  ---
+  duration_ms: 9.900447
+  type: 'test'
+  ...
+# Subtest: the frame it hands the walk back on does not jump: the director's opening gives way to the following eye
+ok 482 - the frame it hands the walk back on does not jump: the director's opening gives way to the following eye
+  ---
+  duration_ms: 7.981726
+  type: 'test'
+  ...
+# Subtest: it waits for the picture to settle before it moves: slow frames hold it on the first picture, up to a limit
+ok 483 - it waits for the picture to settle before it moves: slow frames hold it on the first picture, up to a limit
+  ---
+  duration_ms: 4.020652
+  type: 'test'
+  ...
+# Subtest: skipped at any moment, it comes down the rest of the same way in 0.8–1.2 s, ending on him, never cut
+ok 484 - skipped at any moment, it comes down the rest of the same way in 0.8–1.2 s, ending on him, never cut
+  ---
+  duration_ms: 32.883643
+  type: 'test'
+  ...
+# Subtest: with reduced motion it holds the summit, then the ink closes, the eye is moved behind him, and the ink opens
+ok 485 - with reduced motion it holds the summit, then the ink closes, the eye is moved behind him, and the ink opens
+  ---
+  duration_ms: 2.558302
+  type: 'test'
+  ...
+# Subtest: the prologue's title: once round the screen wall, the gate before him; not walking backwards, not before the wall
+ok 486 - the prologue's title: once round the screen wall, the gate before him; not walking backwards, not before the wall
+  ---
+  duration_ms: 0.627238
+  type: 'test'
+  ...
+# Subtest: the terraces rise one above another, going north
+ok 487 - the terraces rise one above another, going north
+  ---
+  duration_ms: 0.855275
+  type: 'test'
+  ...
+# Subtest: the land is defined everywhere and has no cliffs where the bamboo stands
+ok 488 - the land is defined everywhere and has no cliffs where the bamboo stands
+  ---
+  duration_ms: 14.408614
+  type: 'test'
+  ...
+# Subtest: the half-way pavilion can be stepped into from the landing, a hand's width at a time
+ok 489 - the half-way pavilion can be stepped into from the landing, a hand's width at a time
+  ---
+  duration_ms: 1.497536
+  type: 'test'
+  ...
+# Subtest: the eye climbs a stair as a slope, never more than half a tread from the feet
+ok 490 - the eye climbs a stair as a slope, never more than half a tread from the feet
+  ---
+  duration_ms: 5.923871
+  type: 'test'
+  ...
+# Subtest: the enclosure is closed either side of the gate: wall meets the gate's end, and wraps the towers
+ok 491 - the enclosure is closed either side of the gate: wall meets the gate's end, and wraps the towers
+  ---
+  duration_ms: 245.157361
+  type: 'test'
+  ...
+# Subtest: every named view stands somewhere a visitor could stand
+ok 492 - every named view stands somewhere a visitor could stand
+  ---
+  duration_ms: 1.471076
+  type: 'test'
+  ...
+# Subtest: the plan registers what the rest of the page reads
+ok 493 - the plan registers what the rest of the page reads
+  ---
+  duration_ms: 1.011786
+  type: 'test'
+  ...
+# Subtest: from the first step, every part of the temple can be walked to
+ok 494 - from the first step, every part of the temple can be walked to
+  ---
+  duration_ms: 436.226778
+  type: 'test'
+  ...
+# Subtest: every observance of the journey has a place that can be walked to, and they do not crowd each other
+ok 495 - every observance of the journey has a place that can be walked to, and they do not crowd each other
+  ---
+  duration_ms: 374.301414
+  type: 'test'
+  ...
+# Subtest: every hall with a door can be walked up to, entered at its threshold, and left onto open floor
+ok 496 - every hall with a door can be walked up to, entered at its threshold, and left onto open floor
+  ---
+  duration_ms: 424.953642
+  type: 'test'
+  ...
+# Subtest: the columns of the open pavilions stand in the way
+ok 497 - the columns of the open pavilions stand in the way
+  ---
+  duration_ms: 0.866882
+  type: 'test'
+  ...
+# Subtest: nowhere he can walk is there a step taller than a child's
+ok 498 - nowhere he can walk is there a step taller than a child's
+  ---
+  duration_ms: 1690.549659
+  type: 'test'
+  ...
+# Subtest: walls, halls and the hillside keep the visitor out
+ok 499 - walls, halls and the hillside keep the visitor out
+  ---
+  duration_ms: 376.237997
+  type: 'test'
+  ...
+# Subtest: heights: the courts are level, the stairs climb evenly
+ok 500 - heights: the courts are level, the stairs climb evenly
+  ---
+  duration_ms: 8.197062
+  type: 'test'
+  ...
+# Subtest: the dragon well's arch stands in front of the terrace wall and under its edge, so none of it rises through the parapet above
+ok 501 - the dragon well's arch stands in front of the terrace wall and under its edge, so none of it rises through the parapet above
+  ---
+  duration_ms: 4.627549
+  type: 'test'
+  ...
+# Subtest: plain, across board: only its front is lettered
+ok 502 - plain, across board: only its front is lettered
+  ---
+  duration_ms: 9.715519
+  type: 'test'
+  ...
+# Subtest: plain, upright board: only its front is lettered
+ok 503 - plain, upright board: only its front is lettered
+  ---
+  duration_ms: 2.924946
+  type: 'test'
+  ...
+# Subtest: gilt board: only its front is lettered
+ok 504 - gilt board: only its front is lettered
+  ---
+  duration_ms: 8.14851
+  type: 'test'
+  ...
+# Subtest: banded board: only its front is lettered
+ok 505 - banded board: only its front is lettered
+  ---
+  duration_ms: 3.258249
+  type: 'test'
+  ...
+# Subtest: bare board: only its front is lettered
+ok 506 - bare board: only its front is lettered
+  ---
+  duration_ms: 0.367388
+  type: 'test'
+  ...
+# Subtest: every board on the plan: nothing but the front carries the writing
+ok 507 - every board on the plan: nothing but the front carries the writing
+  ---
+  duration_ms: 804.4899
+  type: 'test'
+  ...
+# Subtest: the plan has its name boards, each with its characters laid out
+ok 508 - the plan has its name boards, each with its characters laid out
+  ---
+  duration_ms: 1.098747
+  type: 'test'
+  ...
+# Subtest: nothing stands on any board's writing, from anywhere in its court
+ok 509 - nothing stands on any board's writing, from anywhere in its court
+  ---
+  duration_ms: 1278.560023
+  type: 'test'
+  ...
+# Subtest: who takes part: the public page and the canary; a preview only when asked at the workbench; never a storefront build; ?presence=0 always leaves it out
+ok 510 - who takes part: the public page and the canary; a preview only when asked at the workbench; never a storefront build; ?presence=0 always leaves it out
+  ---
+  duration_ms: 0.874076
+  type: 'test'
+  ...
+# Subtest: a count is whole to 999 and then about, in each language's own units
+ok 511 - a count is whole to 999 and then about, in each language's own units
+  ---
+  duration_ms: 30.392086
+  type: 'test'
+  ...
+# Subtest: each place's line is said in all four languages, with the number, and not at all where no one has been
+ok 512 - each place's line is said in all four languages, with the number, and not at all where no one has been
+  ---
+  duration_ms: 0.465436
+  type: 'test'
+  ...
+# Subtest: it reads the day once, reports each place once a page and answers with the new count, and a page that is off never asks
+ok 513 - it reads the day once, reports each place once a page and answers with the new count, and a page that is off never asks
+  ---
+  duration_ms: 1.506884
+  type: 'test'
+  ...
+# Subtest: when anything fails it is silent: a network error, 404, 429, 500, a page that is not JSON, nonsense in the JSON, a request that never answers
+ok 514 - when anything fails it is silent: a network error, 404, 429, 500, a page that is not JSON, nonsense in the JSON, a request that never answers
+  ---
+  duration_ms: 42.235905
+  type: 'test'
+  ...
+# Subtest: a read that fails is not kept as a read: the next ask tries again
+ok 515 - a read that fails is not kept as a read: the next ask tries again
+  ---
+  duration_ms: 0.464105
+  type: 'test'
+  ...
+# Subtest: the censer's stubs: none for none, a few for the first, never over the ceiling; the same ones stay put as more come; the triangles are 12 each
+ok 516 - the censer's stubs: none for none, a few for the first, never over the ceiling; the same ones stay put as more come; the triangles are 12 each
+  ---
+  duration_ms: 32.483096
+  type: 'test'
+  ...
+# Subtest: a day that is read too late is asked for again, and the stubs are set when it comes (\#367)
+ok 517 - a day that is read too late is asked for again, and the stubs are set when it comes (\#367)
+  ---
+  duration_ms: 2.112961
+  type: 'test'
+  ...
+# Subtest: a day that never comes back is tried a few times and then left alone
+ok 518 - a day that never comes back is tried a few times and then left alone
+  ---
+  duration_ms: 0.811572
+  type: 'test'
+  ...
+# Subtest: a goal file changed without LATEST-GOALS is pointed out; with it, or with no goal file, nothing is said
+ok 519 - a goal file changed without LATEST-GOALS is pointed out; with it, or with no goal file, nothing is said
+  ---
+  duration_ms: 0.974085
+  type: 'test'
+  ...
+# Subtest: the note is carried on the comment when deployed and when not
+ok 520 - the note is carried on the comment when deployed and when not
+  ---
+  duration_ms: 1.758362
+  type: 'test'
+  ...
+# Subtest: a built commit's comment is short outside its fold, and the links are inside it, once each
+ok 521 - a built commit's comment is short outside its fold, and the links are inside it, once each
+  ---
+  duration_ms: 1.206143
+  type: 'test'
+  ...
+# Subtest: a commit that built nothing says so, names the commit the preview shows, and keeps both addresses and the links
+ok 522 - a commit that built nothing says so, names the commit the preview shows, and keeps both addresses and the links
+  ---
+  duration_ms: 0.394412
+  type: 'test'
+  ...
+# Subtest: a failed commit keeps what the earlier preview was, so that the next push is compared with that
+ok 523 - a failed commit keeps what the earlier preview was, so that the next push is compared with that
+  ---
+  duration_ms: 0.224569
+  type: 'test'
+  ...
+# Subtest: a discrete card starts on the high tier
+ok 524 - a discrete card starts on the high tier
+  ---
+  duration_ms: 0.958859
+  type: 'test'
+  ...
+# Subtest: integrated, base Apple, software and hidden cards start on medium
+ok 525 - integrated, base Apple, software and hidden cards start on medium
+  ---
+  duration_ms: 0.177238
+  type: 'test'
+  ...
+# Subtest: no name at all is taken for a capable card, as before
+ok 526 - no name at all is taken for a capable card, as before
+  ---
+  duration_ms: 0.091713
+  type: 'test'
+  ...
+# Subtest: the mirror is drawn in the forecourt and first court and on their platforms, and nowhere else
+ok 527 - the mirror is drawn in the forecourt and first court and on their platforms, and nowhere else
+  ---
+  duration_ms: 786.135583
+  type: 'test'
+  ...
+# Subtest: the low tier draws no occlusion, no soft shadows, no depth of field
+ok 528 - the low tier draws no occlusion, no soft shadows, no depth of field
+  ---
+  duration_ms: 0.891026
+  type: 'test'
+  ...
+# Subtest: on slow frames the governor puts out the occlusion, then the soft shadows, then the mirror
+ok 529 - on slow frames the governor puts out the occlusion, then the soft shadows, then the mirror
+  ---
+  duration_ms: 0.576917
+  type: 'test'
+  ...
+# Subtest: what is handed over comes back field for field, for the language it was meant for
+ok 530 - what is handed over comes back field for field, for the language it was meant for
+  ---
+  duration_ms: 1.232247
+  type: 'test'
+  ...
+# Subtest: a handover keeps a few minutes, not longer
+ok 531 - a handover keeps a few minutes, not longer
+  ---
+  duration_ms: 0.189224
+  type: 'test'
+  ...
+# Subtest: a damaged handover is not taken, and a damaged field falls back
+ok 532 - a damaged handover is not taken, and a damaged field falls back
+  ---
+  duration_ms: 0.239376
+  type: 'test'
+  ...
+# Subtest: it is read once: taken and forgotten; a look does not take it
+ok 533 - it is read once: taken and forgotten; a look does not take it
+  ---
+  duration_ms: 1.248444
+  type: 'test'
+  ...
+# Subtest: a storage that refuses (a private window) is no handover and no error
+ok 534 - a storage that refuses (a private window) is no handover and no error
+  ---
+  duration_ms: 0.176238
+  type: 'test'
+  ...
+# Subtest: the eye's own distance is handed over, and a bad one is dropped
+ok 535 - the eye's own distance is handed over, and a bad one is dropped
+  ---
+  duration_ms: 0.203578
+  type: 'test'
+  ...
+# Subtest: a place is kept and read back, and a damaged or foreign save is ignored
+ok 536 - a place is kept and read back, and a damaged or foreign save is ignored
+  ---
+  duration_ms: 1.622838
+  type: 'test'
+  ...
+# Subtest: where he was is called by the hall he is in, the nearest place of an observance, or only the way
+ok 537 - where he was is called by the hall he is in, the nearest place of an observance, or only the way
+  ---
+  duration_ms: 0.170108
+  type: 'test'
+  ...
+# Subtest: a first visit is offered only the way in; a visit with a seal or a place up the mountain may be gone on with or begun again
+ok 538 - a first visit is offered only the way in; a visit with a seal or a place up the mountain may be gone on with or begun again
+  ---
+  duration_ms: 0.437391
+  type: 'test'
+  ...
+# Subtest: hidden time is not kept; the clock takes up where it stopped
+ok 539 - hidden time is not kept; the clock takes up where it stopped
+  ---
+  duration_ms: 0.691681
+  type: 'test'
+  ...
+# Subtest: a pause and a hidden page do not count the same time twice
+ok 540 - a pause and a hidden page do not count the same time twice
+  ---
+  duration_ms: 0.145281
+  type: 'test'
+  ...
+# Subtest: each hall's sticks are set in its own bowl and burn out five minutes after they were set there, whatever is done in the others
+ok 541 - each hall's sticks are set in its own bowl and burn out five minutes after they were set there, whatever is done in the others
+  ---
+  duration_ms: 310.390021
+  type: 'test'
+  ...
+# Subtest: a reload finds each hall's sticks as far burnt as its own time says; an older one-number save is the great hall's
+ok 542 - a reload finds each hall's sticks as far burnt as its own time says; an older one-number save is the great hall's
+  ---
+  duration_ms: 1.894015
+  type: 'test'
+  ...
+# Subtest: his hands and the sticks keep out of the offering table, the censer and the dais, in every hall
+ok 543 - his hands and the sticks keep out of the offering table, the censer and the dais, in every hall
+  ---
+  duration_ms: 98.748451
+  type: 'test'
+  ...
+# Subtest: drinking his tea, his hands stay at least 1 cm below his eyes from the lifting of the bowl to its setting down
+ok 544 - drinking his tea, his hands stay at least 1 cm below his eyes from the lifting of the bowl to its setting down
+  ---
+  duration_ms: 646.637988
+  type: 'test'
+  ...
+# Subtest: drinking, the bowl stays between his hands: each hand within reach of the bowl's side, neither inside it
+ok 545 - drinking, the bowl stays between his hands: each hand within reach of the bowl's side, neither inside it
+  ---
+  duration_ms: 135.153615
+  type: 'test'
+  ...
+# Subtest: a hand sent to a place within his reach arrives there, and one sent too far goes as far as the arm does
+ok 546 - a hand sent to a place within his reach arrives there, and one sent too far goes as far as the arm does
+  ---
+  duration_ms: 173.983032
+  type: 'test'
+  ...
+# Subtest: a bow carries his head forward and down, and a breath taken on purpose fills his chest
+ok 547 - a bow carries his head forward and down, and a breath taken on purpose fills his chest
+  ---
+  duration_ms: 117.923762
+  type: 'test'
+  ...
+# Subtest: the bell's log is drawn back, touches the bronze and goes no further, and comes to rest
+ok 548 - the bell's log is drawn back, touches the bronze and goes no further, and comes to rest
+  ---
+  duration_ms: 1.465037
+  type: 'test'
+  ...
+# Subtest: every cushion and every stool is a seat, and he can come within a step or two of each
+ok 549 - every cushion and every stool is a seat, and he can come within a step or two of each
+  ---
+  duration_ms: 1.713106
+  type: 'test'
+  ...
+# Subtest: every hall with a Buddha has an incense stand before its cushion, within his reach from where he steps up to it, its bowl in the way
+ok 550 - every hall with a Buddha has an incense stand before its cushion, within his reach from where he steps up to it, its bowl in the way
+  ---
+  duration_ms: 0.832584
+  type: 'test'
+  ...
+# Subtest: a stroke begun while the log still swings draws it back from where it is, without a jump, and still stops at the bronze
+ok 551 - a stroke begun while the log still swings draws it back from where it is, without a jump, and still stops at the bronze
+  ---
+  duration_ms: 2.336044
+  type: 'test'
+  ...
+# Subtest: an observance made sitting sets him on the top of its seat, not above it
+ok 552 - an observance made sitting sets him on the top of its seat, not above it
+  ---
+  duration_ms: 0.513694
+  type: 'test'
+  ...
+# Subtest: the closing shot leaves air over the pavilion: its top stays a twelfth of the picture under the upper edge, upright or wide
+ok 553 - the closing shot leaves air over the pavilion: its top stays a twelfth of the picture under the upper edge, upright or wide
+  ---
+  duration_ms: 1.504682
+  type: 'test'
+  ...
+# Subtest: the closing shot keeps the ridge's end ornaments clear too, the one nearer the eye included
+ok 554 - the closing shot keeps the ridge's end ornaments clear too, the one nearer the eye included
+  ---
+  duration_ms: 3.253421
+  type: 'test'
+  ...
+# Subtest: the breath's ring on the ground grows from his knees to about a metre and fades as it empties
+ok 555 - the breath's ring on the ground grows from his knees to about a metre and fades as it empties
+  ---
+  duration_ms: 0.517346
+  type: 'test'
+  ...
+# Subtest: the owner's spot at the tea house's south end (a blocked point at ground level): out, and to the court
+ok 556 - the owner's spot at the tea house's south end (a blocked point at ground level): out, and to the court
+  ---
+  duration_ms: 92.464503
+  type: 'test'
+  ...
+# Subtest: from the porches' ends, beside the tables and cushions, to the court below, on every platform with a hop down
+ok 557 - from the porches' ends, beside the tables and cushions, to the court below, on every platform with a hop down
+  ---
+  duration_ms: 1316.688056
+  type: 'test'
+  ...
+# Subtest: a spot he cannot stand on takes him to the nearest he can; an open straight line stays a straight line
+ok 558 - a spot he cannot stand on takes him to the nearest he can; an open straight line stays a straight line
+  ---
+  duration_ms: 40.816919
+  type: 'test'
+  ...
+# Subtest: a way round costs a frame no more than its budget, and the search can be given back and taken up again
+ok 559 - a way round costs a frame no more than its budget, and the search can be given back and taken up again
+  ---
+  duration_ms: 313.388198
+  type: 'test'
+  ...
+# Subtest: a tapped way down off a low porch is the step walking out takes, off a deeper one the hop
+ok 560 - a tapped way down off a low porch is the step walking out takes, off a deeper one the hop
+  ---
+  duration_ms: 7.835913
+  type: 'test'
+  ...
+# Subtest: \#323: the summit scenario's legs, a leg that something shuts searched round, all arrive
+ok 561 - \#323: the summit scenario's legs, a leg that something shuts searched round, all arrive
+  ---
+  duration_ms: 63.534616
+  type: 'test'
+  ...
+# Subtest: an instrument's range moves a whole line, not single notes: the melody keeps its shape
+ok 562 - an instrument's range moves a whole line, not single notes: the melody keeps its shape
+  ---
+  duration_ms: 60.082115
+  type: 'test'
+  ...
+# Subtest: a step in the mode keeps a note in the mode
+ok 563 - a step in the mode keeps a note in the mode
+  ---
+  duration_ms: 0.252544
+  type: 'test'
+  ...
+# Subtest: the music is in the bell's key, and the theme has seven notes, one for each seal
+ok 564 - the music is in the bell's key, and the theme has seven notes, one for each seal
+  ---
+  duration_ms: 0.199711
+  type: 'test'
+  ...
+# Subtest: every named place on the way up is heard as the part of the mountain it is
+ok 565 - every named place on the way up is heard as the part of the mountain it is
+  ---
+  duration_ms: 0.234483
+  type: 'test'
+  ...
+# Subtest: a place counts only once he has stayed in it two seconds; pacing a boundary changes nothing
+ok 566 - a place counts only once he has stayed in it two seconds; pacing a boundary changes nothing
+  ---
+  duration_ms: 0.224503
+  type: 'test'
+  ...
+# Subtest: every season and hour gives the score what it needs
+ok 567 - every season and hour gives the score what it needs
+  ---
+  duration_ms: 0.16462
+  type: 'test'
+  ...
+# Subtest: every phrase stays in the mode, in range, and none holds the whole theme before the seventh seal
+ok 568 - every phrase stays in the mode, in range, and none holds the whole theme before the seventh seal
+  ---
+  duration_ms: 157.949319
+  type: 'test'
+  ...
+# Subtest: a ten-minute visit: one phrase at a time, none cut, none twice running, and the music follows him
+ok 569 - a ten-minute visit: one phrase at a time, none cut, none twice running, and the music follows him
+  ---
+  duration_ms: 6.640497
+  type: 'test'
+  ...
+# Subtest: a phrase never quite repeats: across five hundred visits, each place's phrases vary
+ok 570 - a phrase never quite repeats: across five hundred visits, each place's phrases vary
+  ---
+  duration_ms: 33.84719
+  type: 'test'
+  ...
+# Subtest: a quick crossing of the gate still hears its first phrase whole, on some later visit if not this time
+ok 571 - a quick crossing of the gate still hears its first phrase whole, on some later visit if not this time
+  ---
+  duration_ms: 55.237151
+  type: 'test'
+  ...
+# Subtest: the same seed makes the same visit; another seed another
+ok 572 - the same seed makes the same visit; another seed another
+  ---
+  duration_ms: 11.415355
+  type: 'test'
+  ...
+# Subtest: the close's music: the far bell is heard alone, the flute comes with the title, and it ends on D, not home
+ok 573 - the close's music: the far bell is heard alone, the flute comes with the title, and it ends on D, not home
+  ---
+  duration_ms: 7.904986
+  type: 'test'
+  ...
+# Subtest: the close's music begins at once, is cut only when passed over, and the whole theme of the seventh seal waits for it
+ok 574 - the close's music begins at once, is cut only when passed over, and the whole theme of the seventh seal waits for it
+  ---
+  duration_ms: 0.634079
+  type: 'test'
+  ...
+# Subtest: with the prologue's title the gate's first phrase begins, its first note the title's D, a moment after
+ok 575 - with the prologue's title the gate's first phrase begins, its first note the title's D, a moment after
+  ---
+  duration_ms: 1.702955
+  type: 'test'
+  ...
+# Subtest: the title's phrase, begun over the stair's music, is not cut, and the gate's first phrase is not heard twice
+ok 576 - the title's phrase, begun over the stair's music, is not cut, and the gate's first phrase is not heard twice
+  ---
+  duration_ms: 0.333491
+  type: 'test'
+  ...
+# Subtest: wherever the title can rise, he is already in the gate's music
+ok 577 - wherever the title can rise, he is already in the gate's music
+  ---
+  duration_ms: 7.952001
+  type: 'test'
+  ...
+# bake-doorways: drew chan in 42.7 s
+# bake-doorways: drew tea in 31.7 s
+# bake-doorways: drew main in 24.6 s
+# bake-doorways: drew library in 22.6 s
+# bake-doorways: drew yaoshi in 21.7 s
+# bake-doorways: drew dahui in 24.4 s
+# bake-doorways: drew guanyin in 25.9 s
+# bake-doorways: drew lingxiao in 18.2 s
+# bake-doorways t00: {"drawn":["chan","tea","main","library","yaoshi","dahui","guanyin","lingxiao"],"fromCache":[],"kb":{"chan":124.5,"tea":127.9,"main":120.9,"library":127.9,"yaoshi":127.8,"dahui":124,"guanyin":129.3,"lingxiao":121.1},"totalKb":1003.4,"inward":{"size":{"col":1024,"dist":256,"ss":2},"kb":{"chan":186.2,"tea":202,"main":189.9,"library":192.5,"yaoshi":212.5,"dahui":208.9,"guanyin":219.5,"lingxiao":186.3},"totalKb":1597.8,"withBaseKb":2601.2},"seconds":258.2}
+# Subtest: the test server serves the site, and only the site, and only to this machine
+ok 578 - the test server serves the site, and only the site, and only to this machine
+  ---
+  duration_ms: 26.251581
+  type: 'test'
+  ...
+# Subtest: a new visitor gets the defaults
+ok 579 - a new visitor gets the defaults
+  ---
+  duration_ms: 1.336096
+  type: 'test'
+  ...
+# Subtest: what is set is kept for next time
+ok 580 - what is set is kept for next time
+  ---
+  duration_ms: 1.490597
+  type: 'test'
+  ...
+# Subtest: values out of range are brought back into it
+ok 581 - values out of range are brought back into it
+  ---
+  duration_ms: 0.37776
+  type: 'test'
+  ...
+# Subtest: a damaged save is ignored, not thrown on
+ok 582 - a damaged save is ignored, not thrown on
+  ---
+  duration_ms: 0.594007
+  type: 'test'
+  ...
+# Subtest: storage that refuses to write does not stop a change
+ok 583 - storage that refuses to write does not stop a change
+  ---
+  duration_ms: 0.237317
+  type: 'test'
+  ...
+# Subtest: a change is announced
+ok 584 - a change is announced
+  ---
+  duration_ms: 0.244119
+  type: 'test'
+  ...
+# Subtest: the viewfinder's thirds are on until put away, and kept off once put away
+ok 585 - the viewfinder's thirds are on until put away, and kept off once put away
+  ---
+  duration_ms: 0.140795
+  type: 'test'
+  ...
+# Subtest: the eye goes to each place's own shot unless asked not to, and that is kept
+ok 586 - the eye goes to each place's own shot unless asked not to, and that is kept
+  ---
+  duration_ms: 0.115246
+  type: 'test'
+  ...
+# Subtest: the photograph's blur is off until switched on, kept once on, and off for anything damaged (\#275)
+ok 587 - the photograph's blur is off until switched on, kept once on, and off for anything damaged (\#275)
+  ---
+  duration_ms: 0.284179
+  type: 'test'
+  ...
+# Subtest: the QR code on a photograph's card is on until put away, and kept off once put away; a damaged value is on (\#319)
+ok 588 - the QR code on a photograph's card is on until put away, and kept off once put away; a damaged value is on (\#319)
+  ---
+  duration_ms: 0.313125
+  type: 'test'
+  ...
+# Subtest: the floor of the gate's passage and of the bell tower is dry, all of it but a strip under the eaves
+ok 589 - the floor of the gate's passage and of the bell tower is dry, all of it but a strip under the eaves
+  ---
+  duration_ms: 1.989011
+  type: 'test'
+  ...
+# Subtest: the gate's lower roof is dry where the upper one hangs over it and snowed on beyond, and the upper roof is open sky
+ok 590 - the gate's lower roof is dry where the upper one hangs over it and snowed on beyond, and the upper roof is open sky
+  ---
+  duration_ms: 0.239174
+  type: 'test'
+  ...
+# Subtest: the first court inside the gate is under no roof
+ok 591 - the first court inside the gate is under no roof
+  ---
+  duration_ms: 0.264884
+  type: 'test'
+  ...
+# Subtest: his steps under a roof in snow are on bare stone; out from under it, on snow
+ok 592 - his steps under a roof in snow are on bare stone; out from under it, on snow
+  ---
+  duration_ms: 0.184786
+  type: 'test'
+  ...
+# Subtest: the shader reads the map with the same reach of blown snow
+ok 593 - the shader reads the map with the same reach of blown snow
+  ---
+  duration_ms: 0.169908
+  type: 'test'
+  ...
+# Subtest: old review cannot approve current source
+ok 594 - old review cannot approve current source
+  ---
+  duration_ms: 1.225219
+  type: 'test'
+  ...
+# Subtest: failed current CI preserves last deployed commit
+ok 595 - failed current CI preserves last deployed commit
+  ---
+  duration_ms: 0.219042
+  type: 'test'
+  ...
+# Subtest: successful pipeline does not imply independent acceptance
+ok 596 - successful pipeline does not imply independent acceptance
+  ---
+  duration_ms: 0.153067
+  type: 'test'
+  ...
+# Subtest: job evidence must belong to the selected run
+ok 597 - job evidence must belong to the selected run
+  ---
+  duration_ms: 0.331503
+  type: 'test'
+  ...
+# Subtest: developer record rejects missing lists
+ok 598 - developer record rejects missing lists
+  ---
+  duration_ms: 0.219183
+  type: 'test'
+  ...
+# Subtest: invalid source SHA is rejected
+ok 599 - invalid source SHA is rejected
+  ---
+  duration_ms: 0.207071
+  type: 'test'
+  ...
+# Subtest: a successful run that deployed nothing does not move "deployed"
+ok 600 - a successful run that deployed nothing does not move "deployed"
+  ---
+  duration_ms: 0.501717
+  type: 'test'
+  ...
+# Subtest: when the newest run did deploy, that is the answer and it is current
+ok 601 - when the newest run did deploy, that is the answer and it is current
+  ---
+  duration_ms: 0.152738
+  type: 'test'
+  ...
+# Subtest: no deploy in the history: the board says so, and does not guess
+ok 602 - no deploy in the history: the board says so, and does not guess
+  ---
+  duration_ms: 0.300083
+  type: 'test'
+  ...
+# Subtest: the board and the build comparison ask the same function (tools/ci/deployed.cjs)
+ok 603 - the board and the build comparison ask the same function (tools/ci/deployed.cjs)
+  ---
+  duration_ms: 0.472832
+  type: 'test'
+  ...
+# Subtest: the swept lane shows its stone through a dusting, with clean grainy edges and no half-strength haze
+ok 604 - the swept lane shows its stone through a dusting, with clean grainy edges and no half-strength haze
+  ---
+  duration_ms: 56.287395
+  type: 'test'
+  ...
+# Subtest: snow stays in the joints of the swept lane
+ok 605 - snow stays in the joints of the swept lane
+  ---
+  duration_ms: 23.358154
+  type: 'test'
+  ...
+# Subtest: what was swept lies in a bank along both sides, and the snow rises to it without a step
+ok 606 - what was swept lies in a bank along both sides, and the snow rises to it without a step
+  ---
+  duration_ms: 123.680446
+  type: 'test'
+  ...
+# Subtest: off the lane the snow is deeper by walls and platforms and uneven out in the open; none under a roof
+ok 607 - off the lane the snow is deeper by walls and platforms and uneven out in the open; none under a roof
+  ---
+  duration_ms: 39.354346
+  type: 'test'
+  ...
+# Subtest: his steps agree: stone in the swept lane of any court, snow on the bank and beyond
+ok 608 - his steps agree: stone in the swept lane of any court, snow on the bank and beyond
+  ---
+  duration_ms: 0.319647
+  type: 'test'
+  ...
+# Subtest: \#295: from behind him the eye stands back and sees him: round the great hall's platform
+ok 609 - \#295: from behind him the eye stands back and sees him: round the great hall's platform
+  ---
+  duration_ms: 423.026144
+  type: 'test'
+  ...
+# Subtest: \#295: from behind him the eye stands back and sees him: round the great hall's platform the other way
+ok 610 - \#295: from behind him the eye stands back and sees him: round the great hall's platform the other way
+  ---
+  duration_ms: 278.449399
+  type: 'test'
+  ...
+# Subtest: \#295: from behind him the eye stands back and sees him: behind the tea house
+ok 611 - \#295: from behind him the eye stands back and sees him: behind the tea house
+  ---
+  duration_ms: 33.456565
+  type: 'test'
+  ...
+# Subtest: \#295: from behind him the eye stands back and sees him: behind the tea house the other way
+ok 612 - \#295: from behind him the eye stands back and sees him: behind the tea house the other way
+  ---
+  duration_ms: 30.946645
+  type: 'test'
+  ...
+# Subtest: \#295: from behind him the eye stands back and sees him: in through the gate
+ok 613 - \#295: from behind him the eye stands back and sees him: in through the gate
+  ---
+  duration_ms: 63.487244
+  type: 'test'
+  ...
+# Subtest: \#295: from behind him the eye stands back and sees him: out through the gate
+ok 614 - \#295: from behind him the eye stands back and sees him: out through the gate
+  ---
+  duration_ms: 39.863529
+  type: 'test'
+  ...
+# Subtest: \#295: from behind him the eye stands back and sees him: past the censer, with it behind him
+ok 615 - \#295: from behind him the eye stands back and sees him: past the censer, with it behind him
+  ---
+  duration_ms: 22.878701
+  type: 'test'
+  ...
+# Subtest: \#295: asking what is drawn, the eye does not jump: the measured route, bamboo to the first court
+ok 616 - \#295: asking what is drawn, the eye does not jump: the measured route, bamboo to the first court
+  ---
+  duration_ms: 891.686303
+  type: 'test'
+  ...
+# Subtest: \#295: asking what is drawn, the eye does not jump: round the first court, close past the bell and drum towers
+ok 617 - \#295: asking what is drawn, the eye does not jump: round the first court, close past the bell and drum towers
+  ---
+  duration_ms: 544.693844
+  type: 'test'
+  ...
+# Subtest: \#295: asking what is drawn, the eye does not jump: up the axis of the first court to the main hall's stair
+ok 618 - \#295: asking what is drawn, the eye does not jump: up the axis of the first court to the main hall's stair
+  ---
+  duration_ms: 287.735625
+  type: 'test'
+  ...
+# Subtest: \#295: asking what is drawn, the eye does not jump: up the stair to the second terrace and on to the Guanyin hall's steps
+ok 619 - \#295: asking what is drawn, the eye does not jump: up the stair to the second terrace and on to the Guanyin hall's steps
+  ---
+  duration_ms: 72.869854
+  type: 'test'
+  ...
+# Subtest: \#295: down the flight by the half-way pavilion the arm keeps 3 m and the view does not jump
+ok 620 - \#295: down the flight by the half-way pavilion the arm keeps 3 m and the view does not jump
+  ---
+  duration_ms: 454.392875
+  type: 'test'
+  ...
+# Subtest: \#295: up the flight the view does not tip more than 0.3° a frame either
+ok 621 - \#295: up the flight the view does not tip more than 0.3° a frame either
+  ---
+  duration_ms: 309.617363
+  type: 'test'
+  ...
+# Subtest: \#295: round the censer on a phone held upright, his head and feet are in the picture
+ok 622 - \#295: round the censer on a phone held upright, his head and feet are in the picture
+  ---
+  duration_ms: 59.231409
+  type: 'test'
+  ...
+# Subtest: \#295: on every metre of the floor the written plan never reached, the eye sees him
+ok 623 - \#295: on every metre of the floor the written plan never reached, the eye sees him
+  ---
+  duration_ms: 31580.331885
+  type: 'test'
+  ...
+# Subtest: \#295: the eye's sphere covers the near plane at the widest lenses the page draws
+ok 624 - \#295: the eye's sphere covers the near plane at the widest lenses the page draws
+  ---
+  duration_ms: 1100.469867
+  type: 'test'
+  ...
+# Subtest: up stairs at 60Hz have no whole-step body pop
+ok 625 - up stairs at 60Hz have no whole-step body pop
+  ---
+  duration_ms: 526.76722
+  type: 'test'
+  ...
+# max body delta: 0.02501 m/frame
+# Subtest: up stairs at 30Hz have no whole-step body pop
+ok 626 - up stairs at 30Hz have no whole-step body pop
+  ---
+  duration_ms: 215.788308
+  type: 'test'
+  ...
+# max body delta: 0.01960 m/frame
+# Subtest: up stairs at 20Hz have no whole-step body pop
+ok 627 - up stairs at 20Hz have no whole-step body pop
+  ---
+  duration_ms: 119.920685
+  type: 'test'
+  ...
+# max body delta: 0.02933 m/frame
+# Subtest: down stairs at 60Hz have no whole-step body pop
+ok 628 - down stairs at 60Hz have no whole-step body pop
+  ---
+  duration_ms: 73.335057
+  type: 'test'
+  ...
+# max body delta: 0.01400 m/frame
+# Subtest: down stairs at 30Hz have no whole-step body pop
+ok 629 - down stairs at 30Hz have no whole-step body pop
+  ---
+  duration_ms: 71.394982
+  type: 'test'
+  ...
+# max body delta: 0.02680 m/frame
+# Subtest: down stairs at 20Hz have no whole-step body pop
+ok 630 - down stairs at 20Hz have no whole-step body pop
+  ---
+  duration_ms: 67.794605
+  type: 'test'
+  ...
+# max body delta: 0.03712 m/frame
+# Subtest: a deliberate hop does not snap the feet or torso back onto the floor
+ok 631 - a deliberate hop does not snap the feet or torso back onto the floor
+  ---
+  duration_ms: 68.753108
+  type: 'test'
+  ...
+# Subtest: on a flight he takes no more than 2.2 steps a second, 3 when he hurries
+ok 632 - on a flight he takes no more than 2.2 steps a second, 3 when he hurries
+  ---
+  duration_ms: 1439.707372
+  type: 'test'
+  ...
+# Subtest: going down, a shoe never rises more than a centimetre over the tread it leaves, at 60 and 30 frames a second
+ok 633 - going down, a shoe never rises more than a centimetre over the tread it leaves, at 60 and 30 frames a second
+  ---
+  duration_ms: 879.056973
+  type: 'test'
+  ...
+# Subtest: going up, a shoe comes over a nosing without lifting more than 3 cm over it and never goes into the stone
+ok 634 - going up, a shoe comes over a nosing without lifting more than 3 cm over it and never goes into the stone
+  ---
+  duration_ms: 418.834969
+  type: 'test'
+  ...
+# Subtest: the pelvis rises and falls by no more than 4 cm about the line of the flight, and never jumps between frames
+ok 635 - the pelvis rises and falls by no more than 4 cm about the line of the flight, and never jumps between frames
+  ---
+  duration_ms: 711.228494
+  type: 'test'
+  ...
+# Subtest: going up, the knee of the leg that bears him is bent less than before (it folded to 59° at this pace)
+ok 636 - going up, the knee of the leg that bears him is bent less than before (it folded to 59° at this pace)
+  ---
+  duration_ms: 246.547847
+  type: 'test'
+  ...
+# Subtest: the eye's height, which follows the slope and not him, does not shake more than at the old pace
+ok 637 - the eye's height, which follows the slope and not him, does not shake more than at the old pace
+  ---
+  duration_ms: 982.230852
+  type: 'test'
+  ...
+# Subtest: walking height agrees with actual stair geometry including the overhanging tread noses
+ok 638 - walking height agrees with actual stair geometry including the overhanging tread noses
+  ---
+  duration_ms: 153.200337
+  type: 'test'
+  ...
+# Subtest: hall stair collision uses the same top edge and tread spacing as its visible stairs
+ok 639 - hall stair collision uses the same top edge and tread spacing as its visible stairs
+  ---
+  duration_ms: 125.039947
+  type: 'test'
+  ...
+# Subtest: an overlapping lower landing cannot pull feet through a visible tread
+ok 640 - an overlapping lower landing cannot pull feet through a visible tread
+  ---
+  duration_ms: 4.11454
+  type: 'test'
+  ...
+# Subtest: animated cloth shoes stay above each supporting tread while ascending, descending and turning
+ok 641 - animated cloth shoes stay above each supporting tread while ascending, descending and turning
+  ---
+  duration_ms: 2505.523732
+  type: 'test'
+  ...
+# Subtest: surface support does not lift the seated pose out of its cushion
+ok 642 - surface support does not lift the seated pose out of its cushion
+  ---
+  duration_ms: 180.882055
+  type: 'test'
+  ...
+# Subtest: sideways and reverse stair flights agree with the visible treads
+ok 643 - sideways and reverse stair flights agree with the visible treads
+  ---
+  duration_ms: 25.438101
+  type: 'test'
+  ...
+# Subtest: a flight stays inside the ground its collision is drawn for
+ok 644 - a flight stays inside the ground its collision is drawn for
+  ---
+  duration_ms: 96.003198
+  type: 'test'
+  ...
+# Subtest: a cheek stands a little proud of every tread beside it, and no higher
+ok 645 - a cheek stands a little proud of every tread beside it, and no higher
+  ---
+  duration_ms: 128.263932
+  type: 'test'
+  ...
+# Subtest: seen from the side a cheek is stone down to the ground: no slot under it, no step end showing
+ok 646 - seen from the side a cheek is stone down to the ground: no slot under it, no step end showing
+  ---
+  duration_ms: 1543.651287
+  type: 'test'
+  ...
+# Subtest: nothing beside a flight looks up at the sky but the top of its cheek stones
+ok 647 - nothing beside a flight looks up at the sky but the top of its cheek stones
+  ---
+  duration_ms: 56.22182
+  type: 'test'
+  ...
+# Subtest: a flight of two steps has no cheeks, and a flight can be asked for one cheek or none
+ok 648 - a flight of two steps has no cheeks, and a flight can be asked for one cheek or none
+  ---
+  duration_ms: 1.85348
+  type: 'test'
+  ...
+# Subtest: every hop down from every porch edge, from anywhere along it, lands in the open and ends there
+ok 649 - every hop down from every porch edge, from anywhere along it, lands in the open and ends there
+  ---
+  duration_ms: 353.752397
+  type: 'test'
+  ...
+# Subtest: where he stands coming out of a hall, and at each place an observance is made, is open ground
+ok 650 - where he stands coming out of a hall, and at each place an observance is made, is open ground
+  ---
+  duration_ms: 0.355007
+  type: 'test'
+  ...
+# Subtest: every kind of step lasts a fraction of a second, peaks below clipping and ends in silence
+ok 651 - every kind of step lasts a fraction of a second, peaks below clipping and ends in silence
+  ---
+  duration_ms: 105.277525
+  type: 'test'
+  ...
+# Subtest: the heel lands first and the weight rolls onto the ball: two swells, and quiet after
+ok 652 - the heel lands first and the weight rolls onto the ball: two swells, and quiet after
+  ---
+  duration_ms: 14.438349
+  type: 'test'
+  ...
+# Subtest: snow crunches: bright, not a low thud
+ok 653 - snow crunches: bright, not a low thud
+  ---
+  duration_ms: 3.83791
+  type: 'test'
+  ...
+# Subtest: after rain a step on stone is wetter (brighter) than on dry stone, and a puddle rings brighter still
+ok 654 - after rain a step on stone is wetter (brighter) than on dry stone, and a puddle rings brighter still
+  ---
+  duration_ms: 130.417434
+  type: 'test'
+  ...
+# Subtest: played at their levels, dry stone is the quietest step and snow the loudest
+ok 655 - played at their levels, dry stone is the quietest step and snow the loudest
+  ---
+  duration_ms: 149.910377
+  type: 'test'
+  ...
+# Subtest: steps stay well under the music, as 小王子 keeps them: no step played behind him is louder than -52 dBFS
+ok 656 - steps stay well under the music, as 小王子 keeps them: no step played behind him is louder than -52 dBFS
+  ---
+  duration_ms: 132.998931
+  type: 'test'
+  ...
+# Subtest: every step differs, the same step can be heard again, and a hurried step is shorter
+ok 657 - every step differs, the same step can be heard again, and a hurried step is shorter
+  ---
+  duration_ms: 65.616978
+  type: 'test'
+  ...
+# Subtest: water stands in some hollows of the paving after summer rain, fewer in spring, almost none in autumn, none in winter
+ok 658 - water stands in some hollows of the paving after summer rain, fewer in spring, almost none in autumn, none in winter
+  ---
+  duration_ms: 40.051922
+  type: 'test'
+  ...
+# Subtest: a step sounds as what it comes down on
+ok 659 - a step sounds as what it comes down on
+  ---
+  duration_ms: 0.746348
+  type: 'test'
+  ...
+# Subtest: the walker knows what each floor of the plan is made of
+ok 660 - the walker knows what each floor of the plan is made of
+  ---
+  duration_ms: 1129.010692
+  type: 'test'
+  ...
+# Subtest: every building is found, with its frame; only the Lingxiao pavilion's three storeys are let off the rules for bays
+ok 661 - every building is found, with its frame; only the Lingxiao pavilion's three storeys are let off the rules for bays
+  ---
+  duration_ms: 0.952038
+  type: 'test'
+  ...
+# Subtest: the middle bay of every front of three bays or more carries two sets between its columns, every other bay one
+ok 662 - the middle bay of every front of three bays or more carries two sets between its columns, every other bay one
+  ---
+  duration_ms: 1.283164
+  type: 'test'
+  ...
+# Subtest: a front has an odd number of bays, the middle one the widest, and none wider than the one nearer the middle
+ok 663 - a front has an odd number of bays, the middle one the widest, and none wider than the one nearer the middle
+  ---
+  duration_ms: 0.456859
+  type: 'test'
+  ...
+# Subtest: the sets stand evenly: along any face, no gap between two sets differs from the next gap by more than a Song foot
+ok 664 - the sets stand evenly: along any face, no gap between two sets differs from the next gap by more than a Song foot
+  ---
+  duration_ms: 0.680596
+  type: 'test'
+  ...
+# Subtest: no two sets stand so near that their long arms would run into each other
+ok 665 - no two sets stand so near that their long arms would run into each other
+  ---
+  duration_ms: 0.490394
+  type: 'test'
+  ...
+# Subtest: the roof over every hall rises by the Fashi's share of its span, within a tenth
+ok 666 - the roof over every hall rises by the Fashi's share of its span, within a tenth
+  ---
+  duration_ms: 0.202593
+  type: 'test'
+  ...
+# Subtest: a skirt roof under an upper storey rises one in two from its eave purlin to the storey's wall
+ok 667 - a skirt roof under an upper storey rises one in two from its eave purlin to the storey's wall
+  ---
+  duration_ms: 0.183132
+  type: 'test'
+  ...
+# Subtest: a roof is folded, not bent: straight from purlin to purlin, each fall steeper than the one below, and the eave runs out along the lowest
+ok 668 - a roof is folded, not bent: straight from purlin to purlin, each fall steeper than the one below, and the eave runs out along the lowest
+  ---
+  duration_ms: 0.54778
+  type: 'test'
+  ...
+# Subtest: every column of an upper storey stands over a column of the storey below
+ok 669 - every column of an upper storey stands over a column of the storey below
+  ---
+  duration_ms: 0.753769
+  type: 'test'
+  ...
+# Subtest: a storey over a skirt roof stands on a balcony: bracket sets, a board round its edge, the railing inside, the skirt under it
+ok 670 - a storey over a skirt roof stands on a balcony: bracket sets, a board round its edge, the railing inside, the skirt under it
+  ---
+  duration_ms: 0.932758
+  type: 'test'
+  ...
+# Subtest: every column of the Lingxiao pavilion's top storey stands on a line of columns of the second
+ok 671 - every column of the Lingxiao pavilion's top storey stands on a line of columns of the second
+  ---
+  duration_ms: 0.254878
+  type: 'test'
+  ...
+# Subtest: each building is cut to the cai of its rank
+ok 672 - each building is cut to the cai of its rank
+  ---
+  duration_ms: 0.161957
+  type: 'test'
+  ...
+# Subtest: the parts of a bracket set, reckoned in fen of the building's own cai, are the Fashi's within a twentieth
+ok 673 - the parts of a bracket set, reckoned in fen of the building's own cai, are the Fashi's within a twentieth
+  ---
+  duration_ms: 0.189432
+  type: 'test'
+  ...
+# Subtest: every corner of every roof has its corner beam, from the corner column to the eave, and a smaller one on it
+ok 674 - every corner of every roof has its corner beam, from the corner column to the eave, and a smaller one on it
+  ---
+  duration_ms: 0.343836
+  type: 'test'
+  ...
+# Subtest: a tent roof rises by half its span, within a tenth
+ok 675 - a tent roof rises by half its span, within a tenth
+  ---
+  duration_ms: 0.117921
+  type: 'test'
+  ...
+# Subtest: every building on the plan is found as a group
+ok 676 - every building on the plan is found as a group
+  ---
+  duration_ms: 0.886413
+  type: 'test'
+  ...
+# Subtest: the following eye stays out of every building and never has one between it and him
+ok 677 - the following eye stays out of every building and never has one between it and him
+  ---
+  duration_ms: 6421.933919
+  type: 'test'
+  ...
+# Subtest: every porch edge that offers a hop down can be hopped from along its whole open length
+ok 678 - every porch edge that offers a hop down can be hopped from along its whole open length
+  ---
+  duration_ms: 44.100092
+  type: 'test'
+  ...
+# Subtest: the log that strikes the bell is kept out of the eye's way too
+ok 679 - the log that strikes the bell is kept out of the eye's way too
+  ---
+  duration_ms: 12.040067
+  type: 'test'
+  ...
+# Subtest: up on the summit pavilion's balcony, his own eyes are in the open
+ok 680 - up on the summit pavilion's balcony, his own eyes are in the open
+  ---
+  duration_ms: 4409.887776
+  type: 'test'
+  ...
+# (node:2778) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the places a trace may name are the plan's observances and the side halls' incense stands, and nothing else
+ok 681 - the places a trace may name are the plan's observances and the side halls' incense stands, and nothing else
+  ---
+  duration_ms: 985.114411
+  type: 'test'
+  ...
+# Subtest: a body is exactly { place, kind } from the lists: unknown places and kinds, extra fields and wrong shapes are refused
+ok 682 - a body is exactly { place, kind } from the lists: unknown places and kinds, extra fields and wrong shapes are refused
+  ---
+  duration_ms: 0.275583
+  type: 'test'
+  ...
+# Subtest: POST /api/trace: 200 with the new count; unknown place or kind 400; bad JSON 400; wrong method 405; wrong type 415; too large 413
+ok 683 - POST /api/trace: 200 with the new count; unknown place or kind 400; bad JSON 400; wrong method 405; wrong type 415; too large 413
+  ---
+  duration_ms: 27.103149
+  type: 'test'
+  ...
+# Subtest: GET /api/traces?day=today returns each place's day count; days are separate buckets; an old or malformed day is refused
+ok 684 - GET /api/traces?day=today returns each place's day count; days are separate buckets; an old or malformed day is refused
+  ---
+  duration_ms: 2.797255
+  type: 'test'
+  ...
+# Subtest: the real SQL: increments are atomic upserts, the ceiling stops a row at its cap, old days are pruned, and only day, place, kind, n are stored
+ok 685 - the real SQL: increments are atomic upserts, the ceiling stops a row at its cap, old days are pruned, and only day, place, kind, n are stored
+  ---
+  duration_ms: 8.374025
+  type: 'test'
+  ...
+# Subtest: the limit: a bucket for each place and kind refills over time; a flood is dropped (429) and costs nothing but the dropped; the day has a ceiling
+ok 686 - the limit: a bucket for each place and kind refills over time; a flood is dropped (429) and costs nothing but the dropped; the day has a ceiling
+  ---
+  duration_ms: 5.324159
+  type: 'test'
+  ...
+# Subtest: the limiter never sees a request: it is keyed by place and kind alone, and with the shipped numbers one place passes the burst, then 12 a second
+ok 687 - the limiter never sees a request: it is keyed by place and kind alone, and with the shipped numbers one place passes the burst, then 12 a second
+  ---
+  duration_ms: 0.387715
+  type: 'test'
+  ...
+# Subtest: the Worker's source reads no address, header, cookie or user agent, and stores nothing but the count
+ok 688 - the Worker's source reads no address, header, cookie or user agent, and stores nothing but the count
+  ---
+  duration_ms: 0.913483
+  type: 'test'
+  ...
+# Subtest: the two Workers each own the API and its Durable Object; a pull request's preview has neither, so it writes nothing
+ok 689 - the two Workers each own the API and its Durable Object; a pull request's preview has neither, so it writes nothing
+  ---
+  duration_ms: 1.113986
+  type: 'test'
+  ...
+# Subtest: the cedars in the courts are grown, and their foliage found
+ok 690 - the cedars in the courts are grown, and their foliage found
+  ---
+  duration_ms: 1.409307
+  type: 'test'
+  ...
+# Subtest: no cedar's boughs hang into the paving: every spray clears the ground it stands on
+ok 691 - no cedar's boughs hang into the paving: every spray clears the ground it stands on
+  ---
+  duration_ms: 0.589327
+  type: 'test'
+  ...
+# Subtest: a young cedar is narrower than it is tall
+ok 692 - a young cedar is narrower than it is tall
+  ---
+  duration_ms: 0.209105
+  type: 'test'
+  ...
+# Subtest: a young cedar is clothed nearly to the ground, not bare below like an old one
+ok 693 - a young cedar is clothed nearly to the ground, not bare below like an old one
+  ---
+  duration_ms: 0.227821
+  type: 'test'
+  ...
+# Subtest: at the top of every tree's foot, the foot is the trunk: radius within 1%, centre within 1 cm
+ok 694 - at the top of every tree's foot, the foot is the trunk: radius within 1%, centre within 1 cm
+  ---
+  duration_ms: 1.430182
+  type: 'test'
+  ...
+# Subtest: the trunk is drawn with as many sides as its foot where they meet
+ok 695 - the trunk is drawn with as many sides as its foot where they meet
+  ---
+  duration_ms: 0.132297
+  type: 'test'
+  ...
+# Subtest: a young cedar's trunk is slender: 0.12 to 0.2 m across
+ok 696 - a young cedar's trunk is slender: 0.12 to 0.2 m across
+  ---
+  duration_ms: 0.287183
+  type: 'test'
+  ...
+# Subtest: a cedar's trunk swells into its roots in one piece: wider at the ground than at breast height, with no foot drawn to meet it
+ok 697 - a cedar's trunk swells into its roots in one piece: wider at the ground than at breast height, with no foot drawn to meet it
+  ---
+  duration_ms: 0.196401
+  type: 'test'
+  ...
+# Subtest: at every fork of every cedar the boughs carry 0.8-1.2 of the wood that comes in
+ok 698 - at every fork of every cedar the boughs carry 0.8-1.2 of the wood that comes in
+  ---
+  duration_ms: 0.497253
+  type: 'test'
+  ...
+# Subtest: a cedar grown twice is the same cedar, point for point
+ok 699 - a cedar grown twice is the same cedar, point for point
+  ---
+  duration_ms: 661.916892
+  type: 'test'
+  ...
+# Subtest: a cedar's branches end inside the foliage they carry
+ok 700 - a cedar's branches end inside the foliage they carry
+  ---
+  duration_ms: 0.344168
+  type: 'test'
+  ...
+# Subtest: at every fork of every tree, the wood that goes on is 0.8 to 1.2 of the wood that comes in
+ok 701 - at every fork of every tree, the wood that goes on is 0.8 to 1.2 of the wood that comes in
+  ---
+  duration_ms: 0.157364
+  type: 'test'
+  ...
+# Subtest: no branch is wider than 0.7 of its parent where it leaves, and each starts inside it: every point of its first ring within the parent's radius (\#200)
+ok 702 - no branch is wider than 0.7 of its parent where it leaves, and each starts inside it: every point of its first ring within the parent's radius (\#200)
+  ---
+  duration_ms: 0.303338
+  type: 'test'
+  ...
+# Subtest: below 2 m no two stems of a maple grow against each other: their centres at least 1.2 times their radii together apart (\#200)
+ok 703 - below 2 m no two stems of a maple grow against each other: their centres at least 1.2 times their radii together apart (\#200)
+  ---
+  duration_ms: 1.6201
+  type: 'test'
+  ...
+# Subtest: the great boughs of the ginkgo and the maple bend through at least five points
+ok 704 - the great boughs of the ginkgo and the maple bend through at least five points
+  ---
+  duration_ms: 0.200919
+  type: 'test'
+  ...
+# Subtest: every maple grows as a Japanese maple: two to four stems from the ground, each 15 to 25 cm across, forking three deep
+ok 705 - every maple grows as a Japanese maple: two to four stems from the ground, each 15 to 25 cm across, forking three deep
+  ---
+  duration_ms: 0.547908
+  type: 'test'
+  ...
+# Subtest: no two maples are alike, and each grows the same every time
+ok 706 - no two maples are alike, and each grows the same every time
+  ---
+  duration_ms: 530.786699
+  type: 'test'
+  ...
+# Subtest: a maple's wood is under 8,000 triangles, and the woodland's under 116,000 (it was 101,004)
+ok 707 - a maple's wood is under 8,000 triangles, and the woodland's under 116,000 (it was 101,004)
+  ---
+  duration_ms: 4.390507
+  type: 'test'
+  ...
+# Subtest: a maple in autumn carries as many leaves as it did, over a crown as broad
+ok 708 - a maple in autumn carries as many leaves as it did, over a crown as broad
+  ---
+  duration_ms: 423.01829
+  type: 'test'
+  ...
+# Subtest: below head height every maple's wood keeps inside the post that stops a visitor
+ok 709 - below head height every maple's wood keeps inside the post that stops a visitor
+  ---
+  duration_ms: 878.052097
+  type: 'test'
+  ...
+# Subtest: every tree's foot is lit from outside: its normals face away from the trunk, and its top ring's are the trunk's own
+ok 710 - every tree's foot is lit from outside: its normals face away from the trunk, and its top ring's are the trunk's own
+  ---
+  duration_ms: 193.916198
+  type: 'test'
+  ...
+# Subtest: a trunk begins at the top of its foot and shares that ring's corners: nothing of it shows through the foot
+ok 711 - a trunk begins at the top of its foot and shares that ring's corners: nothing of it shows through the foot
+  ---
+  duration_ms: 1.722088
+  type: 'test'
+  ...
+# Subtest: a trunk is drawn facing outward: from outside, a ray meets its near side, not the inside of its far side
+ok 712 - a trunk is drawn facing outward: from outside, a ray meets its near side, not the inside of its far side
+  ---
+  duration_ms: 8.379212
+  type: 'test'
+  ...
+# Subtest: every near tree stands in a bed of earth as wide as its wood at the ground
+ok 713 - every near tree stands in a bed of earth as wide as its wood at the ground
+  ---
+  duration_ms: 1213.988153
+  type: 'test'
+  ...
+# Subtest: every foot is rounded where it meets the paving: its outline turns at most 85° from one side to the next
+ok 714 - every foot is rounded where it meets the paving: its outline turns at most 85° from one side to the next
+  ---
+  duration_ms: 0.732455
+  type: 'test'
+  ...
+# Subtest: in winter the beds are put away, and come back with the thaw
+ok 715 - in winter the beds are put away, and come back with the thaw
+  ---
+  duration_ms: 1493.694098
+  type: 'test'
+  ...
+# Subtest: the young 5.2 m cedar at -15.5, 1.8 is clothed to its point, seen along x
+ok 716 - the young 5.2 m cedar at -15.5, 1.8 is clothed to its point, seen along x
+  ---
+  duration_ms: 40.816403
+  type: 'test'
+  ...
+# Subtest: the young 5.2 m cedar at -15.5, 1.8 is clothed to its point, seen along z
+ok 717 - the young 5.2 m cedar at -15.5, 1.8 is clothed to its point, seen along z
+  ---
+  duration_ms: 63.862903
+  type: 'test'
+  ...
+# Subtest: the young 5.6 m cedar at 15.5, 1.8 is clothed to its point, seen along x
+ok 718 - the young 5.6 m cedar at 15.5, 1.8 is clothed to its point, seen along x
+  ---
+  duration_ms: 91.815756
+  type: 'test'
+  ...
+# Subtest: the young 5.6 m cedar at 15.5, 1.8 is clothed to its point, seen along z
+ok 719 - the young 5.6 m cedar at 15.5, 1.8 is clothed to its point, seen along z
+  ---
+  duration_ms: 74.858866
+  type: 'test'
+  ...
+# Subtest: the line: the version on the public page, the commit on the internal address and on a preview, in every language
+ok 720 - the line: the version on the public page, the commit on the internal address and on a preview, in every language
+  ---
+  duration_ms: 1.138745
+  type: 'test'
+  ...
+# Subtest: each target is built with its version, its commit and its name, and a pull request's number only on a preview
+ok 721 - each target is built with its version, its commit and its name, and a pull request's number only on a preview
+  ---
+  duration_ms: 5291.079376
+  type: 'test'
+  ...
+# Subtest: a build nobody named a target for says it is a preview, with the commit git gives
+ok 722 - a build nobody named a target for says it is a preview, with the commit git gives
+  ---
+  duration_ms: 1102.528006
+  type: 'test'
+  ...
+# Subtest: a newer build: another commit on both sides; the same commit, no commit, or nothing is no news
+ok 723 - a newer build: another commit on both sides; the same commit, no commit, or nothing is no news
+  ---
+  duration_ms: 0.3699
+  type: 'test'
+  ...
+# Subtest: the page asks when it comes back to the front and every ten minutes, says it once, and only when nothing is going on
+ok 724 - the page asks when it comes back to the front and every ten minutes, says it once, and only when nothing is going on
+  ---
+  duration_ms: 16.174442
+  type: 'test'
+  ...
+# Subtest: a failed ask, or a line refused, is no news and no error
+ok 725 - a failed ask, or a line refused, is no news and no error
+  ---
+  duration_ms: 0.829972
+  type: 'test'
+  ...
+# Subtest: each build writes version.json, the same as the page says it is
+ok 726 - each build writes version.json, the same as the page says it is
+  ---
+  duration_ms: 1533.179011
+  type: 'test'
+  ...
+# Subtest: the grid for the place as it is now is had by its fingerprint, and records what it was baked from
+ok 727 - the grid for the place as it is now is had by its fingerprint, and records what it was baked from
+  ---
+  duration_ms: 6.97868
+  type: 'test'
+  ...
+# Subtest: every named place, seat, door and view can be walked to from where he comes in, on the drawn floor and on the written plan
+ok 728 - every named place, seat, door and view can be walked to from where he comes in, on the drawn floor and on the written plan
+  ---
+  duration_ms: 0.609705
+  type: 'test'
+  ...
+# Subtest: a bake is the same byte for byte each time (the rooms and the pavilion's top storey, baked twice)
+ok 729 - a bake is the same byte for byte each time (the rooms and the pavilion's top storey, baked twice)
+  ---
+  duration_ms: 13307.637744
+  type: 'test'
+  ...
+# Subtest: the trees grow the same, point for point, each time they are made in Node
+ok 730 - the trees grow the same, point for point, each time they are made in Node
+  ---
+  duration_ms: 5505.049583
+  type: 'test'
+  ...
+# Subtest: a wall across the only way makes a place beyond it unreachable, and the comparison says so
+ok 731 - a wall across the only way makes a place beyond it unreachable, and the comparison says so
+  ---
+  duration_ms: 300.663451
+  type: 'test'
+  ...
+# Subtest: his outline the bake keeps the floor off things by is the one measured from his models now
+ok 732 - his outline the bake keeps the floor off things by is the one measured from his models now
+  ---
+  duration_ms: 19577.406221
+  type: 'test'
+  ...
+# Subtest: the bake asks the written plan's own walker, whatever loader it runs under
+ok 733 - the bake asks the written plan's own walker, whatever loader it runs under
+  ---
+  duration_ms: 0.477649
+  type: 'test'
+  ...
+# Subtest: the baked file carries what the drawing needs: his outline and the bake's settings, as it was baked with
+ok 734 - the baked file carries what the drawing needs: his outline and the bake's settings, as it was baked with
+  ---
+  duration_ms: 6.123643
+  type: 'test'
+  ...
+# Subtest: the cells round him: every cell with a floor within the radius, green where he may stand, red where he may not, at the floor's own height
+ok 735 - the cells round him: every cell with a floor within the radius, green where he may stand, red where he may not, at the floor's own height
+  ---
+  duration_ms: 77.930027
+  type: 'test'
+  ...
+# Subtest: his outline is drawn as it was measured: a ring at each height, as wide as he reaches there; his shoes and hem below the knee
+ok 736 - his outline is drawn as it was measured: a ring at each height, as wide as he reaches there; his shoes and hem below the knee
+  ---
+  duration_ms: 0.875632
+  type: 'test'
+  ...
+# Subtest: the summit's low wall has no slit between its plaster and its tiles
+ok 737 - the summit's low wall has no slit between its plaster and its tiles
+  ---
+  duration_ms: 297.479613
+  type: 'test'
+  ...
+# Subtest: the screen wall has no slit between its plaster and its tiles
+ok 738 - the screen wall has no slit between its plaster and its tiles
+  ---
+  duration_ms: 25.975107
+  type: 'test'
+  ...
+# Subtest: the register's file column is read as the paths it names
+ok 739 - the register's file column is read as the paths it names
+  ---
+  duration_ms: 5.471488
+  type: 'test'
+  ...
+# Subtest: every asset file under app/ that goes into the site has a row in the register
+ok 740 - every asset file under app/ that goes into the site has a row in the register
+  ---
+  duration_ms: 27.821467
+  type: 'test'
+  ...
+# Subtest: every file under app/ that the register names is there
+ok 741 - every file under app/ that the register names is there
+  ---
+  duration_ms: 0.602307
+  type: 'test'
+  ...
+# Subtest: every row says whether it may be sold with the game, whether it must be credited, where its terms are and when they were read
+ok 742 - every row says whether it may be sold with the game, whether it must be credited, where its terms are and when they were read
+  ---
+  duration_ms: 1.120184
+  type: 'test'
+  ...
+# Subtest: the code is one JPEG of 1152 × 1152 in app/web/, outside the folders the build copies whole, named by the parent project's version
+ok 743 - the code is one JPEG of 1152 × 1152 in app/web/, outside the folders the build copies whole, named by the parent project's version
+  ---
+  duration_ms: 4.848699
+  type: 'test'
+  ...
+# Subtest: the register names the file, says where it came from and what its hash is, and the hash is the file's
+ok 744 - the register names the file, says where it came from and what its hash is, and the hash is the file's
+  ---
+  duration_ms: 0.680439
+  type: 'test'
+  ...
+# Subtest: it is shown in every language, and the registration link carries its own campaign content
+ok 745 - it is shown in every language, and the registration link carries its own campaign content
+  ---
+  duration_ms: 0.704501
+  type: 'test'
+  ...
+# Subtest: the words beside the code do not say what the sheet must not (功德、供养、布施、回向), and the code's lines are all in the other languages' tables
+ok 746 - the words beside the code do not say what the sheet must not (功德、供养、布施、回向), and the code's lines are all in the other languages' tables
+  ---
+  duration_ms: 1.072667
+  type: 'test'
+  ...
+# Subtest: the drop is loud at the lip, fades with distance and is silent beyond hearing
+ok 747 - the drop is loud at the lip, fades with distance and is silent beyond hearing
+  ---
+  duration_ms: 1.069348
+  type: 'test'
+  ...
+# Subtest: drops fall now and then; near the well they are heard, from across the terrace they are not
+ok 748 - drops fall now and then; near the well they are heard, from across the terrace they are not
+  ---
+  duration_ms: 6.844148
+  type: 'test'
+  ...
+# Subtest: every ring stays on the water between the jambs, and none is drawn while he is indoors
+ok 749 - every ring stays on the water between the jambs, and none is drawn while he is indoors
+  ---
+  duration_ms: 4.660535
+  type: 'test'
+  ...
+# Subtest: the pool is in the niche, inside what keeps him from walking into it
+ok 750 - the pool is in the niche, inside what keeps him from walking into it
+  ---
+  duration_ms: 0.227851
+  type: 'test'
+  ...
+# Subtest: the well's name board hangs in front of the stone of its arch, where it can be read, not inside it
+ok 751 - the well's name board hangs in front of the stone of its arch, where it can be read, not inside it
+  ---
+  duration_ms: 12.162575
+  type: 'test'
+  ...
+# Subtest: every work that hangs is described, credited to the museum that publishes it, and its picture is there
+ok 752 - every work that hangs is described, credited to the museum that publishes it, and its picture is there
+  ---
+  duration_ms: 5.796035
+  type: 'test'
+  ...
+# Subtest: each hall has wall enough for its works beside its own leaf
+ok 753 - each hall has wall enough for its works beside its own leaf
+  ---
+  duration_ms: 0.316151
+  type: 'test'
+  ...
+# Subtest: every figure a hall stands is a packed scan that is there, small, and stands in a hall that exists
+ok 754 - every figure a hall stands is a packed scan that is there, small, and stands in a hall that exists
+  ---
+  duration_ms: 0.334218
+  type: 'test'
+  ...
+1..754
+# tests 754
+# suites 0
+# pass 741
+# fail 0
+# cancelled 0
+# skipped 13
+# todo 0
+# duration_ms 402346.143216
+unit 0

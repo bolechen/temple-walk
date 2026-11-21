@@ -8,12 +8,22 @@ const START = [0, 96];
 test("a place is kept and read back, and a damaged or foreign save is ignored", () => {
   const s = store(); assert.equal(readPlace(s), null);
   assert.ok(writePlace(s, { x: 3.14159, z: -20.5, yaw: 1.23456, label: "钟楼", at: 5 }));
-  assert.deepEqual(readPlace(s), { x: 3.14, z: -20.5, yaw: 1.235, label: "钟楼", at: 5, up: null });
+  assert.deepEqual(readPlace(s), { x: 3.14, z: -20.5, yaw: 1.235, label: "钟楼", at: 5, up: null, hall: null });
   for (const bad of ["", "{", "null", "[]", '{"x":"3","z":1}', '{"x":1}', '{"x":1e9,"z":0}', '{"x":null,"z":2}']) { s.setItem(PLACE_KEY, bad); assert.equal(readPlace(s), null, bad); }
-  assert.deepEqual(sanitizePlace({ x: 1, z: 2, yaw: "north", label: 7 }), { x: 1, z: 2, yaw: 0, label: "", at: 0, up: null });
+  assert.deepEqual(sanitizePlace({ x: 1, z: 2, yaw: "north", label: 7 }), { x: 1, z: 2, yaw: 0, label: "", at: 0, up: null, hall: null });
   writePlace(s, { x: 1, z: 2 }); clearPlace(s); assert.equal(readPlace(s), null);
   assert.equal(readPlace({ getItem() { throw new Error("no storage"); } }), null, "a browser that refuses storage is not an error");
   assert.equal(writePlace({ setItem() { throw new Error("full"); } }, { x: 1, z: 2 }), false);
+});
+test("a place kept in a hall says which hall, and a place kept before halls were named is read as on the ground (#375)", () => {
+  const s = store();
+  assert.ok(writePlace(s, { x: 120.83, z: 4.31, yaw: 0.3, label: "大雄宝殿", at: 7, hall: "main" }));
+  assert.deepEqual(readPlace(s), { x: 120.83, z: 4.31, yaw: 0.3, label: "大雄宝殿", at: 7, up: null, hall: "main" });
+  // what the page kept before #375: the room's place, no hall; read as it was, with no error
+  s.setItem(PLACE_KEY, JSON.stringify({ x: 120, z: 6.8, yaw: 0, label: "大雄宝殿", at: 1795233520952 }));
+  assert.deepEqual(readPlace(s), { x: 120, z: 6.8, yaw: 0, label: "大雄宝殿", at: 1795233520952, up: null, hall: null });
+  for (const bad of ["", "Main", "../x", "a".repeat(25), 7, {}]) { s.setItem(PLACE_KEY, JSON.stringify({ x: 1, z: 2, hall: bad })); assert.equal(readPlace(s).hall, null, String(bad)); }
+  assert.ok(!("hall" in JSON.parse((writePlace(s, { x: 1, z: 2 }), s.getItem(PLACE_KEY)))), "a place on the ground keeps no hall");
 });
 test("where he was is called by the hall he is in, the nearest place of an observance, or only the way", () => {
   const named = [{ place: "钟楼", at: [15.5, 36.9] }, { place: "茶寮", at: [-10.5, 23.2] }];

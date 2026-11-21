@@ -3,6 +3,7 @@
 import { defineConfig } from "vite";
 import { channelOf } from "./app/src/channel.js";
 import { deployOf } from "./app/src/deploy.js";
+import { BENCH_LEVELS, WORKBENCH_LEVELS, levelShipped, workbenchBuild } from "./app/src/bench.js";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs"; import path from "node:path"; import { fileURLToPath } from "node:url";
 
@@ -17,8 +18,15 @@ const keep = () => {
     name: "temple-walk:keep-fetched-files", apply: "build",
     configResolved(config) { out = path.resolve(config.root, config.build.outDir); },
     // A level's scripts are bundled into the page, not shipped as files beside it.
+    // A level only the testers' builds list (app/src/bench.js, #409) leaves its floor and its doorway pictures out of a
+    // production build, as the bundler leaves out its code.
     closeBundle() {
-      for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(out, f), { recursive: true, filter: (p) => !/\.(py|md)$/.test(p) && !(p.includes(`${path.sep}levels${path.sep}`) && (p.endsWith(".js") || p.endsWith(`${path.sep}locales`))) });
+      const away = new Set();
+      for (const id of [...BENCH_LEVELS, ...WORKBENCH_LEVELS]) if (!levelShipped(id, deploy)) {
+        away.add(path.join(app, "shared", "walk", `${id}.bin`)); const list = path.join(app, "shared", "doorways", `${id}.json`); away.add(list);
+        if (fs.existsSync(list)) for (const e of Object.values(JSON.parse(fs.readFileSync(list, "utf8")).halls || {})) for (const f of [e.day, e.night, e.dist, e.in?.day, e.in?.night, e.in?.dist]) if (f) away.add(path.join(app, "shared", "doorways", f));
+      }
+      for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(out, f), { recursive: true, filter: (p) => !away.has(p) && !/\.(py|md)$/.test(p) && !(p.includes(`${path.sep}levels${path.sep}`) && (p.endsWith(".js") || p.endsWith(`${path.sep}locales`))) });
       const file = path.join(out, NOTICES), text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
       const lacking = LIBRARIES.filter((l) => !text.includes(l));
       if (lacking.length) throw new Error(`${NOTICES} is missing from the build or does not name ${lacking.join(", ")} (run node tools/notices.mjs)`);
@@ -82,7 +90,7 @@ const versionFile = () => ({
 });
 
 export default defineConfig({
-  define: { __CHANNEL__: JSON.stringify(channel), __DEPLOY__: JSON.stringify(deploy), __VERSION__: JSON.stringify(version), __COMMIT__: JSON.stringify(commit), __PR__: JSON.stringify(pr) },
+  define: { __CHANNEL__: JSON.stringify(channel), __DEPLOY__: JSON.stringify(deploy), __WORKBENCH__: JSON.stringify(workbenchBuild(deploy) && process.env.VITE_NO_WORKBENCH !== "1"), __VERSION__: JSON.stringify(version), __COMMIT__: JSON.stringify(commit), __PR__: JSON.stringify(pr) },
   root: app, base: "./", publicDir: false, cacheDir: path.join(here, "node_modules/.vite"), plugins: [channelStub(), deployPage(), versionFile(), keep()],
   server: { host: "127.0.0.1", port: 8000 }, preview: { host: "127.0.0.1", port: 8000 },
   build: { outDir: dist, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 2000 },

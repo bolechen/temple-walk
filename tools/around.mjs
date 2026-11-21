@@ -9,10 +9,14 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { buildDrawn } from "./walk/scene.mjs";
 import { inventory, pick, stationsFor, visitors, floor, EYE, HIGH } from "./around/plan.mjs";
 import { ensure, prepare } from "./bake-walk.mjs";
+import { levelFromCommandLine, levelObject, walkFile } from "./walk/level-arg.mjs";
+import { readFileSync } from "node:fs";
 
 const args = process.argv.slice(2), out = args.find((a) => !a.startsWith("--")) || "tools/out/around";
-ensure(prepare());   // the floor for this commit's meshes, from the cache or baked (a minute)
-const drawn = buildDrawn(), fl = floor(), all = inventory(drawn), chosen = pick(all);
+// Which level (docs/t05/LEVEL-SPLIT.md S6): --level=<id>, the prologue by default; its floor, from the cache or baked (a minute).
+const id = levelFromCommandLine(), L = await levelObject(id);
+ensure(prepare(L));
+const drawn = buildDrawn(L), fl = floor(readFileSync(walkFile(id))), all = inventory(drawn), chosen = pick(all);
 const items = chosen.map((i) => ({ ...i, stations: stationsFor(i, fl) }));
 const v = visitors(fl, 200);
 const cls = {}; for (const i of all) (cls[i.cls] ||= { n: 0, shown: 0, source: i.source }).n++;

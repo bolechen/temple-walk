@@ -36,6 +36,7 @@ import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
 import { clearOfCenser } from "./src/censer.js";
 import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { eventFor } from "./src/joya.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
 import { composeCard } from "./src/card.js";
@@ -54,6 +55,8 @@ import { createHints } from "./src/hints.js";
 import { createUI } from "./src/ui.js";
 import { createCommunity } from "./src/community.js";
 import { createCredits } from "./src/credits.js";
+import { createShare, shareOrSave, countDownload } from "./src/share.js";
+import { FROM, fromOf } from "./src/sharelink.js";
 import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
@@ -94,6 +97,7 @@ createPaper();   // the paper, strokes and seals the interface is drawn with (sr
 const ui = createUI();   // what lies over the picture, in order: Esc puts away the top one (src/ui.js)
 createCommunity(ui);
 createCredits(ui);
+createShare(ui);   // the sheet a picture is saved from where the system cannot share it (#344)
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
 const hints = createHints({ off: Q.has("shot"), ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
@@ -173,24 +177,31 @@ await loading.step(tr("山门"));
 // The great hall's interior: a room of its own, far below the courts, entered at the hall's door.
 const rooms = part("interior", () => { const h = buildInteriors(M, site.halls, renderer); scene.add(h.group); return h; });
 if (rooms) rooms.group.visible = false;   // not seen from the courts: the mirror once drew them, figures and all, sixty metres down
-for (const hall of INCENSE_HALLS) site.places[incenseId(hall)] = rooms.places[incenseId(hall)]; site.seats.push(...rooms.seats);
+// (A level without one of these halls has no place for its incense, #409.)
+for (const hall of INCENSE_HALLS) if (rooms.places[incenseId(hall)]) site.places[incenseId(hall)] = rooms.places[incenseId(hall)];
+site.seats.push(...rooms.seats);
 for (const [id, p] of [...INCENSE_HALLS.map((h) => [incenseId(h), site.places[incenseId(h)]]), ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
+// The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
+// its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
+const SKY_AT = L.skyAt || [0, 0]; sky.at(SKY_AT[0], 0, SKY_AT[1]);
 const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
-const backdrop = part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land));
+// A level that has no far hills, no bamboo or no censer of its own (#409: T05 stands in a flat town) builds none of them.
+const NONE = { setMood() {}, update() {} };
+const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land)) : NONE;
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
-const bamboo = part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
+const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
 await loading.step(tr("竹林"));
-const props = part("props", () => createProps(scene, M, site.censer, L.propsAt));
+const props = site.censer ? part("props", () => createProps(scene, M, site.censer, L.propsAt)) : { ...NONE, censer: () => ({ none: true }), setTraces: () => 0 };
 const post = createPost(renderer, scene, camera, quality, OFF);
 await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
-const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: L.grove.areas, land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: L.grove?.areas || [], land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
 const glows = []; let glowCloud = null;
@@ -221,7 +232,7 @@ const well = site.places.well ? createWell(scene, site.places.well.pool, wellDri
 onDrop(() => well.ripple());
 // The birds in the old trees by the bell tower, flushed by the third stroke (flock.js; game.js says when). Not at night,
 // when nothing of them would be seen, and not from indoors.
-const flock = site.places.bell && site.cedars ? createFlock(scene, site.cedars, site.places.bell.at) : { flush: () => false, state: () => ({ none: true }) };
+const flock = site.places.bell && site.cedars ? createFlock(scene, site.cedars, site.places.bell.at) : { update() {}, flush: () => false, state: () => ({ none: true }) };
 addEventListener("flush", () => { if (!inside && mood.time !== "night" && flock.flush()) flutter(0.8); });
 
 await loading.step(tr("石阶"));
@@ -242,11 +253,17 @@ const nowMood = moodNow();
 // visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
 const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
 const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
-const state = { season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
+const state = { hand: false, follow: false, season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
                 time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
 // After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
 // choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
 state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
+// The year-end bell (#341): on that night (or on the workbench with ?event=joya) the mountain is a winter night, unless the
+// address names a season, an hour or a fixed view. A hand that picks one later keeps it (`state.hand`).
+const joyaNight = () => eventFor({ query: Q, bench: import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname) }).open && !(SEASONS.includes(Q.get("season")) || TIMES.includes(Q.get("time")) || Q.has("shot") || Q.has("show") || Q.has("cam"));
+// What the visitor had before the night took over, given back when the window closes (unless a hand has chosen since).
+let beforeJoya = null;
+if (joyaNight()) { beforeJoya = { season: state.season, time: state.time, follow: state.follow }; state.season = "winter"; state.time = "night"; state.follow = false; }
 // Across a change of language the season and hour of this visit are as they were, a hand's choice of hour too (#140).
 if (relang && relang.season && relang.time && !Q.has("season") && !Q.has("time")) { state.season = relang.season; state.time = relang.time; state.follow = relang.follow && !prologueDay; }
 let mood = null;
@@ -364,7 +381,8 @@ const ZB = L.zones;
 // `t`: the clock the frame draws the wind by (`now / 1000`, the same timeline as performance.now()), so that the gusts
 // heard are the ones the leaves and the smoke are seen to follow. (Under ?shot or reduced motion the picture holds its
 // clock at 0; the sound goes on along the timeline.)
-const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
+let joyaOn = false;   // the year-end bell's night is open (joya-ui.js says so): the bell's court plays only the drone (score.js)
+const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), joya: joyaOn, season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
 const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
@@ -853,7 +871,7 @@ function frame(now) {
   } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length }); } }
+  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -873,9 +891,9 @@ const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return
 let pushed = null;   // what the last push did, frame by frame (__probe().push): the most it turned the angle, moved the eye, and frames he faded back
 setView(view);
 ui.layer("keys", { kind: "panel" }).layer("moodPanel", { kind: "panel", release: true });
-document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => { setMood(b.dataset.season, state.time); track("demo.mood", { season: b.dataset.season, time: state.time, follow: state.follow ? 1 : 0 }); }));
-document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => { state.follow = false; setMood(state.season, b.dataset.time); track("demo.mood", { season: state.season, time: b.dataset.time, follow: 0 }); }));
-document.querySelectorAll("[data-follow]").forEach((b) => b.addEventListener("click", () => { state.follow = true; setMood(state.season, moodNow().time); track("demo.mood", { season: state.season, time: state.time, follow: 1 }); }));
+document.querySelectorAll("[data-season]").forEach((b) => b.addEventListener("click", () => { state.hand = true; setMood(b.dataset.season, state.time); track("demo.mood", { season: b.dataset.season, time: state.time, follow: state.follow ? 1 : 0 }); }));
+document.querySelectorAll("[data-time]").forEach((b) => b.addEventListener("click", () => { state.hand = true; state.follow = false; setMood(state.season, b.dataset.time); track("demo.mood", { season: state.season, time: b.dataset.time, follow: 0 }); }));
+document.querySelectorAll("[data-follow]").forEach((b) => b.addEventListener("click", () => { state.hand = true; state.follow = true; setMood(state.season, moodNow().time); track("demo.mood", { season: state.season, time: state.time, follow: 1 }); }));
 // Following the clock is live: when the real hour turns, the picture turns with it (setMood has no fade of its own; a change of hour is a cut today).
 setInterval(() => { const t = photo.on || frozen ? null : hourFollow(state); if (t) setMood(state.season, t); }, 20000);
 
@@ -966,16 +984,16 @@ on("shutter", async () => {
     lastBlob = await new Promise((r) => card.toBlob(r, "image/jpeg", 0.93));
     const url = URL.createObjectURL(lastBlob); $("printImg").src = url; $("saveLink").href = url;
     $("saveLink").download = lang === "zh" ? `云径禅寺-${NAMES[state.season]}${NAMES[state.time]}.jpg` : tr("云径禅寺-{mood}.jpg", { mood: `${tr(NAMES[state.season])}-${tr(NAMES[state.time])}` });
-    const file = new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" });
-    $("shareBtn").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
     ui.open("print", { onClose: () => { if (frozen) freeze(false); } }); stampSound();   // put away by its button or by Esc: the walk goes on
   } catch (e) { freeze(false); throw e; }
   finally { b.disabled = false; }
 });
 on("printBack", () => ui.close("print"));
-on("shareBtn", async () => {
-  try { await navigator.share({ files: [new File([lastBlob], "yunjing.jpg", { type: "image/jpeg" })], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "print" }); } catch {}
-});
+// Shared from wherever the page is open (src/share.js, #344): the system's sheet where it can take the picture, else a
+// sheet to press and hold it on; the address it carries names the observance he stands at, if he is at one.
+const sceneHere = () => { let best = 12, id = "photo"; for (const [k, p] of Object.entries(site.places)) { if (!FROM.includes(k) || p.room) continue; const d = Math.hypot(p.at[0] - pos.x, p.at[1] - pos.z); if (d < best && !inside) { best = d; id = k; } } return id; };
+on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: "yunjing.jpg", title: tr("云径禅寺"), from: sceneHere(), content: "print" }));
+$("saveLink")?.addEventListener("click", () => countDownload("print", sceneHere()));
 
 // ---- A short film (#342, clip.js) ----------------------------------------------------
 // 拍一段: the same view, held, filmed for twelve seconds (stopped whenever the visitor likes). Each frame the framed part
@@ -1041,7 +1059,7 @@ on("clipStop", stopClip);
 on("clipBack", () => ui.close("clip"));
 on("clipShare", async () => {
   if (!clipLast) return;
-  try { await navigator.share({ files: [clipLast.file], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "clip" }); } catch {}
+  try { await navigator.share({ files: [clipLast.file], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
 });
 settings.onChange((s) => $("clipMarkToggle")?.setAttribute("aria-pressed", String(s.clipMark)));
 $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark));
@@ -1073,7 +1091,7 @@ function lookOut(hall) {
   for (const o of scene.children) { const part = o.userData.part; if (COURTS.includes(part)) o.visible = !OFF.has(part); else if (part === "monk" || part === "interior" || part === "drift") o.visible = false; }
   ground.mirror?.(false);
   const target = renderer.getRenderTarget(), xr = renderer.xr.enabled; renderer.xr.enabled = false;
-  try { outCam.update(renderer, scene); } finally { sky.at(0, 0, 0); }
+  try { outCam.update(renderer, scene); } finally { sky.at(SKY_AT[0], 0, SKY_AT[1]); }
   renderer.xr.enabled = xr; renderer.setRenderTarget(target);
   scene.children.forEach((o, i) => { o.visible = seen[i]; });
   const u = r.outlook.material.uniforms; u.tOut.value = outCube.texture; u.uHas.value = 1; u.uTurn.value.set(f[0], f[1]);
@@ -1294,6 +1312,7 @@ window.__censer = (points = []) => {
   const t = still ? 0 : performance.now() / 1000;
   if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
   const c = document.createElement("canvas"), w = canvas.width, h = canvas.height; c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0);
+  if (!site.censer) return { none: true };   // a level with no censer (#409)
   const lum = points.map(([px, py, pz]) => { const v = new THREE.Vector3(site.censer.x + px, site.censer.y + py, site.censer.z + pz).project(camera);
     const sx = Math.round((v.x + 1) / 2 * w), sy = Math.round((1 - v.y) / 2 * h); if (v.z > 1 || sx < 2 || sy < 2 || sx > w - 3 || sy > h - 3) return null;
     const d = x.getImageData(sx - 2, sy - 2, 5, 5).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += (d[i] + d[i + 1] + d[i + 2]) / 3; return s / 25; });
@@ -1321,7 +1340,7 @@ window.__capture = async () => { const c = await capture(); return { w: c.width,
 window.__blocked = (x, z) => walker.blocked(x, z);
 // Which walker answers (#265): its mode, what the baked floor weighed and cost to fetch, open and keep, and the porch edges.
 window.__eyeSpace = () => ({ ...eyeInfo, t0: undefined, radius: eyeSpace ? +eyeSpace.radius.toFixed(3) : null, shutNow: eyeSpace ? eyeSpace.shut(camera.position.x, camera.position.y, camera.position.z) : null });   // (shutNow: the eye where it stands this frame touches something drawn, asked of the hierarchy itself)
-window.__level = () => ({ ...LV });   // which temple this page walks, and what the address asked for (src/level.js, #369)
+window.__level = () => ({ ...LV, keepsPlace: !!L.keepsPlace });   // which temple this page walks, what the address asked for (src/level.js, #369), and whether it keeps the prologue's place and book (#385, #426)
 window.__walker = () => ({ ...walker.stats, grid: walker.grid ? walker.grid()?.id || null : null, answers: walker.answers ? walker.answers(pos.x, pos.z) : false, drops: walker.drops.length, start: site.start.slice(0, 2), blockedHere: walker.blocked(pos.x, pos.z), floor: walker.heightAt(pos.x, pos.z), eye: camera.position.y });   // (asked where he is, not at __yard()'s centimetres: on a 5 cm grid those can fall in the next cell)
 window.__drops = () => walker.drops.map((e) => ({ a: e.a, b: e.b, normal: e.normal, top: e.top }));   // the porch edges as this walker has them
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
@@ -1411,12 +1430,16 @@ createGame({
   level: L,   // which temple: whether it keeps a place, plays the opening, raises the prologue's title (#385)
   traceStubs: (k) => props.setTraces(k),   // the stubs other visitors left in the censer today (同修留痕)
   site, walker, scene,
-  where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null }),
+  where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null, hall: inside && !upIn ? hallIn.room.id : null }),
+  hallIds: site.halls.map((h) => h.id),
   // Up on a balcony walked round: which one; the stair's foot in the room he is in, if it has one; go up or come down.
   up: () => (upIn ? upIn.id : null), stair: () => (inside && hallIn.room.stair) || null, lofts: site.lofts,
   climb: (id) => climbTo(site.lofts[id]), descend: () => climbTo(null),
   // Stand him somewhere at once, facing a way (coming back to where a visit was left, or to the start of the path).
-  place(x, z, turn, up = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
+  // Stood where a kept place says: on a balcony, in a hall's room (#375: indoors first, so that the room's floor is the one
+  // asked, as a change of language does), or on the ground; a spot that falls in something moves to the nearest open floor,
+  // in a room else its door, out of doors else the foot of the path.
+  place(x, z, turn, up = null, hallId = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } const hall = hallId ? site.halls.find((h) => h.id === hallId) : null; if (hall) indoors(hall); { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else if (hall) { x = pos.x; z = pos.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
   start: site.start,
   // Go somewhere at once behind the veil, as through a door: to a place out of doors, or to one inside a hall.
   async travel(x, z, turn, hallId) {
@@ -1455,6 +1478,12 @@ createGame({
   // usual swing. Not for an observance: it is gone to with 自动镜头 off too, as the close itself is.
   holdEye(eye) { const { place, shot } = holdShot(eye, camera.aspect || 16 / 9); return director.go("ending", { ...place, shot }, 0, { now: true, force: true }); },
   undirect: () => director.drop(), directOut: () => director.out(), directed: () => director.active(), directArrived: () => director.state().phase === "hold",
+  // The year-end bell's night has come while the page was open (joya-ui.js): a winter night, unless a hand has chosen.
+  eventNight() { if (!state.hand && joyaNight() && (state.season !== "winter" || state.time !== "night")) { beforeJoya = { season: state.season, time: state.time, follow: state.follow }; state.follow = false; setMood("winter", "night"); } },
+  // And when it has gone: what he had before, the hour following the clock again if it did (prologueDay keeps 昼).
+  eventDay() { if (!beforeJoya || state.hand) { beforeJoya = null; return; } const b = beforeJoya; beforeJoya = null; state.follow = b.follow; setMood(b.season, b.follow ? moodNow().time : b.time); },
+  setJoya(on) { joyaOn = !!on; },
+  eventMood: () => ({ before: beforeJoya, hand: state.hand, season: state.season, time: state.time }),
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),

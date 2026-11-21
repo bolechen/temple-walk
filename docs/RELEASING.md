@@ -49,6 +49,17 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 
 **发版即上线。** 对外分享、或要让一个修复让玩家玩到，都靠发版：版本 PR 随时可合，看过 canary 觉得好就立刻合。合并后 `release-please.yml` 在打出标签的同一次运行里调用 `deploy-tag.yml`（`target: production`）（默认令牌打的标签不会触发别的 workflow，所以由它按 `release_created` 输出接着调用），从标签构建、跑一次 `boot`、部署到生产，并把线上首页与刚建好的首页比哈希。
 
+## 发版前的全量：免费机器或 T4（#335）
+
+发版前要看全量时：Actions → **End to end, every scenario** → Run workflow，选 `runner`。
+
+- `github`（默认，夜间也是它）：十二台免费机器，软件渲染，按各场景上次实测的时间分片（`tests/e2e/shards.cjs`）。
+- `t4`：四个 Hugging Face Job，每个一块 T4，Chromium 经 Vulkan 用显卡画。流程：`t4-pack` 建站并连检出一起打成一个包；`t4` 四片各把包传到私有桶 `<账号>/temple-walk-e2e` 的 `runs/<运行>/`，起 Job 跑 `tools/ci/t4-job.sh`（解包、`pnpm install`、`tests/e2e/run.cjs --shard=i/4`），等它结束，把报告、截图、Job 日志取回作为 artifact `e2e-t4-<片>-…`，再从桶里删掉这一次的文件；`t4-checks` 在免费机器上并行跑 shard 1 通常先跑的解析、类型、单测和 `edges`。运行摘要里有每片的显卡型号和各场景耗时。
+- 红的情况都是真红：没有 `HF_TOKEN`、Job 起不来、报错、超时、被取消、没带回报告、场景不过，都让那一片失败，日志第一行附近有 Job 的地址（`https://huggingface.co/jobs/<账号>/<id>`）。浏览器若退回软件渲染（`SwiftShader`/`llvmpipe`），`run.cjs` 直接退出码 3：T4 的运行不会是披着 T4 名字的免费机器运行。取消这次运行会取消 Job，不会留着显卡计费。
+- 密钥：仓库 secret `HF_TOKEN`（只给这个 workflow，需要有建桶和跑 Job 的权限；Settings → Secrets and variables → Actions 里加，值不进任何日志或文件）。只在 `t4` 的启动那一步读取。这个 workflow 没有 `pull_request` 触发，所以 PR（包括外部 fork 的 PR）碰不到它；手动触发只有有写权限的人能做。
+- 费用：T4 约 0.4 美元每小时，四个 Job 各按墙钟计，一次全量按每片约 15 分钟算，约 0.4 美元。夜间默认用哪个，等 T4 与免费机器的对比（结果是否一致、墙钟时间）出来后由所有者定。
+- 本地试一片：`HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/4`（或直接写场景名）；没有显卡的 CPU 规格上试流程：`T4_GPU=0 T4_FLAVOR=cpu-performance tools/ci/t4-launch.sh boot`。`tests/unit/t4-run.test.mjs` 守着触发条件、密钥只在一处读取、启动器的各种失败。
+
 ## 出事先回滚，再修
 
 1. 打开 Actions → **Deploy a version tag** → Run workflow（`deploy-tag.yml`）：`ref` 填要回到的标签（如 `v0.4.0`；必须是 `vX.Y.Z` 标签，分支和提交号会被拒绝），`target` 选 `production`（线上）或 `canary`（内部 Worker，用来演练，不碰玩家），点运行。它从那个标签自己的代码建站（可取消勾选 `check` 以略过 `boot`、求最快），部署到所选的 Worker，把线上首页和刚建好的首页比哈希，写进运行摘要。`dry_run` 勾上则只建站、检查、打印「要把哪个标签部署到哪个 Worker」，不部署。
@@ -64,11 +75,15 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 |---|---|
 | 接口 | `POST /api/trace`，体 `{ "place", "kind" }`（`place` 取 `worker/trace-core.js` 的 `PLACES`，`kind` 取 `rite`/`seal`，其余 400）；`GET /api/traces?day=today`（或保留期内的 `YYYY-MM-DD`）回 `{ day, traces: { <place>: { rite, seal } } }`，今天的在边缘缓存 30 秒 |
 | 绑定 | `TRACES` → Durable Object 类 `TraceCounter`（SQLite 存储，`migrations` 的 `v1` 用 `new_sqlite_classes`），整座寺一个对象（`idFromName("temple")`），表只有 `counts(day, place, kind, n)` |
+| 绑定（#341 除夕撞钟） | `JOYA` → Durable Object 类 `JoyaShard`（SQLite，`migrations` 的 `v2`，`v1` 不改），16 个对象（`idFromName("joya:0".."joya:15")`），每个表只有 `joya(year, n)`；`/api/joya` 的 POST 随机落一片，GET 读 16 片的和并在机房缓存 10 秒。部署后第一次运行 `v2` 迁移，令牌要有 Durable Objects 的写权限（同 `v1`） |
+| 除夕撞钟的发版与当夜（#341，主创 2026-11-20 定） | **正式版在 12-30 前发出**（带这个功能）。12-31 北京时间 20:00 一到，主创在正式站和 canary 上**不带参数**各真敲一次，确认「今夜已撞 N 声」加一（canary 与正式站各是自己的计数）。窗口外的验证：PR 预览上 `?event=joya&joya=fake:104&at=bell`（页面里的假计数），真 Worker 由 `node tools/worker-smoke.mjs`（workerd + 真 DO，把服务端时钟拨到 12-31 12:00Z 能计数、拨到 1-01 15:00Z 回 403；时钟只能由冒烟用 `--var JOYA_TEST_NOW` 给，任何 wrangler 配置里都没有）和单测担保 |
+| 除夕撞钟的回滚预案 | 当夜计数不加、接口报错或压力出问题时，**目标是前端不显示计数那一行，钟照常能敲**。最快（几分钟，不发版）：在 Cloudflare 控制台给正式站 zone 加一条自定义规则拦截路径 `/api/joya`（Block）；页面拿不到数据就不显示那一行、不报错（`joya-ui.js` 的静默，e2e `joya` 验过），撞钟、远钟以外的一切照旧，同修留痕的 `/api/trace` 不受影响。规则由所有者或有控制台权限的人加；问题解决后删掉规则即恢复。次选：按上文用 `deploy-tag.yml` 回滚到上一个版本标签（整版回退，除夕撞钟随之消失）。不要删 `JoyaShard` 的迁移或绑定（删类要另写 `deleted_classes` 迁移，当夜不做） |
+| 除夕撞钟合并后在 canary 上验 `v2` 迁移（#341，第一次在真 Cloudflare 上执行） | **一、看部署**：合并后 `pages.yml` 的 `deploy` 作业执行 `wrangler deploy -c wrangler.canary.jsonc`，输出里应有迁移 `v2`（`JoyaShard`）被应用、没有报错。若因令牌缺 Durable Objects 权限而失败：canary 停在上一版（`wrangler deploy` 不会半途换脚本），由所有者在 Cloudflare 给 `CLOUDFLARE_API_TOKEN` 补 Workers Scripts 编辑权限后，在 Actions 里重跑该作业。**二、问接口**（不在窗口内，12-31 之前）：`curl -s https://temple-walk-canary.bole-chen.workers.dev/api/joya?year=2027` 应回 200、`{"year":2027,"total":0,"rounds":0,…}`；`curl -s -X POST -H 'content-type: application/json' -d '{"n":1,"tz":-480}' https://temple-walk-canary.bole-chen.workers.dev/api/joya` 应回 **403**（不是当夜，窗口判断在线上生效）；把 `n` 改成 `9` 应回 400；`/api/traces?day=today` 照旧 200（同修留痕不受影响）。**三、看页面**：canary 不带参数打开，顶上没有计数行（窗口未开），控制台无错误；钟照常能敲。**四、12-31 当夜**：北京 20:00 后主创在 canary 和正式站各真敲一次，顶上的数加一（canary 与正式站各是自己的计数）。**回滚**：只要隐藏计数，就用上一行的 Cloudflare 规则拦 `/api/joya`，不发版。不要在迁移已应用后回退到没有 `JoyaShard` 类的脚本：Cloudflare 要求删类必须另写 `deleted_classes` 迁移（按其 Durable Objects 迁移文档，本账号未实测），否则部署会被拒；要整版回退时保留 `JoyaShard` 的类与绑定，只撤页面的部分 |
 | 隔离 | Durable Object 的命名空间属于 Worker：`temple-walk`（生产）和 `temple-walk-canary` 是两个 Worker，计数天然各自独立，没有共用的 id 要配。PR 预览（`wrangler.jsonc`，`wrangler preview`）**没有**这段脚本和绑定，页面也不会在预览里请求接口（`?presence=1` 只给测试和工作台，对预览 Worker 是 404，页面静默）。本地和测试：`node tools/worker-smoke.mjs [wrangler.canary.jsonc]`（`wrangler dev --local`，workerd 加本地 SQLite，不碰 Cloudflare），单测 `tests/unit/trace.test.mjs` 用 `node:sqlite` 跑同一条 SQL |
 | 发布 | 只经 CI：`pages.yml` 的 `deploy`（canary）和 `deploy-tag.yml` 照旧执行 `wrangler deploy -c wrangler.<target>.jsonc`，两处的稀疏检出加了 `worker/`；`pages.yml` 多一个 `worker` 作业（上面的本地冒烟），列入 `verify` |
 | 首次部署要注意 | 迁移 `v1` 会在第一次 `wrangler deploy` 时创建 Durable Object；`CLOUDFLARE_API_TOKEN` 要有 Workers Scripts 编辑权限（Durable Object 迁移随脚本一起提交，不另需权限；这一点未在本账号上实测，第一次发 canary 时看 `deploy` 作业的输出）；账号要是 Workers Paid（免费档每天 10 万请求，见下） |
 | 回滚 | 回滚某个标签会把脚本也回到那个标签的版本；计数表不随版本变，旧页面读不到接口时静默。要整个关掉：把页面的 `presenceOn` 返回 false（下一版），或在 Cloudflare 里给 `/api/*` 加一条自定义规则拦截，页面静默 |
-| 可选的边缘限流 | 脚本里的限流是按地点的总量桶加每日上限，不认人（trace-core.js 注释）。想要按来源地址的限流，在 Cloudflare 控制台给 `/api/trace` 加一条速率限制规则（它在边缘自己计数，我们的代码和库里不存任何地址），这要账号权限，CI 做不了，所以只作为可选项 |
+| 边缘限流（已配，2026-11-21） | 脚本里的限流按地点的总量桶加每日上限，不认人（见 trace-core.js 的注释）。按来源地址的限流放在 Cloudflare 边缘：免费档只能有一条速率限制规则，已经用掉了，所有者 2026-11-21 把 `/api/trace` 加进了这条规则的路径列表，阈值同为**每个 IP 每 10 秒 10 次**。计数在边缘做，我们的代码和数据库都不存地址。页面上每一处、每一种只报一次（`presence.js` 的 `report`），一次访问最多十几次，分散在几分钟里，远低于阈值；风险是同一个出口 IP 背后的许多人（公司网络、运营商 NAT）可能被一起限住，被限的请求页面静默处理。规则由所有者在控制台维护，CI 和会话都不碰 Cloudflare；要改阈值或删规则，先在这里记下。独立评审 SEC-01 的验收（同一来源连发 200 次后被边缘拦下）由评审在正式站上复测 |
 
 **成本，按每日 10 万次访问估一次**（单价取自 2026-11-20 读到的 developers.cloudflare.com 的 Workers 与 Durable Objects 定价页，三个月后重读）：每次访问约 1 次读（页面进入时读当日）加平均 4 次报告（钟、香、茶、句、井、灯、坐、印，每处每页一次，多数访客做不到一半）≈ 50 万次脚本请求一天 ≈ 1500 万一月。
 - Workers 请求：含 1000 万/月，超出 $0.30/百万 → (1500−1000)/100 × 0.30 ≈ **$1.5**；CPU 每次几毫秒，在含 3000 万 CPU 毫秒以内。

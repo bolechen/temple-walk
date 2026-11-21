@@ -10,6 +10,8 @@ import { SEAL, SEALS, VERSES, createJourney, browserStore, placeAt, pickVerse, b
 import { drawGoshuin, sealStamp, sealBoxes } from "./goshuin.js";
 import { chime, coin, coinsHeard, drop, setSeals, hush, farBell, mountainBell, prologueNote, holdMusic, closeMusic, passClose, awaitTitle } from "./audio.js";
 import { openingFor, atGate } from "./opening.js";
+import { shareOrSave, countDownload } from "./share.js";
+import { fromOf } from "./sharelink.js";
 import { createRites } from "./rites.js";
 import { createPresence, presenceOn, readDay } from "./presence.js";
 import { traceStubCount } from "./censer.js";
@@ -17,9 +19,13 @@ import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
 import { track } from "./analytics.js";
-import { t, lang, glyphs } from "./i18n.js";
+import { t, lang, glyphs, FONT } from "./i18n.js";
+import { moodOf } from "./mood.js";
 import { WEB } from "./channel.js";
+import { WISHES, decodeLamp, lampLink } from "./wishes.js";
+import { drawLampCard, fitLines } from "./lampcard.js";
 import { processedLine } from "./credits.js";
+import { createJoya } from "./joya-ui.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -46,12 +52,18 @@ export function createGame(y) {
   const BENCH = import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname);
   const seeded = BENCH ? bookFrom(Q.get("seals")) : null;
   const memoryStore = (v) => ({ get: () => v, set: (x) => { v = x; } });
-  const journey = createJourney(seeded ? memoryStore(seeded) : browserStore(), undefined, { closedBefore: seeded ? false : seenBefore });
-  if (seenBefore) { try { localStorage.removeItem(ENDED); } catch {} }   // the book holds it now, and forgets it on 重新朝山
+  // The book, the visit's metres and the close's old note under yunjing.* are the prologue's. Another level (T05, which
+  // testers walk on the canary since the owner's change of 2026-11-21) neither reads nor writes them: it holds an empty
+  // book in memory for the visit and keeps no metres, so that walking it neither shows the prologue's seals nor adds to
+  // its walk. A level says it is the prologue's by keeping the prologue's place (keepsPlace, #385), until each level
+  // keeps records of its own.
+  const ours = !y.level || !!y.level.keepsPlace;
+  const journey = createJourney(seeded ? memoryStore(seeded) : ours ? browserStore() : memoryStore(null), undefined, { closedBefore: seeded || !ours ? false : seenBefore });
+  if (seenBefore && ours) { try { localStorage.removeItem(ENDED); } catch {} }   // the book holds it now, and forgets it on 重新朝山
   // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
   // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
   const ui = y.ui;
-  ui.layer("slip", { confirm: "slipTake" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } });
+  ui.layer("slip", { confirm: "slipTake" }).layer("bless", { kind: "modal" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } });
   $("slipTake")?.addEventListener("click", () => ui.close("slip"));
   // A slip is written down the page, and a long line in a short window (a phone on its side) would run to more columns than the
   // screen is wide. It is fitted when it opens (#203): the same layout with smaller writing, down to 14 px, and only if that
@@ -79,8 +91,8 @@ export function createGame(y) {
 
   // The visit so far: metres walked and time on the mountain, kept between sittings like the seals.
   const VISIT = "yunjing.visit.v1", visit = { metres: 0, seconds: 0, at: null, save: 0 };
-  try { const v = JSON.parse(localStorage.getItem(VISIT) || "null"); if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
-  const keep = () => { try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
+  try { const v = ours ? JSON.parse(localStorage.getItem(VISIT) || "null") : null; if (v && Number.isFinite(v.metres) && Number.isFinite(v.seconds)) { visit.metres = Math.max(0, v.metres); visit.seconds = Math.max(0, v.seconds); } } catch {}
+  const keep = () => { if (!ours) return; try { localStorage.setItem(VISIT, JSON.stringify({ metres: Math.round(visit.metres), seconds: Math.round(visit.seconds) })); } catch {} };
   const told = () => { const l = visitLine(visit.metres, visit.seconds); return !l ? "" : l.under ? t("这一趟走了 {m} 步，在山上不到一分钟。", { m: l.m }) : t("这一趟走了 {m} 步，在山上 {min} 分钟。", { m: l.m, min: l.min }); };
   // ---- On the ground: a ring at every place whose seal is still to be earned ----
   // The summit keeps its ring until the prologue has closed there, whatever else the book holds.
@@ -89,7 +101,7 @@ export function createGame(y) {
   journey.adopt(season());   // a close kept before seasons were belongs to the season the visitor is in now
   const owed = (id) => !!SEAL[id] && (!journey.has(id)) || (id === "sit" && !closedHere());
   // The bell and the tea may be gone back to after their seals: the bell rung again, another bowl drunk.
-  const offered = (id) => owed(id) || id === "bell" || id === "tea" || (incenseHall(id) !== null && !rites.incenseLit(/** @type {string} */ (incenseHall(id))));
+  const offered = (id) => owed(id) || (id === "lamp" && journey.has("lamp")) || id === "bell" || id === "tea" || (incenseHall(id) !== null && !rites.incenseLit(/** @type {string} */ (incenseHall(id))));
   const tex = ensoTexture(), rings = {};
   for (const id in places) {
     const p = places[id], w = id === "sutra" || id === "sit" ? 0.9 : 1.5;
@@ -98,7 +110,7 @@ export function createGame(y) {
   }
   // The lamp the visitor lights stays lit.
   const mine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8).scale(1, 2.1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.4, 0.7), fog: false }));
-  mine.position.fromArray(places.lamp.flame); y.scene.add(mine);
+  if (places.lamp) { mine.position.fromArray(places.lamp.flame); y.scene.add(mine); }   // (a level with no lamp to light has none, #409)
   const refresh = () => {
     for (const id in rings) rings[id].userData.want = owed(id) && (places[id].room || null) === y.room();   // shown unless the eye is on a shot (below)
     mine.visible = journey.has("lamp");
@@ -119,6 +131,8 @@ export function createGame(y) {
   // ---- Words on the page ----
   let sayTimer = 0;
   const say = (text, secs = 5) => { const el = $("say"); if (!el) return; el.textContent = text; el.classList.add("on"); clearTimeout(sayTimer); sayTimer = setTimeout(() => el.classList.remove("on"), secs * 1000); };
+  // The year-end bell (#341): on the last night of the year every stroke of the bell tower's bell counts toward the mountain's.
+  createJoya({ y, ui, say, query: Q, bench: BENCH });
   function earned(id) {
     if (rite && rite.id === id) rite.done = true;
     track("demo.seal", { id, count: journey.count() });
@@ -170,6 +184,7 @@ export function createGame(y) {
   const seatPose = (at, room = null) => { const k = y.site.seats.find((s) => (s.room || null) === room && Math.hypot(s.at[0] - at[0], s.at[1] - at[1]) < 0.3); return k && k.kind === "stool" ? "chair" : "sit"; };
   async function begin(id) {
     if (rite || !places[id]) return;
+    if (id === "lamp" && journey.has("lamp")) return openBless();   // the lamp is lit: what is left to do there is to light one for someone
     const p = places[id], d = SEAL[id] || SEAL.incense, hall = incenseHall(id); $("act")?.setAttribute("hidden", "");
     const mineRite = (rite = /** @type {any} */ ({ id })), on = () => rite === mineRite;
     if (!(await new Promise((r) => y.walkTo([p.at], r))) || !on()) { if (on()) rite = null; return; }
@@ -351,7 +366,7 @@ export function createGame(y) {
     // While he holds the rope or sits on over his tea the button is what he may do next; seated anywhere, it stands him up.
     const held = rite && rite.press && entered && !y.busy() ? rite.word : null, rise = !held && !near && !look && !seatHere && !climb && free && y.seated();
     if (held || near || look || seatHere || climb || rise) {
-      const w = held || (near ? (SEAL[near] || SEAL.incense).act : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
+      const w = held || (near ? (near === "lamp" && journey.has("lamp") ? "为人点灯" : (SEAL[near] || SEAL.incense).act) : look ? (y.gallery[look].item.offering ? "合掌" : "观看") : climb || (seatHere ? "坐下" : "起身"));
       if (b.dataset.word !== w || !b.firstChild) { b.dataset.word = w; b.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${t(w)}</span>`; }
       b.classList.toggle("wait", held === "撞钟" && !rites.ready()); b.hidden = false;
     } else b.hidden = true;
@@ -408,6 +423,69 @@ export function createGame(y) {
   $("pieceClose")?.addEventListener("click", () => ui.close("piece"));
   window.__work = (slug) => (slug ? showWork(slug, null) : { open: ui.isOpen("piece"), title: $("pieceTitle")?.textContent, loaded: !!$("pieceImg")?.naturalWidth });
 
+  // ---- A lamp lit for someone (#343): a line from the list, the link that carries its number, and, for whoever opens it, the lamp ----
+  const mood0 = () => { const m = y.mood(); return { season: m.season, time: m.time, label: m.label.split(" · ").map((w) => t(w)).join(" · ") }; };
+  let blessed = null;   // the picture and link of the line chosen now
+  function openBless() {
+    const el = $("bless"), list = $("blessList"); if (!el || !list || ui.isOpen("bless")) return;
+    list.textContent = ""; blessed = null;
+    WISHES.forEach((w, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "wish"; b.dataset.wish = String(i); b.setAttribute("aria-pressed", "false"); b.textContent = t(w); list.append(b); });
+    for (const id of ["blessCard", "blessLink", "blessActs"]) $(id).hidden = true;
+    $("blessCopy").textContent = t("复制链接");
+    ui.open("bless", { onClose: () => { if (blessed) URL.revokeObjectURL(blessed.pic); blessed = null; } });
+  }
+  $("blessList")?.addEventListener("click", async (e) => {
+    const b = /** @type {HTMLElement} */ (e.target).closest("[data-wish]"); if (!b) return;
+    const i = +b.getAttribute("data-wish"), m = mood0(), url = lampLink({ wish: i, season: m.season, time: m.time }, lang); if (!url) return;
+    for (const c of $("blessList").children) c.setAttribute("aria-pressed", String(c === b));
+    const card = await drawLampCard({ wish: t(WISHES[i]), label: m.label, url });
+    const blob = /** @type {Blob} */ (await new Promise((r) => card.toBlob(r, "image/jpeg", 0.92))); if (!ui.isOpen("bless")) return;
+    if (blessed) URL.revokeObjectURL(blessed.pic);
+    const pic = URL.createObjectURL(blob), file = new File([blob], "yunjing-lamp.jpg", { type: "image/jpeg" }); blessed = { url, pic, file };
+    $("blessImg").src = pic; $("blessImg").alt = t(WISHES[i]); $("blessLink").textContent = url; $("blessSave").href = pic; $("blessSave").download = t("云径禅寺-点灯.jpg");
+    for (const id of ["blessCard", "blessLink", "blessActs", "blessSave"]) $(id).hidden = false;
+    $("blessShare").hidden = !navigator.share; $("blessCopy").textContent = t("复制链接");
+    $("blessCard").scrollIntoView?.({ block: "nearest", behavior: "smooth" });   // the card and its buttons are below the list: bring them into the paper
+    track("lamp.link", { wish: i, season: m.season, time: m.time });
+  });
+  $("blessCopy")?.addEventListener("click", async () => { if (!blessed) return; try { await navigator.clipboard.writeText(blessed.url); $("blessCopy").textContent = t("已复制"); } catch { const r = document.createRange(); r.selectNodeContents($("blessLink")); const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r); } });
+  $("blessShare")?.addEventListener("click", async () => {
+    if (!blessed) return; const data = /** @type {ShareData} */ ({ title: t("云径禅寺 · 点灯"), text: t("有人在此为你点了一盏灯。"), url: blessed.url });
+    if (navigator.canShare && navigator.canShare({ files: [blessed.file] })) data.files = [blessed.file];
+    try { await navigator.share(data); } catch {}
+  });
+  $("blessClose")?.addEventListener("click", () => ui.close("bless"));
+  // Opened from a link: the number in its fragment is looked up in the list (decodeLamp ignores anything else), and the address is
+  // cleared of it so that a reload does not do it twice. Another kind of fragment (a saved walk, #338) is left where it is.
+  let arrival = decodeLamp(location.hash);
+  if (/^#lamp=/.test(location.hash)) { try { history.replaceState(null, "", location.pathname + location.search); } catch {} }
+  /** The other lamp on the stand and the small slip leaning by it, with the line (from the list) and the hour it was lit in. The slip is part of the place, not the message: on a phone held upright it is a few pixels of writing (the line is also said at the foot of the picture, where it can be read), and a larger one would lie off the screen's edge. */
+  let theirs = null;
+  async function showTheirs(l) {
+    if (theirs) return; const f = places.lamp.flame, m = moodOf(l.season, l.time);
+    const flame = new THREE.Mesh(new THREE.SphereGeometry(0.02, 10, 8).scale(1, 2.4, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 2.9, 1), fog: false }));
+    flame.position.set(f[0] + 0.5, f[1] + 0.012, f[2]);
+    const cv = document.createElement("canvas"); cv.width = 320; cv.height = 200; const x = cv.getContext("2d");
+    try { await document.fonts.load(`40px ${FONT.xing}`, t(WISHES[l.wish])); } catch {}
+    x.fillStyle = "#f1ead9"; x.fillRect(0, 0, 320, 200); x.strokeStyle = "rgba(60,50,40,.45)"; x.lineWidth = 4; x.strokeRect(6, 6, 308, 188); x.fillStyle = "#26221e"; x.textAlign = "center"; x.textBaseline = "middle";
+    const text = t(WISHES[l.wish]), { size: fs, rows } = fitLines(x, text, 270, (n) => `${n}px ${FONT.xing}`, 38, 26); x.font = `${fs}px ${FONT.xing}`;
+    rows.forEach((r, i) => x.fillText(r, 160, 78 - ((rows.length - 1) * fs * 1.3) / 2 + i * fs * 1.3));
+    x.fillStyle = "#7a6f5e"; x.font = `22px ${FONT.serif}`; x.fillText(m.label.split(" · ").map((w) => t(w)).join(" · "), 160, 168);
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    const slip = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.2), new THREE.MeshBasicMaterial({ map: tex, fog: true }));
+    slip.position.set(f[0] + 0.5, f[1] - 0.02, f[2] + 0.2); slip.rotation.x = -0.35;
+    y.scene.add(flame, slip); theirs = { flame, slip, lamp: l };
+  }
+  async function arrive() {
+    const l = arrival; arrival = null; if (!l) return;
+    track("lamp.open", { wish: l.wish, season: l.season, time: l.time });
+    await showTheirs(l); const p = places.lamp;
+    await y.travel(p.at[0], p.at[1], Math.PI - p.face, null); await wait(0.8);
+    say(t("有人在此为你点了一盏灯。"), 7); await wait(7.5); say(t(WISHES[l.wish]), 9);
+  }
+  window.__bless = (i) => { openBless(); if (i != null) /** @type {HTMLElement | undefined} */ ($("blessList")?.children[i])?.click(); return ui.isOpen("bless"); };
+  window.__lamp = () => ({ arrival, shown: !!theirs, wish: theirs?.lamp.wish ?? null, sheet: ui.isOpen("bless") });
+
   // ---- The book ----
   // Once the book has been filled, the line at the foot of the view says once, ever, that the seasons are open.
   const announce = () => { if (entered && journey.opened() && !journey.told() && y.hints?.say.seasons?.()) journey.tell(); };
@@ -425,8 +503,9 @@ export function createGame(y) {
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
     $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");
-    const file = new File([blob], "yunjing-seals.jpg", { type: "image/jpeg" });
-    $("bookShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] })); $("bookShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 朱印") }); track("demo.share", { from: "book" }); } catch {} };
+    // Shared from wherever the page is open (src/share.js, #344): the system's sheet, or a sheet to press and hold the page on.
+    $("bookShare").onclick = () => shareOrSave({ blob, url, name: "yunjing-seals.jpg", title: t("云径禅寺 · 朱印"), from: "goshuin", content: "book" });
+    $("bookSave").onclick = () => countDownload("book", "goshuin");
     // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
     const leaf = $("bookPage"), boxes = sealBoxes(SEALS.length);
     if (leaf) { leaf.querySelectorAll(".seal-go").forEach((b) => b.remove());
@@ -487,9 +566,10 @@ export function createGame(y) {
   awaitTitle(titleOn && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
   let left = free ? readPlace(localStorage) : null, kept = 0;
   if (left && left.up && !y.lofts[left.up]) left = null;
+  if (left && left.hall && !y.hallIds?.includes(left.hall)) left = null;   // a hall this level does not have
   // A place is kept to the centimetre, which against a railing or a wall can fall just past the edge of the floor: it
   // steps out to the nearest free point a few centimetres off. A place kept up on a balcony is tested on its floor.
-  if (left) {
+  if (left && !left.hall) {   // (a place in a hall's room is tested on the room's floor when he is stood there: y.place)
     y.walker.setLoft(left.up);
     if (y.walker.blocked(left.x, left.z)) { let got = null; out: for (let r = 0.01; r <= 0.06; r += 0.01) for (let k = 0; k < 16; k++) { const x = left.x + r * Math.cos((k * Math.PI) / 8), z = left.z + r * Math.sin((k * Math.PI) / 8); if (!y.walker.blocked(x, z)) { got = { x, z }; break out; } } left = got ? { ...left, ...got } : null; }
     y.walker.setLoft(null);
@@ -501,7 +581,7 @@ export function createGame(y) {
     if (again) { again.hidden = !o.going || b.disabled; if (again.dataset.asked !== "1") again.textContent = o.again; }
     return o;
   };
-  if (left && !y.relang && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
+  if (left && !y.relang && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up, left.hall);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
   const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   // Where the visit ends (#326): the first time the page is hidden after he has stepped in, named from the same source
   // as the place "接着走" offers, so the two always agree. A second hide of the same page says nothing.
@@ -525,7 +605,8 @@ export function createGame(y) {
     const b = /** @type {HTMLElement} */ (e.currentTarget);
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
     track("demo.restart", { from: "title", seals: journey.count() });
-    journey.reset(); visit.metres = visit.seconds = 0; keep(); clearPlace(localStorage); forgetTitle(); left = null; b.dataset.asked = "";
+    // Another level's start empties nothing of the prologue's.
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); if (ours) { clearPlace(localStorage); forgetTitle(); } left = null; b.dataset.asked = "";
     const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter(true);
   });
   // Stepping in. A first visit (and a visit begun again from the foot of the path) is shown where it is going first
@@ -542,13 +623,18 @@ export function createGame(y) {
     // Where to go is said after how to walk has gone (he has taken a few steps, or the line has faded), so that a
     // visitor arriving is given one thing to read at a time.
     const begin = () => {
+      if (arrival) { arrive(); return; }   // a lamp lit for him: that is where he is taken first
       let waited = 0;
       const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
       const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
     };
-    if (o.eye === "none") { begin(); return; }
+    // A friend's shared link names a scene (?from=, src/sharelink.js, #344): a first visit is shown the mountain as ever,
+    // and then taken to that place behind the veil; one who goes on from where they were is not moved.
+    const scene = !resumed ? fromOf(location.search) : null, land = scene && places[scene] ? places[scene] : null;
+    const arrive = async () => { if (land) await y.travel(land.at[0], land.at[1], Math.PI - land.face, land.room || null); begin(); };
+    if (o.eye === "none") { arrive(); return; }
     track("opening.played", { eye: o.eye, again: again === true });
-    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); begin(); });
+    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); arrive(); });
   };
   // After a change of language the title's place is kept by the sheet that says the words are being changed, until
   // the page is ready; then it fades as the title does when he steps in (#140).

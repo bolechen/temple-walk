@@ -1,28 +1,21 @@
 // What the end-to-end scenarios share: a server for app/, a browser that can draw without a GPU, and a page that records its own errors.
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
-const root = require("../../tools/site.cjs").site(), out = path.join(__dirname, "..", "..", "tools", "out");
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".glb": "model/gltf-binary", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".css": "text/css", ".woff2": "font/woff2" };
+const fs = require("fs"), path = require("path");
+const { site, serve: siteServe } = require("../../tools/site.cjs"), root = site(), out = path.join(__dirname, "..", "..", "tools", "out");
 
-async function serve() {
-  const srv = http.createServer((req, res) => {
-    // The canary's and production's pages ask the Worker for the day's traces (#340); this server is only the site's files,
-    // so it answers as a Worker with an empty day would: nothing counted yet, and a report taken with nothing to say.
-    // A scenario that wants counts stubs /api/ itself with `route` (the presence scenario).
-    if (req.url.startsWith("/api/")) {
-      if (req.url.startsWith("/api/traces")) { res.writeHead(200, { "content-type": "application/json" }); return res.end('{"day":null,"traces":{}}'); }
-      res.writeHead(204); return res.end();
-    }
-    let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
-    if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-    res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-    
-    fs.createReadStream(p).pipe(res);
-  });
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
-  return { base: `http://127.0.0.1:${srv.address().port}/`, close: () => srv.close() };
+// The site served by tools/site.cjs's one server (#399): { base, close }.
+async function serve() { const srv = await siteServe(root); return { base: srv.base, close: () => srv.close() }; }
+// E2E_GPU=1 (the T4 run, tools/ci/t4-job.sh, #335) asks Chromium for the graphics card through Vulkan, as tools/gpu/job.cjs does;
+// everywhere else the scenarios draw in software, which is what they were written against.
+const GPU_ARGS = ["--no-sandbox", "--use-angle=vulkan", "--enable-features=Vulkan,DefaultANGLEVulkan,VulkanFromANGLE", "--disable-vulkan-surface", "--ignore-gpu-blocklist", "--enable-gpu", "--disable-gpu-driver-bug-workarounds", "--autoplay-policy=no-user-gesture-required"];
+const SOFT_ARGS = ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"];
+const launch = () => chromium.launch({ args: process.env.E2E_GPU ? GPU_ARGS : SOFT_ARGS });
+// What this browser draws with. A run that was asked for the card and got software would be a free-machine run under a T4's name.
+async function renderer(browser) {
+  const p = await browser.newPage();
+  try { return await p.evaluate(() => { const g = document.createElement("canvas").getContext("webgl2"); if (!g) return "no webgl2"; const e = g.getExtension("WEBGL_debug_renderer_info"); return String(g.getParameter(e ? e.UNMASKED_RENDERER_WEBGL : g.RENDERER)); }); }
+  finally { await p.close(); }
 }
-const launch = () => chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"] });
 
 // A page on the temple. `errors` collects everything the page complains about; a scenario fails if it is not empty at the end.
 async function open(browser, base, query, opts = {}) {
@@ -103,4 +96,4 @@ async function open(browser, base, query, opts = {}) {
   return t;
 }
 function expect(cond, what) { if (!cond) throw new Error(what); }
-module.exports = { serve, launch, open, expect, out };
+module.exports = { serve, launch, renderer, open, expect, out };

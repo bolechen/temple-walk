@@ -5,6 +5,7 @@
 #
 #   tools/gpu-render.sh                         # the default measurements and pictures, on one T4
 #   tools/gpu-render.sh l4x1 '{"shots":["court@autumn-dusk@third"],"size":[3840,2160]}'
+#   LEVEL=t05 tools/gpu-render.sh t4-small '{"bench":[{"view":"cam03","q":"high","size":[1920,1080]}],"shots":["cam03"]}'   # another level's pages (?level=); its views are its own, so the spec is given
 #
 # Needs the `hf` command (pip install huggingface_hub) logged in to an account that may run Jobs. A T4 costs about
 # $0.40 an hour and a run takes a few minutes. The spec is JSON: see the top of tools/gpu/job.cjs.
@@ -12,6 +13,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 FLAVOR="${1:-t4-small}"
 SPEC="${2:-}"
+if [ -n "${LEVEL:-}" ] && [ "$LEVEL" != "t00" ] && [ -z "$SPEC" ]; then echo "LEVEL=$LEVEL: the default measurements are the prologue's views; give a spec with this level's own" >&2; exit 2; fi
 if [ -z "$SPEC" ]; then SPEC='{
   "seconds": 6,
   "bench": [
@@ -26,6 +28,7 @@ if [ -z "$SPEC" ]; then SPEC='{
   "size": [1920,1080],
   "shots": ["court@autumn-dusk@third","arrive@spring-dawn@third","front@autumn-dusk","hall@summer-day","library@winter-day","lookback@autumn-dusk","teamat@autumn-dusk@third","lamps@winter-night"]
 }'; fi
+if [ -n "${LEVEL:-}" ]; then SPEC="$(printf %s "$SPEC" | LEVEL="$LEVEL" node -e 'let s="";process.stdin.on("data",(d)=>s+=d).on("end",()=>{const j=JSON.parse(s);j.level=process.env.LEVEL;process.stdout.write(JSON.stringify(j))})')"; fi
 NS="$(hf auth whoami --format json | node -e 'let s="";process.stdin.on("data",(d)=>s+=d).on("end",()=>{const j=JSON.parse(s);console.log(j.name||j.user||j.username)})')"
 BUCKET="$NS/temple-walk-render"
 RUN="$(date -u +%Y%m%d-%H%M%S)"
@@ -33,7 +36,7 @@ hf buckets create "$BUCKET" --private --exist-ok >/dev/null
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 SITE="$(node -e 'console.log(require("./tools/site.cjs").site())')"   # the built site, staged under the name the job expects
 cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/plate.webp"; [ -n "${KEEP_MODELS:-}" ] || rm -rf "$STAGE/app/shared/models";   # KEEP_MODELS=1: the statues go along (the walk-round survey wants the Buddha)
- cp tools/gpu/job.cjs "$STAGE/job.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
+ cp tools/gpu/job.cjs "$STAGE/job.cjs"; cp tools/site.cjs "$STAGE/site.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
 # BASE_SITE: another build (the base commit), served at base/ in the same job so the two can be measured turn about.
 if [ -n "${BASE_SITE:-}" ]; then cp -R "$BASE_SITE" "$STAGE/app/base"; rm -rf "$STAGE/app/base/shared/models" "$STAGE/app/base/plate.webp"; fi
 # Each run stages under runs/<run>, outside in/: two sessions sharing the bucket once overwrote each other's site
