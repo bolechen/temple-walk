@@ -497,10 +497,11 @@ export function createMonk() {
     }
     hemBones.length = 0; hemBones.push(...used);
   }
-  // A point is lifted only if the skirt's bones carry a fair share of it (#163): a made body's skirt front is weighted to
+  // A bone is never shortened below HEM_FLOOR of its length (the robe of the drawing ends above the knee: drawn up further
+  // it shows the trousers' seat). A point is lifted only if the skirt's bones carry a fair share of it (#163): a made body's skirt front is weighted to
   // the thighs as well (tools/novice-tripo.mjs), and a point a thigh carries is carried off the step by that thigh;
   // shortening the skirt's bones for it would only pull the whole skirt up to the waist without moving it.
-  const HEM_SHARE = 0.3, hemBones = [], mats = [];
+  const HEM_SHARE = 0.3, HEM_FLOOR = 0.7, HEM_NEXT = 0.85, hemBones = [], mats = [];
   setupHem(torsoCount);
   const skinPoint = (i, out) => {
     const x = rp[i * 3], y = rp[i * 3 + 1], z = rp[i * 3 + 2]; out.set(0, 0, 0);
@@ -517,7 +518,14 @@ export function createMonk() {
       const need = [0, 0, 0, 0]; let any = false;
       for (const h of hem) { skinPoint(h.i, tv); const L = surfaceAt(tv.x, tv.z) + 0.007 - tv.y; if (L <= 0) continue; any = true; for (const [b] of h.w) need[b] = Math.max(need[b], L / (h.drop * h.W)); }
       if (!any) break;
-      for (let b = 0; b < 4; b++) if (need[b] > 0) { const sc = B[SKIRT[b]].scale, y = Math.max(0.3, sc.y - need[b] * 1.05); hemScale[b] *= y / sc.y; sc.y = y; }
+      for (let b = 0; b < 4; b++) if (need[b] > 0) { const sc = B[SKIRT[b]].scale, y = Math.max(HEM_FLOOR, sc.y - need[b] * 1.05); hemScale[b] *= y / sc.y; sc.y = y; }
+    }
+    // One skirt, not four flaps: no bone hangs shorter than HEM_NEXT of either bone beside it (front, left, back, right go
+    // round him), so the cloth is drawn up as a ring and never as a panel gone to the waist beside a full one (#163, the 3D
+    // review). A centimetre of hem on a step is a smaller fault than that.
+    for (let pass = 0; pass < 2; pass++) for (let b = 0; b < 4; b++) {
+      const sc = B[SKIRT[b]].scale, most = Math.max(B[SKIRT[(b + 1) % 4]].scale.y, B[SKIRT[(b + 3) % 4]].scale.y), y = Math.max(sc.y, HEM_NEXT * most);
+      if (y > sc.y) { hemScale[b] *= y / sc.y; sc.y = y; }
     }
     B.hips.updateMatrixWorld(true);
   }

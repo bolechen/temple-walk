@@ -165,3 +165,17 @@ test("on a flight, up or down and anywhere in the world, the skirt's sides and b
     }
   }
 });
+// The 3D review's floor for the hem's lift (#163): with a step standing right behind his heels, high enough to take the
+// back of the skirt, the skirt is drawn up as one ring: no bone shorter than 0.7 of its length, none shorter than 0.85
+// of a bone beside it (front, left, back, right round him).
+test("a step behind him draws the skirt up as one ring, never a flap to the waist", () => {
+  for (const [name, make] of BODIES) {
+    const m = make(); let t = 0;
+    for (let k = 0; k < 40; k++) { t += 1 / 60; m.group.position.set(0, 0, 0); m.update(1 / 60, 0, false, t, (x, z) => (z < -0.04 ? 0.4 : 0), { heightAt: () => 0 }); }
+    const s = m.skirt, min = Math.min(...s);
+    assert.ok(min < 0.999, `${name}: the step behind him did not lift the skirt at all (${s})`);
+    assert.ok(min >= 0.7, `${name}: a skirt bone shortened to ${min} (${s})`);
+    for (let b = 0; b < 4; b++) { const r = s[b] / Math.max(s[(b + 1) % 4], s[(b + 3) % 4]); assert.ok(r >= 0.85 - 1e-3, `${name}: bone ${b} hangs ${r.toFixed(2)} of the one beside it (${s})`); }
+    console.log(`# ${name}: skirt bones ${s.join(" ")} with a 40 cm step behind his heels`);
+  }
+});
