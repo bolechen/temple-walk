@@ -83,11 +83,11 @@ test("a young evergreen's boughs are out of reach: he cannot stand where his eye
   for (const [x, , z, , h] of young) {
     // Shut to the baked floor (site.closed) as a circle round the trunk (#531: it was a 3 m square), out past the 0.95 m where the eye is among the boughs...
     const c = site.closed.find((c) => c.r !== undefined && Math.hypot(c.x - x, c.z - z) < 0.01);
-    assert.ok(c && c.r >= 0.95 && c.r <= 1.1, `the ${h} m evergreen at (${x}, ${z}) is shut by a circle of about 1 m: ${JSON.stringify(c)}`);
+    assert.ok(c && c.r >= 1.2 && c.r <= 1.35, `the ${h} m evergreen at (${x}, ${z}) is shut by a circle of about 1.25 m (the following eye is among its sprays at 1.0): ${JSON.stringify(c)}`);
     // ...and whichever walker answers, 0.95 m from the trunk is no place to stand (boughs start at 1.35 m and the eye is at 1.6).
     for (const a of [0, 45, 90, 135, 180, 225, 270, 315]) { const dx = Math.cos((a * Math.PI) / 180) * 0.95, dz = Math.sin((a * Math.PI) / 180) * 0.95; assert.ok(walker.blocked(x + dx, z + dz), `0.95 m from the trunk at (${x}, ${z}), bearing ${a}, is no place to stand`); }
-    // On the baked floor the shut ground ends where the eye is clear of them: the corner a square would have kept him out of is open (1.3 m out at 45° was shut by the square, 1.5 m a side).
-    if (walker.kind === "grid") for (const [dx, dz] of [[1.3, 1.3], [-1.3, 1.3], [1.3, -1.3], [-1.3, -1.3]]) assert.ok(!walker.blocked(x + dx, z + dz), `at the corner (${dx}, ${dz}) from the trunk of the evergreen at (${x}, ${z}) he may stand`);
+    // On the baked floor the shut ground ends where the eye is clear of them: the corner a square would have kept him out of is open (1.1 m either way, 1.56 m out at 45°: shut by the old square 1.5 m a side).
+    if (walker.kind === "grid") for (const [dx, dz] of [[1.1, 1.1], [-1.1, 1.1], [1.1, -1.1], [-1.1, -1.1]]) assert.ok(!walker.blocked(x + dx, z + dz), `at the corner (${dx}, ${dz}) from the trunk of the evergreen at (${x}, ${z}) he may stand`);
   }
 });
 
