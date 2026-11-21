@@ -284,7 +284,7 @@ export function buildSite(M) {
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
   // Each flight is also kept as where it stands (`root.userData.flights`), so that its cheeks' feet can be looked under (#272).
-  const flightAt = (w, rise, m) => { (root.userData.flights ||= []).push({ w, rise, sides: [-1, 1], m }); return stairGeo(w, rise).geo.applyMatrix4(m); };
+  const flightAt = (w, rise, m) => { (root.userData.flights ||= []).push({ w, rise, sides: [-1, 1], m }); return stairGeo(w, rise, { place: m }).geo; };
   const placed = (x, y, z, turn = 0) => new THREE.Matrix4().makeTranslation(x, y, z).multiply(new THREE.Matrix4().makeRotationY(turn));
   LEVELS.forEach((L, i) => {
     const y0 = i ? LEVELS[i - 1].y : 0, rise = L.y - y0, st = stairGeo(L.stair, rise);
