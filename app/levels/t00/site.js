@@ -212,7 +212,7 @@ export function buildSite(M) {
     walk.posts.push({ x, z, r: girth("cedar", h) }); shade[lvl].push({ x0: x - 0.5, x1: x + 0.5, z0: z - 0.5, z1: z + 0.5 });
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
-  const seasonal = [[11.5, 0, 52.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
+  const seasonal = [[14.5, 0, 60.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
     [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.8, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];   // (the summit ginkgo kept 0.6 m off the pavilion's platform as it widened, #278)
   for (const [x, , z, kind, h] of seasonal) walk.posts.push({ x, z, r: girth(kind, h) });
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.

@@ -102,13 +102,13 @@ function sheet(kind) {
 // The colour each crown wears, season by season (null: bare).
 const COLOURS = {
   maple:  { spring: [0.94, 0.92, 0.86], summer: [0.2, 0.36, 0.13], autumn: [0.62, 0.13, 0.055], winter: null },
-  ginkgo: { spring: [0.42, 0.6, 0.22], summer: [0.22, 0.4, 0.13], autumn: [0.8, 0.56, 0.1], winter: null },
+  ginkgo: { spring: [0.42, 0.6, 0.22], summer: [0.34, 0.5, 0.17], autumn: [0.8, 0.56, 0.1], winter: null },
   cedar:  { spring: [0.075, 0.15, 0.08], summer: [0.06, 0.125, 0.075], autumn: [0.07, 0.125, 0.065], winter: [0.065, 0.12, 0.08] },
 };
 
 // A crown material: cards that take their light as parts of one round mass, let the low sun through, hold snow,
 // keep their leaves at a distance (a sheet's thin places would otherwise vanish), and stir in the air.
-export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
+export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9, glow = 0 }) {
   const m = new THREE.MeshStandardMaterial({ map, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.82, envMapIntensity: 0.25, vertexColors: true, alphaToCoverage: !!a2c });
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, { uSnow: U.uSnow, uSunC: U.uSunC, uT: U.uT, uSunDir: { value: SUN_DIR } });
@@ -125,9 +125,10 @@ export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9 }) {
       .replace("#include <normal_fragment_begin>", "#include <normal_fragment_begin>\n normal=normalize(vNormal);")   // both faces of a card take the crown's light the same way
       .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
         { vec3 Lv=normalize((viewMatrix*vec4(uSunDir,0.)).xyz); float thru=pow(max(dot(normalize(vViewPosition),-Lv),0.),2.5);
-          totalEmissiveRadiance+=diffuseColor.rgb*uSunC*vec3(1.,1.,.45)*thru*1.6*(1.-uSnow*.7); }`);
+          totalEmissiveRadiance+=diffuseColor.rgb*uSunC*vec3(1.,1.,.45)*thru*1.6*(1.-uSnow*.7);
+          totalEmissiveRadiance+=diffuseColor.rgb*${glow.toFixed(2)}*(1.-uSnow*.7); }`);   // (glow: a thin leaf lets some light through even with the sun in front)
   };
-  m.customProgramCacheKey = () => "crown" + sway + snow + (a2c ? "c" : "");
+  m.customProgramCacheKey = () => "crown" + sway + snow + (glow ? "g" + glow : "") + (a2c ? "c" : "");
   return m;
 }
 
@@ -266,11 +267,11 @@ export function createTrees(scene, M, spots, opts = {}) {
     g.setAttribute("color", new THREE.BufferAttribute(col, 3)); list.push(g);
   };
   const clump = (kind, p, centre, w, n = 5) => {
-    const d = p.distanceTo(centre), shade = 0.62 + 0.38 * Math.min(1, d / 2.6); n = Math.round(n * 1.7);
+    const d = p.distanceTo(centre), floor = kind === "ginkgo" ? 0.84 : 0.62, shade = floor + (1 - floor) * Math.min(1, d / 2.6); n = Math.round(n * 1.7);   // (a ginkgo's thin leaves are never dark: its inner ones keep 0.84)
     for (let i = 0; i < n; i++) {
       if (rnd() < 0.72) q.setFromEuler(e.set(-Math.PI / 2 + (rnd() - 0.5) * 0.9, rnd() * 6.3, (rnd() - 0.5) * 0.5, "YXZ")); else q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1, "XYZ"));
       const s = w * (0.55 + rnd() * 0.35), at = p.clone().add(V((rnd() - 0.5) * w * 0.75, (rnd() - 0.5) * w * 0.5, (rnd() - 0.5) * w * 0.75));
-      card(cards[kind], new THREE.PlaneGeometry(s, s), at, centre, shade);
+      card(cards[kind], new THREE.PlaneGeometry(s, s), at, centre, shade, 0.75, kind === "ginkgo" ? 0.85 : 0.35);
       if (i < 2) { q.setFromEuler(e.set(rnd() * 3.1, rnd() * 6.3, rnd() * 3.1)); card(cards.twig, new THREE.PlaneGeometry(s * 1.1, s * 1.1), at, centre, 1); }
     }
   };
@@ -424,10 +425,13 @@ export function createTrees(scene, M, spots, opts = {}) {
         const m = gen.build(), tubes = m.userData.tubes; m.geometry.translate(x, y - 0.2, z); for (const t of tubes) for (const r of t.rings) r.pos.add(V(x, y - 0.2, z));
         ginkgoWood.push(m.geometry); sk.geometry = m.geometry; info.tris += m.geometry.index.count / 3;
         const at = (t, u) => { const f = u * (t.rings.length - 1), i = Math.min(t.rings.length - 2, Math.floor(f)); return t.rings[i].pos.clone().lerp(t.rings[i + 1].pos, f - i); };
+        // The leaves hang on the outer part of each bough and at the ends of its twigs, not in the cone's inside: the layers
+        // stay open to the sky between them, and the whorled boughs show through (the art director's review of #327).
+        const topW = y + h - 1.8, widthAt = (yy) => 0.275 * h * Math.max(0.1, 1 - 0.85 * Math.min(1, Math.max(0, (yy - y - lay.base) / (topW - y - lay.base))));
         for (const t of tubes) {
           if (t.level === 0) { sk.trunk = t.rings.map((r) => r.pos.toArray()); sk.radii = t.rings.map((r) => r.radius); continue; }
-          if (t.level === 1) { sk.boughs.push({ from: t.rings[0].pos.toArray(), to: t.rings[t.rings.length - 1].pos.toArray(), r: t.base, r0: t.rings[0].radius, r1: t.rings[t.rings.length - 1].radius }); for (const u of [0.45, 0.7, 0.95]) clump(kind, at(t, u), centre, 0.95 + rnd() * 0.5, 4); }
-          else clump(kind, at(t, 1), centre, 0.9 + rnd() * 0.4, 4);
+          if (t.level === 1) { sk.boughs.push({ from: t.rings[0].pos.toArray(), to: t.rings[t.rings.length - 1].pos.toArray(), r: t.base, r0: t.rings[0].radius, r1: t.rings[t.rings.length - 1].radius }); for (const u of [0.62, 0.82, 0.98]) clump(kind, at(t, u), centre, 0.8 + rnd() * 0.4, 3); }
+          else { const e = at(t, 1); if (Math.hypot(e.x - x, e.z - z) >= 0.55 * widthAt(e.y)) clump(kind, e, centre, 0.75 + rnd() * 0.35, 3); }
         }
         const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
         nth++; ginkgoBeds.push(softBed(x, y, z, flare * 3 + 0.9, nth));
@@ -491,7 +495,7 @@ export function createTrees(scene, M, spots, opts = {}) {
     const mat = crownMaterial(map, { a2c: opts.a2c, ...o }), m = new THREE.Mesh(mergeGeometries(cards[kind]), mat);
     m.castShadow = true; m.receiveShadow = false; m.renderOrder = 1; scene.add(m); crowns[kind] = { mat, mesh: m };   // after the buildings, which then hide most of it for nothing
   };
-  put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, {}); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
+  put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, { glow: 0.16 }); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
     joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed,
     setMood(m) {

@@ -94,8 +94,23 @@ const deg = (r) => (r * 180) / Math.PI;
   test("the leaves under a ginkgo are the season's own, gone when it is bare, and fade to nothing at their edge", () => {
     const scene = new THREE.Group(), g = createTrees(scene, M, spots), bed = g.ginkgoBeds, col = bed.geometry.attributes.color;
     assert.equal(col.itemSize, 4); let edge = 0, centre = 0; for (let i = 0; i < col.count; i++) { if (col.getW(i) === 0) edge++; if (col.getW(i) > 0.45) centre++; } assert.ok(edge >= 36 * 4 && centre >= 4, `${edge} edge points at 0 alpha, ${centre} thick ones`);
-    const want = { summer: [0.22, 0.4, 0.13], autumn: [0.8, 0.56, 0.1] };
+    const want = { summer: [0.34, 0.5, 0.17], autumn: [0.8, 0.56, 0.1] };
     for (const [season, c] of Object.entries(want)) { g.setMood({ season, snow: 0 }); assert.ok(bed.visible, season); const k = bed.material.color; assert.ok(Math.abs(k.r - c[0] * 0.45) < 1e-6 && Math.abs(k.g - c[1] * 0.45) < 1e-6, `${season}: ${k.r}, ${k.g}`); }
     g.setMood({ season: "winter", snow: 0 }); assert.ok(!bed.visible, "winter"); g.setMood({ season: "summer", snow: 0.9 }); assert.ok(!bed.visible, "under snow");
+  });
+
+  test("the leaves hang on the outer part of the boughs, so the crown is open inside: nine in ten leaf cards lie beyond half the crown's width at their height", () => {
+    const scene = new THREE.Group(); createTrees(scene, M, spots);
+    const crown = scene.children.find((o) => o.isMesh && o.material.map && o.material.customProgramCacheKey().includes("0.035")), P = crown.geometry.attributes.position;
+    for (const t of trees) {
+      const [ax, az] = t.g.at, top = t.h - 1.8, base = t.g.base; let outer = 0, n = 0;
+      for (let i = 0; i + 3 < P.count; i += 4) {
+        let cx = 0, cy = 0, cz = 0; for (let k = 0; k < 4; k++) { cx += P.getX(i + k) / 4; cy += P.getY(i + k) / 4; cz += P.getZ(i + k) / 4; }
+        if (Math.hypot(cx - ax, cz - az) > 6 || Math.abs(cy - base) > 20 || Math.hypot(cx - ax, cz - az, cy - base - t.h / 2) > t.h) continue;   // (only this tree's own cards)
+        const u = Math.min(1, Math.max(0, (cy - base - t.layers[0].first) / (top - t.layers[0].first))), w = 0.275 * t.h * Math.max(0.1, 1 - 0.85 * u);
+        n++; if (Math.hypot(cx - ax, cz - az) >= 0.5 * w - 0.3) outer++;
+      }
+      assert.ok(n > 100 && outer / n >= 0.9, `the ${t.h} m ginkgo: ${outer} of ${n} leaf cards are in the outer half`);
+    }
   });
 }
