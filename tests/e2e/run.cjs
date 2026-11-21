@@ -153,9 +153,9 @@ const scenarios = {
       // the seal signs 8 to 12 px under the sub (portrait), and the line about the place, the line about the visit and beginning again keep 12 px between them
       const sub = document.querySelector("#title .sub").getBoundingClientRect(), mark = document.querySelector("#title .mark").getBoundingClientRect();
       out.markGap = vis(document.querySelector("#title .mark")) ? Math.round(mark.top - sub.bottom) : null;
-      const apart = (a, b) => !(a.right + 12 <= b.left || b.right + 12 <= a.left || a.bottom + 12 <= b.top || b.bottom + 12 <= a.top);
+      const near = (a, b) => !(a.right + 11.5 <= b.left || b.right + 11.5 <= a.left || a.bottom + 11.5 <= b.top || b.bottom + 11.5 <= a.top);   // (half a pixel for the rounding of a box)
       const group = ["titleSeals", "againBtn"].map((id) => document.getElementById(id)).filter((e) => e && vis(e)).concat([...document.querySelectorAll("#title .how b")].filter(vis));
-      out.crowded = []; for (let i = 0; i < group.length; i++) for (let j = i + 1; j < group.length; j++) if (!apart(group[i].getBoundingClientRect(), group[j].getBoundingClientRect())) out.crowded.push((group[i].id || group[i].tagName) + "/" + (group[j].id || group[j].tagName));
+      out.crowded = []; for (let i = 0; i < group.length; i++) for (let j = i + 1; j < group.length; j++) if (near(group[i].getBoundingClientRect(), group[j].getBoundingClientRect())) out.crowded.push((group[i].id || group[i].tagName) + "/" + (group[j].id || group[j].tagName));
       const seals = document.getElementById("titleSeals"); out.sealsH = seals && vis(seals) ? Math.round(seals.getBoundingClientRect().height) : 0;
       const h1 = document.querySelector("#title h1").getBoundingClientRect(); out.h1 = [Math.round(h1.top), Math.round(h1.height)];
       out.linksBottom = links.length ? Math.round(Math.max(...links.map((l) => l.bottom))) : 0;
