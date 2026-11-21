@@ -47,7 +47,7 @@ export function eyeR(near = 0.1, extra = 16) {
 }
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 27,     // raise when the method changes (27: a floor the flood did not reach still counts as floor beside it, #477), so that every grid baked by the old one is stale
+  version: 28,     // raise when the method changes (27: a floor the flood did not reach still counts as floor beside it; 28: faces at one distance are all the first, #477), so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -177,11 +177,21 @@ const LOWMAX = lowReach(0, BAKE.CLIMB);
 const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
 // Is (x, y, z) inside a closed solid: the first face met going east, west, north and south is in each case seen from behind.
-const side = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3());
-function inside(S, x, y, z) {
+// Faces that lie at the same distance are all "the first": a solid stood against another has its own face and the other's meeting
+// at one place (a platform's stone and the flight of steps against it), and which of the two a ray reports first was the hierarchy's
+// to say, its splits following every triangle of the place, so a tree a hundred metres off could turn the answer (#477). A ray that
+// meets a face seen from behind, whatever else lies there, is leaving a solid; only when every face there is seen from the front
+// does it come out of the open into one.
+const side = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3()), tie = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3()), TIE = 0.001;
+export function inside(S, x, y, z) {
   for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     side.origin.set(x, y, z); side.direction.set(dx, 0, dz); const h = S.bvh.raycastFirst(side, THREE.DoubleSide);
-    if (!h || h.face.normal.x * dx + h.face.normal.z * dz < 0.2) return false;
+    if (!h) return false;
+    const back = (f) => f.normal.x * dx + f.normal.z * dz >= 0.2;
+    if (back(h.face)) continue;
+    // the first face is seen from the front: is there another at the same distance seen from behind?
+    const d = Math.max(0, h.distance - TIE); tie.origin.set(x + dx * d, y, z + dz * d); tie.direction.set(dx, 0, dz);
+    if (!S.bvh.raycast(tie, THREE.DoubleSide, 0, 2 * TIE).some((k) => back(k.face))) return false;
   }
   return true;
 }
