@@ -89,8 +89,8 @@ export function buildSite(M) {
   // The axis before the court (./axis.js): the way from the outer gate's place, the second terrace that the inner gate, the
   // archway and the Wuliang hall stand on, the walls round both, and the places held for the monument pavilion and the lamp.
   const ax = buildAxis(M, { C, W });
-  stone.push(...ax.stone); plaster.push(...ax.plaster); steps.push(...ax.steps); (root.userData.flights ||= []).push(...ax.flights);
-  for (const k of ["solids", "decks", "ramps", "posts"]) walk[k].push(...ax.walk[k]);
+  stone.push(...ax.stone); plaster.push(...ax.plaster);
+  for (const k of ["solids", "decks", "ramps", "posts", "roofs"]) walk[k].push(...ax.walk[k]);
   shade[0].push(...ax.shade[0]); shade[1].push(...ax.shade[1]);
   const paving = ax.paving;
 
@@ -132,7 +132,7 @@ export function buildSite(M) {
     back: [0, 6, Math.PI, -0.08],
   };
   return {
-    root, walk, shade, closed: [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
+    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
     places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10],
   };
 }
