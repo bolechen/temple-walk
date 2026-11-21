@@ -154,3 +154,14 @@ test("below a hall's platform, his back to it, he is in the picture (#396)", () 
   for (const pitch of [0.04, -0.07, -0.2]) seen(-18.8, -12, -Math.PI / 2, `below main's platform at the preview's spot, looking ${pitch}`, bad, pitch);
   assert.deepEqual(bad, [], bad.join("\n"));
 });
+
+// The art review of #411 (c08c42c): out of the tea house's door, the view dragged round 65°, the whole picture was the
+// inside of its front wall. Since #396 the front of the dark behind the leaves is open so that the eye may stand in it;
+// turned aside, the arm ran on out of that dark through its painted sides (a shader, not gathered) into the hollow of the
+// building, 4.3 m from him with the wall between. Out of every hall, the view turned 40° and 65° either way, he is seen.
+test("out of every hall's door with the view turned aside, he is in the picture (#411's art review)", () => {
+  walker.setRoom(null);
+  const bad = [];
+  for (const h of site.halls) for (const turn of [-65, -40, 40, 65]) seen(h.out[0], h.out[1], h.outYaw + (turn * Math.PI) / 180, `out of ${h.id}, turned ${turn}°`, bad);
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
