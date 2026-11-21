@@ -217,3 +217,22 @@ test("worn from interleaved attributes, as the page's loader hands them, he move
   for (const n of PARTS) for (let i = 0; i < plain.parts[n].geometry.attributes.position.count; i++) most = Math.max(most, world(plain.parts[n], i, a).distanceTo(world(woven.parts[n], i, c)));
   assert.ok(most < 1e-6, `a point stands ${most} m apart`);
 });
+
+// #163: the beads and the hat's straps are laid on the robe built in code; worn, this body's robe stands further out at
+// the shoulders and the chest, and they sank out of sight. Dressed as the page dresses him, in the bind pose, every bead
+// and the middle of every cross-section of the straps lies outside the cloth: looked at from his middle at its height
+// (beads) or from inside along the strap's own way out, no worn cloth is further out than it.
+test("the hat's straps lie on the worn robe, not in it", () => {
+  const m = dressed(); m.update(0, 0, "bind", 0); m.group.updateMatrixWorld(true);
+  const cloth = ["robe", "skin"].map((n) => { const c = new THREE.Mesh(m.parts[n].geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); c.updateMatrixWorld(true); return c; });
+  const ray = new THREE.Raycaster(), v = new THREE.Vector3(), d = new THREE.Vector3();
+  // the straps: from each vertex outward across (away from his middle at its height), no cloth within 3 cm beyond it
+  const P = m.parts.straps.geometry.attributes.position; let inside = 0, n = 0;
+  for (let i = 0; i < P.count; i += 3) {
+    v.fromBufferAttribute(P, i); d.set(v.x, 0, v.z); if (d.length() < 0.03 || v.y > 0.95) continue; d.normalize(); n++;   // over the shoulder's top the way out is up, not across
+    ray.set(v.clone().addScaledVector(d, 0.0005), d); ray.far = 0.03;
+    if (ray.intersectObjects(cloth, false).length) inside++;
+  }
+  assert.ok(m.parts.straps.visible && n > 50, `the straps are worn: ${n} points looked at`);
+  assert.ok(inside / n < 0.05, `${inside} of ${n} points of the straps lie under the worn cloth`);
+});

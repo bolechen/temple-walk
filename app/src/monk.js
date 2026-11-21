@@ -53,7 +53,7 @@ const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.11
 const PAL = {
   skin: col(0xf0c6a4), crown: col(0xf3d0b2), blush: col(0xe9958a), lip: col(0x9a5244), brow: col(0x5e3b29), lash: col(0x3a271d), earIn: col(0xe4a58c),
   robe: col(0xb2633f), robeIn: col(0x6c3720), band: col(0x9c5232), sash: col(0xa2583a), collar: col(0xdcd1bb),
-  trousers: col(0x6f6155), wrap: col(0xddd2bc), shoe: col(0x48423f), sole: col(0xc6b9a1), strap: col(0x523a2a), tie: col(0x7a5c38),
+  trousers: col(0x6f6155), wrap: col(0xddd2bc), shoe: col(0x48423f), sole: col(0xc6b9a1), strap: col(0xcdbba0), tie: col(0x7a5c38),
 };
 
 // ---- Cloth and straw, painted once ----
@@ -355,12 +355,12 @@ export function createMonk() {
   }
   // The straps that hold the hat: over each shoulder and down his front, tucked under the sash. They are part of this
   // robe, and are also kept on their own: the sculpted body (`dress`) has no straps, and the hat needs them.
-  const strapParts = [];
+  const strapParts = [], strapLine = [];   // strapLine: each strap's centre line on the robe built here, and which way is out there
   for (const s of [1, -1]) {
     const c = [s * 0.05, 0.78, 0];
     const g = [Bk(s * 0.05, 0.74), Bk(s * 0.058, 0.8), [s * 0.064, 0.95, -0.2, ...c], [s * 0.068, 1.0, 0, ...c], [s * 0.074, 0.95, 0.2, ...c], F(s * 0.082, 0.79), F(s * 0.086, 0.72), F(s * 0.088, 0.655)];
-    const strap = band(onBody(g, 40, 0.0042), flat(0.0075, 0.0028), PAL.strap);
-    robeParts.push(strap); strapParts.push(strap.clone());
+    const line = onBody(g, 40, 0.0042), strap = band(line, flat(0.0075, 0.0028), PAL.strap);
+    robeParts.push(strap); strapParts.push(strap.clone()); strapLine.push(line.map(({ p, n }) => ({ p: p.clone(), n: n.clone() })));
   }
 
   // ---- Trousers and leg wraps: full below the hem, slim where the robe always covers them ----
@@ -576,6 +576,28 @@ export function createMonk() {
     return { beads: beadAt.length, moved, most };
   }
 
+  // The hat's straps are laid on the robe built here too; a worn body's robe stands further out at the shoulders and over
+  // the chest, and they sank out of sight in it (#163, the three-column sheet). Each point of a strap's centre line is
+  // looked at along its own way out, from 15 cm inside: if the worn cloth there lies further out than `gap` under the
+  // strap, that cross-section of the strap is moved out until it is `gap` off (smoothed along the strap, so that it
+  // lies as a ribbon and does not kink).
+  function layStraps(gap = 0.003) {
+    const g = straps.geometry, P = g.attributes.position, cloth = [robe, skin].map((m) => { const c = new THREE.Mesh(m.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); c.updateMatrixWorld(true); return c; });
+    const ray = new THREE.Raycaster(), o = V3(), IN = 0.15;
+    const shifts = strapLine.map((line) => {
+      const raw = line.map(({ p, n }) => { ray.set(o.copy(p).addScaledVector(n, -IN), n); ray.far = IN + 0.08; const hits = ray.intersectObjects(cloth, false); const d = hits.length ? hits[hits.length - 1].distance - IN : -Infinity; return Math.max(0, d + gap); });
+      return raw.map((_, i) => { let m = 0; for (let k = -3; k <= 3; k++) m = Math.max(m, raw[Math.min(raw.length - 1, Math.max(0, i + k))] * (1 - Math.abs(k) / 4)); return m; });
+    });
+    const v = V3(); let most = 0;
+    for (let i = 0; i < P.count; i++) {
+      v.fromBufferAttribute(P, i); let best = Infinity, at = null, sh = 0;
+      strapLine.forEach((line, L) => line.forEach((q, k) => { const d = q.p.distanceToSquared(v); if (d < best) { best = d; at = q; sh = shifts[L][k]; } }));
+      if (sh > 0) { v.addScaledVector(at.n, sh); P.setXYZ(i, v.x, v.y, v.z); most = Math.max(most, sh); }
+    }
+    P.needsUpdate = true; g.computeBoundingSphere();
+    return most;
+  }
+
   let dressed = false;
   return {
     group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat, straps }, steps,
@@ -586,7 +608,7 @@ export function createMonk() {
     // its bind pose and everything `update` does are unchanged; what was built here is let go.
     // `o.helpers`: the helper bones the body is weighted to besides these (its glTF's extras.helpers: name, the bone that
     // carries it, the arm it follows and the share of that arm's swing it takes), added before it is put on; `o.beads`
-    // false leaves the beads where they were laid for the robe built here.
+    // or `o.straps` false leaves the beads or the hat's straps where they were laid for the robe built here.
     get helpers() { return helpers.map((h) => h.name); },
     get helperRig() { return helpers; },   // each helper's bone, the bone carrying it, the arm it follows, its share and the way the arm hung (for the tests)
     dress(geometries, material, robeColor, o = {}) {
@@ -605,7 +627,8 @@ export function createMonk() {
       setupHem(robe.geometry.attributes.position.count);
       straps.visible = true;
       dressed = true;
-      return o.beads === false ? null : layBeads();
+      const laid = o.beads === false ? { beads: beadAt.length, moved: 0, most: 0 } : layBeads();
+      laid.straps = o.straps === false ? 0 : layStraps(); return laid;
     },
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
