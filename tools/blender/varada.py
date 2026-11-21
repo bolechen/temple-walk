@@ -609,7 +609,10 @@ CL = cfg.get("cleanup")
 if CL:
   # last: pieces of fewer than `cleanup.island` faces lying within `cleanup.pad` metres of the knee box (seen from the
   # front) or of the hand are taken out (scraps the cuts left; the 3D review: no isolated piece under 50 faces)
-  bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
+  bm = bmesh.new(); bm.from_mesh(me)
+  # coincident points welded first (the file splits its points along texture seams, so a "piece" of the split mesh may
+  # be a scrap of a larger surface); the points do not move
+  bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=CL.get("weld", 1e-5)); bm.faces.ensure_lookup_table()
   pad = CL.get("pad", 0.3); hb_lo = hand_co.min(0) - pad; hb_hi = hand_co.max(0) + pad
   def near_(c): return (np.all((c[:2] > blo[:2] - pad) & (c[:2] < bhi[:2] + pad)) and c[2] > 0.5) or np.all((c > hb_lo) & (c < hb_hi))
   cand_f = set(f.index for f in bm.faces if near_(np.array([f.calc_center_median().x, f.calc_center_median().z, -f.calc_center_median().y])))
