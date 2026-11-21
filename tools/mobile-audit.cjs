@@ -27,6 +27,9 @@ const SURFACES = [
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.
+  // The close of the chapter (#473): the ring at its foot and the word beside it, held at a moment where the words are on; then the full book's page with its 更多 paper laid out as if 山顶再坐一回 were offered.
+  ["ending", "(() => { window.__riteClock(null); void window.__ending(); setTimeout(() => window.__riteClock(8000), 800); })()", "(async () => { const e = document.getElementById('ending'); for (let i = 0; i < 3 && !e.hidden; i++) { e.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 9 + i, bubbles: true })); await new Promise((r) => setTimeout(r, 1800)); } window.__riteClock(null); })()"],
+  ["bookMore", "(async () => { window.__book(); await new Promise((r) => setTimeout(r, 600)); document.getElementById('bookReplay').hidden = false; document.getElementById('bookMoreBtn').hidden = false; document.getElementById('bookMoreBtn').click(); })()", "document.getElementById('bookMoreClose').click(); document.getElementById('bookClose').click()"],
   ["saveSheet", "(async () => { window.__book(); for (let i = 0; i < 100 && !document.getElementById('bookImg').src; i++) await new Promise((r) => setTimeout(r, 100)); document.getElementById('bookShare').click(); })()", "document.getElementById('saveClose').click(); document.getElementById('bookClose').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   // The photograph's settings with the short film's row, then a film being made (only the way to stop and a hair of progress), then its sheet (#342).
