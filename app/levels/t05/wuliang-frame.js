@@ -1,0 +1,79 @@
+// What a visitor sees overhead in the Wuliang hall's passage: the roof left open to its timber. `buildHall` draws a
+// roof as tiles over one sheet of boards, with nothing under it inside; from the passage the eye looked up at that sheet
+// and it read as a flat black triangle (the lead's note on #492, the same fault the prologue's gate had before #475). The
+// Great Hall has its own frames (hall.js); this hall, drawn by the generator, gets the same kind of thing here, as a white
+// box: on each of the four inner column lines a frame of two tiers of tie beam with posts up to the purlins, the
+// purlins along the hall at each joint of the roof's falls, and the rafters under the boards. Positions and sections are
+// proposals (docs/t05/SOURCES.md §13.2); the roof's own numbers are read from the built hall, so the frame follows the
+// roof wherever the roof is changed.
+import * as THREE from "three";
+import { box, merge, mesh } from "../../src/geo.js";
+
+const PT = 0.3;            // a purlin's section, square (a round purlin is not drawn; the white box has none)
+const RT = 0.12;           // a rafter's depth; its width a fifth less
+const BW = 0.3, BD = 0.5;  // a tie beam's width and depth
+const RAFTER_GAP = 0.5;    // the rafters' spacing across the hall
+
+/**
+ * The frame's boxes, in the hall's own frame (x across, z along, y from the ground the hall stands on).
+ * @param {*} b the built hall (what `buildHall` returns): EX, EZ, roof.purlin, roofAt(d)
+ * @param {{ xs: readonly number[], zs: readonly number[], G: number }} H the hall's column lines and the depth of its end slopes
+ */
+export function frameParts(b, H) {
+  const { EX, EZ } = b, PIN = b.roof.purlin, G = H.G;
+  const under = (d) => b.roofAt(d) - 0.17;   // the boards' underside
+  // (the boards' own sheet is cut away under the ridge, a quarter metre down at its crown, so the frame is let down there too)
+  const underAt = (x, z) => { const dz = EZ - Math.abs(z), dx = EX - Math.abs(x); return under(dx <= G ? Math.min(dz, dx) : dz) - Math.max(0, 0.25 * (1 - Math.abs(z) / 0.6)); };
+  const half = EZ - PIN, n = Math.max(2, Math.ceil(half / 1.86)), seg = half / n;
+  const zk = (k) => EZ - (PIN + k * seg);   // the k-th purlin from the front eave purlin; k = n is the ridge, at 0
+  const purlinBottom = (z) => underAt(0, z) - RT - PT;
+  const wood = [], woodZ = [];
+
+  // The purlins, along the hall as far as the hipped ends leave room over their tops.
+  const within = (z, top) => { let x = EX - 0.5; while (x > 0 && underAt(x, z) < top + 0.05) x -= 0.05; return x; };
+  for (let k = 0; k <= n; k++) for (const s of k === n ? [1] : [1, -1]) {
+    const z = s * zk(k), bottom = purlinBottom(z), len = within(z, bottom + PT) - 0.2;   // stopped a little short of the step where the hip begins
+    if (len > 0.5) wood.push(box(2 * len, PT, PT, 0, bottom + PT / 2, z));
+  }
+
+  // The frames: on each inner column line a lower tie beam from the front column line to the back, its top under the
+  // first purlin in; an upper one between the purlins two falls in from the eave, standing on posts on the lower; and
+  // posts from there to the purlins above, up to the ridge. The two end lines are under the hip, whose slope leaves no room.
+  const zc = H.zs[0], k2 = Math.max(2, n - 2);
+  const top1 = purlinBottom(zk(1)), top2 = purlinBottom(zk(k2));
+  const post = (x, z, from, to, w, d) => { if (to - from > 0.12) woodZ.push(box(w, to - from, d, x, (from + to) / 2, z)); };
+  for (const x of H.xs.slice(1, -1)) {
+    woodZ.push(box(BW, BD, 2 * zc, x, top1 - BD / 2, 0));
+    woodZ.push(box(BW, BD, 2 * zk(k2), x, top2 - BD / 2, 0));
+    for (const s of [1, -1]) {
+      for (let k = 2; k <= n; k++) {
+        const z = s * zk(k);
+        if (k === n && s < 0) continue;   // one post under the ridge
+        if (k < k2) post(x, z, top1, purlinBottom(z), BW * 0.7, 0.3);
+        else if (k === k2) post(x, z, top1, top2 - BD, BW * 0.8, 0.35);   // the post carrying the upper beam's end
+        else post(x, z, top2, purlinBottom(z), BW * 0.7, 0.3);
+      }
+    }
+  }
+
+  // The rafters, one every half metre across the hall, in lengths following the falls, from the front eave purlin over the
+  // ridge to the back one; none where the hip begins.
+  const rafters = [], reach = EX - G - 0.2, steps = 2 * Math.ceil(zk(0) / 0.5), dz = (2 * zk(0)) / steps;
+  for (let x = -Math.floor(reach / RAFTER_GAP) * RAFTER_GAP; x <= reach + 1e-6; x += RAFTER_GAP) {
+    for (let i = 0; i < steps; i++) {
+      const za = zk(0) - i * dz, zb = za - dz, ya = underAt(x, za) - RT / 2, yb = underAt(x, zb) - RT / 2, L = Math.hypot(dz, yb - ya);
+      const g = box(RT * 0.8, RT, L + 0.02, 0, 0, 0);
+      g.rotateX(Math.atan2(yb - ya, dz)).translate(x, (ya + yb) / 2, (za + zb) / 2);
+      rafters.push(g);
+    }
+  }
+  return { wood, woodZ: [...woodZ, ...rafters] };
+}
+
+/** The frame as a group, placed where the hall stands. @param {*} M @param {*} b @param {*} H @param {number} z0 @param {number} y0 */
+export function buildWuliangFrame(M, b, H, z0, y0 = 0) {
+  const { wood, woodZ } = frameParts(b, H), g = new THREE.Group();
+  g.add(mesh(merge(wood), M.woodX), mesh(merge(woodZ), M.woodZ));
+  g.position.set(0, y0, z0);
+  return g;
+}

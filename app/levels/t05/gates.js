@@ -13,9 +13,13 @@ import * as THREE from "three";
 import { box, merge, mesh, BODY } from "../../src/geo.js";
 import { buildHall, PURLIN } from "../../src/building.js";
 import { buildPaifang } from "../../src/paifang.js";
+import { buildWuliangFrame } from "./wuliang-frame.js";
 
 // How high a ridge stands over the eave purlins on a hall (Yingzao Fashi, juan 5): a third of the distance between the front and back purlins.
 const ju = (o) => (o.zs[0] - o.zs[o.zs.length - 1] + (2 * PURLIN * (o.cai || 0.21)) / 0.21) / 3;
+
+/** The Wuliang hall's `buildHall` options (a table of axis.js's `HALL`), shared with the test that looks at its frame. @param {any} HALL */
+export const hallOptions = (HALL) => ({ cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: HALL.colTop, overhang: 2.2, G: HALL.G, lift: HALL.lift, liftLen: HALL.liftLen, crest: HALL.crest, rise: HALL.juzhe ? HALL.juzhe * (HALL.zs[0] - HALL.zs[HALL.zs.length - 1] + (2 * PURLIN * 0.232) / 0.21) : undefined, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack });
 
 /**
  * Stand a building at (x, z) on ground at y0, facing south; its meshes in a group and its rectangles for the written plan.
@@ -85,13 +89,14 @@ export function buildShells(M, P) {
   }
 
   // ---- The Wuliang hall: five bays, a passage through the middle one, the rooms either side walled off from it ----
-  const hall = put(M, { cai: 0.232, xs: [...HALL.xs], zs: [...HALL.zs], platH: HALL.platH, platOut: HALL.platOut, colTop: HALL.colTop, overhang: 2.2, lift: HALL.lift, liftLen: HALL.liftLen, crest: HALL.crest, rise: HALL.juzhe ? HALL.juzhe * (HALL.zs[0] - HALL.zs[HALL.zs.length - 1] + (2 * PURLIN * 0.232) / 0.21) : undefined, front: "pass", back: "pass", dark: false, lamps: false, steps: 0, stepsBack: HALL.stepsBack }, [0, AXIS.hallZ]);
+  const hall = put(M, hallOptions(HALL), [0, AXIS.hallZ]);
   take("无量殿", hall, 0, 0);
   // Inside, two walls along the middle bay's columns close the side rooms (the exhibition of the third phase, SCOPE-OPTIONS.md (b)'s neighbours): the passage is the only floor.
   const wallH = HALL.platH + HALL.colTop, mid = Math.floor((HALL.xs.length - 1) / 2), ix = HALL.xs[mid + 1], t = 0.3, zN = HALL.zs[HALL.zs.length - 1], zS = HALL.zs[0];
   const room = merge([-1, 1].map((sx) => box(t, wallH - HALL.platH, zS - zN, sx * ix, (HALL.platH + wallH) / 2, (zS + zN) / 2 + AXIS.hallZ)));
   group.add(mesh(room, M.plaster()));
   sides([0, AXIS.hallZ], HALL.xs, HALL.zs, false);
+  group.add(buildWuliangFrame(M, hall.b, HALL, AXIS.hallZ));   // overhead, the roof open to its timber, so that the passage's ceiling is not one black sheet
 
   // ---- The archway (docs/t05/PAIFANG.md): on the terrace between the inner gate and the hall, its posts' plane at AXIS.paifangZ, facing the way in ----
   {
