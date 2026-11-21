@@ -27,6 +27,7 @@ import { WISHES, decodeLamp, lampLink } from "./wishes.js";
 import { drawLampCard, fitLines } from "./lampcard.js";
 import { processedLine } from "./credits.js";
 import { createJoya } from "./joya-ui.js";
+import { createHoldRing } from "./holdring.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -64,7 +65,7 @@ export function createGame(y) {
   // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
   // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
   const ui = y.ui;
-  ui.layer("slip", { confirm: "slipTake" }).layer("bless", { kind: "modal" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } });
+  ui.layer("slip", { confirm: "slipTake" }).layer("bless", { kind: "modal" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } }).layer("bookMore", { kind: "modal", confirm: "bookMoreClose" });
   $("slipTake")?.addEventListener("click", () => ui.close("slip"));
   // A slip is written down the page, and a long line in a short window (a phone on its side) would run to more columns than the
   // screen is wide. It is fitted when it opens (#203): the same layout with smaller writing, down to 14 px, and only if that
@@ -275,16 +276,47 @@ export function createGame(y) {
     return /** @type {[number, string][]} */ (lines.map((l, i) => [from + i * gap, l]));
   }
   const TITLE_AT = 25.5;   // seconds into the close when the title of what has ended comes
-  let closing = false, skip = false, /** @type {string[]} */ words = [];
-  async function finale(on = () => true) {
+  let closing = false, skip = false, /** @type {string | null} */ skipHow = null, /** @type {() => object} */ passState = () => ({}), /** @type {string[]} */ words = [];
+  async function finale(on = () => true, replay = false) {
     const el = $("ending"); if (closing || !el) { openBook(); return; }
-    closing = true; skip = false; document.body.classList.add("ending"); el.hidden = false; $("endingTitle").classList.remove("on");
+    closing = true; skip = false; skipHow = null; document.body.classList.add("ending"); el.hidden = false; $("endingTitle").classList.remove("on");
     const line = $("endingLine"), CLOSING = closingWords(); let shown = -1; words = CLOSING.map((c) => c[1]);
     // The close has its own music, written to these words: the far bell's line and the title (audio.js, score.js).
     closeMusic({ bell: CLOSING[bellLine][0], title: TITLE_AT });
-    // A tap wakes a sleeping phone and then reaches the page: that one is not taken for a skip, only a later one is.
-    let back = -Infinity; const seen = () => { if (!document.hidden) back = performance.now(); }; document.addEventListener("visibilitychange", seen);
-    const pass = () => { if (performance.now() - back > 900) skip = true; }; el.addEventListener("click", pass); const key = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); pass(); } }; window.addEventListener("keydown", key, true);
+    // Passing the close over (#473). A tap that wakes a sleeping phone must never do it, so: a press is never a skip the
+    // first time the close is watched unless it is held for HOLD; a visitor who has seen it may tap. And the first press
+    // after the page was frozen (hidden, or no frame for FROZEN ms: some in-app browsers send no visibilitychange) is
+    // taken for the wake and ignored, however late after the screen came on it lands.
+    const HOLD = 1500, FROZEN = 2000, seenBefore = replay || !!journey.closed;
+    const host = $("endingHold"), word = $("endingHoldWord"), ring = createHoldRing(host);
+    word.textContent = seenBefore ? t("轻点略过") : t("按住略过"); host.setAttribute("aria-label", word.textContent);
+    // (once it has been seen a tap is enough, and a tap needs no ring: it is drawn only for the hold)
+    let frozen = false, lastFrame = performance.now(), ignored = 0, held = null, pressed = null, raf = 0;
+    const letGo = () => { held = null; pressed = null; ring.release(); };
+    const give = (how) => { if (!skip) { skip = true; skipHow = how; letGo(); } };
+    const freeze = () => { frozen = true; letGo(); };
+    const seen = () => freeze();
+    const frame = () => { const now = performance.now(); if (now - lastFrame > FROZEN) freeze(); lastFrame = now; if (held !== null) { const k = Math.min(1, (now - held) / HOLD); ring.progress(k); if (k >= 1) give("hold"); } raf = requestAnimationFrame(frame); };
+    raf = requestAnimationFrame(frame); document.addEventListener("visibilitychange", seen);
+    const down = (id) => {
+      if (pressed !== null) return;
+      // A frame may not have run since the page came back: ask the clock too, not only the loop.
+      if (performance.now() - lastFrame > FROZEN) frozen = true;
+      if (frozen) { frozen = false; ignored++; pressed = id; held = null; return; }   // the wake: this press, its release and its holding count for nothing
+      pressed = id; held = performance.now(); if (!seenBefore) ring.press();
+    };
+    const up = (id) => {
+      if (pressed !== id) return;
+      const was = held, wake = was === null; letGo();
+      if (!wake && seenBefore && performance.now() - was < HOLD) give("tap");
+    };
+    // The pointer is captured on the press, so a finger slid off the window still ends here; and a press that is lost any other way (capture taken, focus gone) is let go, not left held.
+    const pd = (e) => { down("p" + e.pointerId); try { el.setPointerCapture(e.pointerId); } catch {} }, pu = (e) => up("p" + e.pointerId), lost = (e) => { if (pressed === "p" + e.pointerId) letGo(); }, blur = () => letGo();
+    el.addEventListener("pointerdown", pd); el.addEventListener("pointerup", pu); el.addEventListener("pointercancel", pu); el.addEventListener("lostpointercapture", lost); window.addEventListener("blur", blur);
+    const key = (e) => { if (e.key !== "Escape" && e.key !== "Enter" && e.key !== " ") return; e.preventDefault(); e.stopPropagation(); if (!e.repeat) down("k" + e.key); };
+    const keyUp = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") up("k" + e.key); };
+    window.addEventListener("keydown", key, true); window.addEventListener("keyup", keyUp, true);
+    passState = () => ({ seenBefore, frozen, holding: held !== null, ignored, how: skipHow, progress: ring.value / 100, ring: ring.held });
     awake.hold();   // the screen stays on while it is played, where the browser allows (src/awake.js)
     try {
       await rites.close(() => on() && !skip, (t) => {
@@ -297,12 +329,16 @@ export function createGame(y) {
         }
       });
     } finally { awake.free(); }
-    el.removeEventListener("click", pass); window.removeEventListener("keydown", key, true); document.removeEventListener("visibilitychange", seen);
+    cancelAnimationFrame(raf); el.removeEventListener("pointerdown", pd); el.removeEventListener("pointerup", pu); el.removeEventListener("pointercancel", pu); el.removeEventListener("lostpointercapture", lost); window.removeEventListener("blur", blur);
+    window.removeEventListener("keydown", key, true); window.removeEventListener("keyup", keyUp, true); document.removeEventListener("visibilitychange", seen); letGo();
     if (skip || !on()) { passClose(); y.direct(null); }   // passed over, or walked away: the eye comes home by the usual swing (rites.close left it where it was)
-    line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; ended++;
+    line.classList.remove("on"); $("endingTitle").classList.remove("on"); el.hidden = true; document.body.classList.remove("ending"); closing = false; if (!replay) ended++;
+    // How it ended, for the analytics: held, tapped, or played out (with how many wake presses the guard let by unseen).
+    const gone = /** @type {any} */ (passState()).ignored, how = skipHow || (gone ? "wake-ignored" : "played");
+    if (replay) { track("demo.ending.replay", { skipped: skip, how, ignored: gone }); if (!skip && on()) farBegin(); return; }
     // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
     // When it is seen again in another season, the full book's seal is not shown again: only the book opens.
-    if (journey.close(season())) track("demo.ending", { skipped: skip, count: journey.count(), seconds: Math.round(visit.seconds) });
+    if (journey.close(season())) track("demo.ending", { skipped: skip, how, ignored: gone, count: journey.count(), seconds: Math.round(visit.seconds) });
     refresh();
     // Nothing opens by itself: the eye stays on the far view of the pavilion (rites.close, y.holdEye) and the music plays out;
     // the book is the visitor's to open (a line at the foot, B), and any step, tap on the ground or Esc brings the eye home.
@@ -503,7 +539,7 @@ export function createGame(y) {
     const blank = SEALS.length - journey.count();
     $("bookHint").textContent = next ? `${journey.closed ? t("帐上还空着{n}处。", { n: "〇一二三四五六七"[blank], k: blank }) : ""}${[t(next.hint), told()].filter(Boolean).join("　")}` : `${t("七印圆满。这一页可以存下来，也可以分享。时节已开，留影与歇脚里可选。")}${told()}`;
     // (an empty book has nothing to begin again: 重新朝山 is offered once there is a seal to give up)
-    if (!ui.isOpen("book")) { leaf0?.classList.add("drawing"); $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; $("bookReset").hidden = !journey.count(); ui.open("book", { onClose: announce }); }
+    if (!ui.isOpen("book")) { leaf0?.classList.add("drawing"); $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; $("bookReset").hidden = !journey.count(); $("bookReplay").hidden = !(journey.closed && journey.done()); $("bookMoreBtn").hidden = $("bookReset").hidden && $("bookReplay").hidden; ui.open("book", { onClose: announce }); }
     page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label.split(" · ").map(glyphs).join(" · ") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
@@ -532,6 +568,22 @@ export function createGame(y) {
   function openBookOwed() { if (journey.owed() && !closing && !completing && !rite) complete(); else openBook(); }
   $("bookBtn")?.addEventListener("click", () => { track("demo.book", { seals: journey.count() }); openBookOwed(); });
   $("bookClose")?.addEventListener("click", () => ui.close("book"));
+  // 山顶再坐一回 (#473): the close again from the start, from the summit mat. It stamps nothing, keeps nothing in the book and is not a new season's.
+  async function replayEnding() {
+    const p = places.sit; if (!p || closing || completing || rite || !journey.closed) return;
+    ui.close("book"); farEnd();
+    if (!(await y.travel(p.at[0], p.at[1], Math.PI - p.face, p.room || null))) return;
+    await wait(0.6);
+    const s = y.site.seats.find((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3);
+    if (s) await sitDown(s);
+    await wait(1); await finale(() => true, true);
+  }
+  // 更多 (#473, the art review's one way of laying out the foot of the book): a small paper of what is seldom wanted, one to a line.
+  // Whatever is pressed on it, the paper goes first and then the thing is done.
+  $("bookMoreBtn")?.addEventListener("click", () => ui.open("bookMore", { onClose: () => { const b = $("bookReset"); b.dataset.asked = ""; b.textContent = t("重新朝山"); } }));
+  $("bookMoreClose")?.addEventListener("click", () => ui.close("bookMore"));
+  $("bookReplay")?.addEventListener("click", () => { ui.close("bookMore"); track("demo.ending.replay", { phase: "start" }); replayEnding(); });
+  window.__replayEnding = () => replayEnding(); window.__endingPass = () => passState();
   $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 
   // ---- The prologue's title, at the gate ----
