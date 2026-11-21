@@ -23,7 +23,12 @@ const SURFACES = [
   ["joya", "window.__joyaPreview(true)", "window.__joyaPreview(false)"],
   ["joyaCard", "(async () => { window.__joyaPreview(true); await new Promise((r) => setTimeout(r, 200)); document.getElementById('joyaTake').click(); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
   ["prologue", "(() => { window.__pose(6.6, 53.4, Math.atan2(-6.6, 13.4), 0.05); window.__prologue(true); })()", null],
-  ["menu", "document.body.classList.add('seasons'); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
+  // (with a temple closed, so that the map's row is there too, #449: the book's chip and the map's own sheet below keep it)
+  ["menu", "document.body.classList.add('seasons'); window.__pilgrimage({ mark: 't00', season: 'autumn' }); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
+  // The map of temples walked (#449, phase one): one temple closed and another still a fog, then both closed (a place to go, and the one he is in marked); and the ring of ink that a held Q fills.
+  ["pilgrim", "(async () => { window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList li'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
+  ["pilgrimGo", "(async () => { window.__pilgrimage({ mark: 't05', season: 'winter' }); window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList .go'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
+  ["pilgrimHold", "(async () => { window.__pilgrimage({ clock: 0 }); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true })); await new Promise((r) => setTimeout(r, 200)); window.__pilgrimage({ clock: 600 }); await new Promise((r) => setTimeout(r, 300)); })()", "window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true })); window.__pilgrimage({ clock: null })"],
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.

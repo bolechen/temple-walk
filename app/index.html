@@ -40,6 +40,9 @@
 <!-- /production-only -->
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="src/ui.css">
+<!-- A crossing from another temple (行脚图, #449) is waiting: keep the ink curtain shut from the first paint, before anything is built.
+     Only looks (yard.js reads the handover once, src/pilgrimage.js); it must say what takeCrossing says: for this page's level, a few minutes old at most. -->
+<script>try{var c=JSON.parse(sessionStorage.getItem("yunjing.crossing.v1")||"null"),l=new URLSearchParams(location.search).get("level")||"t00",n=Date.now();if(c&&c.to===l&&typeof c.at==="number"&&n-c.at<=18e4&&c.at-n<=6e4)document.documentElement.classList.add("crossing")}catch(e){}</script>
 
 <div class="view" id="yardView">
   <canvas id="yardGl"></canvas>
@@ -52,6 +55,7 @@
     <dt><kbd>鼠标</kbd></dt><dd>按住拖动环顾，点地面走去（「歇脚」里可改为锁定鼠标）</dd><dt><kbd>滚轮</kbd></dt><dd>远近</dd>
     <dt><kbd>E</kbd></dt><dd>行事</dd><dt><kbd>V</kbd></dt><dd>换视角</dd><dt><kbd>R</kbd></dt><dd>镜头转回身后（鼠标中键亦可）</dd>
     <dt><kbd>B</kbd></dt><dd>朱印帐</dd><dt><kbd>P</kbd></dt><dd>留影</dd>
+    <dt class="need-pilgrim"><kbd>Q</kbd></dt><dd class="need-pilgrim">长按，行脚图</dd>
     <dt><kbd>Space</kbd></dt><dd>跳，台沿处下台阶</dd>
     <dt class="need-seasons"><kbd>T</kbd></dt><dd class="need-seasons">时节</dd><dt><kbd>Esc</kbd></dt><dd>松开鼠标，合上，歇脚</dd>
   </dl><p>按 H 收起</p></div>
@@ -92,6 +96,7 @@
     </div>
     <div class="grp-name grp-lang"><h3 aria-label="文字" title="文字">意</h3></div>
     <div class="set"><span>文字</span><div class="opts"><button class="chip" data-lang="zh" lang="zh-Hans" type="button">中文</button><button class="chip" data-lang="ja" lang="ja" type="button">日本語</button><button class="chip" data-lang="en" lang="en" type="button">English</button><button class="chip" data-lang="ko" lang="ko" type="button">한국어</button></div></div>
+    <div class="set need-pilgrim"><span>行脚图</span><div class="opts"><button class="chip" id="menuPilgrim" type="button">翻开</button></div></div>
     <div class="community-invite" id="menuCommunityInvite" hidden><button class="chip" id="menuCommunity" type="button">加入内测反馈群</button><p>遇到问题，或有什么想法，来群里聊聊。</p></div>
     <div class="row"><button class="chip" id="menuFull" type="button">全屏</button><button class="chip" id="menuKeys" type="button">键位</button><button class="chip" id="menuHome" type="button">回到起点</button><button class="chip" id="menuCredits" type="button">鸣谢</button><button class="stamp" id="menuResume" type="button">继续</button><p class="version" id="menuVersion" translate="no"></p></div>
   </div></dialog>
@@ -116,6 +121,7 @@
     <div><button class="chip" data-season="spring" type="button">春</button><button class="chip" data-season="summer" type="button">夏</button><button class="chip" data-season="autumn" type="button">秋</button><button class="chip" data-season="winter" type="button">冬</button></div>
     <div><button class="chip" data-follow type="button">随时辰</button><button class="chip" data-time="dawn" type="button">晨</button><button class="chip" data-time="day" type="button">昼</button><button class="chip" data-time="dusk" type="button">暮</button><button class="chip" data-time="night" type="button">夜</button></div>
   </div>
+  <div id="pilgrimHold" role="progressbar" aria-label="按住 Q，行脚图" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><i></i><span>行脚图</span></div>
   <canvas id="still" aria-hidden="true"></canvas>
   <div id="finder" aria-hidden="true"></div>
   <div id="frame"><i class="third"></i></div>
@@ -166,7 +172,16 @@
   <div id="bookPage"><img id="bookImg" alt="朱印帐：寺名、日期和已得的印"></div>
   <p id="bookHint"></p>
   <p id="bookGo" hidden>点一枚已得的印，回到那一处。</p>
-  <div class="row"><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+  <div class="row"><button class="chip need-pilgrim" id="bookMap" type="button">行脚图</button><button class="chip" id="bookShare" type="button">分享</button><a class="chip" id="bookSave" href="#">保存</a><button class="stamp" id="bookClose" type="button">合上</button><button class="chip" id="bookReset" type="button">重新朝山</button></div>
+</dialog>
+<dialog class="layer" id="pilgrim" aria-labelledby="pilgrimTitle" hidden>
+  <div class="pilgrim-card paper scrolls">
+    <h2 id="pilgrimTitle">行脚图</h2>
+    <p id="pilgrimHint">走过的寺，随时可以回去。</p>
+    <ul id="pilgrimList"></ul>
+    <p id="pilgrimNote" role="status" aria-live="polite"></p>
+    <footer><button class="stamp" id="pilgrimClose" type="button">合上</button></footer>
+  </div>
 </dialog>
 <dialog class="layer" id="bless" aria-labelledby="blessTitle" hidden>
   <article class="paper scrolls">

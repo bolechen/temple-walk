@@ -87,6 +87,9 @@
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
 | `demo.leave` | 入山后第一次页面隐藏（每次打开一次） | `seconds`（本次页面打开秒数）`seals` `metres`（这一趟）`place`（殿 id / 楼上 id / 地点名）`inside` `up` | 每次访问在哪儿结束、多久、走了多少、几枚印 |
 | `demo.setting` | 改设置（同一 key 800 ms 内合并，取最后值；值未变不发） | `key` `value`（布尔为 `1/0`） | 谁改了哪项：自动镜头、画质、锁定鼠标、音量、视野等 |
+| `pilgrimage.open` | 打开行脚图（#449） | `via`（`menu`/`book`/`hold`/`hook`）`closed`（已打卡几座） | 三处入口各有多少人用；长按是否被发现 |
+| `pilgrimage.go` | 在图上点「去」 | `from` `to` | 换寺的去向 |
+| `pilgrimage.arrive` | 新寺画得出来、墨帘拉开 | `from` `to` `ms`（从点「去」到寺画得出来）`walk_ms`（到墨帘全开、能走） | 换寺要等多久，二期长卷时长的依据 |
 
 `demo.load_error` 的三个新字段（`app/loading.js`）：
 

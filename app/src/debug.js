@@ -118,6 +118,15 @@ export async function mountDebug({ link }) {
   levelFolder.add(ls, "seals").name("已得").listen().disable();
   levelFolder.add(ls, "visit").name("这一趟").listen().disable();
 
+  // The map of temples walked (#449): a temple closed by hand, so that a tester on the canary need not play a close to see the map
+  // and cross to the other temple. The record is the visitor's own and nothing a visitor does empties it; only this does.
+  const pg = gui.addFolder("行脚图"), ps = { record: "—" };
+  const pgRead = () => { const r = W.__pilgrimage(); ps.record = Object.entries(r.record).map(([id, e]) => `${id} ${e.season || "?"}`).join(" · ") || "（空）"; return r; };
+  pg.add(ps, "record").name("已打卡").listen().disable();
+  for (const id of pgRead().listed) pg.add({ mark() { W.__pilgrimage({ mark: id, season: W.__probe().season }); pgRead(); } }, "mark").name(`打卡 ${id}`);
+  pg.add({ open() { W.__pilgrimage({ open: true }); } }, "open").name("打开行脚图（打卡后才有）");
+  pg.add({ wipe() { W.__pilgrimage({ wipe: true }); pgRead(); } }, "wipe").name("清空打卡记录");
+
   // What stops him, drawn (src/walkviz.js): the floor's cells round him, his outline, the ball round his own eye.
   const hit = gui.addFolder("碰撞");
   const hs = { viz: false, cells: "—", walker: W.__walker().mode };

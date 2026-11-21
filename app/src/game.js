@@ -26,6 +26,7 @@ import { WISHES, decodeLamp, lampLink } from "./wishes.js";
 import { drawLampCard, fitLines } from "./lampcard.js";
 import { processedLine } from "./credits.js";
 import { createJoya } from "./joya-ui.js";
+import { createPilgrimageUI } from "./pilgrimage-ui.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -63,6 +64,14 @@ export function createGame(y) {
   // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
   // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
   const ui = y.ui;
+  // 行脚图 (#449): the temples whose close has been played, and the three ways to the map of them (the pause menu, the book, a
+  // hold on Q). The record is the visitor's, apart from every book: 从头走起 empties a book and never this. A book seeded
+  // from ?seals= is for that visit only, and so is what it closes.
+  const levelId = y.level?.id || "t00";
+  const pilgrims = createPilgrimageUI({
+    ui, level: { id: levelId }, memory: !!seeded, visit: y.visit, stand: () => y.leave(),
+    canHold: () => entered && !closing && !completing && !y.openingActive() && !ui.isOpen("photo"),
+  });
   ui.layer("slip", { confirm: "slipTake" }).layer("bless", { kind: "modal" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } });
   $("slipTake")?.addEventListener("click", () => ui.close("slip"));
   // A slip is written down the page, and a long line in a short window (a phone on its side) would run to more columns than the
@@ -85,7 +94,7 @@ export function createGame(y) {
   const holdOut = (text, from, take, onClose) => { $("slipText").textContent = text; $("slipFrom").textContent = from; $("slipTake").textContent = take; ui.open("slip", { onClose }); fitSlip(); };
   const wait = (s) => new Promise((r) => setTimeout(r, s * 1000 * fast));
   let sat = 0, ended = 0, went = 0;
-  let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter") || !!y.relang;   // (a page opened by a change of language goes on where it was, #140)
+  let rite = null, near = null, entered = Q.has("shot") || Q.has("show") || Q.has("cam") || Q.has("enter") || !!y.relang || !!y.crossing;   // (a page opened by a change of language goes on where it was, #140; one opened by a crossing from another temple is already in, at its start, #449)
   // How long this page has been open, for the leave event: not the visit, which is kept between sittings.
   const openedAt = performance.now();
 
@@ -99,6 +108,8 @@ export function createGame(y) {
   // A change of season lets it close there again, once in that season (journey.closedIn).
   const season = () => y.season(), closedHere = () => journey.closedIn(season());
   journey.adopt(season());   // a close kept before seasons were belongs to the season the visitor is in now
+  // A close played before the record was kept is carried into it, at the time it was (a seeded book closes nothing for good).
+  if (ours && !seeded && journey.closed && !pilgrims.record.has(levelId)) { pilgrims.record.mark(levelId, { season: journey.closedSeason, at: journey.closed }); pilgrims.refresh(); }
   const owed = (id) => !!SEAL[id] && (!journey.has(id)) || (id === "sit" && !closedHere());
   // The bell and the tea may be gone back to after their seals: the bell rung again, another bowl drunk.
   const offered = (id) => owed(id) || (id === "lamp" && journey.has("lamp")) || id === "bell" || id === "tea" || (incenseHall(id) !== null && !rites.incenseLit(/** @type {string} */ (incenseHall(id))));
@@ -301,6 +312,8 @@ export function createGame(y) {
     // Seen, or passed over: either way it is not shown again in this season. The seals left over can still be earned.
     // When it is seen again in another season, the full book's seal is not shown again: only the book opens.
     if (journey.close(season())) track("demo.ending", { skipped: skip, count: journey.count(), seconds: Math.round(visit.seconds) });
+    // The close has been played, or passed over: the temple is closed, and the way back to it opens from the other temples (#449).
+    if (ours) { pilgrims.record.mark(levelId, { season: season() }); pilgrims.refresh(); }
     refresh();
     // Nothing opens by itself: the eye stays on the far view of the pavilion (rites.close, y.holdEye) and the music plays out;
     // the book is the visitor's to open (a line at the foot, B), and any step, tap on the ground or Esc brings the eye home.
@@ -581,7 +594,7 @@ export function createGame(y) {
     if (again) { again.hidden = !o.going || b.disabled; if (again.dataset.asked !== "1") again.textContent = o.again; }
     return o;
   };
-  if (left && !y.relang && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up, left.hall);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
+  if (left && !y.relang && !y.crossing && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up, left.hall);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
   const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   // Where the visit ends (#326): the first time the page is hidden after he has stepped in, named from the same source
   // as the place "接着走" offers, so the two always agree. A second hide of the same page says nothing.

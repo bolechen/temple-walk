@@ -33,6 +33,10 @@ test("the levels only the workbench lists are the ones the registry lists behind
   assert.match(src, /const TESTING = typeof __DEPLOY__ === "undefined" \|\| __DEPLOY__ === "preview" \|\| __DEPLOY__ === "canary";/);
   const behind = [...(src.match(/\.\.\.\(TESTING \? \{([^}]*)\} : \{\}\)/)?.[1] || "").matchAll(/\b(\w+)\s*:/g)].map((m) => m[1]);
   assert.deepEqual(behind, [...BENCH_LEVELS]);
+  // The map's names for the levels (行脚图, #449) are behind the same test: the public page names only the prologue.
+  const places = [...(src.match(/export const PLACES = \{([\s\S]*?)\n\};/)?.[1] || "").matchAll(/^\s*(?:\.\.\.\(TESTING \? \{ )?(\w+): \{ region/gm)];
+  assert.deepEqual(places.map((m) => m[1]), ["t00", ...BENCH_LEVELS]);
+  assert.match(src, /\.\.\.\(TESTING \? \{ t05: \{ region: "[^"]+", seal: "[^"]+" \} \} : \{\}\)/, "T05's name on the map is behind the test of the build");
 });
 
 test("a preview and the canary ship T05; the public page carries none of it", () => {
@@ -45,5 +49,7 @@ test("a preview and the canary ship T05; the public page carries none of it", ()
       if (baked.floor) assert.ok(p.floor, `and its baked floor (${t})`); if (baked.doorways) assert.ok(p.doorways, `and its doorway list (${t})`);
     }
     assert.deepEqual(ofT05(outs.production), { module: false, listed: false, floor: false, doorways: false }, "production carries nothing of T05");
+    assert.ok(!scripts(outs.production).some((s) => /关外|奉明/.test(s)), "nor its region or its seal on the map (#449)");
+    assert.ok(scripts(outs.preview).some((s) => /关外/.test(s)) && scripts(outs.canary).some((s) => /关外/.test(s)), "the testers' builds name it");
   } finally { for (const o of Object.values(outs)) fs.rmSync(o, { recursive: true, force: true }); }
 });

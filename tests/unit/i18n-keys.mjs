@@ -63,6 +63,8 @@ export async function dataKeys() {
   // Each level's plan names its own halls (app/levels/<level>/site.js, #362).
   for (const lv of fs.readdirSync(path.join(ROOT, "levels")).filter((d) => fs.existsSync(path.join(ROOT, "levels", d, "site.js"))))
     for (const m of read(`levels/${lv}/site.js`).matchAll(/hall: \{[^}]*name: "([^"]+)"/g)) keys.add(m[1]);
+  // The map of temples walked (#449) names each level by its region, kept as data in the level registry and shown through t().
+  for (const m of read("src/level.js").matchAll(/region: "([^"]+)"/g)) keys.add(m[1]);
   keys.add("山路上"); keys.add("凌霄阁上");   // where he was left, on the ground or up on the summit pavilion's balcony
   // Words each table needs for the action button and the calligraphy (game.js translates these as they are shown).
   for (const k of ["撞钟", "起身", "观看", "坐下", "登楼", "下楼", "圆", "奉拜", "云径", "云径禅寺", "年代", "质地", "尺寸", "收藏"]) keys.add(k);
