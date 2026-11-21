@@ -159,7 +159,7 @@ const scenarios = {
   } },
   // T05's white box (#409), on the workbench: ?level=t05 walks its own place on its own baked floor. He arrives at the
   // outer gate's place, walks the way into the court, past station A and up the flight to station B on the terrace, 3 m
-  // up, and nothing complains. Built, not drawn.
+  // up, and on through the hall's middle door to station E under its roof, and nothing complains. Built, not drawn.
   t05: { tier: 2, async run(b, base) {
     const t = await open(b, base, "level=t05&q=low&fast=1" + BARE), lv = await t.page.evaluate(() => window.__level());
     expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
@@ -170,6 +170,12 @@ const scenarios = {
     let lo = 9, hi = -9;
     await t.until(async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); return Math.hypot(s.x, s.z - 14.4) < 0.6; }, 300000, "he never reached station B on the terrace");
     expect(Math.abs(lo) < 0.1 && Math.abs(s.h - 3) < 0.1, `from the court's paving up to the terrace, 3 m: went ${lo} to ${hi}, stands at ${s.h}`);
+    // On into the great hall (#422) through its middle door, over the sill to station F and under the roof to E: the
+    // same floor as the court's, no veil, no room under the court.
+    await t.page.evaluate(() => window.__walk([[0, 2], [0, -2], [0, -12]]));
+    let veil = false;
+    await t.until(async () => { s = await t.state(); veil ||= !!s.inside || s.room !== null; return Math.hypot(s.x, s.z + 12) < 0.6; }, 300000, "he never reached station E inside the hall");
+    expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are

@@ -11,6 +11,7 @@ const { loadLevel } = await import("../../app/src/level.js");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
 const { stairProfile, STAIR } = await import("../../app/src/geo.js");
+const { BAYS, HALL, FRONT, XS, ZS, OUTER, buildHall } = await import("../../app/levels/t05/hall.js");
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -61,7 +62,32 @@ test("nothing outside the compound and the way can be stood on, and the parapet 
   for (const [x, z] of [[0, PLATFORM.zS - PLATFORM.d + 0.05], [PLATFORM.w / 2 - 0.05, -10], [TERRACE.w / 2 - 0.05, 8], [12, TERRACE.zS - 0.05]]) assert.ok(walker.blocked(x, z), `(${x}, ${z})`);
 });
 
-test("T05 builds no censer, no trees, no hall, no bell and no seat of its own yet", () => {
+test("the great hall: nine bays at ARCHITECTURE.md's widths, 28 eave columns, three doors and four windows, eave and ridge where SITE.md has them (#422)", () => {
+  assert.deepEqual([...BAYS], [4.98, 4.98, 5.26, 5.8, 5.8, 5.8, 5.26, 4.98, 4.98]);
+  assert.ok(Math.abs(XS[XS.length - 1] - XS[0] - 47.84) < 1e-9, "47.84 m across the column heads");
+  assert.ok(Math.abs(ZS[0] - ZS[ZS.length - 1] - 25.13) < 1e-9, "25.13 m deep");
+  assert.equal(HALL.column, 6.06); assert.equal(HALL.floor, PLATFORM.h);
+  assert.deepEqual([...FRONT], ["wall", "window", "window", "door", "door", "door", "window", "window", "wall"]);
+  const h = buildHall(M);
+  assert.equal(h.columns.length, 28, "ten across the front and the back, four more up each end");
+  assert.ok(Math.abs(h.roof.eave - 11.81) < 0.01 && Math.abs(h.roof.ridge - 21) < 0.01, "eave about +11.8, ridge about +21 from the court");
+  assert.ok(Math.abs(h.roof.EX - h.roof.rx - (h.roof.EF - h.roof.EB) / 2) < 1e-9, "the ends are hipped at 45°: one roof of four slopes and five ridges");
+  assert.ok(OUTER.zB > PLATFORM.zS - PLATFORM.d, "the back wall stands on the platform");
+});
+
+test("he walks into the hall across the threshold, to stations C, D, E and F, all on the hall's floor, and nowhere through its walls (#422)", () => {
+  const targets = file.header.targets;
+  for (const id of ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
+  for (const k of ["C", "D", "E", "F"]) assert.ok(Math.abs(walker.heightAt(...STATION[k]) - 3) < 0.03, `${k} is on the hall's floor`);
+  const zWall = ZS[0] + 0.3 - HALL.wall / 2, mid = (i) => (XS[i] + XS[i + 1]) / 2;
+  FRONT.forEach((kind, i) => {
+    if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zWall) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
+    else assert.ok(walker.blocked(mid(i), zWall), `the ${kind} in bay ${i} is not walked through`);
+  });
+  for (const [x, z] of [[XS[0] + 0.3 - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
+});
+
+test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil", () => {
   assert.equal(site.censer, null); assert.deepEqual(site.trees, []); assert.deepEqual(site.halls, []); assert.deepEqual(site.strikers, []);
   assert.deepEqual(site.places, {}); assert.deepEqual(site.seats, []);
   assert.equal(level.backdrop, null); assert.equal(level.grove, null); assert.equal(level.zones, null);

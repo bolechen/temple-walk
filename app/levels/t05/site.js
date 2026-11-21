@@ -1,7 +1,7 @@
-// 奉明寺 (T05, the first chapter after the prologue), as a white box (#409, docs/t05/PLAN.md item 5): the court between the
-// Wuliang hall and the great hall, the great hall's 3 m platform, the terrace before it and the flight up, walled round,
-// and a paved way from the outer gate's place far to the south. The great hall itself, its seven Buddhas and the axis of
-// gates and halls come in later items (6 to 10). Every size here, and whether it is a published measurement, a summary
+// 奉明寺 (T05, the first chapter after the prologue), as a white box (#409, #422; docs/t05/PLAN.md items 5 and 6): the
+// court between the Wuliang hall and the great hall, the great hall's 3 m platform, the terrace before it and the flight
+// up, the hall's shell on the platform (./hall.js), walled round, and a paved way from the outer gate's place far to the
+// south. The hall's seven Buddhas and the axis of gates and halls come in later items (7 to 10). Every size here, and whether it is a published measurement, a summary
 // or our own proposal, is in docs/t05/SITE.md and docs/t05/SOURCES.md.
 //
 // Heights are taken from the court's paving (y = 0; SITE.md §4.2), so the platform, the terrace and the hall's floor are
@@ -9,6 +9,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
+import { buildHall, OUTER } from "./hall.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
 export const PLATFORM = Object.freeze({ w: 55.8, d: 25.91, h: 3.0, zS: 0.4 });
@@ -20,9 +21,9 @@ export const FLIGHT = Object.freeze({ w: 9, rise: PLATFORM.h });
 export const COMPOUND = Object.freeze({ x: 42, zN: -40, zS: 62, h: 3.2, t: 0.8, gate: 4 });
 /** The way from the outer gate's place (PLAN item 5: the arrival stays where it will be once the axis is built, 0, +215). */
 export const WAY = Object.freeze({ x: 6, zS: 221, wallH: 1.2, t: 0.5 });
-/** Where he arrives, and the two stations of SITE.md §5 this item reaches: A in the court, B on the terrace. */
+/** Where he arrives, and the six stations of SITE.md §5: A in the court, B on the terrace, C before the middle door, D down the east side, E under the roof, F back on the axis. */
 export const ARRIVE = [0, 215];
-export const STATION = Object.freeze({ A: [0, 55], B: [0, TERRACE.zS - 1] });   // SITE.md puts B at z = +17, past the terrace's 15 m; it stands 1 m inside the edge
+export const STATION = Object.freeze({ A: [0, 55], B: [0, TERRACE.zS - 1], C: [0, 0.6], D: [19, -8], E: [0, -12], F: [0, -2] });   // SITE.md puts B at z = +17, past the terrace's 15 m; it stands 1 m inside the edge
 /** The parapet round the platform and the terrace (SITE.md §6: a railing or a low wall; a low wall here). */
 const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
 
@@ -46,11 +47,13 @@ export function buildSite(M) {
   walk.ramps.push({ x0: -F.w / 2 + pad, x1: F.w / 2 - pad, z0: T.zS - 0.8, z1: T.zS + run + 0.3, base: 0, h: F.rise, low: [0, T.zS + run], high: [0, T.zS], floor: "stone" });
   for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? F.w / 2 - BODY - 0.021 : -F.w / 2 - CHEEK - BODY, x1: sx > 0 ? F.w / 2 + CHEEK + BODY : -F.w / 2 + BODY + 0.021, z0: T.zS + 0.02, z1: T.zS + run + BODY + 0.06, h: top });
 
-  // The parapet along every outer edge of the platform and the terrace, open where the flight comes up.
-  const open = F.w / 2 + CHEEK;
+  // The parapet along every outer edge of the platform and the terrace, open where the flight comes up. Where the
+  // hall's walls stand at the platform's edge (its back, its front between the terrace and the hall's ends) the wall is
+  // the edge; the parapet runs only beside the hall's ends, where a walk goes round.
+  const open = F.w / 2 + CHEEK, hX = OUTER.x;
   const runs = [
-    [-pX, pN, pX, pN], [-pX, pN, -pX, P.zS], [pX, pN, pX, P.zS],          // the platform's back and its two ends
-    [-pX, P.zS, -tX, P.zS], [tX, P.zS, pX, P.zS],                         // its front either side of the terrace
+    [-pX, pN, -hX, pN], [hX, pN, pX, pN], [-pX, pN, -pX, P.zS], [pX, pN, pX, P.zS],   // the platform's back beside the hall, and its two ends
+    [-pX, P.zS, -hX, P.zS], [hX, P.zS, pX, P.zS],                         // its front beside the hall
     [-tX, T.zN, -tX, T.zS], [tX, T.zN, tX, T.zS],                         // the terrace's sides
     [-tX, T.zS, -open, T.zS], [open, T.zS, tX, T.zS],                     // its front either side of the flight
   ];
@@ -88,15 +91,27 @@ export function buildSite(M) {
   flat(-far, far, -far, cn); flat(-far, -cx, cn, far); flat(cx, far, cn, far);
   flat(-cx, -wx, cs, far); flat(wx, cx, cs, far); flat(-wx, wx, ws, far);
 
+  // The great hall's shell (./hall.js): its walls, timber, columns and roof, and what the written plan's walker is told of it.
+  const hall = buildHall(M), hp = hall.parts;
+  plaster.push(...hp.plaster);
+  for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
+  root.add(mesh(merge(hp.wood), M.woodX), mesh(merge(hp.woodZ), M.woodZ), mesh(merge(hp.columns), M.woodV), mesh(merge(hp.dark), M.woodX),
+    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX), mesh(merge(hp.ridge), M.ridge));
+  shade[0].push(hall.box);
+
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
 
-  const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }];
+  const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }, { name: "大雄殿", ...hall.box, y: top }];
   // Named views (shots.js draws each): the arrival, the two stations, and the court seen from the terrace.
   const views = {
     arrive: [ARRIVE[0], ARRIVE[1], 0, 0.05],
     a: [STATION.A[0], STATION.A[1], 0, 0.19],          // SITE.md §5.1: a 50° lens raised 11° holds the platform to the ridge
     b: [STATION.B[0], STATION.B[1], 0, 0.3],
+    c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3)
+    d: [STATION.D[0], STATION.D[1], -0.96, 0.09],      // down the east side, looking west across the hall (cam04's 305°)
+    e: [STATION.E[0], STATION.E[1], 0, 1.01],          // under the roof, raised 58° (cam05)
+    f: [STATION.F[0], STATION.F[1], 0, 0.17],
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
