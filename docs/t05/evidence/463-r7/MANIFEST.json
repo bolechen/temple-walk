@@ -1,0 +1,84 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 160914,
+   "sha256": "2008aa0b1345142ed0909afbcfba5959c1ca1729231f677f5824eb0e8f772fde",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-cam03-winter.png",
+   "bytes": 835160,
+   "sha256": "e840fc1a8df4985f75c7752cae7195a7b8a6d75ba28722563f4e1da67fa720f6",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-face10-diffuse-vipasyin.png",
+   "bytes": 713829,
+   "sha256": "ca35771d0d5f581748968fde44fc846ad63481805b062b4d9de683490320b84c",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-face10-vipasyin.png",
+   "bytes": 702220,
+   "sha256": "5a53334ed5047bb5a6521f5b8852e7ab22e562e42b6c07143792306ab8654506",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-level10-diffuse-vipasyin.png",
+   "bytes": 863241,
+   "sha256": "0ccbbfe90c45ec2afd868f9ac15e051f2fc3cb42c2e7061deb20825af115ee8e",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-level10-vipasyin.png",
+   "bytes": 788499,
+   "sha256": "60b63e604512a7cd798b5a155bf87b9a6905f4f401e1ad3c32b8287719e3ca6c",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-mouth-below-vipasyin.png",
+   "bytes": 445548,
+   "sha256": "06edfd246c336b36e4b29980e7bf130590d1df678d9c347559577c5f4e538d72",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-mouth-level-vipasyin.png",
+   "bytes": 525148,
+   "sha256": "9172ba2ae12c71df88f3a41307d5ea60ae278f9149ed8389b321d0b1a39c51ab",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-side3-diffuse-vipasyin.png",
+   "bytes": 542812,
+   "sha256": "e9613bc4d263fe9eab5fea3e554918c87cc476868b9942b6f7868b02f6d6fe5a",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7a-side3-vipasyin.png",
+   "bytes": 578402,
+   "sha256": "27e2c7e29fd87777ac88b20752f7105c7e917143edd0c059a1b44a8aee244a30",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7b-face10-diffuse-vipasyin.png",
+   "bytes": 714306,
+   "sha256": "29545077ff33e7d42b3c0936d2b12ea3b77b7c8dc5d335d4068d28772f57c44a",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7b-face10-vipasyin.png",
+   "bytes": 703212,
+   "sha256": "bd7797d4b24062b20e71828b4dafd0b53a21b1033a29bee55f61b0a90394568d",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  },
+  {
+   "path": "r7b-level10-vipasyin.png",
+   "bytes": 789214,
+   "sha256": "b6846ef3472faf06b6c55a1faa459261fc52d9b98c02296a2121f717a1161d83",
+   "rev": "5f5a58902263122fcf27197c9c1dfa8cafb5798e"
+  }
+ ]
+}

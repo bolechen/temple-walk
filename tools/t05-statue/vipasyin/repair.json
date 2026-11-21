@@ -30,6 +30,137 @@
    "below": 0.47,
    "k": 0.902,
    "band": 0.05
+  },
+  {
+   "op": "tilt",
+   "note": "head bowed 10° about the neck (#463, the 3D review: seen from 10 m below, a face made for the level frowns and pouts; real figures bow toward the worshipper)",
+   "c": [
+    0,
+    0.05,
+    0.725
+   ],
+   "deg": 10,
+   "z0": 0.735,
+   "fade": 0.035,
+   "rx": 0.115,
+   "fx": 0.02
+  },
+  {
+   "op": "attenuate",
+   "note": "the knit between the brows kept to 30% of its depth (#463, the 3D review's k ≈ 0.3)",
+   "seed": [
+    0.0,
+    -0.0527,
+    0.8503
+   ],
+   "r": 0.0344,
+   "sr": 0.0688,
+   "k": 0.3,
+   "iter": 500
+  },
+  {
+   "op": "attenuate",
+   "note": "the philtrum shallower, k 0.5 (#463)",
+   "seed": [
+    0.0,
+    -0.0539,
+    0.7999
+   ],
+   "r": 0.0138,
+   "sr": 0.0344,
+   "k": 0.5,
+   "iter": 300
+  },
+  {
+   "op": "push",
+   "note": "right corner of the mouth up 0.1 of the mouth's width (#463)",
+   "seed": [
+    -0.0286,
+    -0.0309,
+    0.7861
+   ],
+   "r": 0.0172,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.0057
+  },
+  {
+   "op": "push",
+   "note": "left corner of the mouth up 0.1 of the mouth's width (#463)",
+   "seed": [
+    0.0286,
+    -0.0309,
+    0.7861
+   ],
+   "r": 0.0172,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.0057
+  },
+  {
+   "op": "scale",
+   "note": "mouth: across ×1.08, height ×0.8, depth ×0.8 about the slit's middle, back 0.015 of the face's width; radii [1.3, 0.6, 1.3] mouth widths; nothing above the base of the nose (face-ops.py: w 0.32 m, face 1.03 m, slit y 6.845, nose base y 6.917)",
+   "c": [
+    0.0,
+    -0.03322,
+    0.78437
+   ],
+   "r": [
+    0.04767,
+    0.022,
+    0.04767
+   ],
+   "s": [
+    1.08,
+    0.8,
+    0.8
+   ],
+   "back": 0.00177,
+   "below": 0.79148,
+   "fade": 0.00229
+  },
+  {
+   "op": "scale",
+   "note": "chin's pad: depth ×0.68 about the hollow under the lip (y 6.758), radius 0.8 mouth widths, centred 0.45 w below the slit; nothing above the slit",
+   "c": [
+    0.0,
+    -0.02677,
+    0.76787
+   ],
+   "r": [
+    0.02934,
+    0.02934,
+    0.02934
+   ],
+   "s": [
+    1.0,
+    1.0,
+    0.68
+   ],
+   "below": 0.78208,
+   "fade": 0.00344
+  },
+  {
+   "op": "push",
+   "note": "the hollow under the lip filled by 0.35 of its depth (0.064 m), radius 0.5 mouth widths (face-ops.py)",
+   "seed": [
+    0.0,
+    -0.02677,
+    0.7744
+   ],
+   "r": 0.01833,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "d": 0.00255
   }
  ]
 }

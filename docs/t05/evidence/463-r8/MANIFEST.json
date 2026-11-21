@@ -1,0 +1,150 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 182670,
+   "sha256": "72ef544028094a9ebe45915db06ce5381062d20926a751337db9c98cb2303af6",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8-320.png",
+   "bytes": 86512,
+   "sha256": "5b7bb86a1f945c881e8ae9a129d97ef947b4f399b340b4b3672574ccdc41472d",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8-profile-overlay.png",
+   "bytes": 26263,
+   "sha256": "d2ac9fa483921c80d190765c152f4fb08b34bd859169c53da75f46c086f07d8c",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-cam03-winter.png",
+   "bytes": 835129,
+   "sha256": "7f74384611331bcdbec318b794fae7f6afe8a1b32d927ae71b6125f81b6b1791",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-eyes-face10-diffuse-vipasyin.png",
+   "bytes": 719690,
+   "sha256": "7f4a18397b6da59324e76874cae8719a3f440350863964fa80dbed1ff0eba029",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-eyes-face10-vipasyin.png",
+   "bytes": 707485,
+   "sha256": "f9341a623e540dd8a08d258ee3b916853077f1cfab0ea3a7c9d55d0793826374",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-eyes-level10-vipasyin.png",
+   "bytes": 794035,
+   "sha256": "1783a7eaf6a945291cd26a91467065ac076e61f405b4da3d737d9956b55af0b3",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-face10-diffuse-vipasyin.png",
+   "bytes": 718170,
+   "sha256": "d7ceddfbd513ec61a96c7f60c6bfb912da0a881dbfe1662d7ad6daf4e119c312",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-face10-vipasyin.png",
+   "bytes": 707684,
+   "sha256": "a20965d727610dde8249563ead895efeb6272f8b3981ea648522cffe3820a3bf",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-level10-diffuse-vipasyin.png",
+   "bytes": 867155,
+   "sha256": "39f229d03177c18ffe7f3c41d6b513ab7a27396654da48dd1cff3d92e490d6e9",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-level10-vipasyin.png",
+   "bytes": 792935,
+   "sha256": "5d8fff9daa3a29a87a07e63b06d4dd826007c6407ce35383be14d3e61799d1e4",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-mouth-below-vipasyin.png",
+   "bytes": 475241,
+   "sha256": "d22a80d3b3e8043090d2f68dc54aafe550bc30da4ad99e4d6bfc177465b126f0",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-mouth-level-vipasyin.png",
+   "bytes": 569235,
+   "sha256": "3e2327db0c15b87557ede0c25f35aefa286153a7ec66d10f03a338c62ca6d47a",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-side3-diffuse-vipasyin.png",
+   "bytes": 537571,
+   "sha256": "f8711d9be91001270fe70219ad1bb0a72a9955acd133e87cae5c77a2fbae801b",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8A-side3-vipasyin.png",
+   "bytes": 574753,
+   "sha256": "e9ba5a5bcab66535fd5f0f3a71ba3ada63075fc3dedc4ded21152ca49a7019a2",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-cam03-winter.png",
+   "bytes": 836411,
+   "sha256": "1d4d3b892b6842f073e682a4df21208b82d2f345eadeb8d8877b818e0c8d4d8c",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-face10-diffuse-vipasyin.png",
+   "bytes": 718743,
+   "sha256": "642fbbe02d4a46be3a3a990e2b691bba6a7645e0eff37ac8bdc4058a188acd89",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-face10-vipasyin.png",
+   "bytes": 706344,
+   "sha256": "87803e56bf6da11abe47ee2f7060e1389b1c518461dec045e011010b8b706228",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-level10-diffuse-vipasyin.png",
+   "bytes": 865149,
+   "sha256": "32be82b4e4b5b58fad65a871b755d8dbc60d9db3f418308ff125efcf39933c3b",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-level10-vipasyin.png",
+   "bytes": 792678,
+   "sha256": "87518218e7786fe285f2257815fc03897db34d561ca164c073e773e3fd5ee245",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-mouth-below-vipasyin.png",
+   "bytes": 474802,
+   "sha256": "bd1a17bb55e59d13703ffc822ca0978650a90ef12cf125568ca89573dd04ef67",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-mouth-level-vipasyin.png",
+   "bytes": 567013,
+   "sha256": "4a057d3aa48cb0810394037d4c5ae6dc598f8b41bad7f69c87483679e50b8eb1",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-side3-diffuse-vipasyin.png",
+   "bytes": 541780,
+   "sha256": "a29f81497bf76aebe98515e1053d9fe6016ae6d27345356bc008530613fbdbe0",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  },
+  {
+   "path": "r8B-side3-vipasyin.png",
+   "bytes": 576937,
+   "sha256": "2563564a0086ac6fdb53f5a54d7de8fcbe5d1123ef560cb209c8c2c3e60df706",
+   "rev": "1186a0392d929eee84497b3c3e51ac5b08874d80"
+  }
+ ]
+}

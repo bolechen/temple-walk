@@ -1,0 +1,33 @@
+{
+ "about": "The face's reshaping for every figure (#463, the 3D review's second round), laid on each figure's own landmarks by face-ops.py. Radii in mouth widths; s = across, up, depth; back in face widths; drop: how far below the slit, in mouth widths, the chin's pad is centred. Tuned on Vipasyin against the concept's ratios (face-ratios.py). fill: the hollow under the lower lip filled by k of its depth, radius r mouth widths.",
+ "mouth": {
+  "r": [
+   1.3,
+   0.6,
+   1.3
+  ],
+  "s": [
+   1.08,
+   0.8,
+   0.8
+  ],
+  "back": 0.015
+ },
+ "chin": {
+  "r": [
+   0.8,
+   0.8,
+   0.8
+  ],
+  "s": [
+   1.0,
+   1.0,
+   0.68
+  ],
+  "drop": 0.45
+ },
+ "fill": {
+  "k": 0.35,
+  "r": 0.5
+ }
+}
