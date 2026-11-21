@@ -19,7 +19,7 @@ test("no leg of the keys' way crosses the ground that is shut round a young ever
     const [ax, az] = way[i], [bx, bz] = way[i + 1], n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.05);
     for (let k = 0; k <= n; k++) {
       const x = ax + ((bx - ax) * k) / n, z = az + ((bz - az) * k) / n;
-      for (const c of shut) if (x > c.x0 - BODY && x < c.x1 + BODY && z > c.z0 - BODY && z < c.z1 + BODY) { hit.push(`leg ${i} at (${x.toFixed(2)}, ${z.toFixed(2)})`); break; }
+      for (const c of shut) if (c.r !== undefined ? Math.hypot(x - c.x, z - c.z) < c.r + BODY : x > c.x0 - BODY && x < c.x1 + BODY && z > c.z0 - BODY && z < c.z1 + BODY) { hit.push(`leg ${i} at (${x.toFixed(2)}, ${z.toFixed(2)})`); break; }   // (round since #531: the circle, not the box that holds it)
     }
   }
   assert.deepEqual(hit.slice(0, 4), [], "the way crosses shut ground");
