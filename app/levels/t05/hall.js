@@ -47,6 +47,9 @@ export const ZS = Object.freeze(Array.from({ length: HALL.rows + 1 }, (_, i) => 
 /** The hall's outer faces: the walls' outside, 0.3 m beyond the column lines. */
 export const OUTER = Object.freeze({ x: XS[XS.length - 1] + 0.3, zF: HALL.front, zB: -HALL.depth - 0.3 });
 
+/** Where the roof's ridge runs: half its length to the ornaments' centres, its z, and its height (the ornaments stand 2.3 m over it): what a view from the axis is judged by (#482). */
+export const RIDGE = (() => { const EX = XS[XS.length - 1] + HALL.overhang, EF = ZS[0] + HALL.overhang, EB = ZS[ZS.length - 1] - HALL.overhang; return Object.freeze({ rx: EX - (EF - EB) / 2, zm: (EF + EB) / 2, height: HALL.ridge, ornamentTop: HALL.ridge + 2.3 }); })();
+
 /** The hall's meshes (by material) and what the written plan's walker is told of it. */
 export function buildHall(M) {
   const H = HALL, y0 = H.floor, top = y0 + H.column, X = XS[XS.length - 1], zB = ZS[ZS.length - 1];

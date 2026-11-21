@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 65959,
+   "sha256": "babf113f67e97adbe5dd54ebc45e1068faec3ab10e464507d271f498093037e3",
+   "rev": "feabd7e4a61e60df157b17cbd9892c033afe9a20"
+  },
+  {
+   "path": "views/archway-looking-north.png",
+   "bytes": 1236980,
+   "sha256": "8f34318796bc8673be6141e4d14bd61ea28b336755c5820794c252de76197864",
+   "rev": "feabd7e4a61e60df157b17cbd9892c033afe9a20"
+  },
+  {
+   "path": "views/cam07-no-ears.png",
+   "bytes": 1081775,
+   "sha256": "ad96577f4e2edae42f8fdd7986ea3601c674833d1b1e1e38d6dda1aa9ab56ff7",
+   "rev": "feabd7e4a61e60df157b17cbd9892c033afe9a20"
+  },
+  {
+   "path": "views/hall-platform-looking-south-no-ears.png",
+   "bytes": 1237099,
+   "sha256": "f62adcd651ef9baab89b0d640aab5888cb4115041ccf50251d7481bf40f8cfcd",
+   "rev": "feabd7e4a61e60df157b17cbd9892c033afe9a20"
+  }
+ ]
+}
