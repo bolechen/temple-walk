@@ -1,0 +1,27 @@
+
+> temple-walk@0.6.0 edges:grid /home/user/temple-walk
+> node tools/bake-walk.mjs && WALKER=mesh node --import ./tools/walk/swap.mjs tools/edges.mjs
+
+t00: built in 2074 ms, gathered 906494 triangles into 10 grids in 2327 ms
+/home/user/temple-walk/app/shared/walk/t00.bin: from the cache (dcae0cb2), 4729 ms
+180 places checked, 0 not reached
+he reaches 0.379 m from his centre above the knee; 2001406 places to stand, 36952369 points of what is built, 201.9 s
+✓ 大慧院　　　　　   25486 places       6 over  deepest 1.0 cm
+      woodV             6 places  1.0 cm  standing at (19.23, -74.13) into (18.95, 6.25, -74.37)
+✓ the grounds 1529397 places       0 over  deepest 0.0 cm
+✓ 凌霄阁　　　　　   53556 places       0 over  deepest 0.0 cm
+✓ 观音殿　　　　　   60874 places       0 over  deepest 0.0 cm
+✓ 藏经楼　　　　　   55265 places       0 over  deepest 0.0 cm
+✓ 药师殿　　　　　   24372 places       0 over  deepest 0.0 cm
+✓ 大雄宝殿　　　　   95962 places       0 over  deepest 0.0 cm
+✓ 茶寮　　　　　　   39664 places       0 over  deepest 0.0 cm
+✓ 禅堂　　　　　　   32085 places       0 over  deepest 0.0 cm
+✓ 万年正续　　　　   17464 places       0 over  deepest 0.0 cm
+✓ 云径禅寺　　　　   29978 places       0 over  deepest 0.0 cm
+✓ 鼓楼　　　　　　    9164 places       0 over  deepest 0.0 cm
+✓ 钟楼　　　　　　    9164 places       0 over  deepest 0.0 cm
+✓ 御碑亭　　　　　    3097 places       0 over  deepest 0.0 cm
+✓ 半山亭　　　　　    8358 places       0 over  deepest 0.0 cm
+✓ 望江亭　　　　　    7520 places       0 over  deepest 0.0 cm
+below the knee (his shoes and hem, 0.322 m out at most): deepest 0.7 cm; turned through a whole circle even while striding, 8.3 cm
+edges 0

@@ -330,7 +330,10 @@ export function createGame(y) {
   y.onTick((dt) => {
     if (far && !y.directArrived()) farEnd();   // the eye has gone home (a step, a tap on the ground, Esc, or a door): the far view is over
     // The marker toward the next place rides the picture every frame, but only while the goal is being shown.
-    { const el = $("way"), g = $("goal"), next = journey.next(), p = next && places[next.id];
+    // A place made indoors (the great hall's incense, the first goal of an empty book, #436) is pointed at from outside by
+    // its hall's door; inside, by the place itself.
+    { const el = $("way"), g = $("goal"), next = journey.next(), q = next && places[next.id], door = q && q.room && y.room() === null && y.site.halls.find((h) => h.id === q.room),
+        p = door ? { at: door.out, room: null } : q;
       if (el) { const show = !!(p && g && g.classList.contains("on") && entered && (p.room || null) === y.room() && !rite);
         el.classList.toggle("on", show);
         if (show) { const w = y.where(), py = p.y ?? y.walker.heightAt(p.at[0], p.at[1]), sc = y.screenOf(p.at[0], py + 1.6, p.at[1]), m = 46;
@@ -622,7 +625,10 @@ export function createGame(y) {
     entered = true; title?.classList.add("gone"); setTimeout(() => title && (title.hidden = true), 1600); y.listen(); document.body.classList.add("entered");
     // Where to go is said after how to walk has gone (he has taken a few steps, or the line has faded), so that a
     // visitor arriving is given one thing to read at a time.
-    const begin = () => {
+    // (named apart from `begin`, which starts an observance, and `arrive`, which brings a lamp lit for him: a name used
+    // again inside this function hides the one outside it, and a lamp link once went round and round for it,
+    // tests/unit/shadow.test.mjs)
+    const showWay = () => {
       if (arrival) { arrive(); return; }   // a lamp lit for him: that is where he is taken first
       let waited = 0;
       const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
@@ -631,10 +637,10 @@ export function createGame(y) {
     // A friend's shared link names a scene (?from=, src/sharelink.js, #344): a first visit is shown the mountain as ever,
     // and then taken to that place behind the veil; one who goes on from where they were is not moved.
     const scene = !resumed ? fromOf(location.search) : null, land = scene && places[scene] ? places[scene] : null;
-    const arrive = async () => { if (land) await y.travel(land.at[0], land.at[1], Math.PI - land.face, land.room || null); begin(); };
-    if (o.eye === "none") { arrive(); return; }
+    const toScene = async () => { if (land) await y.travel(land.at[0], land.at[1], Math.PI - land.face, land.room || null); showWay(); };
+    if (o.eye === "none") { toScene(); return; }
     track("opening.played", { eye: o.eye, again: again === true });
-    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); arrive(); });
+    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); toScene(); });
   };
   // After a change of language the title's place is kept by the sheet that says the words are being changed, until
   // the page is ready; then it fades as the title does when he steps in (#140).

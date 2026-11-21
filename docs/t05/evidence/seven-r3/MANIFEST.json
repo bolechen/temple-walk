@@ -1,0 +1,102 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 186306,
+   "sha256": "92c1ed1dc06b55b8c5ee70396feeff61d1e021474a8a56332d3297bac4c9d9a0",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "kanakamuni-front.png",
+   "bytes": 486672,
+   "sha256": "b48c1f1b83356d27627d7ae682214ecdca68cdeaea6e43f9c96b541cea24e364",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "kanakamuni-half-warm.png",
+   "bytes": 778033,
+   "sha256": "01cf24efbf92a2fc592d80d93a631e7499a4a71a0aef4794ee7a2aced8abae13",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "kasyapa-front.png",
+   "bytes": 471840,
+   "sha256": "8ba6575439b27c8230126cef5c4df49005b63d91731c939bc25db4d79e4b5228",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "kasyapa-half-warm.png",
+   "bytes": 759757,
+   "sha256": "2df6de2f610d2fba24666cb4fcf6d5b44dc4c9abb8b7bce07b8abcf4d1dc0e85",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "krakucchanda-front.png",
+   "bytes": 475934,
+   "sha256": "8afc993f2d97b25da1d6b2b78eb82ba76f7b5e2268a20ada3b35a45b63b706b9",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "krakucchanda-half-warm.png",
+   "bytes": 759454,
+   "sha256": "5a04c32e7b7242e6a0009af5e7d9294b9980a741f28c0c3fa4caf60389dcbdab",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "lineup-door3-winter.png",
+   "bytes": 888793,
+   "sha256": "58f74d624b0a907dd474a95fe6c7f9344dd9477fc5adc90040ff16c1c8df6413",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "lineup-row-winter.png",
+   "bytes": 802842,
+   "sha256": "889c02616f075ca9f2e87fa4eebf3d01b1ac2e8d35a3d6f773b962146c44b5ed",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "sakyamuni-half-warm.png",
+   "bytes": 922524,
+   "sha256": "d26080ba1c315590c62aae51e6d5e8b12720baf7a6606a995eaccb2806eca1a5",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "sikhin-front.png",
+   "bytes": 507616,
+   "sha256": "2f4f26993ffe3fa3421686b8335b498ad07ba7f8fe25c9b8978f25fed6dbd7c2",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "sikhin-half-warm.png",
+   "bytes": 860598,
+   "sha256": "d9b3a4cfb78399785d69ad3048dfffef6b6ccb4f258db620c0b1378257e86e57",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "vipasyin-front.png",
+   "bytes": 510311,
+   "sha256": "8263840d75bfafa0d90ab247182de5d18062a57e481305456659c38cc1b3cd2c",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "vipasyin-half-warm.png",
+   "bytes": 847624,
+   "sha256": "e7ec7354b3538ac6a390c45e3714cb9ae26451dc947884a522c93952dba1e0b3",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "visvabhu-front.png",
+   "bytes": 491396,
+   "sha256": "da27b198e1851ea03b89ea25215702ab99ee8ec26eca88430085a09a15f8d92f",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  },
+  {
+   "path": "visvabhu-half-warm.png",
+   "bytes": 810262,
+   "sha256": "d201fefbbaa47483f7f8e98f07f65d80dc3d72a24e5e9e7c50fa104ded7a2960",
+   "rev": "2d505379c493bcaa81c12235016cbf055bf9321f"
+  }
+ ]
+}

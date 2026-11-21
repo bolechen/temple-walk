@@ -1,0 +1,123 @@
+{
+  "spec": "tools/t05-hall/specs/sakyamuni-370-one.json",
+  "shots": [
+    {
+      "name": "ortho-front-clay",
+      "ortho": {
+        "i": 0,
+        "side": "front",
+        "cy": 4.4,
+        "half": 4.6
+      },
+      "paint": false,
+      "file": "tools/out/t05/sakyamuni-370/one/ortho-front-clay.png",
+      "ms": 546
+    },
+    {
+      "name": "ortho-front-paint",
+      "ortho": {
+        "i": 0,
+        "side": "front",
+        "lit": true,
+        "exp": 4.5,
+        "cy": 4.4,
+        "half": 4.6
+      },
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/one/ortho-front-paint.png",
+      "ms": 5543
+    },
+    {
+      "name": "ortho-side-paint",
+      "ortho": {
+        "i": 0,
+        "side": "side",
+        "lit": true,
+        "exp": 4.5,
+        "cy": 4.4,
+        "half": 4.6
+      },
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/one/ortho-side-paint.png",
+      "ms": 993
+    },
+    {
+      "name": "ortho-hands-paint",
+      "ortho": {
+        "i": 0,
+        "side": "front",
+        "lit": true,
+        "exp": 4.5,
+        "cx": -0.6,
+        "cy": 3.6,
+        "half": 1.6
+      },
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/one/ortho-hands-paint.png",
+      "ms": 2071
+    },
+    {
+      "name": "front10-winter-paint",
+      "view": "front10",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/one/front10-winter-paint.png",
+      "tris": 72576,
+      "calls": 96,
+      "ms": 9169
+    },
+    {
+      "name": "front10-winter-clay",
+      "view": "front10",
+      "mood": "winter",
+      "paint": false,
+      "file": "tools/out/t05/sakyamuni-370/one/front10-winter-clay.png",
+      "tris": 72576,
+      "calls": 96,
+      "ms": 6730
+    },
+    {
+      "name": "hands-close-winter-paint",
+      "view": "handsClose",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/one/hands-close-winter-paint.png",
+      "tris": 71700,
+      "calls": 57,
+      "ms": 9337
+    },
+    {
+      "name": "face-from10-winter-paint",
+      "view": "faceFrom10",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/one/face-from10-winter-paint.png",
+      "tris": 70916,
+      "calls": 37,
+      "ms": 9305
+    },
+    {
+      "name": "door-winter-paint",
+      "view": "door",
+      "mood": "winter",
+      "paint": true,
+      "file": "tools/out/t05/sakyamuni-370/one/door-winter-paint.png",
+      "tris": 74084,
+      "calls": 165,
+      "ms": 8830
+    }
+  ],
+  "film": null,
+  "cost": null,
+  "statues": [
+    {
+      "file": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+      "tris": 60000
+    }
+  ],
+  "renderer": {
+    "gl": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+  },
+  "errors": []
+}

@@ -1,0 +1,100 @@
+[
+  {
+    "name": "sakyamuni-mv-1",
+    "task_id": "cd076293-86eb-46c1-9fdc-fc506fb1ab89",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795182931,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261120/cd076293-86eb-46c1-9fdc-fc506fb1ab89/image_0.png"
+          }
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261120/cd076293-86eb-46c1-9fdc-fc506fb1ab89/image_2.png"
+          }
+        },
+        null
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "sakyamuni-mv-1.base_model.glb",
+        "bytes": 40925492,
+        "sha256": "6bab782571a91b6388987406cc7abff518b6e1bffe36a0bf5b2b5e49218c75ab"
+      },
+      "rendered_image": {
+        "file": "sakyamuni-mv-1.rendered_image.webp",
+        "bytes": 68192,
+        "sha256": "c31844cc3b59e8c6e0883ebc246b4eb86051f223f79c748e48d2cf2a3929e5eb"
+      }
+    }
+  },
+  {
+    "name": "sakyamuni-mv-2",
+    "task_id": "bb474101-859c-4aa8-ab9d-bfc25baa96c4",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795219829,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/bb474101-859c-4aa8-ab9d-bfc25baa96c4/image_0.png"
+          }
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/bb474101-859c-4aa8-ab9d-bfc25baa96c4/image_2.png"
+          }
+        },
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/bb474101-859c-4aa8-ab9d-bfc25baa96c4/image_3.png"
+          }
+        }
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "sakyamuni-mv-2.base_model.glb",
+        "bytes": 42532260,
+        "sha256": "f882e1d0c97c6bcaf43bf4a973962884f63cee0b6bff74a9e32f6f543793d648"
+      },
+      "rendered_image": {
+        "file": "sakyamuni-mv-2.rendered_image.webp",
+        "bytes": 69348,
+        "sha256": "9ac5c34c37629bdc7174ea2af6cb56cd818dc1cc5d0fc5f4a56c51509b48526e"
+      }
+    }
+  }
+]

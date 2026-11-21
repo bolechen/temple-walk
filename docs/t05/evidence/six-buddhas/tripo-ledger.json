@@ -1,0 +1,278 @@
+[
+  {
+    "name": "01-kasyapa",
+    "task_id": "40929ef0-e405-4465-93b5-7b2387bc6174",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795223365,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/40929ef0-e405-4465-93b5-7b2387bc6174/image_0.png"
+          }
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/40929ef0-e405-4465-93b5-7b2387bc6174/image_2.png"
+          }
+        },
+        null
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "01-kasyapa.base_model.glb",
+        "bytes": 40928604,
+        "sha256": "25566135c66af45b666c22a5e2dd1c55c0ecdad4f164b23057d91f25f604e187"
+      },
+      "rendered_image": {
+        "file": "01-kasyapa.rendered_image.webp",
+        "bytes": 74564,
+        "sha256": "3716bf4efd22adcdee2b5de5a5971df486a7325cffd005b6f2d64cb16c949b96"
+      }
+    }
+  },
+  {
+    "name": "02-krakucchanda",
+    "task_id": "415b668f-2d2f-4d34-a91a-583d8bbf8e81",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795223485,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/415b668f-2d2f-4d34-a91a-583d8bbf8e81/image_0.png"
+          },
+          "type": "png"
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/415b668f-2d2f-4d34-a91a-583d8bbf8e81/image_2.png"
+          }
+        },
+        null
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "02-krakucchanda.base_model.glb",
+        "bytes": 41711132,
+        "sha256": "4248476d0367d44e5e658fd618fcf53406bab38563900c006b14bcf14246377b"
+      },
+      "rendered_image": {
+        "file": "02-krakucchanda.rendered_image.webp",
+        "bytes": 74798,
+        "sha256": "493101cc507a7fedf66f2bb2dd3cb80575aa32398b212c2a812961c0d11b0720"
+      }
+    }
+  },
+  {
+    "name": "03-sikhin",
+    "task_id": "705702ae-372d-451e-9da5-19df8cee46e7",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795223604,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/705702ae-372d-451e-9da5-19df8cee46e7/image_0.png"
+          }
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/705702ae-372d-451e-9da5-19df8cee46e7/image_2.png"
+          }
+        },
+        null
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "03-sikhin.base_model.glb",
+        "bytes": 40585960,
+        "sha256": "81e72a6b1d222a73bc14e2072407b62e58eb4d0260feebc4cf063059d9ee75f5"
+      },
+      "rendered_image": {
+        "file": "03-sikhin.rendered_image.webp",
+        "bytes": 77376,
+        "sha256": "7632ea887f0ca3aba655f1e6bbac89e9f7d3336970bad77f08488ebd079bccbf"
+      }
+    }
+  },
+  {
+    "name": "04-vipasyin",
+    "task_id": "11aa9c7f-bd3b-4d35-af1d-b286be368c5f",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795223724,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/11aa9c7f-bd3b-4d35-af1d-b286be368c5f/image_0.png"
+          }
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/11aa9c7f-bd3b-4d35-af1d-b286be368c5f/image_2.png"
+          }
+        },
+        null
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "04-vipasyin.base_model.glb",
+        "bytes": 42437972,
+        "sha256": "6aa0bc98f8b9a8857ae90d89e2552eaf19935f072db58dc470a5a38326442ed3"
+      },
+      "rendered_image": {
+        "file": "04-vipasyin.rendered_image.webp",
+        "bytes": 75156,
+        "sha256": "056131543d007db048f91cc86f6aa15fa8a6890e39322cff53ef652d266c0a9c"
+      }
+    }
+  },
+  {
+    "name": "05-visvabhu",
+    "task_id": "088201c6-7115-4861-9f29-3b13ffc29b55",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795223843,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/088201c6-7115-4861-9f29-3b13ffc29b55/image_0.png"
+          },
+          "type": "png"
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/088201c6-7115-4861-9f29-3b13ffc29b55/image_2.png"
+          }
+        },
+        null
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "05-visvabhu.base_model.glb",
+        "bytes": 42454816,
+        "sha256": "c867b542a1abf1f413af79381534fcd8cdb472710136423b1488a183b0486b5b"
+      },
+      "rendered_image": {
+        "file": "05-visvabhu.rendered_image.webp",
+        "bytes": 75940,
+        "sha256": "7c7316ac4b8f73772cedec5de9e200410767672c76bd8f4f7fccbb37ec0f5c0c"
+      }
+    }
+  },
+  {
+    "name": "06-kanakamuni",
+    "task_id": "2cb1eb65-2f47-4257-be59-a1e6d893f6e5",
+    "type": "multiview_to_model",
+    "status": "success",
+    "credits": 20,
+    "created": 1795224031,
+    "input": {
+      "model_version": "v3.1-20260211",
+      "files": [
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/2cb1eb65-2f47-4257-be59-a1e6d893f6e5/image_0.png"
+          }
+        },
+        null,
+        {
+          "type": "png",
+          "object": {
+            "bucket": "tripo-data",
+            "key": "tcli_79c568d319e3413ba153b1a41199f084/20261121/2cb1eb65-2f47-4257-be59-a1e6d893f6e5/image_2.png"
+          }
+        },
+        null
+      ],
+      "texture": false,
+      "pbr": false,
+      "model_seed": 3701,
+      "export_uv": true,
+      "geometry_quality": "standard"
+    },
+    "files": {
+      "base_model": {
+        "file": "06-kanakamuni.base_model.glb",
+        "bytes": 40685940,
+        "sha256": "77ae088ba3c33b88479217a5b01689267c8196ccee4c30031be1f0cefeededc9"
+      },
+      "rendered_image": {
+        "file": "06-kanakamuni.rendered_image.webp",
+        "bytes": 73516,
+        "sha256": "d0e2300568604dcbd8c8341c80c58434a3822fca056122596a1f93ee0a735bce"
+      }
+    }
+  }
+]
