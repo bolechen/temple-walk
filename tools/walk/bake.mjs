@@ -252,6 +252,10 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   // at the ledge's edge), and a cell on it can be a border. Whether a cell beside a wall's foot is open must come of the wall and the
   // ground, not of whether some step a hundred metres off lets the flood onto the stone skirt (#477: the outer gate's 0.5 m platform did).
   // `h` stays what the flood reached (it is what is kept and written); `hx` is what the borders, the erosion and the last flood see.
+  // (Which floor of such a cell: its highest, `Y[start[k]]`, since a cell's spans are listed highest first, and the first flood keeps the highest span it
+  // reached in a cell as `h` just so: the same rule for a floor reached and for one not. A cell the first flood never reached has none reached, so it keeps
+  // `h` = NaN in what is written; the last flood cannot step into it, since a step the first flood could take (four ways, CLIMB) it has taken, and it is
+  // shut as unreached: tests/unit/walk-bake-height.test.mjs asserts that no open cell is left with no height.)
   const hx = Float32Array.from(h);
   for (let k = 0; k < N; k++) if (Number.isNaN(hx[k]) && start[k] < start[k + 1]) hx[k] = Y[start[k]];
   // 4. Borders: what stands up in a cell from the lowest floor round it to CLEAR over its own; the foot of a ledge; the
