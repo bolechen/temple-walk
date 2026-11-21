@@ -712,7 +712,7 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 #carryIn, #carryOut { position: absolute; inset: 0; z-index: 60; display: grid; place-items: center; background: var(--veil); touch-action: none; }
 #carryIn[hidden], #carryOut[hidden] { display: none; }
 .carry-card { width: min(92vw, 460px); box-sizing: border-box; padding: 30px 34px 18px; color: var(--ink-1); text-align: center; }
-.carry-card h2 { margin: 0 0 12px; font: 400 30px/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; }
+.carry-card h2 { margin: 0 0 12px; font: 400 clamp(22px, 6.6vw, 30px)/1.2 var(--brush); letter-spacing: .12em; text-indent: .12em; text-wrap: balance; word-break: auto-phrase; }   /* (as #blessTitle: on a phone a long title breaks between words, not inside one) */
 .carry-card p { margin: 8px 0; font: 400 var(--t-m)/1.8 var(--kai); letter-spacing: .04em; color: var(--ink-2); }
 .carry-card p.note { font-size: var(--t-s); color: var(--ink-3); }
 .carry-card footer { display: flex; justify-content: center; align-items: center; gap: 0 18px; margin-top: 14px; flex-wrap: wrap; }
