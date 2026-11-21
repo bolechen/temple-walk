@@ -200,13 +200,20 @@ if Kn.get("mode") == "surface":
     c = (np.array([a, b]) + 0.5) * cell; dx = max(blo[0] - c[0], c[0] - bhi[0]); dy = blo[1] - c[1]
     if c[1] > bhi[1] - Kn.get("head", 0.35): continue
     out_ = max(dx, dy)
-    if 0.02 < out_ < Kn.get("ringW", 0.12) and (a, b) in Bm: ring.append((c[0], c[1], z - Bm[(a, b)]))
+    if 0.02 < out_ < Kn.get("ringW", 0.12) and ((a, b) in Bm or not Kn.get("useLeft", False)): ring.append((c[0], c[1], z - Bm.get((a, b), 0.0)))
   ring = np.array(ring)
   # one smooth surface (a thin-plate spline with smoothing `smooth`) through the right knee's own front round the box
   # and the left knee's mirrored front inside it (cells of `cell` metres, the foremost point of each)
-  inner = [((a + 0.5) * cell, (b + 0.5) * cell, z) for (a, b), z in Bm.items()
-           if blo[0] < (a + 0.5) * cell < bhi[0] and blo[1] < (b + 0.5) * cell < bhi[1]]
-  fitp = np.r_[np.array([(x, y, z + Bm[(int(np.floor(x / cell)), int(np.floor(y / cell)))]) for x, y, z in ring]), np.array(inner)]
+  # (round 2, third try) the left knee mirrored lies about 0.2 m behind the right one (the right leg is on top and
+  # forward) and has gaps near the box's head, so it is no guide: the surface is the thin-plate spline through the
+  # right knee's own front round the box's sides and foot alone, and never stands in front of the figure's front as
+  # it was (the old hand lay on the knee, so the knee was behind it)
+  fitp = None
+  if not Kn.get("useLeft", False):
+    fitp = np.array([(x, y, Dm[(int(np.floor(x / cell)), int(np.floor(y / cell)))]) for x, y, z in ring])
+  else:
+    inner = [((a + 0.5) * cell, (b + 0.5) * cell, z) for (a, b), z in Bm.items() if blo[0] < (a + 0.5) * cell < bhi[0] and blo[1] < (b + 0.5) * cell < bhi[1]]
+    fitp = np.r_[np.array([(x, y, z + Bm[(int(np.floor(x / cell)), int(np.floor(y / cell)))]) for x, y, z in ring]), np.array(inner)]
   surf = RBFInterpolator(fitp[:, :2], fitp[:, 2], kernel="thin_plate_spline", smoothing=Kn.get("smooth", 5.0), neighbors=Kn.get("neighbors", 200))
   Ssurf = lambda xy: surf(np.atleast_2d(xy))
   # every face of the figure whose middle lies over the box (seen from the front) and in front of the knee's surface
@@ -221,6 +228,8 @@ if Kn.get("mode") == "surface":
   sk, tk, gs = Kn.get("skirt", 0.04), Kn.get("tuck", 0.005), Kn.get("grid", 0.015)
   xs = np.arange(blo[0] - sk, bhi[0] + sk + 1e-9, gs); ys = np.arange(blo[1] - sk, bhi[1] + sk + 1e-9, gs)
   GX, GY = np.meshgrid(xs, ys); GZ = Ssurf(np.c_[GX.ravel(), GY.ravel()]).reshape(GX.shape)
+  Dn = np.array([[Dm.get((int(np.floor(x / cell)), int(np.floor(y / cell))), np.nan) for x in xs] for y in ys])
+  GZ = np.where(np.isfinite(Dn), np.minimum(GZ, Dn), GZ)
   gy_, gx_ = np.gradient(GZ, gs); okS = np.hypot(gx_, gy_) < Kn.get("slope", 1.2)
   dkeys = set(Dm.keys()); hasF = np.array([[(int(np.floor(x / cell)), int(np.floor(y / cell))) in dkeys for x in xs] for y in ys])
   inbox_ = (GX > blo[0]) & (GX < bhi[0]) & (GY > blo[1]) & (GY < bhi[1])
