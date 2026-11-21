@@ -1,0 +1,533 @@
+{
+  "started": "2026-11-20T05:38:24.492Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "a83819e32d32c51308857f50b28fcfc8ab97a2e8",
+    "entry": "assets/index-cnvrNmeR.js",
+    "files": 327,
+    "sha256": "d784adee2521f96c12d69814584590506a6def75e8d410e1aa5ed76ba2723364"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "script": {
+    "name": "doorway-live.cjs",
+    "timeline": [
+      {
+        "q": "high",
+        "mode": "",
+        "i": 0,
+        "base": true,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third",
+        "loadMs": 18939,
+        "frames": 153,
+        "maxMs": 67.1,
+        "over50": 3,
+        "over100": 0,
+        "worst5": [
+          67.1,
+          66.3,
+          50.4,
+          47.5,
+          44.2
+        ],
+        "slow": [
+          {
+            "ms": 67.1,
+            "at": 3,
+            "live": null
+          },
+          {
+            "ms": 50.4,
+            "at": 8,
+            "live": null
+          },
+          {
+            "ms": 66.3,
+            "at": 13,
+            "live": null
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 60.4,
+          "spikes": [],
+          "mb": 13.5
+        },
+        "fps": 42.5,
+        "tris": 1706302,
+        "calls": 312,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 10.95,
+        "live": null,
+        "shot": "main-6m-high-baked-base-0.png"
+      },
+      {
+        "q": "high",
+        "mode": "",
+        "i": 0,
+        "base": false,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third",
+        "loadMs": 13225,
+        "frames": 177,
+        "maxMs": 55.9,
+        "over50": 1,
+        "over100": 0,
+        "worst5": [
+          55.9,
+          48.9,
+          47.9,
+          47.2,
+          45.3
+        ],
+        "slow": [
+          {
+            "ms": 55.9,
+            "at": 22,
+            "live": null
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 53.7,
+          "spikes": [],
+          "mb": 57.17,
+          "live": null
+        },
+        "fps": 43.7,
+        "tris": 1706302,
+        "calls": 312,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 10.55,
+        "live": null,
+        "shot": "main-6m-high-baked-0.png"
+      },
+      {
+        "q": "low",
+        "mode": "",
+        "i": 0,
+        "base": true,
+        "size": [
+          390,
+          844
+        ],
+        "query": "q=low&season=summer&time=day&view=third",
+        "loadMs": 16298,
+        "frames": 375,
+        "maxMs": 31.6,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          31.6,
+          24.9,
+          13.3,
+          13.1,
+          12.7
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 18.8,
+          "spikes": [],
+          "mb": 10.13
+        },
+        "fps": 93.7,
+        "tris": 759497,
+        "calls": 165,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 5.92,
+        "live": null,
+        "shot": "main-6m-low-baked-base-0.png"
+      },
+      {
+        "q": "low",
+        "mode": "",
+        "i": 0,
+        "base": false,
+        "size": [
+          390,
+          844
+        ],
+        "query": "q=low&season=summer&time=day&view=third",
+        "loadMs": 12352,
+        "frames": 398,
+        "maxMs": 61.2,
+        "over50": 1,
+        "over100": 0,
+        "worst5": [
+          61.2,
+          32.2,
+          30.3,
+          29.2,
+          20.7
+        ],
+        "slow": [
+          {
+            "ms": 61.2,
+            "at": 32,
+            "live": null
+          }
+        ],
+        "doors": {
+          "worstFrameMs": 61.3,
+          "spikes": [],
+          "mb": 18.88,
+          "live": null
+        },
+        "fps": 97.8,
+        "tris": 759497,
+        "calls": 165,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 5.79,
+        "live": null,
+        "shot": "main-6m-low-baked-0.png"
+      },
+      {
+        "q": "high",
+        "mode": "",
+        "i": 1,
+        "base": true,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third",
+        "loadMs": 12782,
+        "frames": 175,
+        "maxMs": 33.1,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          33.1,
+          30.5,
+          30.4,
+          30.4,
+          29.7
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 31.8,
+          "spikes": [],
+          "mb": 13.5
+        },
+        "fps": 45.7,
+        "tris": 1706302,
+        "calls": 312,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 10.17,
+        "live": null,
+        "shot": "main-6m-high-baked-base-1.png"
+      },
+      {
+        "q": "high",
+        "mode": "",
+        "i": 1,
+        "base": false,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third",
+        "loadMs": 13094,
+        "frames": 194,
+        "maxMs": 43.7,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          43.7,
+          32.2,
+          32.1,
+          31.1,
+          30.6
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 34.5,
+          "spikes": [],
+          "mb": 57.17,
+          "live": null
+        },
+        "fps": 45.7,
+        "tris": 1706302,
+        "calls": 312,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 11.1,
+        "live": null,
+        "shot": "main-6m-high-baked-1.png"
+      },
+      {
+        "q": "low",
+        "mode": "",
+        "i": 1,
+        "base": true,
+        "size": [
+          390,
+          844
+        ],
+        "query": "q=low&season=summer&time=day&view=third",
+        "loadMs": 12260,
+        "frames": 380,
+        "maxMs": 29.8,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          29.8,
+          17,
+          14.7,
+          14.2,
+          13.4
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 16.7,
+          "spikes": [],
+          "mb": 10.13
+        },
+        "fps": 99.4,
+        "tris": 759497,
+        "calls": 165,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 5.3,
+        "live": null,
+        "shot": "main-6m-low-baked-base-1.png"
+      },
+      {
+        "q": "low",
+        "mode": "",
+        "i": 1,
+        "base": false,
+        "size": [
+          390,
+          844
+        ],
+        "query": "q=low&season=summer&time=day&view=third",
+        "loadMs": 12337,
+        "frames": 390,
+        "maxMs": 41,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          41,
+          31.5,
+          28.7,
+          28.2,
+          27.1
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 42.1,
+          "spikes": [],
+          "mb": 18.88,
+          "live": null
+        },
+        "fps": 97.7,
+        "tris": 759497,
+        "calls": 165,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 5.16,
+        "live": null,
+        "shot": "main-6m-low-baked-1.png"
+      },
+      {
+        "q": "high",
+        "mode": "",
+        "i": 2,
+        "base": true,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third",
+        "loadMs": 13035,
+        "frames": 175,
+        "maxMs": 32.7,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          32.7,
+          32.1,
+          31.5,
+          31.2,
+          28.5
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 36,
+          "spikes": [],
+          "mb": 13.5
+        },
+        "fps": 45.7,
+        "tris": 1706302,
+        "calls": 312,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 10.72,
+        "live": null,
+        "shot": "main-6m-high-baked-base-2.png"
+      },
+      {
+        "q": "high",
+        "mode": "",
+        "i": 2,
+        "base": false,
+        "size": [
+          1920,
+          1080
+        ],
+        "query": "q=high&season=summer&time=day&view=third",
+        "loadMs": 12819,
+        "frames": 184,
+        "maxMs": 45,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          45,
+          44.1,
+          32.6,
+          32.4,
+          32.4
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 37.5,
+          "spikes": [],
+          "mb": 57.17,
+          "live": null
+        },
+        "fps": 46.1,
+        "tris": 1706302,
+        "calls": 312,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 10.55,
+        "live": null,
+        "shot": "main-6m-high-baked-2.png"
+      },
+      {
+        "q": "low",
+        "mode": "",
+        "i": 2,
+        "base": true,
+        "size": [
+          390,
+          844
+        ],
+        "query": "q=low&season=summer&time=day&view=third",
+        "loadMs": 12185,
+        "frames": 377,
+        "maxMs": 38.3,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          38.3,
+          30.6,
+          29.7,
+          28.9,
+          19.9
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 39,
+          "spikes": [],
+          "mb": 10.13
+        },
+        "fps": 99.5,
+        "tris": 759497,
+        "calls": 165,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 5.28,
+        "live": null,
+        "shot": "main-6m-low-baked-base-2.png"
+      },
+      {
+        "q": "low",
+        "mode": "",
+        "i": 2,
+        "base": false,
+        "size": [
+          390,
+          844
+        ],
+        "query": "q=low&season=summer&time=day&view=third",
+        "loadMs": 12548,
+        "frames": 387,
+        "maxMs": 47.4,
+        "over50": 0,
+        "over100": 0,
+        "worst5": [
+          47.4,
+          31.7,
+          28.2,
+          17.4,
+          16.3
+        ],
+        "slow": [],
+        "doors": {
+          "worstFrameMs": 35.5,
+          "spikes": [],
+          "mb": 18.88,
+          "live": null
+        },
+        "fps": 96.8,
+        "tris": 759497,
+        "calls": 165,
+        "at": [
+          0,
+          1.32
+        ],
+        "cost": 5.53,
+        "live": null,
+        "shot": "main-6m-low-baked-2.png"
+      }
+    ]
+  },
+  "finished": "2026-11-20T05:44:21.023Z"
+}

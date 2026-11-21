@@ -4,19 +4,15 @@
 //   (--fall: how readily the trees let go, `__fall(k)`: 1 as built, 0.5 half, -1 the old steady fall)
 //   → tools/out/litter/<tag><season>-<hour>-<secs>.png, and what the record held at each (kept, heap, landed, slid, lifted…)
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out", "litter");
 const arg = (k, d) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || `--${k}=${d}`).split("=")[1];
 const cam = arg("cam", "-7.5,33,-0.6,-0.32"), [season, time] = arg("when", "autumn-day").split("-"), at = arg("at", "0,60,180").split(",").map(Number);
 const [W, H] = arg("size", "960x540").split("x").map(Number), q = arg("q", "high"), tag = arg("tag", ""), fall = Number(arg("fall", "1"));
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2", ".wasm": "application/wasm" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1, locale: "zh-CN" }), errs = [];
   p.on("pageerror", (e) => errs.push(e.stack ? e.stack.slice(0, 500) : e.message));

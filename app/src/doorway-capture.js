@@ -66,18 +66,49 @@ export function createCapture({ renderer, scene, U, size = 256 }) {
     }
     return canvas;
   };
+  // The face that looks into the room from the door (-z, the sixth), alone and larger (#320's trial): at `n` pixels a
+  // side, colour drawn `ss` times larger and averaged down (the door shows it close, so its edges should not stair),
+  // distances drawn at their own size and never averaged. Rows kept as the card holds them, as `read` keeps them.
+  const big = {};
+  const readInward = (r, C, kind, gain, n, ss = 1) => {
+    const m = kind === "dist" ? n : n * ss, key = kind + m;
+    const rt = (big[key] ||= new THREE.WebGLRenderTarget(m, m, { type: THREE.HalfFloatType }));
+    const undress = dress(r), target = renderer.getRenderTarget(), xr = renderer.xr.enabled; renderer.xr.enabled = false;
+    try {
+      cam.position.copy(C); cam.updateMatrixWorld();
+      if (kind === "dist") { scene.fog = null; dm.uniforms.uC.value.copy(C); scene.overrideMaterial = dm; }
+      renderer.setRenderTarget(rt); renderer.render(scene, cam.children[5]);
+    } finally { scene.overrideMaterial = null; renderer.xr.enabled = xr; renderer.setRenderTarget(target); undress(); }
+    const half = new Uint16Array(m * m * 4); renderer.readRenderTargetPixels(rt, 0, 0, m, m, half);
+    const canvas = document.createElement("canvas"); canvas.width = canvas.height = n;
+    const g = canvas.getContext("2d"), img = g.createImageData(n, n), k = kind === "dist" ? 1 : ss;
+    const srgb = (v) => { v = Math.max(0, v * gain); v = v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; return Math.min(255, Math.round(v * 255)); };
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const o = (y * n + x) * 4;
+      if (kind === "dist") { const i = o, d = Math.round(Math.min(1, Math.max(0, DataUtils.fromHalfFloat(half[i]))) * 65535); img.data[o] = d >> 8; img.data[o + 1] = d & 255; img.data[o + 2] = 0; }
+      else {
+        let R = 0, G = 0, B = 0;
+        for (let j = 0; j < k; j++) for (let i = 0; i < k; i++) { const q = ((y * k + j) * m + x * k + i) * 4; R += DataUtils.fromHalfFloat(half[q]); G += DataUtils.fromHalfFloat(half[q + 1]); B += DataUtils.fromHalfFloat(half[q + 2]); }
+        const w = 1 / (k * k); img.data[o] = srgb(R * w); img.data[o + 1] = srgb(G * w); img.data[o + 2] = srgb(B * w);
+      }
+      img.data[o + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+    return canvas;
+  };
   // One hall: its figures fetched first (else the door shows an empty dais), then a day, a night and the distances.
   // `mood(season, time)` sets the page's hour; `keep()` remembers the hour the page had and returns what puts it back.
   // Returns three canvases.
-  const bake = async (hall, room, mood, keep) => {
+  // `inward` ({ col, dist, ss }): also the face into the room alone, larger (#320's trial; doorway.js's `?doorway=hires`).
+  const bake = async (hall, room, mood, keep, inward = null) => {
     await room.stand();
     const back = keep();
-    const R = room.room, C = new THREE.Vector3(R.cx, R.y + EYE, R.z1 + 0.3 - INSET);
-    mood("summer", "day"); const day = read(room, C, "col", GAIN[0]);
-    mood("summer", "night"); const night = read(room, C, "col", GAIN[1]);
-    const far = read(room, C, "dist", 1);
+    const R = room.room, C = new THREE.Vector3(R.cx, R.y + EYE, R.z1 + 0.3 - INSET), out = {};
+    mood("summer", "day"); out.day = read(room, C, "col", GAIN[0]); if (inward) out.inDay = readInward(room, C, "col", GAIN[0], inward.col, inward.ss);
+    mood("summer", "night"); out.night = read(room, C, "col", GAIN[1]); if (inward) out.inNight = readInward(room, C, "col", GAIN[1], inward.col, inward.ss);
+    out.dist = read(room, C, "dist", 1); if (inward) out.inDist = readInward(room, C, "dist", 1, inward.dist);
     back();
-    return { day, night, dist: far };
+    return out;
   };
   return { bake };
 }

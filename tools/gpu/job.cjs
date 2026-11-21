@@ -4,10 +4,10 @@
 // spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, before, after }], seconds: 6 }
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
+const { serve } = require(require("fs").existsSync(require("path").join(__dirname, "site.cjs")) ? "./site.cjs" : "../site.cjs");   // staged beside it by gpu-render.sh, or in the checkout
+const fs = require("fs"), path = require("path"), { execSync } = require("child_process");
 const [root, out, specArg = "{}"] = process.argv.slice(2);
 const spec = JSON.parse(specArg.trim().startsWith("{") ? specArg : Buffer.from(specArg, "base64").toString("utf8"));   // the launcher sends it as base64: a job's variables are single lines
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".glb": "model/gltf-binary", ".ktx2": "image/ktx2", ".wasm": "application/wasm", ".css": "text/css", ".woff2": "font/woff2", ".svg": "image/svg+xml" };
 const sh = (c) => { try { return execSync(c, { stdio: ["ignore", "pipe", "pipe"], timeout: 20000 }).toString().trim(); } catch (e) { return "(failed) " + String(e.stderr || e.message).slice(0, 200); } };
 
 // Ways of asking Chromium for the graphics card, most direct first. The first that reports a real GPU is used.
@@ -35,14 +35,8 @@ function fingerprint(dir) {
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const report = { started: new Date().toISOString(), host: { gpu: sh("nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader"), cpu: sh("nproc"), egl: sh("ls /usr/share/glvnd/egl_vendor.d 2>&1"), vulkan: sh("ls /usr/share/vulkan/icd.d /etc/vulkan/icd.d 2>&1"), libs: sh("ldconfig -p | grep -i -E 'nvidia|libEGL|libvulkan' | cut -c1-90 | head -30"), dev: sh("ls /dev | grep -i -E 'nvidia|dri' ; ls /dev/dri 2>&1") }, tried: {}, bench: [], shots: [], errors: [] };
-  const srv = http.createServer((req, res) => {
-    let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
-    if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-    res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-    
-    fs.createReadStream(p).pipe(res);
-  });
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); const base = `http://127.0.0.1:${srv.address().port}/`;
+  let srv;
+  srv = await serve(root); const base = `http://127.0.0.1:${srv.address().port}/`;
 
   let browser = null, how = null, launchWith = null;
   pick: for (const [name, flags] of Object.entries(FLAGS)) for (const channel of ["chromium", undefined]) {
@@ -251,6 +245,31 @@ function fingerprint(dir) {
       const file = free ? name + ".png" : name.replace(/@/g, "_") + (named && shot.q ? "_" + shot.q : "") + ".png"; await page.screenshot({ path: path.join(out, file), timeout: 120000 });
       const y = await page.evaluate(() => window.__yard()); report.shots.push({ name, file, tris: y.tris, calls: y.calls }); console.log("shot", file); await ctx.close();
     } catch (e) { report.shots.push({ name, error: String(e.message).slice(0, 200) }); console.log("shot failed", name, String(e.message).slice(0, 200)); }
+    save();
+  }
+  // What filming costs (#342, app/src/clip.js): the raised camera's frame interval with no film and with one being made,
+  // turn about in this one job (`runs` times each), so that the card and the browser are the same for both.
+  // spec.clip = { size, q, runs, secs, ms, aspect }: `ms` is how long each interval is measured, `secs` how long the film runs.
+  if (spec.clip) {
+    const C = spec.clip, size = C.size || [1920, 1080], runs = C.runs || 3, ms = C.ms || 6000, log = (report.clip = { size, q: C.q || "high", aspect: C.aspect || "tall", ms, off: [], same: [], on: [], files: [] });
+    try {
+      const { ctx, page } = await open(q({ q: C.q || "high", enter: 1, view: "third", season: "summer", time: "day" }), size, 1);
+      await page.waitForTimeout(4000);
+      await page.evaluate((a) => { window.__photo(true); document.querySelector(`[data-aspect="${a}"]`)?.click(); }, C.aspect || "tall"); await page.waitForTimeout(1500);
+      const info = await page.evaluate(() => window.__clip()); log.supported = info.supported; log.mime = info.mime;
+      const probe = (n) => page.evaluate((n) => new Promise((res) => { const d = []; let p = performance.now(); const end = p + n; const f = (t) => { d.push(t - p); p = t; if (t < end) requestAnimationFrame(f); else { d.shift(); d.sort((a, b) => a - b); const m = d.reduce((a, b) => a + b, 0) / d.length; res({ frames: d.length, mean: +m.toFixed(2), p95: +d[Math.floor(d.length * 0.95)].toFixed(2), max: +d[d.length - 1].toFixed(2) }); } }; requestAnimationFrame(f); }), n);
+      for (let i = 0; i < runs; i++) {
+        log.off.push(await probe(ms));
+        await page.evaluate((sh) => window.__clip({ layout: true, short: sh }), C.short || 0); await page.waitForTimeout(800); log.same.push(await probe(ms)); await page.evaluate(() => window.__clip({ layout: false })); await page.waitForTimeout(800);   // the same size and place, nothing recorded
+        await page.evaluate(([s, sh, d]) => window.__clip({ start: true, secs: s, short: sh, dry: d }), [C.secs || Math.ceil(ms / 1000) + 4, C.short || 0, !!C.dry]);
+        await page.waitForFunction(() => window.__clip().drawn > 5, null, { timeout: 60000 });
+        log.on.push(await probe(ms));
+        await page.waitForFunction(() => window.__clip().last != null, null, { timeout: 120000, polling: 500 });
+        log.files.push(await page.evaluate(() => window.__clip().last)); await page.evaluate(() => document.getElementById("clipBack").click()); await page.waitForTimeout(500);
+        console.log("clip run", i + 1, JSON.stringify({ off: log.off[i], same: log.same[i], on: log.on[i], file: log.files[i] })); save();
+      }
+      await ctx.close();
+    } catch (e) { log.error = String(e.message).slice(0, 300); console.log("clip failed", log.error); }
     save();
   }
   report.finished = new Date().toISOString(); report.errors = [...new Set(report.errors)].slice(0, 20); save();

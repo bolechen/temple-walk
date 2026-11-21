@@ -1,6 +1,7 @@
 // Every script in the app must at least parse. Vendored libraries are skipped.
 const { execFileSync } = require("child_process"), fs = require("fs"), path = require("path");
 const root = path.join(__dirname, "..", "app"), files = [];
+for (const extra of ["worker"]) { const d = path.join(__dirname, "..", extra); for (const f of fs.readdirSync(d)) if (f.endsWith(".js")) files.push(path.join(d, f)); }   // the Worker (#340) parses too
 (function walk(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) { if (f !== "vendor" && f !== "node_modules") walk(p); } else if (f.endsWith(".js")) files.push(p); } })(root);
 let bad = 0;
 for (const f of files) { try { execFileSync(process.execPath, ["--check", f], { stdio: "pipe" }); } catch (e) { bad++; console.error(String(e.stderr).split("\n").slice(0, 6).join("\n")); } }
@@ -31,6 +32,9 @@ for (const m of mats.matchAll(/`([^`]*)`/g)) { const last = m[1].trimEnd().split
 // Every character the page writes must be in the typefaces cut for it (tools/fonts.py). The debug panel (src/debug.js)
 // is left out: it exists only on the dev server and is drawn by lil-gui in the system's own font, not in the cut faces.
 const DEV_ONLY = [path.join(root, "src", "debug.js")];
+// Nor is each level's bake.js (#405): the floor's bake reads it in Node, the page never imports it (tests/unit/level-bake.test.mjs),
+// and its names of the place's parts are written only into the floor's report on GitHub.
+const BAKE_ONLY = fs.readdirSync(path.join(root, "levels")).map((d) => path.join(root, "levels", d, "bake.js"));
 // The Japanese, English and Korean tables (app/locales/*.js, app/levels/*/locales/*.js) are written in faces of their own, cut by
 // `tools/fonts.py --lang`: each table's characters must be in its own cut, and the Chinese cut is not asked to hold them.
 // So is the name of each language on its button in index.html, which is written in that language.
@@ -41,7 +45,7 @@ const wide = (c) => c.codePointAt(0) > 0x2000 && !(c.codePointAt(0) >= 0xe000 &&
 const have = cut("chars.txt"), missing = new Set();
 const own = { ja: "", en: "", ko: "" };
 const page = (f) => { let s = fs.readFileSync(f, "utf8"); if (f.endsWith("index.html")) s = s.replace(/<[^>]*\slang="(ja|en|ko)"[^>]*>([^<]*)</g, (m, l, text) => { own[l] += text; return ""; }); return s; };
-for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
+for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !BAKE_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
 if (missing.size) { bad++; console.error("characters used but not in app/shared/fonts (run tools/fonts.py): " + [...missing].join("")); }
 for (const [l, f] of Object.entries(TABLES)) {
   const theirs = cut(`chars-${l}.txt`), lacking = new Set();
@@ -54,5 +58,8 @@ for (const [l, f] of Object.entries(TABLES)) {
 // every statement after it, and the scenario then passes without having waited for anything.
 { const e2e = path.join(__dirname, "..", "tests", "e2e", "run.cjs");
   fs.readFileSync(e2e, "utf8").split("\n").forEach((line, i) => { if (/;\s+\/\/ .*(\bawait |\bexpect\()/.test(line)) { bad++; console.error(`tests/e2e/run.cjs:${i + 1}: a // comment in the middle of the line cuts off the statements after it`); } }); }
+// Likewise in app/: a comment added at the end of a line of code that went on with another statement swallows it
+// (tools/swallowed.cjs; twice in #414, the court's lamplit paving and every seat in the halls).
+for (const h of require("./swallowed.cjs").swallowedIn(root)) { bad++; console.error(`${path.relative(path.join(__dirname, ".."), h.file)}:${h.line}: a // comment swallows a statement written after it on the same line: ${h.comment.slice(-80)}`); }
 console.log(`${files.length} files checked, ${bad} problems`);
 process.exit(bad ? 1 : 0);

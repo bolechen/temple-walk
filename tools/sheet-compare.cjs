@@ -3,14 +3,10 @@
 //   node tools/sheet-compare.cjs <label>   → tools/out/sheets/<label>-{phone,desk}-{credits,offering}.png and a line each of their --deckle
 const fs = require("fs"), path = require("path"), http = require("http"), { chromium } = require("playwright");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out", "sheets"), label = process.argv[2] || "now";
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".svg": "image/svg+xml", ".glb": "model/gltf-binary", ".css": "text/css", ".woff2": "font/woff2", ".wasm": "application/wasm", ".txt": "text/plain" };
-const srv = http.createServer((req, res) => {
-  const base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html")));
-  if (!full.startsWith(base + path.sep) || !fs.existsSync(full) || fs.statSync(full).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(full)] || "application/octet-stream" }); fs.createReadStream(full).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   for (const [shape, vw, vh, touch] of [["phone", 390, 844, true], ["desk", 1280, 720, false]]) {
     const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: touch, hasTouch: touch, locale: "zh-CN" }), p = await ctx.newPage();

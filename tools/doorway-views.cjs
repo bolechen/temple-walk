@@ -1,26 +1,22 @@
 // The room seen through a hall's open door from outside (#218): from 12 m, 6 m and 2 m before the door, square on and
 // 30° to either side, drawn with the room painted in the doorway and (`--before`) without, into tools/out/doorway/.
-// usage: node tools/doorway-views.cjs [hall=main] [--before] [--halls] [--moods [--seasons=spring,…]] [--dists=12,6,2] [--angles=-30,0,30] [--mood=summer-day] [--size=640x400] [--q=high] [--view=first] [--tag=] [--baked]
+// usage: node tools/doorway-views.cjs [hall=main] [--doorway=hires|live] [--before] [--halls] [--moods [--seasons=spring,…]] [--dists=12,6,2] [--angles=-30,0,30] [--mood=summer-day] [--size=640x400] [--q=high] [--view=first] [--tag=] [--baked]
 // Each picture's door and the lattice beside it, in pixels, go to rects.json (doorway-light.py measures them).
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out", "doorway");
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const base = `http://127.0.0.1:${srv.address().port}/`, hallId = process.argv.slice(2).find((a) => !a.startsWith("--")) || "main", before = process.argv.includes("--before");
   const dists = arg("dists", "12,6,2").split(",").map(Number), angles = arg("angles", "-30,0,30").split(",").map(Number), [season, time] = arg("mood", "summer-day").split("-");
   const [vw, vh] = arg("size", "640x400").split("x").map(Number);
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, locale: "zh-CN" }), errs = [];
   p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));
-  await p.goto(`${base}?shot=1&q=${arg("q", "high")}&view=${arg("view", "first")}&season=${season}&time=${time}` + (before ? "&off=doorway" : ""), { waitUntil: "commit", timeout: 180000 });
+  await p.goto(`${base}?shot=1&q=${arg("q", "high")}&view=${arg("view", "first")}&season=${season}&time=${time}` + (before ? "&off=doorway" : "") + (arg("doorway", "") ? `&doorway=${arg("doorway", "")}${/live/.test(arg("doorway", "")) ? "&warm=0" : ""}` : ""), { waitUntil: "commit", timeout: 180000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
   const baked = process.argv.includes("--baked");   // the pictures as a visitor fetches them, not drawn in this page
   if (!before && !baked) await p.evaluate(() => window.__doorways(true));   // every room drawn now, not on the way there
@@ -42,8 +38,11 @@ const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=
         await p.evaluate(([x, z, yaw]) => window.__pose(x, z, yaw, 0.04), [x, z, yaw]);
         await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))));
         if (baked && !before) await p.waitForFunction((i) => window.__doorways().halls[i].fade === 1, id, { timeout: 120000, polling: 500 }).catch(() => errs.push(id + ": its baked pictures never came"));
+        // `--doorway=live` (#320): within reach the room is drawn live (here unwarmed, `warm=0`: a picture does not mind the first frame's wait); wait for that frame.
+        if (/live/.test(arg("doorway", "")) && d < 16) await p.waitForFunction((i) => { const l = window.__doorways().live; return l && l.halls[i] === "ready" && l.hall === i; }, id, { timeout: 240000, polling: 500 }).then(() => p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))).catch(() => errs.push(id + ": the live room never came"));
+        if (/hires/.test(arg("doorway", "")) && !before) await p.waitForFunction((i) => window.__doorways().halls[i].hi, id, { timeout: 120000, polling: 500 }).catch(() => errs.push(id + ": the larger face never came"));
         const name = `${id}-${d}m-${a}${moods.length > 1 ? `-${se}-${ti}` : ""}${before ? "-before" : ""}${arg("tag", "")}.png`;
-        await p.screenshot({ path: path.join(out, name) }); shots.push(name); rects[name] = await p.evaluate((id) => window.__doorRect(id), id);
+        await p.screenshot({ path: path.join(out, name), timeout: 240000 });   // a frame with a room drawn live can take a minute in software shots.push(name); rects[name] = await p.evaluate((id) => window.__doorRect(id), id);
       }
     }
   }

@@ -85,7 +85,9 @@ pnpm typecheck   # TypeScript（checkJs）检查 app/ 下全部模块，three.js
 
 | 按键／输入 | 操作 |
 |---|---|
-| WASD／方向键 | 行走 |
+| W S（或 ↑ ↓） | 前后行走 |
+| A D | 连同视角转身（歇脚菜单「A/D 平移（旧）」打开后改回左右平移） |
+| ← → | 左右平移 |
 | Shift | 快步 |
 | 按住鼠标拖动 | 环顾；单击地面走到那里，单击钟或鼓敲响 |
 | Space | 跳；在无栏矮台前沿面向外侧时下台阶 |
@@ -170,6 +172,10 @@ PR 有构建预览和自动检查，合并统一用 squash，规则见 [CONTRIBU
 **[正式站](https://temple.rushiwowen.co/)只从版本标签部署**：Release Please 发版时自动调用 [`deploy-tag.yml`](.github/workflows/deploy-tag.yml)。出了问题回滚，就在 Actions 里手动运行 `deploy-tag.yml`，选一个旧标签。每一步的细节以 [docs/RELEASING.md](docs/RELEASING.md) 为准。
 
 较慢的场景（`edges` 等）在 [e2e 工作流](.github/workflows/e2e.yml) 里并行跑，每晚还跑一遍全部场景；实际结果以 [Actions](https://github.com/bolechen/temple-walk/actions) 中对应提交的记录为准，配置存在不等于每个提交都已跑过完整套件。
+
+## 隐私与同修留痕
+
+走过的人会在钟楼前看到一句淡淡的「当日已有 N 人在此敲钟」，大殿香炉的灰里也多几根别人留下的香梗（#340）。这是**匿名的计数**，没有实时同步，没有聊天，看不到任何人：服务器只存「日期 × 地点 × 次数」，不存 IP、设备、语言、账号或任何标识；每处每次访问只报一次；浏览器开着 Do Not Track 或 Global Privacy Control 时只读不报；离线或接口出错时页面什么都不显示。统计页面访问用的 Umami 是另一回事，见 [docs/t00/ANALYTICS.md](docs/t00/ANALYTICS.md)。
 
 ## 安全与素材许可
 

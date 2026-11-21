@@ -2,16 +2,12 @@
 // and the doorways' cubes, with them and without (`?off=doorway`), standing in the first court before the great hall.
 // Software rendering: compare the two runs with each other, not with a phone. usage: node tools/doorway-cost.cjs [runs=2]
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site();
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+  srv = await serve(root);
   const base = `http://127.0.0.1:${srv.address().port}/`, runs = +(process.argv[2] || 2), rows = [];
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--enable-precise-memory-info"] });
   for (let k = 0; k < runs; k++) for (const off of ["doorway", ""]) {

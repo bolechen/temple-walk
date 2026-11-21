@@ -31,19 +31,15 @@ if (process.argv.includes("--spec")) {
 }
 
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const arg = (k, d) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || "").slice(k.length + 3) || d;
 const out = process.argv.slice(2).find((a) => !a.startsWith("--")) || path.join(__dirname, "out", "offering-frames");
 const aspects = arg("aspect", "16x9,4x3,phone").split(","), moments = arg("moments", "1,2,3,4").split(",").map(Number);
 const small = process.argv.includes("--small"), root = require("./site.cjs").site();
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2", ".glb": "model/gltf-binary", ".png": "image/png", ".jpg": "image/jpeg", ".wasm": "application/wasm" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const base = `http://127.0.0.1:${srv.address().port}/`;
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   for (const aspect of aspects) for (const m of moments) {

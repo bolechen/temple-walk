@@ -13,7 +13,7 @@
 // browser's renderer string, so a software picture is never mistaken for a GPU measurement. The film is drawn frame by
 // frame (deterministic, any frame rate) and encoded with ffmpeg. The page is bundled with the site's own three.
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
+const fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
 const here = __dirname, root = path.join(here, "..");
 
 (async () => {
@@ -24,14 +24,8 @@ const here = __dirname, root = path.join(here, "..");
   const stageOut = path.join(here, "out", "t05-hall-page");
   await build({ configFile: false, logLevel: "error", root: path.join(here, "t05-hall"), base: "./", publicDir: false, build: { outDir: stageOut, emptyOutDir: true, target: "es2022", chunkSizeWarningLimit: 4000 } });
   const files = (spec.statues || []).map((s) => path.resolve(root, s.url));
-  const types = { ".html": "text/html", ".js": "text/javascript", ".glb": "model/gltf-binary" };
-  const srv = http.createServer((req, res) => {
-    const rel = decodeURIComponent(req.url.split("?")[0]), m = /^\/s\/(\d+)\.glb$/.exec(rel);
-    const p = m ? files[+m[1]] : path.join(stageOut, path.posix.normalize("/" + (rel === "/" ? "index.html" : rel)));
-    if (!p || (!m && !p.startsWith(stageOut)) || !fs.existsSync(p)) { res.writeHead(404); return res.end(); }
-    res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-  });
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+  const { serve } = require("./site.cjs"); let srv;
+  srv = await serve(stageOut, { api: false, handler: (req, res, rel) => { const m = /^\/s\/(\d+)\.glb$/.exec(rel); if (!m) return false; const p = files[+m[1]]; if (!p || !fs.existsSync(p)) { res.writeHead(404); res.end(); return true; } res.writeHead(200, { "content-type": "model/gltf-binary" }); fs.createReadStream(p).pipe(res); return true; } });
   const gpu = process.env.T05_GPU === "1";
   const args = gpu ? ["--enable-gpu", "--use-angle=vulkan", "--enable-features=Vulkan", "--ignore-gpu-blocklist"] : ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"];
   const browser = await chromium.launch({ args });

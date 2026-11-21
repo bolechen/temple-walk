@@ -56,4 +56,26 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 3. 回滚不改 `main`，也不动标签和版本；`main` 继续往 canary 走。生产停在那个标签，直到下一个版本标签。要把修好的版本放上去，就合版本 PR。
 4. 要回到最新版本，用同一个入口，`ref` 填最新标签。
 
+## 同修留痕的 Worker 与绑定（#340）
+
+页面之外，canary 和生产的 Worker 各多了一段脚本（`worker/`）和一个 Durable Object，只处理 `/api/*`；静态文件仍由 Cloudflare 直接回，不经脚本、不计脚本请求（配置里 `assets.run_worker_first: ["/api/*"]`）。
+
+| 项 | 内容 |
+|---|---|
+| 接口 | `POST /api/trace`，体 `{ "place", "kind" }`（`place` 取 `worker/trace-core.js` 的 `PLACES`，`kind` 取 `rite`/`seal`，其余 400）；`GET /api/traces?day=today`（或保留期内的 `YYYY-MM-DD`）回 `{ day, traces: { <place>: { rite, seal } } }`，今天的在边缘缓存 30 秒 |
+| 绑定 | `TRACES` → Durable Object 类 `TraceCounter`（SQLite 存储，`migrations` 的 `v1` 用 `new_sqlite_classes`），整座寺一个对象（`idFromName("temple")`），表只有 `counts(day, place, kind, n)` |
+| 隔离 | Durable Object 的命名空间属于 Worker：`temple-walk`（生产）和 `temple-walk-canary` 是两个 Worker，计数天然各自独立，没有共用的 id 要配。PR 预览（`wrangler.jsonc`，`wrangler preview`）**没有**这段脚本和绑定，页面也不会在预览里请求接口（`?presence=1` 只给测试和工作台，对预览 Worker 是 404，页面静默）。本地和测试：`node tools/worker-smoke.mjs [wrangler.canary.jsonc]`（`wrangler dev --local`，workerd 加本地 SQLite，不碰 Cloudflare），单测 `tests/unit/trace.test.mjs` 用 `node:sqlite` 跑同一条 SQL |
+| 发布 | 只经 CI：`pages.yml` 的 `deploy`（canary）和 `deploy-tag.yml` 照旧执行 `wrangler deploy -c wrangler.<target>.jsonc`，两处的稀疏检出加了 `worker/`；`pages.yml` 多一个 `worker` 作业（上面的本地冒烟），列入 `verify` |
+| 首次部署要注意 | 迁移 `v1` 会在第一次 `wrangler deploy` 时创建 Durable Object；`CLOUDFLARE_API_TOKEN` 要有 Workers Scripts 编辑权限（Durable Object 迁移随脚本一起提交，不另需权限；这一点未在本账号上实测，第一次发 canary 时看 `deploy` 作业的输出）；账号要是 Workers Paid（免费档每天 10 万请求，见下） |
+| 回滚 | 回滚某个标签会把脚本也回到那个标签的版本；计数表不随版本变，旧页面读不到接口时静默。要整个关掉：把页面的 `presenceOn` 返回 false（下一版），或在 Cloudflare 里给 `/api/*` 加一条自定义规则拦截，页面静默 |
+| 可选的边缘限流 | 脚本里的限流是按地点的总量桶加每日上限，不认人（trace-core.js 注释）。想要按来源地址的限流，在 Cloudflare 控制台给 `/api/trace` 加一条速率限制规则（它在边缘自己计数，我们的代码和库里不存任何地址），这要账号权限，CI 做不了，所以只作为可选项 |
+
+**成本，按每日 10 万次访问估一次**（单价取自 2026-11-20 读到的 developers.cloudflare.com 的 Workers 与 Durable Objects 定价页，三个月后重读）：每次访问约 1 次读（页面进入时读当日）加平均 4 次报告（钟、香、茶、句、井、灯、坐、印，每处每页一次，多数访客做不到一半）≈ 50 万次脚本请求一天 ≈ 1500 万一月。
+- Workers 请求：含 1000 万/月，超出 $0.30/百万 → (1500−1000)/100 × 0.30 ≈ **$1.5**；CPU 每次几毫秒，在含 3000 万 CPU 毫秒以内。
+- Durable Object 请求：含 100 万/月，超出 $0.15/百万 → 约 **$2.1**（今日的读被边缘缓存挡掉大半，写每次一个请求）。
+- Durable Object 时长：对象几乎不歇，128 MB × 86 400 s × 30 ≈ 32 万 GB-s，在含 40 万 GB-s 以内：$0。
+- SQLite 写：约 1200 万行/月（含主键索引按两倍算 2400 万），含 5000 万：$0；存储每天几十行，可忽略。
+- 合计约 **$3.6/月**，在 Workers Paid 的 $5/月基础费之上（账号已是 Paid 则只多这些）。免费档放不下：每天 10 万请求的上限一天就超。静态文件、`/api` 之外的一切不计费。
+- 现在的实际量远小于此（`docs/t00/ANALYTICS.md`：每日几十到几百次访问），这份估算是留给「万一出圈」的上限。**花钱的开关在所有者手里**：Cloudflare 里可给 Workers 和 Durable Objects 各设花费上限（官方文档 spend management），超了脚本停、页面静默，不影响走路。
+
 官方说明：[Release Please Action](https://github.com/googleapis/release-please-action)、[manifest配置与初始化](https://github.com/googleapis/release-please/blob/main/docs/manifest-releaser.md)。

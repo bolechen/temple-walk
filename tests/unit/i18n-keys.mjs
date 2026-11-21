@@ -49,7 +49,9 @@ export function pageKeys() {
 export async function dataKeys() {
   const { SEALS, VERSES } = await import("../../app/src/journey.js");
   const { NAMES, LINES } = await import("../../app/src/mood.js");
-  const keys = new Set();
+  const { WISHES } = await import("../../app/src/wishes.js");
+  const keys = new Set(WISHES);   // the preset lines for a lamp lit for someone (#343)
+  keys.add("为人点灯");   // the action button's word at the lamp once it is lit (game.js picks it by name and shows it through t(w))
   for (const s of SEALS) for (const k of ["seal", "place", "act", "line", "hint"]) keys.add(s[k]);
   for (const [text, from] of VERSES) { keys.add(text); keys.add(from); }
   for (const k of Object.values(NAMES)) keys.add(k);
@@ -58,7 +60,9 @@ export async function dataKeys() {
   const interior = read("src/interior.js");
   for (const m of interior.matchAll(/title: "([^"]+)", text: "([^"]+)"/g)) { keys.add(m[1]); keys.add(m[2]); }
   // The halls' names, said on entering and kept as where he was left.
-  for (const m of read("src/site.js").matchAll(/hall: \{[^}]*name: "([^"]+)"/g)) keys.add(m[1]);
+  // Each level's plan names its own halls (app/levels/<level>/site.js, #362).
+  for (const lv of fs.readdirSync(path.join(ROOT, "levels")).filter((d) => fs.existsSync(path.join(ROOT, "levels", d, "site.js"))))
+    for (const m of read(`levels/${lv}/site.js`).matchAll(/hall: \{[^}]*name: "([^"]+)"/g)) keys.add(m[1]);
   keys.add("山路上"); keys.add("凌霄阁上");   // where he was left, on the ground or up on the summit pavilion's balcony
   // Words each table needs for the action button and the calligraphy (game.js translates these as they are shown).
   for (const k of ["撞钟", "起身", "观看", "坐下", "登楼", "下楼", "圆", "奉拜", "云径", "云径禅寺", "年代", "质地", "尺寸", "收藏"]) keys.add(k);

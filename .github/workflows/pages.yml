@@ -109,10 +109,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/walk
-          key: walk-t00-${{ steps.walk.outputs.key }}-${{ steps.walk.outputs.base }}
+          # One cache for every level's floor (#405): the files in it are named <level>-<fingerprint>.bin, and the key is
+          # every level's fingerprint joined (bake-walk.mjs --key). `walk-` also finds the caches saved before #405 under the prologue's name.
+          key: walk-${{ steps.walk.outputs.key }}-${{ steps.walk.outputs.base }}
           restore-keys: |
-            walk-t00-${{ steps.walk.outputs.key }}-
-            walk-t00-
+            walk-${{ steps.walk.outputs.key }}-
+            walk-
       # A change that is neither the site's nor the floor's still runs the unit tests, which read the baked floor: take it
       # from the newest cache (the same fingerprint as main's, since nothing it is made of has changed) rather than bake it cold.
       - name: Take the newest baked floor, nothing of it having changed
@@ -120,8 +122,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules/.cache/walk
-          key: walk-t00-unchanged-${{ github.run_id }}
-          restore-keys: walk-t00-
+          key: walk-unchanged-${{ github.run_id }}
+          restore-keys: walk-
       - name: The floor he may stand on, and what this change did to it
         if: needs.changes.outputs.walk == 'true'
         env:
@@ -131,8 +133,13 @@ jobs:
         run: |
           node tools/bake-walk.mjs
           if [ "$BASEKEY" != none ]; then (cd .main && WALK_CACHE="$GITHUB_WORKSPACE/node_modules/.cache/walk" node tools/bake-walk.mjs | tail -2); fi
-          find node_modules/.cache/walk -name '*.bin' ! -name "t00-$KEY.bin" ! -name "t00-$BASEKEY.bin" -delete
-          node tools/walk-diff.mjs .main/app/shared/walk/t00.bin --png=tools/out/walk-diff
+          # Keep only the floors of this commit and of the base, whatever level each is (<level>-<fingerprint>.bin; #405).
+          keep=" $(echo "$KEY-$BASEKEY" | tr '-' ' ') "
+          for f in node_modules/.cache/walk/*.bin; do [ -e "$f" ] || continue; k=$(basename "$f" .bin); case "$keep" in *" ${k##*-} "*) ;; *) rm -f "$f" ;; esac; done
+          # Each level's floor against the base's: a level the base has no floor for is checked for reach alone.
+          status=0
+          for lv in $(node tools/bake-walk.mjs --list); do node tools/walk-diff.mjs ".main/app/shared/walk/$lv.bin" --level="$lv" --png="tools/out/walk-diff/$lv" || status=1; done
+          exit $status
       - name: Unit tests (the plan, the walker, the building generator, the seasons)
         if: needs.changes.outputs.unit == 'true'
         run: pnpm test
@@ -191,8 +198,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-t00-
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
       - name: Build the site
         run: pnpm run build
       - name: End to end, startup and movement
@@ -257,8 +264,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/.cache/doorways
-          key: doorways-t00-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-t00-
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
       - name: The scenario, on the built site
         run: node tests/e2e/run.cjs ${{ matrix.scenario }}
       - name: Keep the report and screenshots
@@ -270,10 +277,30 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  # The Worker behind 同修留痕 (#340), run for real on this machine (workerd, a Durable Object on local SQLite): never Cloudflare.
+  # It needs only node; the page is not built for it.
+  worker:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            worker
+            tools/worker-smoke.mjs
+            wrangler.canary.jsonc
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: The canary's Worker answers the API as it should (the public site's is the same script and binding, held equal by tests/unit/trace.test.mjs)
+        run: node tools/worker-smoke.mjs wrangler.canary.jsonc
+
   # The one check that all of them passed (the name a branch rule may require, as before). A job skipped because nothing
   # called for it is fine; one that failed, was cancelled, or never ran because `changes` did not is not.
   verify:
-    needs: [changes, unit, grid, site, quick]
+    needs: [changes, unit, grid, site, quick, worker]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -347,7 +374,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: wrangler.canary.jsonc
+          sparse-checkout: |
+            wrangler.canary.jsonc
+            worker
       - uses: actions/download-artifact@v4
         with:
           name: canary-site-${{ github.run_id }}-${{ github.run_attempt }}

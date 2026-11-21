@@ -54,7 +54,7 @@
 
 | 事件 | 何时 | 数据 | 用途 |
 |---|---|---|---|
-| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` | 到达；加载质量与语言来源 |
+| `demo.ready` | 页面画稳、三帧后 | `tier` `lang_source` `lang_from` `failed` | 到达；加载质量与语言来源；本轮起带失败贴图数（缺席表示旧数据，按未知处理，不当 0） |
 | `demo.enter` | 点「入山」后 | `resumed` `seals` `tier` | 从标题进入；新访/续走 |
 | `opening.played` | 开场开始 | `eye` `again` | 开场覆盖 |
 | `opening.skipped` | 开场被跳过 | `eye` `at`（走到几成） | 开场长度 |
@@ -63,7 +63,7 @@
 | `demo.complete` | 第七印、书满 | `count` `seconds` | 通关 |
 | `demo.ending` | 收尾看完/跳过 | `skipped` `count` `seconds` | 结尾 |
 | `demo.restart` | 从头走起 | `from` `seals` | 重开 |
-| `demo.load_error` | 加载失败 | `reason`（本轮补） | 失败原因 |
+| `demo.load_error` | 加载失败 | `reason`（`error`/`webgl`）`asset` `stage` `where` | 失败原因、哪个资源、停在哪一步、哪里出的错（本轮补 `asset`/`stage`/`where`，见下） |
 
 ### 3.2 本轮新增
 
@@ -77,8 +77,22 @@
 | `demo.mood` | 手动换季/换时辰/回到随时辰 | `season` `time` `follow` | 赛季权限用得多不多；偏好 |
 | `demo.view` | 按 V 或滚轮/双指切换第一/第三人称 | `to` | 视角偏好 |
 | `demo.rite` | observance 开始/结束 | `id` `phase` `seconds` `done` | 哪个仪式被开始、多久、有没有做完（补上 `demo.seal` 看不到的放弃） |
-| `demo.share` | 系统分享成功（留影或朱印簿） | `from` | 分享出口 |
+| `demo.share` | 系统分享成功（留影、朱印簿或短片） | `from`（`print` `book` `clip`） | 分享出口 |
+| `demo.clip.start` | 按「拍一段」，录制开始（#342） | `aspect` `tier` `fmt`（`mp4`/`webm`）`mark`（带不带落款） | 短片使用率、画幅、各浏览器出什么格式、落款有没有被关 |
+| `demo.clip.export` | 一段录完、文件出来（自然结束或中途停下） | `fmt` `secs`（取整）`early`（中途停）`tier` | 录得完不完整、平均多长；`start` 与 `export` 之差是录到一半被放弃（收起相机、切到后台）的 |
+| `lamp.link` | 在供灯处选了一句祝语、生成了链接和卡片（#343） | `wish`（预设祝语的编号）`season` `time` | 为他人点灯做了多少次、选的哪句；不记链接，不记任何文字 |
+| `lamp.open` | 经「为他人点灯」的链接打开，灯被带到眼前 | `wish` `season` `time` | 链接有没有被打开；与 `lamp.link` 对比，再加 `utm_source=lamp` 的访问数 |
 | `demo.quality` | governor 降一档 | `tier` `level` `gtao` `soft` `planar` `scale` | 有多少人在跑的过程中被降级，降到哪一步 |
+| `demo.leave` | 入山后第一次页面隐藏（每次打开一次） | `seconds`（本次页面打开秒数）`seals` `metres`（这一趟）`place`（殿 id / 楼上 id / 地点名）`inside` `up` | 每次访问在哪儿结束、多久、走了多少、几枚印 |
+| `demo.setting` | 改设置（同一 key 800 ms 内合并，取最后值；值未变不发） | `key` `value`（布尔为 `1/0`） | 谁改了哪项：自动镜头、画质、锁定鼠标、音量、视野等 |
+
+`demo.load_error` 的三个新字段（`app/loading.js`）：
+
+- `asset`：失败资源的文件名（去掉网址、query 与 hash）。依次取：调用方传入的资源；这次错误信息里的第一个网址（如 three 的 `fetch for "…/buddha.glb" responded with 404`）；页面里最近一个加载失败的 `<img>`/`<script>`/`<link>`。资源加载失败不冒泡到 `window`，只有捕获阶段听得到；这个监听只记下文件名，**不判为加载失败**，一张图缺了不等于整页没加载好。three 用不进文档的图片取的扫描贴图，捕获阶段也听不到，它们只记在 `demo.ready.failed` 里。
+- `stage`：最后一次 `loading.step(name)` 的步骤名（不带「山路正在铺开」）。
+- `where`：代码抛错时是脚本文件名与行号（如 `yard-3f9a.js:722`）；未处理的 Promise 拒绝时是错误信息的前 50 字，其中网址只留文件名。
+
+`demo.leave` 的 `place` 与「接着走」保存的地点同源：殿内是殿 id（如 `main`），楼上是 `lingxiao`，其余是用 `labelOf` 得出的地点名（如 `钟楼`、`山路上`）。
 
 **为什么是这些，不是更多**：它们正好补上「ready → enter → 第一枚印 → 第一座殿 → 第一次留影/分享」这条运营主线，以及「仪式中途放弃」和「性能降级」两个质量信号。点击热区、每帧位置、滚动深度都不做——页面没有滚动，也不该把访客的每一步都记下来。
 
@@ -90,7 +104,8 @@
 - **事件数据**：Umami 的 Events 表按事件名筛，再按 `id`、`lang`、`from` 分组；`demo.rite` 先筛 `phase=start` 和 `phase=end`，`done=0` 是放弃。
 - **语言**：每个事件都带 `lang`，所以「日文访客走到哪一步」可以直接筛；不要用浏览器语言代替。
 - **性能降级**：`demo.quality` 的 `level` 是第几次降级（1…5），`tier` 是起始档；和 `demo.ready.tier` 对比。
-- **分享**：`demo.share.from` 只有 `print | book`；`t.co` 的 196 次进入是外部，不是站内分享。
+- **分享**：`demo.share.from` 只有 `print | book | clip`；`t.co` 的 196 次进入是外部，不是站内分享。
+- **朱印帐上的二维码（#319）**：分享出去的朱印帐带一枚码，写 `https://temple.rushiwowen.co/?utm_source=goshuin&utm_medium=share&utm_content=<lang>`；扫码进来的访问在 Umami 里按 `utm_source=goshuin` 筛，`utm_content` 是图上的语言。`demo.share` 照旧只数「分享」按钮成功的次数，扫码进来的数不能拿它去对，二者可以相差很多（图可以被保存、转发、截屏）。留影卡片上的码（默认开，可在留影设置里关）写 `utm_source=photo`，同样的筛法；`utm_content` 是卡片的语言。
 
 ---
 
@@ -100,6 +115,11 @@
 - 事件值截到 50 字符，避免把长文本带出去；`track()` 在非公开域名直接返回，不发送。
 - `__events()` 是测试与主控台用的内存记录（最后 200 条），不上传。
 - 这份数据是自建 Umami 的 Postgres 只读查询；查询日期 2026-11-19，之后会变。引用时写日期。
+
+**同修留痕（#340）不是统计，是游戏数据。** 站在钟楼前看到的「当日已有 N 人在此敲钟」来自 Worker 的 `/api/trace` 与 `/api/traces`（`worker/`，docs/RELEASING.md），不经 Umami，也不写进 Umami：
+- 只存「日期（UTC）× 地点 × 种类（`rite`/`seal`）× 计数」，没有 IP、UA、Cookie、访客号、语言、来源页；Worker 的代码只读请求的方法、路径、`day` 和那一小段体，`tests/unit/trace.test.mjs` 扫源码保证这点。
+- 它的数字不能拿来当访客数、转化率或留存：每处每页面只报一次，同一个人刷新、换设备都会再算一次；尝试刷数的被总量桶和日上限挡住，所以也不是精确的人数。要看人数，仍看 Umami。
+- 因此没有新增 Umami 事件。`demo.rite`、`demo.seal` 照旧；留痕的请求只在公开站和 canary 发（预览、测试、steam/平台版不发），遵守浏览器的 Do Not Track 和 Global Privacy Control（读，不报）。
 
 ---
 

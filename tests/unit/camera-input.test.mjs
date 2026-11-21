@@ -10,13 +10,14 @@ function controls(view = 'first', photoMode = false, set = { sens: 1, invertY: f
   const handlers = new Map();
   const canvas = { style: {}, clientHeight: 800, setPointerCapture() {}, addEventListener(name, fn) { handlers.set('canvas:' + name, fn); } };
   const document = { pointerLockElement: null, addEventListener(name, fn) { handlers.set('document:' + name, fn); } };
-  const c = vm.createContext({ THREE, camera: { fov: 50 }, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, inside, settings: { get: () => set }, director: { back() { c.backs = (c.backs || 0) + 1; } }, hints: { say: { dragged() {}, nearest() {} } } });
+  const c = vm.createContext({ THREE, turning: null, handTurn() { c.hands = (c.hands || 0) + 1; }, recenter() { c.recentered = (c.recentered || 0) + 1; return true; }, camera: { fov: 50 }, canvas, document, performance, view, photo: { on: photoMode, dist: 4.6 }, yaw: 0, pitch: 0, down: null, inside, settings: { get: () => set }, director: { back() { c.backs = (c.backs || 0) + 1; } }, hints: { say: { dragged() {}, nearest() {} } } });
   vm.runInContext(source.slice(source.indexOf('const touches = new Map()'), source.indexOf('const lift = (e)')), c);
   return {
-    send(target, name, values = {}) { handlers.get(target + ':' + name)({ pointerId: 1, pointerType: 'mouse', clientX: 100, clientY: 100, ...values }); },
+    send(target, name, values = {}) { handlers.get(target + ':' + name)({ pointerId: 1, pointerType: 'mouse', clientX: 100, clientY: 100, preventDefault() {}, ...values }); },
     lock() { document.pointerLockElement = canvas; },
     state() { return { yaw: c.yaw, pitch: c.pitch }; },
     backs: () => c.backs || 0,
+    recentered: () => c.recentered || 0, hands: () => c.hands || 0, setTurning(v) { c.turning = v ? { t: 0 } : null; },
   };
 }
 
@@ -104,4 +105,20 @@ test('a drag or a held mouse sends the eye back from a place\'s shot; a tap does
     assert.ok(locked.backs() > 0, `${view}: the held mouse should send the eye back`);
     assert.equal(tap.backs(), 0, `${view}: a tap that hardly moves should not`);
   }
+});
+
+// #295: the middle mouse button turns the view back behind him (yard.js `recenter`); while that swing is under way a drag
+// or a held mouse does not turn the view (the two would pull against each other), and any turn by hand tells the drift.
+test("the middle button turns the view back; while it swings a drag or a held mouse is not taken; a hand's turn is told", () => {
+  const a = controls("third"), c = a;
+  a.send("canvas", "pointerdown", { button: 1 });
+  const ctx = a; // the sandbox counts recenter() calls
+  a.send("canvas", "pointerdown"); a.send("canvas", "pointermove", { clientX: 140, clientY: 100 });
+  assert.notEqual(a.state().yaw, 0, "a drag turns the view when no swing is under way");
+  const b = controls("third"); b.setTurning(true);
+  b.send("canvas", "pointerdown"); b.send("canvas", "pointermove", { clientX: 140, clientY: 100 });
+  b.lock(); b.send("document", "mousemove", { movementX: 20, movementY: 0 });
+  assert.equal(b.state().yaw, 0, "during the swing the hand's turn is not taken");
+  assert.ok(a.recentered() === 1 && a.hands() >= 1, `middle button ${a.recentered()} time(s), hands ${a.hands()}`);
+  void c; void ctx;
 });

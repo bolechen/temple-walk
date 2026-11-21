@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "court-hall-court-before.mp3",
+   "bytes": 2296016,
+   "sha256": "95d3821586f2ef97a6ddfde1aaad283286ae6dc1aafc4f2050406ec52999a8b2",
+   "rev": "241e0fd89e632afdb26a2418c8c8e2a43b89178b"
+  },
+  {
+   "path": "court-hall-court.mp3",
+   "bytes": 2386469,
+   "sha256": "26dafb8338eeed6a05299bf35d9163739b5d130bf8f0e84d3c26f5e5afe38590",
+   "rev": "241e0fd89e632afdb26a2418c8c8e2a43b89178b"
+  }
+ ]
+}

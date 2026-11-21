@@ -84,3 +84,55 @@ export function climbPose(plan, elapsed) {
   return { x: done ? plan.to[0] : plan.from[0] + (plan.to[0] - plan.from[0]) * f, z: done ? plan.to[2] : plan.from[2] + (plan.to[2] - plan.from[2]) * f,
     y: done ? plan.to[1] : plan.from[1] + plan.speed * time - plan.gravity * time * time / 2, done };
 }
+
+// Walking off a low edge (#294): the owner stood on the tea house's porch, saw the court below, and could not get down
+// without facing the edge squarely and pressing Space. A ledge no deeper than his leg he now walks down, as a child steps
+// off a kerb: his leg, hip to sole, is 0.50 m (monk.js: the hips stand 0.50 m over the sole, thigh 0.22, shin 0.22, the
+// ankle 0.06), and with the standing knee bent his leading foot reaches that far down. Deeper than that he jumps, by Space.
+export const STEP_DOWN = 0.5;
+// He steps down only when the way he walks points out over the edge within 45° (the outward part of his step at least
+// cos 45° of it); along the edge, or across it at a slant, he goes on along the porch as before.
+export const STEP_FACING = Math.SQRT1_2;
+// Where his foot comes down: the nearest of these out from the edge where the ground is clear (a step, not a leap).
+export const STEP_OUT = Object.freeze([0.6, 0.75, 0.9]);
+const STEP_PACE = 1.6;   // metres a second over the step: a little slower than his walk, as one goes down a step
+
+/**
+ * The step down off a low edge before him, or null: as findDrop, but only for a ledge no deeper than STEP_DOWN, only when
+ * he walks out over it within 45°, and coming down nearer, at a walk. `stepPose` walks it.
+ */
+export function findStep(walker, edges, x, z, dx, dz) {
+  if (walker.room || walker.loft || Math.hypot(dx, dz) < 0.01) return null;
+  const length = Math.hypot(dx, dz); dx /= length; dz /= length;
+  for (const edge of edges) {
+    const [nx, nz] = edge.normal, ax = edge.b[0] - edge.a[0], az = edge.b[1] - edge.a[1], span = Math.hypot(ax, az);
+    if (dx * nx + dz * nz < STEP_FACING || span < 0.6) continue;
+    const along = ((x - edge.a[0]) * ax + (z - edge.a[1]) * az) / span, back = (x - edge.a[0]) * nx + (z - edge.a[1]) * nz;
+    if (along < 0.25 || along > span - 0.25 || back > 0.01 || back < -0.65 || Math.abs(walker.heightAt(x, z) - edge.top) > 0.03) continue;
+    for (const o of STEP_OUT) {
+      const px = edge.a[0] + ax * along / span + nx * o, pz = edge.a[1] + az * along / span + nz * o, py = walker.heightAt(px, pz), fall = edge.top - py;
+      if (fall < 0.2 || fall > STEP_DOWN + 0.005) continue;
+      if ([[0, 0], [ax / span * 0.25, az / span * 0.25], [-ax / span * 0.25, -az / span * 0.25]].some(([ox, oz]) => walker.blocked(px + ox, pz + oz) || Math.abs(walker.heightAt(px + ox, pz + oz) - py) > 0.04)) continue;
+      // His body goes over the edge's line a third of the way through, and comes down as his leading foot takes his weight.
+      const travel = o - back, duration = Math.max(0.45, travel / STEP_PACE), cross = Math.min(0.8, Math.max(0.2, -back / travel));
+      return { step: true, from: [x, edge.top, z], to: [px, py, pz], normal: edge.normal, fall, duration, cross };
+    }
+  }
+  return null;
+}
+export function stepPose(plan, elapsed) {
+  const time = Math.min(plan.duration, Math.max(0, elapsed)), f = time / plan.duration, done = time >= plan.duration;
+  // Level until his body is over the edge, then down, eased in and out, as his weight goes onto the lower foot.
+  const d = Math.min(1, Math.max(0, (f - plan.cross) / (1 - plan.cross))), s = d * d * (3 - 2 * d);
+  return { x: done ? plan.to[0] : plan.from[0] + (plan.to[0] - plan.from[0]) * f, z: done ? plan.to[2] : plan.from[2] + (plan.to[2] - plan.from[2]) * f,
+    y: done ? plan.to[1] : plan.from[1] + (plan.to[1] - plan.from[1]) * s, done };
+}
+/**
+ * Walking (keys, the stick, or a tapped way) at the edge of a low porch: the step down it, when the way ahead on the porch is
+ * shut and he walks out over the edge; null otherwise. The keys, the stick and route.js ask this one question.
+ */
+export function stepOff(walker, x, z, dx, dz) {
+  const l = Math.hypot(dx, dz); if (l < 1e-6) return null;
+  if (!walker.blocked(x + (dx / l) * 0.1, z + (dz / l) * 0.1)) return null;   // the porch goes on that way: walk on
+  return findStep(walker, walker.drops || [], x, z, dx, dz);
+}
