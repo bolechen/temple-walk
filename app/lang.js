@@ -3,6 +3,7 @@
 // The loading bar (loading.js), a plain script, finds `t` on the window.
 import { t, localize, lang, setLang } from "./src/i18n.js";
 import { peekRelang, withoutPose } from "./src/relang.js";
+import { carryIn } from "./src/carry-page.js";
 
 localize(document);
 // Opened by a change of language in the pause menu (#140): the title is covered by a sheet that says, in the new
@@ -26,3 +27,5 @@ const bindLang = () => document.querySelectorAll("[data-lang]").forEach((b) => {
   });
 });
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bindLang); else bindLang();
+// A link that carries a save from another place (#338, src/carry-page.js): asked about over the title, before the walk is begun.
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => carryIn()); else carryIn();
