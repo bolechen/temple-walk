@@ -19,7 +19,7 @@
 // middle would hold that too, but it would bring the eye down to his hip by every wall, under a stair's cheek).
 export function frameArm(frame, fov, aspect, at = 6.2, h = 1.3) {
   const tv = Math.tan((fov * Math.PI) / 360);
-  return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h };
+  return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h, tv, ny: frame.ny, hold: frame.hold };   // (tv, ny, hold: to tell whether all of him fits the picture, `fitRise`)
 }
 export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = DEFAULT_ARM, space = null }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = arm ? eyeY + arm.h : eyeY + 1.18;
@@ -30,6 +30,9 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   // it may: past that it is not a platform's edge but a terrace wall or a flight of stairs far above him, and an eye
   // sent up it stands metres over his head and loses him below the frame. Such a point is closed to the eye, as a wall is.
   const MAXRISE = 1.5;
+  // How much higher still it may go to hold all of him in the picture when it is held in near him (`fitRise`): as far again
+  // as a grown person lifts a camera over their head, 1.8 m (#515; the T00 lead asked for 1.5 to 2 m on MAXRISE's lines).
+  const FIT_RISE = 1.8;
   const rise = (px, y, pz) => { const under = walker.landAt(px, pz); return under + 0.35 + Math.max(0, under - foot) * 1.6 - y; };
   // (An arm, B's or A's, also keeps the near plane off a porch's railing, as the director's swings do: straight behind
   // him on a balcony it would otherwise come down to the rail's top.)
@@ -130,7 +133,22 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
     // beyond a wall that stops it is none of its business.
     const y = base(dist, sd)[1]; let L = 0;
     for (let s = Math.max(0, dist - 0.5); s <= Math.min(dist + 1.0, Math.max(d, dist)) + 1e-6; s += 0.25) L = Math.max(L, need(s, sd, y));
-    return Math.min(L, MAXRISE);
+    L = Math.min(L, MAXRISE);
+    return stop && dist <= d + 1e-6 ? Math.max(L, fitRise(dist, sd, L)) : L;
+  };
+  // Held in so near him that the whole of him no longer fits the picture (#515: by the ink-stone pool the bamboo holds the arm
+  // at 1.25 m, and his feet fell out of the frame), the eye rises where it stands and looks down at him until his feet and
+  // the top of his head are inside it with 5% to spare, as a person stepping back against a hedge lifts the camera over
+  // their head. At most `FIT_RISE` over where it would stand, and never up into anything drawn or kept out.
+  const fits = (b, y) => {
+    const h = Math.hypot(b[0] - x, b[2] - z) || 1e-3, a = (py) => Math.atan2(py - y, h), pitch = a(foot + arm.hold) - Math.atan(arm.ny * arm.tv);
+    return Math.tan(a(foot + 1.22) - pitch) / arm.tv <= 0.9 && Math.tan(a(foot) - pitch) / arm.tv >= -0.9;
+  };
+  const fitRise = (dist, sd, from) => {
+    if (!arm?.tv) return 0;
+    const b = base(dist, sd);
+    for (let k = from; k <= from + FIT_RISE + 1e-6; k += 0.1) { if (fits(b, b[1] + k)) return k; if (drawn(b[0], b[1] + k + 0.1, b[2])) return k; }
+    return from + FIT_RISE;
   };
   const open = space && arm ? (dist, sd = s0) => !shutAt(dist, sd) : (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
   // The floor the eye must never be under, at a distance: whatever is there to stand on, and a hand's breadth.
