@@ -588,7 +588,9 @@ export function buildHall(M, opts) {
       benchParts.push(part(mid, len, 0.05, 0.05, ry - 0.05, rc), part(mid, len, 0.07, 0.06, top + 0.1, rc), part(mid, 0.03, 0.03, ry - 0.05 - top - 0.16, top + 0.16, rc));
       for (const t of [a + 0.02, mid, b - 0.02]) benchParts.push(part(t, BENCH.post * (t === mid ? 1 : 0.5), BENCH.post * (t === mid ? 1 : 0.5), BENCH.rail + 0.04, top, rc));
       for (let k = 1; k < 6; k++) { const t = a + (len * k) / 6; if (Math.abs(t - mid) > 0.1) benchParts.push(part(t, 0.03, 0.03, ry - 0.05 - top - 0.16, top + 0.16, rc)); }
-      walk.posts.push(along === "x" ? { x0: a - BODY, x1: b + BODY, z0: fixed - H / 2 - BODY, z1: fixed + H / 2 + BODY } : { x0: fixed - H / 2 - BODY, x1: fixed + H / 2 + BODY, z0: a - BODY, z1: b + BODY });
+      // Kept off by his width: from the board's inner edge to the rail's outer face (its posts stand proud of the board's edge).
+      const inner = H / 2, outer = Math.max(H / 2, rc + BENCH.post / 2) + 0.01, lo = (c, o) => (o < 0 ? c - outer : c - inner), hi = (c, o) => (o > 0 ? c + outer : c + inner);
+      walk.posts.push(along === "x" ? { x0: a - BODY, x1: b + BODY, z0: lo(fixed, out[1]) - BODY, z1: hi(fixed, out[1]) + BODY } : { x0: lo(fixed, out[0]) - BODY, x1: hi(fixed, out[0]) + BODY, z0: a - BODY, z1: b + BODY });
       const n = Math.max(1, Math.floor(len / BENCH.seatWidth));
       for (let k = 0; k < n; k++) { const t = a + (len * (k + 0.5)) / n, off = BENCH.back; seats.push({ at: along === "x" ? [t, fixed - out[1] * off] : [fixed - out[0] * off, t], out, top }); }
     }
