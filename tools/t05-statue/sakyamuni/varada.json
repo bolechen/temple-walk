@@ -143,9 +143,10 @@
   "poly": 2,
   "clamp": false,
   "blur": 0.12,
-  "inset": 0.12,
+  "inset": 0.3,
   "ease": 0.06,
-  "edgeBlur": 0.025
+  "edgeBlur": 0.025,
+  "note_inset": "the knee's front under the old hand set back to where the left knee's front stands mirrored (z about 1.42 at y 3.4, as the reviewed round 1 had it): the old hand's back blurred stands about 0.3 m before it there"
  },
  "knee_r1": {
   "box": [
