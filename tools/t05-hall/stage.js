@@ -448,6 +448,7 @@ function studio(on) {
   for (const f of figures) for (const m of Object.values(f.painted || {})) { m.userData.envKeep ??= m.envMap; m.envMap = on ? studioEnv : m.userData.envKeep; m.envMapIntensity = on ? 1.0 : 1.6; m.needsUpdate = true; }
   renderer.shadowMap.needsUpdate = true;
 }
+let lastShot = {};   // zoneIds measures under the same light as the last shot (a diffuse shot's lights are put back after it)
 function shoot(s) {
   if (s.mood) setMood(s.mood); if (s.paint !== undefined) paint(s.paint);
   if (s.studio) {
@@ -464,7 +465,7 @@ function shoot(s) {
   } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
   // { light: "diffuse" }: the same view lit only by a hemisphere light, the sun, the doors' light, the floor's fill and the
   // lamp put out, so a form can be told from the shadows the hall's light throws on it (#463, the 3D review's third round)
-  const diffuse = s.light === "diffuse", keep = [];
+  const diffuse = s.light === "diffuse", keep = []; lastShot = s;
   if (diffuse) {
     for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { keep.push([l, l.visible]); l.visible = false; }
     hemi.intensity = s.hemi ?? 2.2; hemi.visible = true;
@@ -568,6 +569,8 @@ function ortho(i, side = "front", z = {}) {
 // and their mean colour on screen, 0–255; call after shoot(), with the same view.
 function zoneIds() {
   const gl = renderer.getContext(), Wd = gl.drawingBufferWidth, Hd = gl.drawingBufferHeight, shown = new Uint8Array(Wd * Hd * 4), id = new Uint8Array(Wd * Hd * 4);
+  const dif = lastShot.light === "diffuse", kept0 = [];
+  if (dif) { for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { kept0.push([l, l.visible]); l.visible = false; } hemi.intensity = lastShot.hemi ?? 2.2; hemi.visible = true; }
   render(); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, shown);
   const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), kept = new Map(), mats = [];
   const haloMat = (i) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(15. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
@@ -577,6 +580,7 @@ function zoneIds() {
   renderer.setRenderTarget(null); renderer.render(scene, camera); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, id);
   renderer.toneMapping = tm; scene.background = bg; sky.visible = sv;
   for (const [o, m] of kept) o.material = m; for (const f of figures) for (const m of f.meshes) if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 0;
+  if (dif) { for (const [l, v] of kept0) l.visible = v; hemi.visible = false; }
   black.dispose(); mats.forEach((m) => m.dispose());
   const code = (k) => (id[k + 1] ? Math.round(id[k] * 16 / 255) * 100 + Math.round(id[k + 1] * 16 / 255) : 0);
   const acc = {};
