@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage-r2.jpg",
+   "bytes": 174392,
+   "sha256": "0bcda69538365f7d7b9d076bfb52e141aadad46acfc4bbdd76acb3b5c0216c14",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 165910,
+   "sha256": "865d8f8794920706a1b0db1227e9a6db50ce271de303836c941647ba4257738c",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "compare-r3.jpg",
+   "bytes": 225588,
+   "sha256": "48984e805879e935a97bab9284c5e6f262a440b9e1ccca743dd7cb3d029f7063",
+   "rev": "d7821e38670d2e5881846082c4651fc5c9b97fb3"
+  },
+  {
+   "path": "views/paifang-front.png",
+   "bytes": 256269,
+   "sha256": "506fb30a90eaa2599fc201c82aa0184187b122ae0ff51b82cd5092fded0d64dc",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/paifang-gate.png",
+   "bytes": 165896,
+   "sha256": "3a88b627ca37b65016c681f81084a1beb794631f630783566df4ac8784b604fd",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/paifang-iso.png",
+   "bytes": 212565,
+   "sha256": "6b5517182dedc475761ee78dbcb4722dbd94704bf83881e0167485db6f3c3e02",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/paifang-low.png",
+   "bytes": 514447,
+   "sha256": "4b2635c476f0e68b9741c5c12048a77fdac4069997a3e46057f6e38ef829cd91",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/paifang-side.png",
+   "bytes": 76704,
+   "sha256": "0e6beabaf4a6326fbf613926ebd4f4a96df2bd5dd477d06ec957e3cea915d58a",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/paifang-top.png",
+   "bytes": 124643,
+   "sha256": "ddc4ec68c2099aee4cd45ddefcc8c24d2f76ff276e1149cc253209ed1d7ff97d",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/paifang-under.png",
+   "bytes": 465230,
+   "sha256": "af777df4c9612930f2156e2b5aeef3ac078f02e04b97cb640451554d68ea276b",
+   "rev": "14858aeac1445fde012189bd56caa4d60048f338"
+  },
+  {
+   "path": "views/r2-paifang-front.png",
+   "bytes": 289056,
+   "sha256": "b08df3666c204c8fcb5495c348ebb50cb8e4d7f22f657266e99b83e5982a1721",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-gate.png",
+   "bytes": 198656,
+   "sha256": "c9df374294113c76b3c2c1475287bebde253e353e628c813970fb8540ee4509f",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-iso.png",
+   "bytes": 260474,
+   "sha256": "7968db76a0ec4f7a6bf66016396db199844eaa6535ffaaf570d928142717f3ba",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-low.png",
+   "bytes": 530593,
+   "sha256": "4b341f406683260425323778d1a9603b88590be1acf7f6f2d64bbcf6c0e87ac0",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-side.png",
+   "bytes": 92311,
+   "sha256": "a9b23eaf7acf92c4c232e7f4ac15348f0cf2e6875273f15717fba15812144c38",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-top.png",
+   "bytes": 141724,
+   "sha256": "104cddaf43876e1777b071c886b2f2ee591f990deb4e73b609f56a57f19c3d98",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r2-paifang-under.png",
+   "bytes": 507242,
+   "sha256": "6762cc69744bb83d65aabac7e1ffd0bb045890c8b449cad11f8a886556bf17d9",
+   "rev": "d92d6a3a8280b05e852943b9f56ba4133867c230"
+  },
+  {
+   "path": "views/r3-paifang-front.png",
+   "bytes": 267605,
+   "sha256": "9a00f5fc73c92ca61eecd92985e3b1b75f9c726012f5ae9227df666266982bd6",
+   "rev": "d7821e38670d2e5881846082c4651fc5c9b97fb3"
+  },
+  {
+   "path": "views/r3-paifang-gate.png",
+   "bytes": 177632,
+   "sha256": "55f4edb5c6e839bcd163a959254926d28d43dcc7d4bd406a27ae86216fa722c0",
+   "rev": "d7821e38670d2e5881846082c4651fc5c9b97fb3"
+  }
+ ]
+}
