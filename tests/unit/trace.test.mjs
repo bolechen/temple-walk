@@ -101,9 +101,10 @@ test("the two Workers each own the API and its Durable Object; a pull request's 
   assert.notEqual(prod.name, canary.name, "different Workers: a Durable Object namespace belongs to its Worker, so their counts never meet");
   for (const c of [prod, canary]) {
     assert.equal(c.main, "worker/index.js"); assert.deepEqual(c.assets.run_worker_first, ["/api/*"], "only the API reaches the script; static files are served as before");
-    assert.deepEqual(c.durable_objects.bindings, [{ name: "TRACES", class_name: "TraceCounter" }]); assert.deepEqual(c.migrations, [{ tag: "v1", new_sqlite_classes: ["TraceCounter"] }]);
+    assert.deepEqual(c.durable_objects.bindings, [{ name: "TRACES", class_name: "TraceCounter" }, { name: "JOYA", class_name: "JoyaShard" }]); assert.deepEqual(c.migrations, [{ tag: "v1", new_sqlite_classes: ["TraceCounter"] }, { tag: "v2", new_sqlite_classes: ["JoyaShard"] }], "the year-end bell's shards (#341) are a second migration: v1 is never edited once deployed");
     assert.ok(fs.existsSync(new URL(`../../${c.main}`, import.meta.url)));
   }
   assert.ok(!preview.main && !preview.durable_objects && !preview.migrations, "the preview Worker has no script and no counter");
   assert.match(fs.readFileSync(new URL("../../worker/index.js", import.meta.url), "utf8"), /export class TraceCounter\b/);
+  assert.match(fs.readFileSync(new URL("../../worker/index.js", import.meta.url), "utf8"), /export class JoyaShard\b/);
 });

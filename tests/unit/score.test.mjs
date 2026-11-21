@@ -1,6 +1,6 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
-import { MODE, THEME, hz, inMode, sealNote, ZONES, zoneBounds, zoneOf, createZoneKeeper, moodMusic, makePhrase, createConductor, rng, step, RANGE, FADE, SECTION_LEVEL, endingPhrase, ENDING, COMPLETE_AFTER, titlePhrase, TITLE_LEAD } from "../../app/src/score.js";
+import { MODE, THEME, hz, inMode, sealNote, ZONES, zoneBounds, zoneOf, createZoneKeeper, moodMusic, makePhrase, createConductor, rng, step, RANGE, FADE, SECTION_LEVEL, joyaZone, endingPhrase, ENDING, COMPLETE_AFTER, titlePhrase, TITLE_LEAD } from "../../app/src/score.js";
 const { buildSite, SITE, LEVELS, APPROACH, SCREEN } = await import("../../app/src/site.js");
 import * as THREE from "three";
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -227,4 +227,11 @@ test("the title's phrase, begun over the stair's music, is not cut, and the gate
 test("wherever the title can rise, he is already in the gate's music", async () => {
   const { GATE } = await import("../../app/src/opening.js");
   for (let z = GATE.zN + 0.05; z < GATE.zS; z += 0.25) for (let x = -GATE.x + 0.05; x < GATE.x; x += 0.5) assert.equal(zoneOf(x, z, false, B), "gate", `the title may rise at ${x.toFixed(1)}, ${z.toFixed(1)}, which is not the gate's place`);
+});
+
+test("the year-end bell's night: the bell's court and the terraces play only the held fifth (#341)", () => {
+  assert.equal(joyaZone("court"), "joya"); assert.equal(joyaZone("upper"), "joya");
+  for (const z of ["grove", "stair", "gate", "hall", "summit"]) assert.equal(joyaZone(z), z);
+  assert.equal(SECTION_LEVEL.joya, SECTION_LEVEL.hall);
+  for (let seed = 1; seed < 20; seed++) { const p = makePhrase("joya", { r: rng(seed), mood: moodMusic("winter", "night"), seals: 0, first: false }); assert.deepEqual([...new Set(p.events.map((e) => e.voice))], ["pad"], "no melody, no string"); }
 });

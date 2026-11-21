@@ -23,6 +23,7 @@ import { WEB } from "./channel.js";
 import { WISHES, decodeLamp, lampLink } from "./wishes.js";
 import { drawLampCard, fitLines } from "./lampcard.js";
 import { processedLine } from "./credits.js";
+import { createJoya } from "./joya-ui.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -122,6 +123,8 @@ export function createGame(y) {
   // ---- Words on the page ----
   let sayTimer = 0;
   const say = (text, secs = 5) => { const el = $("say"); if (!el) return; el.textContent = text; el.classList.add("on"); clearTimeout(sayTimer); sayTimer = setTimeout(() => el.classList.remove("on"), secs * 1000); };
+  // The year-end bell (#341): on the last night of the year every stroke of the bell tower's bell counts toward the mountain's.
+  createJoya({ y, ui, say, query: Q, bench: BENCH });
   function earned(id) {
     if (rite && rite.id === id) rite.done = true;
     track("demo.seal", { id, count: journey.count() });
