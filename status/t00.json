@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-21T13:37:21.208Z",
+  "generated_at": "2026-11-21T13:39:10.258Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
     "sha": "be29654bff2c83aa2f1ed26b4639e10a4e7f4cc5",
@@ -591,10 +591,10 @@
   },
   "deployment": {
     "status": "not_current",
-    "sha": "2807f903c01e5a116cb71e544f03f4d1cc37053a",
+    "sha": "440509acd64aee33ace20dfc54ca71115c3d9bf6",
     "target": "canary",
     "url": "https://temple-walk-canary.bole-chen.workers.dev/",
-    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44906837557"
+    "run_url": "https://github.com/bolechen/temple-walk/actions/runs/44908741162"
   },
   "independent_review": {
     "schema_version": "1.0",
