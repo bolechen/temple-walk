@@ -1,0 +1,306 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage-505.jpg",
+   "bytes": 374585,
+   "sha256": "9914feebf26c70436c3620769c07b9ce46ee1db01a23427a79dabc962269d63d",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "sheets/cam02-16-moods.jpg",
+   "bytes": 310755,
+   "sha256": "3ad38daecf29883f976f10b0f4cb64a081121066f1252f4d76b9a3b346d3f940",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "sheets/phone-low-cam02-main-vs-505.jpg",
+   "bytes": 116824,
+   "sha256": "b56c8d545c08c02dadbace54d829b50ed97da1c5fe998a71838a44c462395d51",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "sheets/t05-main-vs-505.jpg",
+   "bytes": 208231,
+   "sha256": "31b34ad427a444b76f4a036217401297addf4578c960fd22b92bd9329cd68453",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "sheets/third-person-1to1-main-vs-505.jpg",
+   "bytes": 146721,
+   "sha256": "83416785b3a13803fc513554f6c5868445d429e7cd2d66e8d5ee2367e5b22fdc",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "sheets/winter-cam02-main-vs-505-crop.jpg",
+   "bytes": 198444,
+   "sha256": "d0683b8035b9c3e96a441082db48d3689819928c655e74e0b5bb5c8f84ad7dad",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art1_summer-dawn.png",
+   "bytes": 3001595,
+   "sha256": "9c83ae62e5f096688bf7841b2b2521018ae6dec88dff6c2a145a650885ffa8cb",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art1_summer-dawn_base.png",
+   "bytes": 2997325,
+   "sha256": "159da5d2cf07df3de79952caa938b7fec7b81d8be1071dd510b11bed9358a70c",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art5_summer-day.png",
+   "bytes": 2513142,
+   "sha256": "f56b67305da63d7dcf2d3ff980489b5988221c6703152d1a5911ecfa8652c838",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art5_summer-day_base.png",
+   "bytes": 2511409,
+   "sha256": "967c29cb0eb314afcf7c2b509e44e8aabbb2c15db2ba5394f2514545e15351ba",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art5_summer-day_third.png",
+   "bytes": 2823789,
+   "sha256": "aaaf4441b247cd8f0a276080cc69339df1e419e9bc717e9b67bcb596fd0ea5c6",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art5_summer-day_third_base.png",
+   "bytes": 2819144,
+   "sha256": "6260b09a06563b7955e4bf177a0e3e5b69d5d1f7e110d956c0e0af2393daf609",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art5_summer-dusk.png",
+   "bytes": 2042901,
+   "sha256": "37317a735b6e0b302cb419abe52e61d7175aef25dda6126d05dbcded60f07e77",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/art5_summer-dusk_base.png",
+   "bytes": 2044469,
+   "sha256": "6fb32b25a10c35911416f565af3e45646d4f032435c32adf8dd01c16936cdf78",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam01_summer-day.png",
+   "bytes": 3387504,
+   "sha256": "a271481a5b6f106554012d4b3c06061bef5ca6e823f96c4667367b24bd20085c",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam01_summer-day_base.png",
+   "bytes": 3384590,
+   "sha256": "45aeb8ad374c8e782896156f7be91ab67a5fa1b575bcac5a0ed0d4a5bb73417e",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam02_summer-day.png",
+   "bytes": 3165462,
+   "sha256": "e1c48da4bcd00b9b37ab46832e3f092e3c6e1b5168173455f5163a1c1b9227a4",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam02_summer-day_base.png",
+   "bytes": 3153170,
+   "sha256": "e5eb4b2bc27c1b5ed8b88dad561f2289fa0b077f1bb98c8bc6c30782467bb027",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam02_summer-day_third.png",
+   "bytes": 3313275,
+   "sha256": "6758c8329762cbefd36ca0cb2f7eaff455b8ffbb55fb8fd9607e46f3e4c97939",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam02_summer-day_third_base.png",
+   "bytes": 3306818,
+   "sha256": "caf3c87372734dc5a15be81d2444362fa1e804cd96e0d25b48788489839d8169",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam02_winter-day.png",
+   "bytes": 3293137,
+   "sha256": "a6cd7fc72802444b5cdcb7f9cb687167330aa1ae788237b693a7a84be7a97a9a",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/cam02_winter-day_base.png",
+   "bytes": 3293177,
+   "sha256": "60b968b794360c5e08d45da756db9214891b36a02b0f589ee29a4bd5af58634a",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/firstcourt-stair_summer-day_505.png",
+   "bytes": 2347310,
+   "sha256": "e0c95fec2b0a5b953907fa9cc9eed7b0cdf7264306544e820784c543c3aba109",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/firstcourt-stair_summer-day_main.png",
+   "bytes": 2342265,
+   "sha256": "813dd75decf80e3d0fa40c0fa2d3ab68e164ac89e3f2c5e6dc914f7f9150c38d",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/hall-back-stair_summer-day_505.png",
+   "bytes": 2592972,
+   "sha256": "fa84ec4eb0e5e7dcff5e7ce1b5448c519979e6c94aaf6bb15dc614fa1d852a27",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/hall-back-stair_summer-day_main.png",
+   "bytes": 2585406,
+   "sha256": "e6aa371a6917c4575fd855081d33139a12cf310aa9d85ee38a2c1f13b211f232",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_autumn-dawn.png",
+   "bytes": 1603569,
+   "sha256": "6c70bbdffaf087af5389ff4e325122c9ec2192cea525b67dcf27e64600213e30",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_autumn-day.png",
+   "bytes": 1708014,
+   "sha256": "f4bdb7067fb49b13825711da50bd96f885b8fe6d5c53342976944a5ad9dddb5d",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_autumn-dusk.png",
+   "bytes": 1376151,
+   "sha256": "1bdb11dd49fa79e036d06381ab4fca91601e32d3ddbee55efa648d2d745c6253",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_autumn-night.png",
+   "bytes": 1301273,
+   "sha256": "1d2a8f62869b59c1c34275fe51f636a913dbb20c71ad870ad39a2f4f2428cbd6",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_spring-dawn.png",
+   "bytes": 1589710,
+   "sha256": "c167cbf5c287a83b9ee5ef0fe9b8c7cd64e3cda1c7355cdd7a448287010bc8b1",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_spring-day.png",
+   "bytes": 1697090,
+   "sha256": "caa66c1c3ce01a064e61915af58468a31c82e092f9ab9de62ce1635674833def",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_spring-dusk.png",
+   "bytes": 1377104,
+   "sha256": "6c9d922166870ec90b569e97d48c140b4ff3e318c083aee60c01f340c0a81f3e",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_spring-night.png",
+   "bytes": 1308893,
+   "sha256": "2c3aa3caf408fd51ce966d307a66ad8a7a7428e23382fb0fd63f8ff9a1f73ad1",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_summer-dawn.png",
+   "bytes": 1701076,
+   "sha256": "e0d4c120fef053440f17d394e1a281e34e5078de5c85708d7ec76f3debbee3e8",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_summer-day.png",
+   "bytes": 1426779,
+   "sha256": "8cfab6a88f5dbb12646c65221609207df9d57433db6b7022a7e9b7fa7d2bcaab",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_summer-dusk.png",
+   "bytes": 1316659,
+   "sha256": "3b5f26bea21ba3a17ab9b5cb4f2535d35703c5e70716041cbcb16a711ad0c242",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_summer-night.png",
+   "bytes": 1247498,
+   "sha256": "9fbdff6844d620f76ff7b7dfc40b98398ee99a1b26fe01bd2e98c3048ac9f86c",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_winter-dawn.png",
+   "bytes": 1625055,
+   "sha256": "8f62230d599ef25f94128fb81e30f8812c0807674eb808cf4339a9146a12e492",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_winter-day.png",
+   "bytes": 1488533,
+   "sha256": "0262ea7450d533800194feb8f19c4ed85819ff9c925d5175e83af1d532c610f6",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_winter-dusk.png",
+   "bytes": 1317812,
+   "sha256": "ef0e71c00fe19235f6d7983d304eb976be56d966f6404faad42789ebbd7e8149",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/mood_cam02_winter-night.png",
+   "bytes": 1377962,
+   "sha256": "6172ca62d920b7460709138bae01a942fb27b58c9aff191cb7bb14a3c593853e",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/phone-low_cam02_505.png",
+   "bytes": 400657,
+   "sha256": "ed2963ec67339d6c46d13c58c83f6d7254ccf64981e60908ac1c9336133b5f13",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/phone-low_cam02_main.png",
+   "bytes": 399216,
+   "sha256": "4f16736eadf9271c99649bb996f484181999fd2640482b4f4c9d0d2ba3b4ea0d",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/t05_a-tall_505.png",
+   "bytes": 2559731,
+   "sha256": "79bca9a14eb7231a5977ca8c42c973884bcc9147bc3fe77d0f8fdd06fb5b8b50",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/t05_a-tall_main.png",
+   "bytes": 2557868,
+   "sha256": "4b0c608ea8da4449eb47df8b27b7117bef025673327a15ba37679a7ddf4e7991",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/t05_b_505.png",
+   "bytes": 2476418,
+   "sha256": "3f9db8ca26abb858873915841dfa19df1faaa76e1de77e4723f2f1560323b097",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/t05_b_main.png",
+   "bytes": 2472605,
+   "sha256": "e8449249dc8e3b5c19f9ef87cdd274282da787f8fed2f6a9559a3c5321c32b75",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/t05_flight-close_505.png",
+   "bytes": 2424360,
+   "sha256": "935e73b856ac4a47616e670344f63b67f9dcd0c0faa4fda5f7290c76416aaf1f",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  },
+  {
+   "path": "t4/t05_flight-close_main.png",
+   "bytes": 2418152,
+   "sha256": "c03b8b5dc0f63625ee60edc8b54e032536d1e0d47d9349badf08e57685e57b66",
+   "rev": "15a7e8322deee27a728c4384f4fb33cc882dabce"
+  }
+ ]
+}
