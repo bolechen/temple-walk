@@ -13,8 +13,8 @@ import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 
-/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
-export const PLATFORM = Object.freeze({ w: 55.8, d: 25.91, h: 3.0, zS: 0.4 });
+/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns; 0.2 m deeper here (26.11), so that its back edge holds the back wall now 1.0 m thick and wrapping its 0.81 m columns (#493). */
+export const PLATFORM = Object.freeze({ w: 55.8, d: 26.11, h: 3.0, zS: 0.4 });
 /** The terrace before it (SITE.md §3.1, S10/S22, a summary: about 37 × 15 m), from the platform's south edge. */
 export const TERRACE = Object.freeze({ w: 37, d: 15, zN: 0.4, zS: 15.4 });
 /** The flight up the terrace's middle (SITE.md §6: proposed 8–10 m wide, about 18 steps; stairGeo lays 0.18 m steps, so 17). */

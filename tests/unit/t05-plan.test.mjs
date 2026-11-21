@@ -20,7 +20,7 @@ const file = ensure(prepare(level)), decoded = decode(file.bytes, (b) => inflate
 const old = createWalker(site), walker = createGridWalker(createWalker(site), gridsByPlace(decoded), { doors: site.halls });
 
 test("the platform, the terrace and the flight are SITE.md's sizes, the court's paving at 0 and the floors at +3", () => {
-  assert.deepEqual([PLATFORM.w, PLATFORM.d, PLATFORM.h, PLATFORM.zS], [55.8, 25.91, 3.0, 0.4]);      // SITE.md §1.1, §3.1 (S03, S10)
+  assert.deepEqual([PLATFORM.w, PLATFORM.d, PLATFORM.h, PLATFORM.zS], [55.8, 26.11, 3.0, 0.4]);      // SITE.md §1.1, §3.1 (S03, S10: 25.91 deep), 0.2 m deeper to hold the back wall (#493)
   assert.deepEqual([TERRACE.w, TERRACE.d, TERRACE.zN, TERRACE.zS], [37, 15, 0.4, 15.4]);             // SITE.md §1.1, §3.1 (a summary)
   assert.equal(FLIGHT.rise, PLATFORM.h); assert.ok(FLIGHT.w >= 8 && FLIGHT.w <= 10, "SITE.md §8: 8–10 m wide");
   const { count, height } = stairProfile(FLIGHT.rise);
@@ -79,6 +79,7 @@ test("the great hall: nine bays at ARCHITECTURE.md's widths, 28 eave columns, th
   assert.ok(Math.abs(h.roof.eave - 11.81) < 0.01 && Math.abs(h.roof.ridge - 21) < 0.01, "eave about +11.8, ridge about +21 from the court");
   assert.ok(Math.abs(h.roof.EX - h.roof.rx - (h.roof.EF - h.roof.EB) / 2) < 1e-9, "the ends are hipped at 45°: one roof of four slopes and five ridges");
   assert.ok(OUTER.zB > PLATFORM.zS - PLATFORM.d, "the back wall stands on the platform");
+  assert.ok(HALL.out - HALL.colR >= 0.05 - 1e-9 && HALL.wall >= 1.0, "the end and back walls wrap their columns, 0.05 m over them, and are 1.0 m thick at least (ARCHITECTURE.md §4.2)");
   // The front columns stand out of the front wall more than half round, so that the nine bays read (#425's review).
   assert.ok(HALL.front < 0 && HALL.front > -HALL.colR, "the front wall's face lies behind the column line");
   // The doors and windows share one head line, and the ridge is a narrow, tall course with its end ornaments.
@@ -135,7 +136,7 @@ test("he walks into the hall across the threshold, to stations C, D, E and F, al
     if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zWall) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
     else assert.ok(walker.blocked(mid(i), zWall), `the ${kind} in bay ${i} is not walked through`);
   });
-  for (const [x, z] of [[XS[0] + 0.3 - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
+  for (const [x, z] of [[XS[0] + HALL.out - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
 });
 
 test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil", () => {

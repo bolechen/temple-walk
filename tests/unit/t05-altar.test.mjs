@@ -18,8 +18,8 @@ const level = await loadLevel("t05"), site = buildSite(M), hall = buildHall(M), 
 const file = ensure(prepare(level)), decoded = decode(file.bytes, (b) => inflateRawSync(b));
 const walker = createGridWalker(createWalker(site), gridsByPlace(decoded), { doors: site.halls });
 const top = HALL.floor + ALTAR.h, mid = (i) => (XS[i] + XS[i + 1]) / 2;
-// The walls' inner faces (hall.js: the wall 0.9 thick, its outer face 0.3 m beyond the column line; the front wall's face just behind its line).
-const IN = { x: XS[XS.length - 1] + 0.3 - HALL.wall, zF: ZS[0] + HALL.front - HALL.wall, zB: ZS[ZS.length - 1] - 0.3 + HALL.wall };
+// The walls' inner faces (hall.js: the wall HALL.wall thick, its outer face HALL.out beyond the column line; the front wall's face just behind its line).
+const IN = { x: XS[XS.length - 1] + HALL.out - HALL.wall, zF: ZS[0] + HALL.front - HALL.wall, zB: ZS[ZS.length - 1] - HALL.out + HALL.wall };
 // cam03's eyes as the page has them (third person, upright third person, first person: __frame() on #425's commit).
 const EYES = [[0, 3.66, 6.57], [0, 3.8, 6.58], [0, 4.3, 0.6]];
 

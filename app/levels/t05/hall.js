@@ -21,7 +21,8 @@ export const HALL = Object.freeze({
   column: 6.06,          // column height (S04, 234 small cun, converted)
   colR: 0.405,           // an eave column's radius at its foot, 0.81 m across, a little less at its head (the structural review of #432: the Yingzao Fashi's hall columns are two cai two zhi to three cai across, chapter 5, read; a first-grade cai, chapter 4, is 28 or 29 cm by two second-hand readings, and 0.81 sits in the band at either: the T05 lead's choice)
   innerR: 0.42,          // an inner column's, 0.84 m (three cai, 45 fen: it is 2.7 m taller than the eave columns; the review's choice)
-  wall: 0.9,             // the walls' thickness, their outer face 0.3 m outside the column line (ARCHITECTURE.md §4.2: 1.0–1.5 m, a proposal; thinner here so the platform's back edge holds it)
+  wall: 1.0,             // the walls' thickness (ARCHITECTURE.md §4.2: 1.0–1.5 m, a proposal), the thinnest that keeps the end and back walls' columns inside them
+  out: 0.46,             // how far the end and back walls' outer face lies outside the column line: over the 0.81 m columns by 0.05 m, as a Liao hall's thick walls wrap them (the T05 lead on #493)
   front: -0.05,          // but the front wall's outer face lies just behind its column line, so that the ten front columns stand out of it more than half round and the nine bays read (the review of #425); the end and back walls keep the columns in, as this hall's thick walls do
   eave: 11.81,           // the eave's edge above the court: platform 3 + column 6.06 + bracket sets 2.75 (SITE.md §4.2)
   ridge: 21.0,           // the ridge above the court (SITE.md §1, about +21)
@@ -51,17 +52,17 @@ export const FRONT = Object.freeze(["wall", "window", "window", "door", "door", 
 /** The column lines across (x, west to east) and front to back (z, front first). */
 export const XS = Object.freeze(BAYS.reduce((a, w) => [...a, a[a.length - 1] + w], [-BAYS.reduce((s, w) => s + w, 0) / 2]));
 export const ZS = Object.freeze(Array.from({ length: HALL.rows + 1 }, (_, i) => -(HALL.depth * i) / HALL.rows));
-/** The hall's outer faces: the walls' outside, 0.3 m beyond the column lines. */
-export const OUTER = Object.freeze({ x: XS[XS.length - 1] + 0.3, zF: HALL.front, zB: -HALL.depth - 0.3 });
+/** The hall's outer faces: the walls' outside, HALL.out beyond the column lines. */
+export const OUTER = Object.freeze({ x: XS[XS.length - 1] + HALL.out, zF: HALL.front, zB: -HALL.depth - HALL.out });
 
 /** The hall's meshes (by material) and what the written plan's walker is told of it. */
 export function buildHall(M) {
   const H = HALL, y0 = H.floor, top = y0 + H.column, X = XS[XS.length - 1], zB = ZS[ZS.length - 1];
-  const wallIn = H.wall - 0.3;   // how far the wall's inner face lies inside the column line
+  const wallIn = H.wall - H.out;   // how far the wall's inner face lies inside the column line
   const plaster = [], wood = [], woodZ = [], dark = [], mural = [], walk = { solids: [], decks: [], posts: [] };
   // The hall's own floor, a thin course laid over the platform's top within the walls: the platform's top is one face from
   // edge to edge, which the inside's shut-out sky (`shut` below) cannot reach at its corners; this one lies all inside.
-  const inZ0 = ZS[ZS.length - 1] - 0.3 + H.wall, inZ1 = ZS[0] + H.front - H.wall, inX = XS[XS.length - 1] + 0.3 - H.wall;
+  const inZ0 = ZS[ZS.length - 1] - H.out + H.wall, inZ1 = ZS[0] + H.front - H.wall, inX = XS[XS.length - 1] + H.out - H.wall;
   const floor = [box(2 * inX, 0.02, inZ1 - inZ0, 0, y0 + 0.01, (inZ0 + inZ1) / 2)];
   // Columns: every crossing of the outer lines, ten across the front and the back and four more up each end.
   const columns = [];
@@ -73,7 +74,7 @@ export function buildHall(M) {
   const along = (x0, x1, zc, a, b) => { if (x1 - x0 > 0.01 && b - a > 0.01) plaster.push(box(x1 - x0, b - a, H.wall, (x0 + x1) / 2, y0 + (a + b) / 2, zc)); };
   const across = (z0, z1, xc, a, b) => plaster.push(box(H.wall, b - a, z1 - z0, xc, y0 + (a + b) / 2, (z0 + z1) / 2));
   const solid = (x0, x1, z0, z1) => walk.solids.push({ x0: x0 - BODY, x1: x1 + BODY, z0: z0 - BODY, z1: z1 + BODY, eyeTop: top + 0.3 });
-  const zcF = ZS[0] + H.front - H.wall / 2, zcB = zB - 0.3 + H.wall / 2, xc = X + 0.3 - H.wall / 2;
+  const zcF = ZS[0] + H.front - H.wall / 2, zcB = zB - H.out + H.wall / 2, xc = X + H.out - H.wall / 2;
   const fz0 = zcF - H.wall / 2, fz1 = zcF + H.wall / 2;
   // The front, bay by bay: a door is an opening with a sill to step over; a window an opening over a sill wall, barred;
   // the end bays are wall. Each opening fills its bay between two wooden jambs, under a wooden head on the doors' line, so
@@ -99,7 +100,7 @@ export function buildHall(M) {
   // The back wall, its middle bay a door kept shut (the way round behind the altar is not opened, PRD.md §1.5); the two end walls.
   along(XS[0], X, zcB, 0, H.column); solid(XS[0], X, zcB - H.wall / 2, zcB + H.wall / 2);
   dark.push(box(H.door.w, H.door.h, 0.06, 0, y0 + H.door.h / 2, zcB + H.wall / 2 + 0.03));
-  for (const s of [-1, 1]) { across(zB - 0.3, ZS[0] + H.front, s * xc, 0, H.column); solid(s * xc - H.wall / 2, s * xc + H.wall / 2, zB - 0.3, ZS[0] + H.front); }
+  for (const s of [-1, 1]) { across(zB - H.out, ZS[0] + H.front, s * xc, 0, H.column); solid(s * xc - H.wall / 2, s * xc + H.wall / 2, zB - H.out, ZS[0] + H.front); }
   for (const [x, z] of columns) walk.posts.push({ x0: x - H.colR - BODY, x1: x + H.colR + BODY, z0: z - H.colR - BODY, z1: z + H.colR + BODY });
 
   // The roof: four slopes from the eave's edge to the ridge, the ends hipped at 45°, with the dark of its underside
@@ -134,22 +135,29 @@ export function buildHall(M) {
   const BR = H.bracket, lt = H.lintel, cap = top + 0.2;
   /** @type {[boolean, number, number, readonly number[], number][]} */
   const sides = [   // [along x?, the column line's z or x, outward sign, the column positions along it, the wall's outer face off the line]
-    [true, ZS[0], 1, XS, H.front], [true, zB, -1, XS, 0.3], [false, XS[0], -1, ZS, 0.3], [false, X, 1, ZS, 0.3],
+    [true, ZS[0], 1, XS, H.front], [true, zB, -1, XS, H.out], [false, XS[0], -1, ZS, H.out], [false, X, 1, ZS, H.out],
   ];
   for (const [ax, at, out, pos, off] of sides) {
     const a = pos[0], b = pos[pos.length - 1], len = Math.abs(b - a), mid = (a + b) / 2, face = at + out * off;
     // The wall rises to the roof's underside over its inner face, which is higher than over its outer face (the roof
     // climbs inward): stopped at the outer face's height it left a slit along every wall's top that the sun came in by
     // (the hall's inside lit in diagonal bands). Its top above the outer face stays inside the roof's own thickness.
-    const inside = at + out * (off - H.wall), wallUp = ax ? underAt(0, inside) : underAt(inside, zm);
+    // (Over the front, where the hips come down to its ends, the wall above the cap board keeps the 0.9 m it had: a metre
+    // thick, its flat top over the inner face would stand out through the hipped corners.)
+    const T = ax && out > 0 ? 0.9 : H.wall;
+    const inside = at + out * (off - T), wallUp = ax ? underAt(0, inside) : underAt(inside, zm);
     const put = (list, w, h, d, u, y, v) => list.push(ax ? box(w, h, d, u, y, v) : box(d, h, w, v, y, u));
     const list = ax ? wood : woodZ;
     put(list, len, lt, 0.4, mid, top - lt / 2, face + out * 0.1);                       // the tie-beam, proud of the wall
     put(list, len + 0.8, 0.2, H.wall + 0.3, mid, top + 0.1, at + out * (off - H.wall / 2 + 0.15));   // the cap board
-    put(plaster, len, wallUp - cap, H.wall, mid, (cap + wallUp) / 2, at + out * (off - H.wall / 2));  // the wall between the brackets, up to the roof
+    // the wall between the brackets, up to the roof: in two leaves, the inner up to the underside over the inner face, the
+    // outer to the underside over the wall's middle, so that over a wall a metre thick neither rises out through the roof
+    const midLine = at + out * (off - T / 2), midUp = ax ? underAt(0, midLine) : underAt(midLine, zm);
+    put(plaster, len, wallUp - cap, T / 2, mid, (cap + wallUp) / 2, at + out * (off - (3 * T) / 4));
+    put(plaster, len, midUp - cap, T / 2, mid, (cap + midUp) / 2, at + out * (off - T / 4));
     // Inside the back and end walls, their whole height, the dark ground the murals are painted on (ARCHITECTURE.md §7.2:
     // darker and greyer than the timber's colours), so that seen from the court through the doors the hall is dark.
-    if (off > 0) put(mural, len - 2 * (H.wall - 0.3), wallUp - y0, 0.04, mid, (y0 + wallUp) / 2, at - out * (H.wall - off + 0.05));
+    if (off > 0) put(mural, len - 2 * (H.wall - H.out), wallUp - y0, 0.04, mid, (y0 + wallUp) / 2, at - out * (H.wall - off + 0.05));
     const sets = []; pos.forEach((p, i) => { sets.push(p); if (i < pos.length - 1) sets.push((p + pos[i + 1]) / 2); });
     for (const u of sets) {
       for (let k = 0; k < BR.tiers; k++) {                                               // out under the eave
@@ -212,9 +220,9 @@ export function buildHall(M) {
     // How much of the sky reaches a point: under the roof and inside the walls, little (the white box's stand-in for the
     // occlusion a closed hall has, which a mesh's own baked occlusion does not see); outside, all of it. Handed to
     // geo.mesh's `ao`, so that from the court the doorways read darker than the wall (the review of #425).
-    shut: (x, y, z) => (Math.abs(x) < X + 0.3 - H.wall + 0.02 && z < ZS[0] + H.front - H.wall + 0.02 && z > zB - 0.3 + H.wall - 0.02 && y > y0 - 0.01 ? H.inside : 1),
+    shut: (x, y, z) => (Math.abs(x) < X + H.out - H.wall + 0.02 && z < ZS[0] + H.front - H.wall + 0.02 && z > zB - H.out + H.wall - 0.02 && y > y0 - 0.01 ? H.inside : 1),
     // The same inside as a box the mist does not fill (fog.js, FOGSHUT): from the floor up to the ridge, within the walls.
-    fogShut: { x0: -(X + 0.3 - H.wall), x1: X + 0.3 - H.wall, z0: zB - 0.3 + H.wall, z1: ZS[0] + H.front - H.wall, y0: y0, y1: H.ridge },
+    fogShut: { x0: -(X + H.out - H.wall), x1: X + H.out - H.wall, z0: zB - H.out + H.wall, z1: ZS[0] + H.front - H.wall, y0: y0, y1: H.ridge },
     // A neutral fill under the roof, so that the white box's frame and floor can be seen from inside (the hall's own
     // light, from its door and its lamps, is phase two: docs/t05/PLAN.md, PRD.md §2.1). [x, y, z, intensity, distance]:
     // the intensity is what it reaches once he is well inside; from the court it is out, so that the doorway reads dark
@@ -223,7 +231,7 @@ export function buildHall(M) {
     // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.depth metres before the
     // threshold, then rising smoothly to FILL.depth metres in (PRD.md §2.1's "how far inside", its cheapest form).
     within: (x, y, z) => {
-      const zF = ZS[0] + H.front, xIn = X + 0.3 - H.wall, zIn = zB - 0.3 + H.wall;
+      const zF = ZS[0] + H.front, xIn = X + H.out - H.wall, zIn = zB - H.out + H.wall;
       if (Math.abs(x) > xIn || z < zIn || z > zF + FILL.depth || y < y0 - 0.5 || y > H.ridge) return 0;
       const t = Math.min(1, Math.max(0, (zF + FILL.depth - z) / (2 * FILL.depth)));
       return t * t * (3 - 2 * t);
