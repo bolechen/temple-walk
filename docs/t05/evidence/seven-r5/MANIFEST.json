@@ -1,0 +1,60 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 310399,
+   "sha256": "9d64c36eaac33b51521e4db7964a4fc325fd771d4d28678b9e90c772a8a60186",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "kanakamuni-front.png",
+   "bytes": 486520,
+   "sha256": "27a6deca7620a7caa4bd73e95b42d3f85c77a30c4ad206906a65814cb2742c0d",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "kanakamuni-half-warm.png",
+   "bytes": 776146,
+   "sha256": "bdb3d58a680888c6484893fec82ebac6d82368d07a3674852d9f334d90ac9936",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "krakucchanda-front.png",
+   "bytes": 474441,
+   "sha256": "650de32e778586688384fe6f8c1c66a219a9f2fb2c7dbdddb7a25c57489cec20",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "krakucchanda-half-warm.png",
+   "bytes": 757825,
+   "sha256": "a0c24a75233a17c1ef243cb06861bb47dc51e90b81e46f50370c6e9b931b4105",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "lineup-row-winter.png",
+   "bytes": 800404,
+   "sha256": "c2e8d21bf2d08a7ada8269b49a74209349d2d75eafb3e7c68d64da9387db9e4e",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "sakyamuni-half-warm.png",
+   "bytes": 923531,
+   "sha256": "221826a033fc9f1809acf56b785ee32232cd14777663067f0a9df6e411c2dd79",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "vipasyin-front.png",
+   "bytes": 507164,
+   "sha256": "33ae58cc17d1c64496afd889ee046bb2c81077a8e6540c420e82fb38c0439db4",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  },
+  {
+   "path": "vipasyin-half-warm.png",
+   "bytes": 844136,
+   "sha256": "b09a4e450ca21a4814d63eb07078c6010f9c2fb3c3d8782dab2fa567f35822b0",
+   "rev": "92992fb727474e65b920b486e8cdd83d0235bc3f"
+  }
+ ]
+}

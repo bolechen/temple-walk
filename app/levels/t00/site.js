@@ -563,7 +563,10 @@ export function buildSite(M) {
     // the bamboo stair with the half-way pavilion at its head, the gate between the screen wall and its steps, the first
     // court behind the novice, the tea table before the tea house, the Guanyin hall up its stair, and the look back from
     // the summit. Each is drawn in the season and hour its picture shows, which the address gives, not the view.
-    art1: [21.4, 78.7, -1.4, 0.2], art2: [2.5, 53.8, -0.18, 0.3], art3: [0, 29, 0, 0.1], art4: [-9.6, 25.0, -0.6, 0.08],
+    // art3 stands a little off the axis, under the north-west maple, so that its trunk and the shade of its crown frame the
+    // left of the picture as the prototype's near cedars do (#467, ART-REVIEW A4; the owner chose this over planting two trees
+    // at the court's south end, 2026-11-21): it is no longer cam06's pose, which stays on the axis.
+    art1: [21.4, 78.7, -1.4, 0.2], art2: [2.5, 53.8, -0.18, 0.3], art3: [-5.2, 31, 0.16, 0.1], art4: [-9.6, 25.0, -0.6, 0.08],
     art5: [0, T2.zS + 5, 0, 0.22], art6: [0, topZ + 7.5 + 0.8, Math.PI, -0.2],
     // Up on the pavilion's top storey, at its door on the axis (the railing's middle bay is open there), looking back
     // south over every roof below (issue #101). A view up on a balcony is named in `viewUp`.

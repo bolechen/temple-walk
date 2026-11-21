@@ -13,24 +13,32 @@ const MAX_LAMPS = 14;
 // they show as the water's mirror and sheen bending, not as lines drawn on it.
 export const RIPPLE = { max: 6, speed: 0.3, life: 2.0, lag: 0.25, width: 0.06 };
 
-export function createGround(scene, shade, censer, paving) {
+export function createGround(scene, shade, censer, paving, trees = []) {
   const rt = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
   const cam = new THREE.PerspectiveCamera(), texM = new THREE.Matrix4();
   // The light map: how far each spot of paving lies from the nearest wall, platform or trunk, worked out once when the
   // place is built and kept as a picture, eight points to the metre. The shader reads it for the soft darkening
   // under eaves and along walls, and for where snow drifts. (It used to walk a list of forty boxes for every pixel,
   // and anything past the fortieth cast nothing.)
-  const SPAN = 3, bake = (list) => {
+  // Crowns are worked out here too: the share of the sky a tree's crown hides from the paving under it, one channel for the
+  // leaved trees (a maple's, a ginkgo's: bare in winter) and one for the evergreens. A crown is a soft disc, denser at the middle,
+  // as wide as the tree stands tall by CROWN's measure; the shader breaks it up into the flecks of light that fall through leaves.
+  const CROWN = { maple: [0.42, 0.62], ginkgo: [0.27, 0.8], cedar: [0.2, 0.85] };   // [radius as a share of the height, how much sky the middle hides]
+  const SPAN = 3, bake = (list, crowns = []) => {
     if (!list.length) list = [{ x0: 0, x1: 0, z0: 999, z1: 999 }];
-    const x0 = Math.min(...list.map((r) => r.x0)) - 3.5, x1 = Math.max(...list.map((r) => r.x1)) + 3.5, z0 = Math.min(...list.map((r) => r.z0)) - 3.5, z1 = Math.max(...list.map((r) => r.z1)) + 3.5;
-    const k = Math.min(8, 1024 / Math.max(x1 - x0, z1 - z0)), W = Math.max(2, Math.ceil((x1 - x0) * k)), H = Math.max(2, Math.ceil((z1 - z0) * k)), data = new Uint8Array(W * H);
+    const all = [...list, ...crowns.map((c) => ({ x0: c.x - c.r, x1: c.x + c.r, z0: c.z - c.r, z1: c.z + c.r }))];
+    const x0 = Math.min(...all.map((r) => r.x0)) - 3.5, x1 = Math.max(...all.map((r) => r.x1)) + 3.5, z0 = Math.min(...all.map((r) => r.z0)) - 3.5, z1 = Math.max(...all.map((r) => r.z1)) + 3.5;
+    const k = Math.min(8, 1024 / Math.max(x1 - x0, z1 - z0)), W = Math.max(2, Math.ceil((x1 - x0) * k)), H = Math.max(2, Math.ceil((z1 - z0) * k)), data = new Uint8Array(W * H * 4);
     const bx = list.map((r) => [(r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, (r.x1 - r.x0) / 2, (r.z1 - r.z0) / 2]);
     for (let j2 = 0; j2 < H; j2++) for (let i2 = 0; i2 < W; i2++) {
       const px = x0 + ((i2 + 0.5) / W) * (x1 - x0), pz = z0 + ((j2 + 0.5) / H) * (z1 - z0); let d = 1e3;
       for (const b of bx) { const dx = Math.abs(px - b[0]) - b[2], dz = Math.abs(pz - b[1]) - b[3]; const v = Math.hypot(Math.max(dx, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dz), 0); if (v < d) d = v; }
-      data[j2 * W + i2] = Math.max(0, Math.min(255, Math.round(((d + 0.5) / SPAN) * 255)));
+      const o = (j2 * W + i2) * 4; data[o] = Math.max(0, Math.min(255, Math.round(((d + 0.5) / SPAN) * 255))); data[o + 3] = 255;
+      let leaf = 0, ever = 0;
+      for (const c of crowns) { const q = Math.hypot(px - c.x, pz - c.z) / c.r; if (q >= 1) continue; const v = c.k * (1 - q * q) ** 1.5; if (c.ever) ever = 1 - (1 - ever) * (1 - v); else leaf = 1 - (1 - leaf) * (1 - v); }
+      data[o + 1] = Math.round(leaf * 255); data[o + 2] = Math.round(ever * 255);
     }
-    const tex = new THREE.DataTexture(data, W, H, THREE.RedFormat); tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.unpackAlignment = 1; tex.needsUpdate = true;   // one byte a point: rows are not padded to four
+    const tex = new THREE.DataTexture(data, W, H, THREE.RGBAFormat); tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.needsUpdate = true;   // red: the distance to the nearest wall; green and blue: the crowns
     return { tex, box: new THREE.Vector4(x0, z0, 1 / (x1 - x0), 1 / (z1 - z0)) };
   };
   // One paving shader, used by the entrance court (with the mirror) and by the terraces (without).
@@ -40,12 +48,12 @@ export function createGround(scene, shade, censer, paving) {
   // The rings now spreading, shared by every stretch of paving: (x, z, age in seconds, height of the stone).
   const rip = { value: Array.from({ length: RIPPLE.max }, () => new THREE.Vector4(0, 0, 99, -999)) };
   let ripNext = 0, ripMade = 0;
-  const pave = (list, mirror, censerAt, lm = bake(list)) => new THREE.ShaderMaterial({
+  const pave = (list, mirror, censerAt, lm) => new THREE.ShaderMaterial({
     lights: true,
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
       tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
-      uLamp: U.uLamp, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, uLitMode: U.uLitMode, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
+      uLamp: U.uLamp, uCrownLeaf: { value: 1 }, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, uLitMode: U.uLitMode, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
       #include <common>
@@ -68,7 +76,7 @@ export function createGround(scene, shade, censer, paving) {
       #include <shadowmask_pars_fragment>
       ` + NOISE + FOGLAYER + declare(["stone", "snow"]) + TRAIL + /* glsl */`
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
-      uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
+      uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform float uCrownLeaf; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       uniform vec4 uRip[${RIPPLE.max}];
       // Leaves and petals lie where the trees let them fall (fall.js's map, the same one the falling ones read): two layers of
       // small leaves, each one to a cell of a rotated grid, each laid its own way, more of them at the foot of a wall or a
@@ -88,6 +96,22 @@ export function createGround(scene, shade, censer, paving) {
         float m=on*fold*smoothstep(1.,.7,d);
         return vec4(h21(id+21.9),h21(id+5.5),m,tree);
       }
+      // The flag a point lies in: (x0, x1, z0, z1) of its sides, and a number for it. A period of 2.4 m of depth holds three rows
+      // whose depths are drawn from 0.6 to 0.9 (the first at will, the other two share what is left); a row is cut over a period
+      // of 3.4 m into four flags, the halves cut at 1.5 to 1.9 and each cut again near its middle. The path keeps its period to its
+      // own width, so that four flags lie across it and its sides are the kerb's.
+      vec4 flags(vec2 p, bool path, out vec2 id){
+        float P=floor(p.y/2.4), t=p.y-P*2.4, sd=path?31.:0.;
+        float a=.6+.3*h21(vec2(P,3.1+sd)), rest=2.4-a, lo=max(.6,rest-.9), hi=min(.9,rest-.6), b=mix(lo,hi,h21(vec2(P,9.7+sd)));
+        float y0=0., y1=a, rid=0.;
+        if(t>=a+b){ y0=a+b; y1=2.4; rid=2.; } else if(t>=a){ y0=a; y1=a+b; rid=1.; }
+        float R=P*3.+rid+sd, xo=path?1.7:h21(vec2(R,17.3))*3.4, u=p.x+xo, Q=floor(u/3.4), s=u-Q*3.4;
+        float m=1.5+.4*h21(vec2(R,Q*1.7+5.)), c0, c1, k=0.;
+        if(s<m){ k=m*(.42+.16*h21(vec2(R,Q*2.3+1.))); if(s<k){ c0=0.; c1=k; k=0.; } else { c0=k; c1=m; k=1.; } }
+        else { float k2=m+(3.4-m)*(.42+.16*h21(vec2(R,Q*3.1+2.))); if(s<k2){ c0=m; c1=k2; k=2.; } else { c0=k2; c1=3.4; k=3.; } }
+        id=vec2(Q*4.+k,R)+(path?vec2(300.,0.):vec2(0.));
+        return vec4(Q*3.4+c0-xo,Q*3.4+c1-xo,P*2.4+y0,P*2.4+y1);
+      }
       // The slope of the water where his steps have set it moving: each ring a short train of waves at its front,
       // weaker as it widens and dying away over its life.
       vec2 ripples(vec2 p, float y){
@@ -105,29 +129,38 @@ export function createGround(scene, shade, censer, paving) {
       }
       void main(){
         vec2 p=vWP.xz;
-        // Running-bond slabs, each a slightly different stone.
-        // Down the axis runs a path of large square slabs between two lines of kerb stones.
+        // Flagstones of unequal size, each a slightly different stone. Rows run 0.6 to 0.9 m deep and each row is cut into flags
+        // 0.6 to 1.1 m long, every row begun at its own place; down the axis runs a path of the same stone, a little paler,
+        // between two lines of kerb stones. Joints are under a centimetre wide, one notch darker than the stone.
         bool onAxis=p.y>-.95&&p.y<53.9, path=onAxis&&abs(p.x)<1.7, kerb=onAxis&&!path&&abs(p.x)<2.02;
-        vec2 sz=path?vec2(1.1333):vec2(1.02,.64); float row=floor(p.y/sz.y);
-        vec2 q=vec2(p.x/sz.x+(path?1.5:mod(row,2.)*.5+h21(vec2(row,7.))*.3),p.y/sz.y); vec2 id=floor(q)+(path?vec2(300.,0.):vec2(0.)), f=fract(q);
-        float edge=min(min(f.x,1.-f.x)*sz.x,min(f.y,1.-f.y)*sz.y);
+        vec2 id; vec4 fl=flags(p,path,id);
+        float edge=min(min(p.x-fl.x,fl.y-p.x),min(p.y-fl.z,fl.w-p.y));
         if(kerb){ float kz=fract(p.y/1.6); edge=min(min(abs(p.x)-1.7,2.02-abs(p.x)),min(kz,1.-kz)*1.6); id=vec2(floor(p.y/1.6),500.+sign(p.x)); }
-        edge+=(n2(p*9.)-.5)*.02; float joint=1.-smoothstep(.014,.04,edge);
+        edge+=(n2(p*9.)-.5)*.006;
+        // The joint is drawn a pixel wide at least, and thins into the stone's own darkening where the eye is far enough
+        // that it would be less than a pixel (a hairline of full strength would crawl).
+        float hw=.0045, fw=max(fwidth(edge),1e-4), joint=(1.-smoothstep(hw-.5*fw,hw+.5*fw,edge))*min(1.,2.*hw/fw);
         float tone=h21(id);
         // Each slab is cut from a different part of the scanned stone.
         vec2 su0=p*.75, suv=su0+vec2(h21(id+3.),h21(id+7.))*5., sgx=dFdx(su0), sgy=dFdy(su0); vec3 sA=textureGrad(tStoneA,suv,sgx,sgy).rgb/mStone, sN=textureGrad(tStoneN,suv,sgx,sgy).xyz;
-        vec3 alb=mix(vec3(.17,.175,.17),vec3(.34,.345,.33),tone)*mix(vec3(1.),sA,.9)*(.78+.4*fbm2(p*.7));
+        vec3 alb=mix(vec3(.2,.205,.2),vec3(.315,.32,.305),tone)*mix(vec3(1.),sA,.9)*(.78+.4*fbm2(p*.7));
         if(path) alb*=vec3(1.16,1.13,1.06); if(kerb) alb*=.78;
         float mossM=smoothstep(.42,.7,fbm2(p*.45+9.));
-        alb=mix(alb,vec3(.085,.115,.06),joint*mossM*.85); alb=mix(alb,vec3(.03),joint*.55*(1.-mossM));   // moss only in the joints that stay damp; the rest are dark with dirt
+        alb=mix(alb,vec3(.085,.115,.06),joint*mossM*.55); alb*=1.-joint*.36*(1.-mossM);   // moss only in the joints that stay damp; the rest are a notch darker with dirt
+        alb*=mix(.88,1.,smoothstep(0.,.04,edge)*(1.-joint));   // a flag's arris is worn a little darker than its face
         alb=mix(alb,vec3(.11,.14,.085),mossM*smoothstep(.12,.0,edge)*.25);
         // Water: one continuous ramp, standing water -> soaked -> damp.
-        float low=fbm2(p*.17+3.)+(tone-.5)*.07-joint*.03+(uWet-1.)*.34;
+        float low=fbm2(p*.17+3.)+(uWet-1.)*.34;   // one smooth field only, so that no puddle has a straight edge where a flag ends (and it is steps.js's puddleAt exactly)
         float puddle=smoothstep(.57,.61,low), damp=smoothstep(.3,.58,low);   // water stands only in the hollows
         alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
         // Occlusion from every platform and wall, since overcast light casts no hard shadow.
-        vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; float dB=(lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.)?texture2D(tShade,lmUv).r*${SPAN}.-.5:2.5;
-        float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*mix(.42,1.,smoothstep(0.,1.1,length(p-uCenser)-.3));   // under the censer's belly (feet 0.48 m out, belly 0.56: censer.js), and a little sky kept off by its height round it
+        vec2 lmUv=(p-uShadeBox.xy)*uShadeBox.zw; bool inLm=lmUv.x>0.&&lmUv.x<1.&&lmUv.y>0.&&lmUv.y<1.; vec3 lmv=inLm?texture2D(tShade,lmUv).rgb:vec3(1.,0.,0.); float dB=inLm?lmv.r*${SPAN}.-.5:2.5;
+        // The sky a crown hides: the stone under a tree lies in its own soft shade (the sun's shadow of the crown is in the shadow
+        // map as well, but at dusk the court is already in the halls' shadow and under cloud it casts none), broken by the flecks of
+        // light that come through the leaves, which are fewer where the crown is thick. Leaved trees thin out with the season (uCrownLeaf).
+        float crownK=clamp(lmv.g*uCrownLeaf+lmv.b,0.,1.), fleck=smoothstep(.5,.72,fbm2(p*2.1+13.)*.7+n2(p*7.)*.3);
+        float crownAo=1.-.52*crownK*(1.-fleck*(1.-.55*crownK));
+        float ao=mix(.4,1.,smoothstep(0.,2.2,dB))*crownAo*mix(.42,1.,smoothstep(0.,1.1,length(p-uCenser)-.3));   // under the censer's belly (feet 0.48 m out, belly 0.56: censer.js), and a little sky kept off by its height round it
         // Leaves and petals on the stone (autumn and spring; none under a roof or on the swept lane). They lie in drifts: where the
         // trees drop them (the map, steeply: a few metres past the crown there are few), more at the foot of a wall or a platform
         // and out of the wind, a little in the open; and they take the stone's own light and shadow like anything on it.
@@ -181,7 +214,10 @@ export function createGround(scene, shade, censer, paving) {
         vec3 N=normalize(vec3(g.x,1.,g.y)), V=normalize(cameraPosition-vWP); /* nan-ok: the eye is never on the surface it draws (the near plane is 0.1 m off) */
         float ndv=max(dot(N,V),0.), fres=.035+.965*pow(max(1.-ndv,0.),5.);
         float sun=getShadowMask();
-        vec3 lit=alb*(uAmb*ao*mix(.86,1.,sun)+uSunC*1.5*max(dot(N,uSun),0.)*ao*sun);
+        // A low sun, which is what lights the court at dawn and dusk, is a hundred times the sky at the stone's face, and the paving lit
+        // by cosine alone gives its flecks and long shadows too little to read: lift the grazing light (none by day).
+        float nl=max(dot(N,uSun),0.); nl=mix(nl,min(1.,1.15*sqrt(max(nl,0.))),1.-smoothstep(.15,.45,uSun.y));
+        vec3 lit=alb*(uAmb*ao*mix(.86,1.,sun)+uSunC*1.5*nl*ao*sun);
         // After dark every lamp lays a warm pool on the stone round its foot.
         if(uLamp>.01){ float pool=0.; for(int i=0;i<${MAX_LAMPS};i++){ vec4 L=uLamps[i]; if(L.w<=0.) break; vec2 dl=p-L.xy; pool+=L.w*exp(-dot(dl,dl)/(L.z*L.z)); } lit+=(alb*.55+.03)*vec3(1.,.56,.25)*min(pool,1.2)*uLamp*.85; }
         // Mirror in puddles; on damp stone only a stretched, blurred sheen. Without the mirror pass: the sky alone.
@@ -200,12 +236,13 @@ export function createGround(scene, shade, censer, paving) {
   });
   const levels = [];   // each stretch of paving, with the height it lies at
   // (A level with no censer has none marked, as on the terraces.)
-  const mat = pave(shade[0], true, censer ? new THREE.Vector2(censer.x, censer.z) : new THREE.Vector2(0, 999)); levels.push({ mat, y: 0 });
+  const under = (y) => trees.filter((t) => Math.abs(t[1] - y) < 0.6 && CROWN[t[3]]).map(([x, , z, kind, h, far]) => ({ x, z, r: CROWN[kind][0] * h, k: CROWN[kind][1], ever: kind === "cedar" })).filter((c) => c.r > 0.5);
+  const mat = pave(shade[0], true, censer ? new THREE.Vector2(censer.x, censer.z) : new THREE.Vector2(0, 999), bake(shade[0], under(0))); levels.push({ mat, y: 0 });
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(460, 300).rotateX(-Math.PI / 2).translate(0, 0, -86), mat);   // ends at the head of the approach stair
   ground.receiveShadow = true; scene.add(ground);
   // The same wet paving on the terraces above: no mirror pass up there, only the sky's sheen.
   for (const p of paving) {
-    const terrace = new THREE.Mesh(new THREE.PlaneGeometry(p.x * 2, p.zS - p.zN).rotateX(-Math.PI / 2).translate(0, p.y, (p.zS + p.zN) / 2), pave(shade[p.level], false, new THREE.Vector2(0, 999)));
+    const terrace = new THREE.Mesh(new THREE.PlaneGeometry(p.x * 2, p.zS - p.zN).rotateX(-Math.PI / 2).translate(0, p.y, (p.zS + p.zN) / 2), pave(shade[p.level], false, new THREE.Vector2(0, 999), bake(shade[p.level], under(p.y))));
     terrace.receiveShadow = true; scene.add(terrace); levels.push({ mat: terrace.material, y: p.y });
   }
 
@@ -223,6 +260,8 @@ export function createGround(scene, shade, censer, paving) {
     // The rings spread with the clock (`dt` 0 while time stands still for a picture).
     update(dt) { for (const v of rip.value) if (v.z < 99) v.z = v.z + dt > RIPPLE.life + RIPPLE.lag ? 99 : v.z + dt; },
     ripples: () => ({ made: ripMade, live: rip.value.filter((v) => v.z < 99).length }),
+    // How much of its leaf each season leaves the leaved trees' crowns: they hide the sky from the stone under them accordingly.
+    setMood(m) { const k = { spring: 0.85, summer: 1, autumn: 0.8, winter: 0.1 }[m.season] ?? 1; for (const L of levels) L.mat.uniforms.uCrownLeaf.value = k; },
     resize(w, h, on) { if (on) rt.setSize(Math.max(64, w), Math.max(64, h)); has = !!on; mat.uniforms.uReflOn.value = on ? 1 : 0; },
     // Whether the mirror is being drawn this frame. When it is not, the paving falls back to the sky's sheen
     // instead of showing whatever the mirror last held.
