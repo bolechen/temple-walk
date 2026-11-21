@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "face10-vipasyin.png",
+   "bytes": 717931,
+   "sha256": "f4d69df48f6976f2050098e728249742016a21fee60cb8079d6e1fc9ad90f088",
+   "rev": "0a76c89add0f370e75c45f9be70d09fdd38e27ad"
+  },
+  {
+   "path": "level10-vipasyin.png",
+   "bytes": 807104,
+   "sha256": "fc71727682e971d46627ed7f1b54f92e58d725df049f8742635ba756195aa0fd",
+   "rev": "0a76c89add0f370e75c45f9be70d09fdd38e27ad"
+  },
+  {
+   "path": "nose-below-vipasyin.png",
+   "bytes": 656263,
+   "sha256": "f3bf47f0439d372c58a0a64f1516a0e1b4cf57e18f7393734a6e8d685097e0e8",
+   "rev": "0a76c89add0f370e75c45f9be70d09fdd38e27ad"
+  },
+  {
+   "path": "nose-level-vipasyin.png",
+   "bytes": 665776,
+   "sha256": "58107f0840af2ee09201b2b40af96f8af68d40da45ffdb236f912e01697ef1a2",
+   "rev": "0a76c89add0f370e75c45f9be70d09fdd38e27ad"
+  },
+  {
+   "path": "vipasyin-r5-bake-before-after.png",
+   "bytes": 889462,
+   "sha256": "486fca4e05c34b12e5d5aff1cc8dd56310589fdbcc2a4e433e78997eebcb8b7d",
+   "rev": "0a76c89add0f370e75c45f9be70d09fdd38e27ad"
+  },
+  {
+   "path": "vipasyin-r5-nose.png",
+   "bytes": 425440,
+   "sha256": "7507fc11048298eacaafafc64acde7c430874c8808ee4f7167bd4432a9695e7f",
+   "rev": "0a76c89add0f370e75c45f9be70d09fdd38e27ad"
+  }
+ ]
+}
