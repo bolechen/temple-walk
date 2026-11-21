@@ -17,6 +17,32 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded.
+// (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
+// He does not walk here: he is set down outside the door behind the veil and stands, so `fast` only shortens the veil's
+// pauses. The halls go in two halves (`half`), each well under one machine's share of the night's run.
+async function exitFrames(b, base, half) {
+  const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom&fast=1", { viewport: { width: 480, height: 320 } });   // (fast: the veil through a door pauses a sixth as long)
+  await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
+  const all = await t.page.evaluate(() => window.__halls.map((h) => h.id)), halls = all.slice(half * Math.ceil(all.length / 2), (half + 1) * Math.ceil(all.length / 2)), log = {}, bad = [];
+  for (const id of halls) {
+    await t.page.evaluate((h) => window.__inside(h), id); await t.page.waitForFunction((h) => window.__yard().room === h, id, { polling: 50, timeout: 120000 });   // (waited on directly: t.until looks only every 1.2 s)
+    { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f + 5, f0, { polling: 20, timeout: 120000 }); }
+    await t.page.evaluate(() => window.__inside(null));
+    await t.page.waitForFunction(() => !window.__yard().inside, null, { polling: 10, timeout: 120000 });
+    const rows = [];
+    for (let i = 0; i < 60; i++) {
+      const r = await t.page.evaluate(() => { const f = window.__frame(); return { f: f.frames, box: !!f.monkBox, op: +f.opacity.toFixed(2), dist: +f.dist.toFixed(2) }; });
+      rows.push(r); if (!r.box || r.op < 0.6) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
+      await t.page.waitForFunction((f) => window.__yard().frames > f, r.f, { polling: 10, timeout: 120000 });
+    }
+    log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length };
+  }
+  console.log("    exitframe", JSON.stringify(log));
+  expect(bad.length === 0, `coming out of a door he left the picture or faded ${bad.length} times: ` + bad.slice(0, 6).join(" | "));
+  expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+}
+
 // The probe level (app/levels/_probe, docs/t05/LEVEL-SPLIT.md S7) proves the engine stands on its own. On the build tested here (dist/, built with
 // no target: a preview's) it is walked on its own baked floor and, as any level but the prologue, leaves what the prologue keeps alone
 // (#385: its place, its opening, its title). That the canary and production do not list it is `level-targets`, which builds them.
@@ -726,11 +752,11 @@ const scenarios = {
     // which is how the gap in the hierarchy went unseen).
     await t.page.evaluate(() => window.__inside(null)); await t.until(() => t.page.evaluate(() => !window.__yard().inside), 60000, "he did not come out of the hall");
     await t.frames(40);
-    // just out of the door, facing the court: the eye behind him stays in front of the leaves, not in the hollow of the hall
-    // behind its painted dark (the preview of 574b14e: 5.7 m in, looking at the back of the dark)
+    // just out of the door, facing the court: the eye behind him stays within the dark behind the leaves, not in the hollow
+    // of the hall beyond it (the preview of 574b14e: 5.7 m in, looking at the back of the dark)
     { const o = await t.page.evaluate(() => { const h = window.__halls.find((x) => x.id === "main"), f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], e = window.__frame().eye; return { into: -((e[0] - h.door[0]) * f[0] + (e[2] - h.door[1]) * f[1]), eye: e, box: window.__frame().monkBox }; });
-      // (it stands close behind him there, the leaves at his back: so near he fades, as he did before #354 on coming out)
-      expect(o.into < 0.45, "coming out of the great hall the eye should stay in front of its door: " + JSON.stringify(o)); }
+      // (since #396 it may stand in the dark behind the leaves, as far as its back, and sees him framed in the door)
+      expect(o.into < 3.0 && o.box, "coming out of the great hall the eye should stay within the dark behind its door, with him in the picture: " + JSON.stringify(o)); }
     lap("out of the door");
     const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 0], [0, 1.5]], shut = []; let samples = 0;   // ((19.5, 1) lies a few tenths past where he can stand)
     for (const p of round) {
@@ -750,6 +776,9 @@ const scenarios = {
     console.log("    eyeroom", JSON.stringify({ tris: fromHall.tris, door: f.eye.map((v) => +v.toFixed(2)), wall: g.map((v) => +v.toFixed(2)), round: samples }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Out of every hall's door, in two halves (#396): exitFrames above.
+  exitframe: { tier: 3, run: (b, base) => exitFrames(b, base, 0) },
+  "exitframe-b": { tier: 3, run: (b, base) => exitFrames(b, base, 1) },
   halls: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
     const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));

@@ -38,7 +38,7 @@ function segmentHitsBox(a, b, box) {
  */
 export function createEyeSpace(bvh) {
   let r = 0.25, near = [], seg = new THREE.Line3(), have = false;
-  const box = new THREE.Box3(), p = new THREE.Vector3(), q = new THREE.Vector3(), s = new THREE.Sphere(new THREE.Vector3(), r);
+  const box = new THREE.Box3(), p = new THREE.Vector3(), q = new THREE.Vector3(), s = new THREE.Sphere(new THREE.Vector3(), r), ray = new THREE.Ray();
   const touches = (x, y, z) => { p.set(x, y, z); for (const t of near) { t.closestPointToPoint(p, q); if (q.distanceToSquared(p) <= r * r) return true; } return false; };
   return {
     get radius() { return r; },
@@ -51,6 +51,14 @@ export function createEyeSpace(bvh) {
         intersectsTriangle: (tri) => { if (tri.closestPointToSegment(seg) <= r) { const t = new THREE.Triangle(tri.a.clone(), tri.b.clone(), tri.c.clone()); near.push(t); } return false; },
       });
       return near.length;
+    },
+    /**
+     * Is the line from a to b ([x, y, z] each) clear of everything drawn? (#396: an eye risen over a platform's balustrade
+     * stood clear of it and could not see him past it.)
+     */
+    sees(a, b) {
+      ray.origin.set(a[0], a[1], a[2]); ray.direction.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const len = ray.direction.length(); if (len < 1e-6) return true;
+      ray.direction.divideScalar(len); const h = bvh.raycastFirst(ray, THREE.DoubleSide); return !h || h.distance >= len - 0.05;
     },
     /** Does the sphere at (x, y, z) touch anything drawn? Near the segment last gathered, only those triangles are asked. */
     shut(x, y, z) {
