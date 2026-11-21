@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 181843,
+   "sha256": "f221a8a2b253f0173f42516318254616bb67aa154df4655dd4f6eef6c272c667",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "views/lane-N.png",
+   "bytes": 1144451,
+   "sha256": "a247c198cdb6fbd85b33272aa17fbaaf712a7dc0f500cf5a7c9914cd6e9e801d",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "views/lane-S.png",
+   "bytes": 1147119,
+   "sha256": "ba90e68076c447ad3b0efd3e1f0d9e2c709d70328b00d2be9a057287e345cfb9",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "views/terrace-N.png",
+   "bytes": 1120946,
+   "sha256": "86f07e6b4a6b9e52b66f130bd712d9350a14eeed7172948fae4141ce90b136da",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "views/terrace-S.png",
+   "bytes": 1129831,
+   "sha256": "7b02c68169050fc9411f0fdcd5ee6595f82176352eb51a9b88685ec8f922ae4d",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  },
+  {
+   "path": "views/walk-diff-vs-r2.png",
+   "bytes": 58598,
+   "sha256": "169ee138db8a452943c77e22c93161a2a6f33aeb79591e25e9065e458d263baf",
+   "rev": "f88aeec48dd2defea1b4b142d923ff526c33428c"
+  }
+ ]
+}
