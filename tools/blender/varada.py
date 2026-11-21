@@ -156,8 +156,20 @@ if PO:
   a_ = math.radians(PO["pitch_deg"]); D = np.array([0, -math.cos(a_), math.sin(a_)]); N = np.array([0, math.sin(a_), math.cos(a_)])
   t_ = math.radians(PO.get("turn_deg", 5)); N = math.cos(t_) * N + math.sin(t_) * np.cross(D, N); X = np.cross(D, N)
   TP = T.get("taper")
+  CU = PO.get("curl")
+  def curl(du_, dn_):
+    # variant B (the art director, 2026-11-21): the fingers' middle joints bent toward the palm, `curl.deg` across
+    # the hand rising to `curl.little_deg` on the little finger's side, about the line across the fingers at `curl.u`
+    # of the hand's length, eased in over `curl.ease`
+    if not CU: return du_, dn_
+    piv = np.abs(u - CU["u"]) < 0.01; pu, pn = du_[piv].mean(), dn_[piv].mean()
+    side = np.clip(v / CU.get("v_little", 0.2), 0, 1)
+    k_ = np.clip((u - CU["u"]) / CU.get("ease", 0.06), 0, 1); k_ = k_ * k_ * (3 - 2 * k_)
+    ph_ = np.radians(CU["deg"] + (CU["little_deg"] - CU["deg"]) * side) * k_
+    c_, s_ = np.cos(ph_), np.sin(ph_); a_, b_ = du_ - pu, dn_ - pn
+    return pu + c_ * a_ - s_ * b_, pn + s_ * a_ + c_ * b_
   def place(W, geo=None):
-    du_, dn_ = geo if geo is not None else (du, dn)
+    du_, dn_ = geo if geo is not None else (du, dn); du_, dn_ = curl(du_, dn_)
     Q = W + np.outer(du_, D) + np.outer(dn_, N) + np.outer(-v * sc, X)
     RD = PO.get("round")
     if RD:   # the wrist's section rounded (the 3D review: long / short ≤ 1.25 so the turned hand meets the forearm unseen):
