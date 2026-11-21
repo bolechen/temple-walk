@@ -514,14 +514,23 @@ if AR:
       if len(set(np.round(mv[ids], 4))) > 1:
         e0 = max(np.linalg.norm(st0[ids[i]] - st0[ids[i - 1]]) for i in range(len(ids))); e1 = max(np.linalg.norm(st[ids[i]] - st[ids[i - 1]]) for i in range(len(ids)))
         if e1 > 0.02 and e1 > AR.get("stretch", 3.0) * max(e0, 1e-4): dead.append(f); stretched += 1
-    dead = list(set(dead))
-    gone_n = len(dead); bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    dead = list(set(dead)); n_dead = len(dead)
+    bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS"); dead = []
+    if AR.get("cap"):
+      # the forearm's cut end closed (a fill over the open edges of the moved forearm past the wrist), so nothing of its
+      # inside shows through a gap in the hand's top
+      bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table()
+      vi = {v.index: v for v in bm.verts}
+      edge_c = [e for e in bm.edges if e.is_boundary and all(moved[v.index] and st[v.index, 2] > tw[2] for v in e.verts)]
+      before = len(bm.faces); bmesh.ops.holes_fill(bm, edges=edge_c, sides=0); capped = len(bm.faces) - before
+      bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
+    gone_n = n_dead; bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     bm.to_mesh(me); bm.free(); me.update()
     co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
   log["arm"] = {"pivot": Pv.tolist(), "elbow": Ev.tolist(), "angle_deg": round(math.degrees(ph), 2), "elbow_moves_m": Edisp.round(3).tolist(), "forearm_shift_m": trans.tolist(),
                 "upper_points": int(upper.sum()), "forearm_points": int(len(fi)), "largest_move_m": round(float(mv.max()), 3),
                 "band": {"points": int(band.sum()), "largest_move_m": round(float(mv[band].max()) if band.any() else 0.0, 3), "shoulder_band_y": AR["shoulder"], "inner_band_m": AR["inner_band"], "inner_x": AR["inner_x"]},
-                "range": {"min": st0[mv > 0].min(0).round(3).tolist(), "max": st0[mv > 0].max(0).round(3).tolist()}, "old_hand_faces_cut": gone_n - stretched, "stretched_faces_cut": stretched}
+                "range": {"min": st0[mv > 0].min(0).round(3).tolist(), "max": st0[mv > 0].max(0).round(3).tolist()}, "old_hand_faces_cut": gone_n - stretched, "stretched_faces_cut": stretched, "cap_faces": int(capped) if AR.get("cap") else 0}
   np.save(os.path.join(out, "arm-moved.npy"), np.c_[st0[mv > 0], mv[mv > 0]])
 # the new hand, joined
 if PO and PO.get("trim"):

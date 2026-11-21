@@ -272,6 +272,7 @@
   "facing": 0.2,
   "stretch": 3.0,
   "cut_dz": 0.18,
-  "cut_below_y": 3.64
+  "cut_below_y": 3.64,
+  "cap": true
  }
 }
