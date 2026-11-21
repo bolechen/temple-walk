@@ -159,7 +159,7 @@ J01 的资料库参考图 2026-11-21 放进了 `refs/t00-atlas/`（`T00.lossless
 | #481 | 同上，第五轮 | **通过**（白盒） | 2026-11-21，`33132ef` | [评论](https://github.com/bolechen/temple-walk/pull/481#issuecomment-7062438364)：门洞暗（门外 6 米 0.12）、殿内看得清（E 站 11.9 / 34.3）、进殿渐变、山墙与后墙一个调子，都成立；前墙内面门额以上那一带仍是后墙的 3.5 倍，带到 #432 |
 | #480 | 同上，第七轮（毗婆尸 r7） | 嘴的路对了，还不过 | 2026-11-21，`a7c4fa5` | [评论](https://github.com/bolechen/temple-walk/pull/480#issuecomment-7062473298)：嘴靠颜色读了、撅没有了；r8 改四处：唇色从玫瑰回到赭、眼上的两道板改成线、半开的眼把瞳画成一条带再试一版、下巴下沿的横折淡掉 |
 | #492 | T05 `cam07` 乙′ | **通过**（白盒） | 2026-11-21，`6095ba4` | [评论](https://github.com/bolechen/temple-walk/pull/492#issuecomment-7062592014)：三条画面条件、层次、节奏都成立；合并前挪紧挨牌坊的两棵树；两层屋顶分不分得开等 T4 |
-| #511 | T05 无量殿穿堂顶 | **通过**（白盒） | 2026-11-21，拼图 | [评论](https://github.com/bolechen/temple-walk/pull/511#issuecomment-7062602104)：梁架读得出；构件之间的深浅差拉到 8 个 L\* 以上（不挡） |
+| #511 | T05 无量殿穿堂顶 | **通过**（白盒） | 2026-11-21，`551bf6d3` | 四轮：[第一次通过](https://github.com/bolechen/temple-walk/pull/511#issuecomment-7062602104)、[反对 `7d0d5252`（椽子没了）](https://github.com/bolechen/temple-walk/pull/511#issuecomment-7063102816)、[`551bf6d3` 通过](https://github.com/bolechen/temple-walk/pull/511#issuecomment-7063182575)：望板、椽、栿檩三档，各差 4–5 个 L\* |
 | #475 | T00 山门天花等（只判落到 T05 的两处） | 可以接受 | 2026-11-21，拼图 | [评论](https://github.com/bolechen/temple-walk/pull/475#issuecomment-7062603301)：两座山门门洞顶的平綦天花比平黑好；结构若改判明造，三处穿堂用同一种顶 |
 
 之后每看一轮，在这张表里加一行。2026-11-21 起，T00 的画面由第二位美术审图接手（主创的分工），T05 和 #327 的复看仍在我这里；两边口径不一致时以这一页为准。
