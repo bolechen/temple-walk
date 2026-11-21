@@ -434,10 +434,12 @@ if PO and PO.get("solve"):
     # the fingers then bent from the knuckles toward the back of the hand as far as the knee lets them (within
     # `bend_range` degrees), their tips kept `solve.tip_gap` metres off it
     # (toward the back is negative; if even straight they run into the knee, the least bend toward the palm that clears it)
-    fingers = u >= u0; b_best = None
+    # (the fingers are what lies past the part the wrist was solved on: the knuckles are that part's own contact)
+    fingers = u >= PO["solve"].get("palm_u", u0); b_best = None; trials = []
     for bdeg in np.arange(PO["solve"]["bend_range"][0], PO["solve"]["bend_range"][1] + 0.01, 1.0):
-      if gap(dsol, bendgeo(math.radians(bdeg)), fingers) >= PO["solve"].get("tip_gap", 0.01): b_best = float(bdeg); break
-    if b_best is None: b_best = float(PO["solve"]["bend_range"][1])
+      gb = gap(dsol, bendgeo(math.radians(bdeg)), fingers); trials.append((float(bdeg), gb))
+      if gb >= PO["solve"].get("tip_gap", 0.01): b_best = float(bdeg); break
+    if b_best is None: b_best = max(trials, key=lambda t: t[1])[0]
     Q0 = place(W, bendgeo(0.0)); g0 = gaps(Q0); g0[~fingers | (g0 < -8)] = 9; j0 = int(np.argmin(g0)); k0 = tuple(np.floor(Q0[j0, :2] / 0.02).astype(int))
     src0 = st[sel][np.all(np.floor(st[sel][:, :2] / 0.02).astype(int) == list(k0), axis=1)]
     log["pose"]["straight_finger_limit"] = {"gap_m": round(float(g0[j0]), 4), "hand_point": Q0[j0].round(3).tolist(), "u": round(float(u[j0]), 3), "v": round(float(v[j0]), 3), "w": round(float(w[j0]), 3),
