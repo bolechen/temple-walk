@@ -12,7 +12,7 @@ const season = arg("season", "summer"), time = arg("time", "day");
   const srv = await serve(), b = await launch(), errors = [];
   const ctx = await b.newContext({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1, locale: "zh-CN" }), p = await ctx.newPage();
   p.on("pageerror", (e) => errors.push(String(e))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errors.push(m.text()));
-  await p.goto(`${srv.base}?q=high&enter&view=third&season=${season}&time=${time}`, { waitUntil: "commit", timeout: 120000 });
+  await p.goto(`${srv.base}?q=${arg("q", "medium")}&enter&view=third&season=${season}&time=${time}`, { waitUntil: "commit", timeout: 120000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 });
   const frames = async (n) => { const f0 = await p.evaluate(() => window.__yard().frames); await p.waitForFunction((f) => window.__yard().frames >= f, f0 + n, { timeout: 300000 }); };
   const seats = await p.evaluate(() => window.__seats.map((s, i) => ({ i, at: s.at, face: s.face, top: s.top, pavilion: s.pavilion || null, place: s.place || null })).filter((s) => s.pavilion));
@@ -31,16 +31,16 @@ const season = arg("season", "summer"), time = arg("time", "day");
     // He sits: the eye as the visitor has it once he is down (and, in the half-way pavilion, once it has come round and rests).
     await p.evaluate(([x, z, f]) => window.__pose(x, z, -f, 0.05), [s.at[0] + Math.sin(s.face) * 1.2, s.at[1] + Math.cos(s.face) * 1.2, s.face]); await frames(4);
     await p.evaluate((i) => window.__sit(i), s.i);
-    await p.waitForFunction((k) => { const r = window.__rites(), q = window.__seats[k]; return Math.hypot(r.him[0] - q.at[0], r.him[2] - q.at[1]) < 0.05; }, s.i, { timeout: 120000 });
+    await p.waitForFunction((k) => { const r = window.__rites(), q = window.__seats[k]; return Math.hypot(r.him[0] - q.at[0], r.him[2] - q.at[1]) < 0.05; }, s.i, { timeout: 600000 });
     await frames(10);
     await p.screenshot({ path: path.join(out, `${name}-3-sitting-as-he-sits.png`), timeout: 300000 });
     if (s.place) {
-      await p.waitForFunction(() => window.__director().phase === "hold", null, { timeout: 120000 }); await frames(30);
+      await p.waitForFunction(() => window.__director().phase === "hold", null, { timeout: 600000 }); await frames(30);
       await p.screenshot({ path: path.join(out, `${name}-4-the-eye-at-the-valley.png`), timeout: 300000 });
       console.log(name, "director", JSON.stringify(await p.evaluate(() => window.__director())));
     }
     await p.keyboard.down("s"); await frames(15); await p.keyboard.up("s");
-    await p.waitForFunction(() => window.__director().phase === "idle", null, { timeout: 120000 });
+    await p.waitForFunction(() => window.__director().phase === "idle", null, { timeout: 600000 });
   }
   console.log("errors:", errors.length ? errors : "none");
   await ctx.close(); await b.close(); srv.close && srv.close();
