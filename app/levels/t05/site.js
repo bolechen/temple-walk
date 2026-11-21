@@ -8,6 +8,7 @@
 // at +3.0. x runs east, z south; the great hall's front column line is z = 0.
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
+import { createPlanWalker } from "../../src/plan-walker.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
 export const PLATFORM = Object.freeze({ w: 55.8, d: 25.91, h: 3.0, zS: 0.4 });
@@ -106,63 +107,5 @@ export function buildSite(M) {
   };
 }
 
-/**
- * The walker of the written plan for this level: where he may stand and how high, from the rectangles above. The
- * baked floor (shared/walk/t05.bin) answers where he walks; this one answers the eye, the sound of his steps and the
- * railings (app/src/gridwalker.js), as the prologue's own does for it. It has the prologue's walker's shape and none of
- * its terraces or hillside: outside the compound and the way there is nothing to stand on.
- */
-export function createWalker(site) {
-  const { solids, decks, ramps, posts = [], rails = [] } = site.walk;
-  const inRect = (r, x, z) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1;
-  let room = null, floor = null;
-  function carved(x, z, even) {
-    let height = null; floor = null;
-    const take = (h, f) => { if (height === null || h > height) { height = h; floor = f || "path"; } };
-    for (const d of decks) if (inRect(d, x, z)) take(d.h, d.floor);
-    for (const r of ramps) if (inRect(r, x, z)) {
-      const dx = r.high[0] - r.low[0], dz = r.high[1] - r.low[1], { count: n, nosing } = stairProfile(r.h), len = Math.hypot(dx, dz);
-      const f = Math.min(1, Math.max(0, ((x - r.low[0]) * dx + (z - r.low[1]) * dz) / (len * len) + nosing / len));
-      take((r.base || 0) + r.h * (even ? f : Math.ceil(f * n - 1e-6) / n), r.floor);
-    }
-    return height;
-  }
-  const post = (x, z) => posts.find((p) => inRect(p, x, z)) || null;
-  const shut = (x, z) => x < room.x0 || x > room.x1 || z < room.z0 || z > room.z1 || room.solids.some((s) => inRect(s, x, z));
-  const height = (x, z) => carved(x, z) ?? 0;
-  const solidAt = (x, z) => solids.some((s) => inRect(s, x, z));
-  return {
-    kind: "old",
-    drops: site.walk.drops || [],
-    setRoom(r) { room = r || null; }, get room() { return room; },
-    setLoft() {}, get loft() { return null; },
-    heightAt(x, z) { return room ? room.y : height(x, z); },
-    floorAt(x, z) { if (room) return "room"; return carved(x, z) !== null ? floor : "earth"; },
-    eyeAt(x, z) { return room ? room.y : carved(x, z, true) ?? 0; },
-    landAt(x, z) { return room ? room.y : height(x, z); },
-    wall(x, z) { if (room) return shut(x, z); if (post(x, z)) return true; return carved(x, z) === null && solidAt(x, z); },
-    railNear(x, y, z, m = 0) { if (room) return false; return rails.some((r) => x > r.x0 - m && x < r.x1 + m && z > r.z0 - m && z < r.z1 + m && y > r.bottom - m && y < r.top + m); },
-    // The eye may be anywhere over the court and the floors; it keeps out of the walls up to a little over their tops
-    // and out of the platform's stone below its floor. (It passes over the parapet as over any floor; railNear says where it is.)
-    eyeShut(x, y, z) {
-      if (room) return shut(x, z);
-      for (const s of solids) if (inRect(s, x, z) && y < (s.top ?? s.eyeTop)) return true;
-      return false;
-    },
-    onGround: (x, z) => !room && carved(x, z) === null,
-    onStairs: (x, z) => !room && ramps.some((r) => inRect(r, x, z) && carved(x, z) <= (r.base || 0) + r.h + 0.01),
-    blocked(x, z) {
-      if (room) return shut(x, z);
-      if (post(x, z)) return true;
-      const c = carved(x, z);
-      if (c === null) return true;   // nothing to stand on outside the compound and the way
-      if (ramps.some((r) => inRect(r, x, z))) return false;   // the flight is cut through the terrace's stone; its cheeks are posts
-      // A solid (a wall, or the platform's stone) stops him unless the floor here is its top.
-      for (const s of solids) if (inRect(s, x, z) && !(s.top !== undefined && c >= s.top - 1e-6)) return true;
-      return false;
-    },
-  };
-}
-
-/** How high above the floor an observance made sitting puts him: none are made here yet (game.js asks every level). */
-export function placeLift(place) { return place?.lift ?? 0.1; }
+/** The walker of the written plan: the one that knows no level, over this plan's rectangles (app/src/plan-walker.js). */
+export const createWalker = createPlanWalker;
