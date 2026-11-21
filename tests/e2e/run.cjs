@@ -6,7 +6,7 @@
 //   node tests/e2e/run.cjs walk photo   only those named
 // Each scenario is independent and fails on any error the page reports. A report is written to tools/out/e2e-report.json.
 const fs = require("fs"), path = require("path");
-const { serve, launch, open, expect, out } = require("./lib.cjs");
+const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 
 // Software rendering draws the whole temple about once a second and takes twenty seconds to bring it up. A scenario
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
@@ -2470,19 +2470,25 @@ const scenarios = {
   // Apart from `menu` so that it can run beside every push: the place is built and not drawn, a minute or two (#177).
   menufit: { tier: 2, async run(b, base) {
     // (English's Follow the hour is the longest hour row.)
-    for (const lg of ["zh", "ja", "en", "ko"]) { const u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
+    for (const lg of ["zh", "ja", "en", "ko"]) { let u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 1280, height: 720 } });
       await u.page.evaluate(() => document.body.classList.add("seasons")); await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu in " + lg); await u.frames(2);
       for (const [w, h] of [[1280, 720], [1366, 768], [1920, 1080]]) { await u.page.setViewportSize({ width: w, height: h }); await u.frames(2);
         const m = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); return { fits: c.scrollHeight <= c.clientHeight, clipped: [...document.querySelectorAll("#menu .opts, #menu .row")].some((o) => o.scrollWidth > o.clientWidth + 1) }; });
         expect(m.fits && !m.clipped, `the menu should lie whole at ${w}x${h} in ${lg}: ` + JSON.stringify(m)); }
-      // and on a phone held upright, the parts named at first sight: the ear's heading above the foot, unscrolled (#185)
+      // and on a phone held upright, the parts named at first sight: the ear's heading above the foot, unscrolled (#185).
+      // A phone is a touch screen: its pointer is coarse, which is what hides the keyboard's own rows (`.keys-only`, the A/D row of #295's C) and the key card's button;
+      // a context with a fine pointer made 390 px wide is a narrow desktop window, which the menu scrolls for, and is not what this holds to (#129).
+      await u.close(); u = await open(b, base, "q=low&cam=0,30,0,0&view=first&lang=" + lg + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      await u.page.keyboard.press("Escape"); await u.until(() => u.page.isVisible("#menu"), 20000, "no menu on the phone in " + lg); await u.frames(2);
       await u.page.setViewportSize({ width: 390, height: 844 }); await u.frames(2);
+      // (#417: the seasons' two rows, once the book has been filled, make the sheet taller than a phone: both states are held to it)
+      for (const on of [true, false]) { await u.page.evaluate((o) => document.body.classList.toggle("seasons", o), on); await u.frames(2); const lg2 = lg + (on ? "" : " (seasons not yet opened)");
       const ph = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const hs = [...document.querySelectorAll("#menu .grp-name h3")]; return { names: hs.length, ear: hs[2] ? Math.round(hs[2].getBoundingClientRect().bottom) : null, foot: Math.round(document.querySelector("#menu .row").getBoundingClientRect().top) }; });
-      expect(ph.names === 4 && ph.ear <= ph.foot, `on a 390x844 phone in ${lg} the ear's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
+      expect(ph.names === 4 && ph.ear <= ph.foot, `on a 390x844 phone in ${lg2} the ear's heading should be in sight above the menu's foot: ` + JSON.stringify(ph));
       // and the four ways to another language are all there at first sight: each the thing a thumb lands on at its middle,
       // above the foot, and a thumb's size (#195: English and 한국어 had gone under the foot)
       const langs = await u.page.evaluate(() => { const foot = document.querySelector("#menu .row").getBoundingClientRect().top; return [...document.querySelectorAll("#menu [data-lang]")].map((e) => { const q = e.getBoundingClientRect(), hit = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2); return { l: e.dataset.lang, ok: !!hit && (hit === e || e.contains(hit)) && q.bottom <= foot + 0.5 && q.height >= 43.5 && q.width >= 43.5, top: Math.round(q.top), bottom: Math.round(q.bottom), foot: Math.round(foot), on: hit && !(hit === e || e.contains(hit)) ? (hit.id || hit.className || hit.tagName) : null }; }); });
-      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
+      expect(langs.every((x) => x.ok), `on a 390x844 phone in ${lg2} all four languages should be in sight, above the foot and free to press: ` + JSON.stringify(langs.filter((x) => !x.ok)));
       // and nothing written on the sheet lies half under the foot at first sight: any block of words that shows within the
       // sheet keeps clear of the foot's box, whatever is added to the menu later (#195: the group's invitation, half hidden)
       const under = await u.page.evaluate(() => { const c = document.querySelector("#menu .card"); c.scrollTop = 0; const cr = c.getBoundingClientRect(), foot = document.querySelector("#menu .row"), f = foot.getBoundingClientRect(), out = [];
@@ -2490,7 +2496,8 @@ const scenarios = {
           const st = getComputedStyle(el), r = el.getBoundingClientRect(); if (!r.width || !r.height || st.visibility === "hidden" || el.closest("[hidden]")) continue;
           const shows = r.bottom > cr.top && r.top < cr.bottom; if (shows && r.bottom > f.top + 0.5 && r.top < f.bottom - 0.5) out.push(`${el.id || el.className || el.tagName} "${el.textContent.trim().slice(0, 8)}" ${Math.round(r.top)}-${Math.round(r.bottom)}`); }
         return { foot: Math.round(f.top), out }; });
-      expect(!under.out.length, `on a 390x844 phone in ${lg} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
+      expect(!under.out.length, `on a 390x844 phone in ${lg2} no words on the menu should lie under its foot (top ${under.foot}): ` + under.out.join(" | "));
+      }
       await u.close(); }
   } },
   // A page left open learns that a newer build has been put up (#310, src/version.js): coming back to the front it asks
@@ -3071,6 +3078,10 @@ const scenarios = {
   const names = part(named.length ? named : Object.keys(scenarios).filter((n) => scenarios[n].tier <= most));
   for (const n of names) if (!scenarios[n]) { console.error(`no scenario "${n}"; there are: ${Object.keys(scenarios).join(", ")}`); process.exit(2); }
   const srv = await serve(), browser = await launch(), report = [];
+  if (process.env.E2E_GPU) {   // the T4 run (#335): say what drew it, and refuse to go on if it was software
+    const gl = await renderer(browser); fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "e2e-renderer.txt"), gl + "\n"); console.log("renderer:", gl);
+    if (/SwiftShader|llvmpipe|no webgl2/i.test(gl)) { console.error("E2E_GPU is set but the browser draws in software: not a T4 run"); process.exit(3); }
+  }
   for (const n of names) {
     const t0 = Date.now(); let error = null;
     try { await scenarios[n].run(browser, srv.base); } catch (e) { error = String(e.message || e).slice(0, 1500); }
