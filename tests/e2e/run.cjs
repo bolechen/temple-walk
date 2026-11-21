@@ -416,6 +416,61 @@ const scenarios = {
     expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // T05 walked as a visitor walks it (PLAN.md item 12, PRD.md §9 item 3): ?level=t05 straight in on the workbench, at the
+  // walking pace (no ?fast), from the outer gate's place to station F. The long way up the axis is walked by __walk; the two
+  // stretches where the prologue once only let a hurried test through (docs/t00/PITFALLS.md A3) are walked on the keys:
+  // the flight up onto the terrace with W, back down it with S and up again, and the hall's sill with W; then a tap on
+  // the hall's floor carries him on in. The prologue's book and kept place lie in the browser all the while, untouched.
+  "t05-walk": { tier: 3, async run(b, base) {
+    const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" }) };
+    const t = await open(b, base, "level=t05&q=low" + BARE, { init: `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) if (localStorage.getItem(k) === null) localStorage.setItem(k, p[k]); })()` });
+    const lv = await t.page.evaluate(() => window.__level());
+    expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05 straight in: " + JSON.stringify(lv));
+    const fast = await t.page.evaluate(() => new URLSearchParams(location.search).has("fast")); expect(!fast, "this walk is at the walking pace");
+    let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
+    const near = (x, z, r = 0.6) => async () => { s = await t.state(); return Math.hypot(s.x - x, s.z - z) < r; };
+    // Up the axis to a few steps short of the flight's foot (z 21), walked, not jumped: through both gates, the archway and the Wuliang hall.
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 44], [0, 24]]));
+    await t.until(near(0, 24), 900000, "he never came up the axis to the foot of the flight");
+    // Face up the flight on the keys (A and D turn him, #295), then hold W: up the treads to the terrace at +3.
+    const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+    const face = async (to) => {
+      for (let i = 0; i < 60; i++) {
+        s = await t.state(); const d = wrap(to - s.yaw); if (Math.abs(d) < 0.05) return;
+        const key = d > 0 ? "a" : "d"; await t.page.keyboard.down(key); await t.frames(1); await t.page.keyboard.up(key); await t.frames(1);
+      }
+      throw new Error("he could not be turned to face " + to + ": " + JSON.stringify(await t.state()));
+    };
+    await face(0);
+    const hold = async (key, done, what, ms = 600000) => { await t.page.keyboard.down(key); try { await t.until(done, ms, what); } finally { await t.page.keyboard.up(key); } };
+    let lo = 9, hi = -9; const track = async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); };
+    await hold("w", async () => { await track(); return s.h > 2.95 && s.z < 14.5; }, "W did not take him up the flight onto the terrace");
+    expect(Math.abs(lo) < 0.1, `he started the flight from the court's paving: ${lo}`);
+    // Back down it with S, walking backwards, to the court again, and up once more.
+    await hold("s", async () => { await track(); return s.h < 0.05 && s.z > 21.2; }, "S did not take him back down the flight");
+    await hold("w", async () => { await track(); return s.h > 2.95 && s.z < 6; }, "W did not take him up the flight a second time");
+    // Over the hall's middle door sill (0.24 m, the door's line at z -0.05) and in, on W alone: the doorway that only a hurried test once crossed.
+    await hold("w", async () => { s = await t.state(); return s.z < -1.2; }, "W did not take him over the sill into the hall");
+    expect(Math.abs(s.h - 3) < 0.1 && !s.inside && s.room == null, `over the sill and onto the hall's floor, with no veil: ${JSON.stringify({ h: s.h, inside: s.inside, room: s.room })}`);
+    // A tap on the hall's floor ahead of him (pickFloor) walks him on in. Where the floor lies on the screen depends on the eye, so the
+    // tap is tried a little lower each time until one lands on the floor ahead (higher up the picture are the altar and the figures, no floor).
+    const box = await t.page.$("canvas").then((c) => c.boundingBox()), z0 = s.z;
+    let tapped = null;
+    for (const fy of [0.55, 0.6, 0.65, 0.7, 0.75]) {
+      await t.page.mouse.click(box.x + box.width / 2, box.y + box.height * fy); await t.frames(3);
+      s = await t.state(); if (s.target && s.target[1] < z0 - 1) { tapped = { fy, target: s.target }; break; }
+    }
+    expect(tapped, "a tap on the hall's floor ahead of him set no way to walk: " + JSON.stringify(s));
+    await t.until(async () => { s = await t.state(); return s.z < z0 - 1; }, 300000, "a tap on the hall's floor did not walk him on");
+    // To station F, walked.
+    await t.page.evaluate(() => window.__walk([[0, -2]]));
+    await t.until(near(0, -2), 300000, "he never reached station F");
+    expect(Math.abs(s.h - 3) < 0.1, "station F is on the hall's floor: " + s.h);
+    await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
+    const kept = await t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
+    for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} byte for byte: ${kept[k]}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
   // production not at all, where ?level=t05 walks the prologue and says what was asked. Each is built here as it is
   // published (VITE_DEPLOY), with nothing fetched from outside. On the canary he walks T05 a little with the prologue's
@@ -1734,7 +1789,7 @@ const scenarios = {
   // Which floor he walks on (#265, #274): the grid baked from the drawn meshes everywhere by default (a spot on every level
   // out of doors, inside a hall, up on the balcony), the written plan with ?walker=old; and a ?cam address that falls
   // where the grid shuts him out is moved to the nearest open spot within half a metre, or back to the start of the path
-  // (in a room: left at its door; on the balcony: at its door).
+  // (in a room: left at its door; on the balcony: at its door). A level that keeps no written plan (T05) is walked on the grid whatever the address asks.
   walkgrid: { tier: 2, async run(b, base) {
     let t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
     const w = await t.page.evaluate(() => window.__walker());
@@ -1787,6 +1842,11 @@ const scenarios = {
     expect(o.mode === "old" && o.grid === null && !o.bytes, "?walker=old should walk the written plan, and fetch no grid: " + JSON.stringify(o));
     await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the great hall on the written plan");
     expect((await t.page.evaluate(() => window.__walker())).grid === null, "?walker=old is the written plan indoors too");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A level that keeps no written plan to walk on (T05, writtenPlan: false) refuses ?walker=old: the baked floor, and the refusal reported.
+    t = await open(b, base, "level=t05&q=low&view=first&walker=old" + BARE);
+    const n = await t.page.evaluate(() => window.__walker());
+    expect(n.mode === "mesh" && n.asked === "old" && n.bytes > 0 && n.grid === "outdoors", "?level=t05&walker=old should walk T05's baked floor and say what was asked: " + JSON.stringify(n));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the platforms the baked floor opened (#265: the owner saw the floor's underside from his own eyes at the great

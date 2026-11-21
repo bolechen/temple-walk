@@ -22,7 +22,8 @@ import fs from "node:fs";
 // Which level (docs/t05/LEVEL-SPLIT.md S6): --level=<id>, the prologue by default; the plan and the walker are the level's own
 // (tests/unit/level-plan.mjs, which reads WALK_LEVEL as the baked floor's walker does), and what its table names and sweeps is app/levels/<id>/checks.js.
 { const a = process.argv.find((q) => q.startsWith("--level=")); if (a) process.env.WALK_LEVEL = a.slice(8); }
-const { levelPlan, L: LEVEL, LEVEL_ID, checks } = await import("../tests/unit/level-plan.mjs");
+const { levelPlan, L: LEVEL, LEVEL_ID, checks, needWalkedPlan } = await import("../tests/unit/level-plan.mjs");
+await needWalkedPlan("edges", `pnpm run edges:grid -- --level=${LEVEL_ID}`);
 const { CHEEK, stairProfile } = await import("../app/src/geo.js");
 const { createMonk } = await import("../app/src/monk.js");
 const { dressed } = await import("../tests/unit/novice-glb.mjs");   // the sculpted body he wears in the page, read from the file

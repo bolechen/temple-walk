@@ -9,6 +9,9 @@ export default {
   id: "t05",
   build: buildSite,
   createWalker,
+  // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
+  // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
+  writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level
   backdrop: null,
   grove: null,
