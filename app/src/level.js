@@ -44,10 +44,19 @@ import t00 from "../levels/t00/level.js";
  */
 const TESTING = typeof __DEPLOY__ === "undefined" || __DEPLOY__ === "preview" || __DEPLOY__ === "canary";
 
+/**
+ * Whether this build is the workbench's alone: the dev server and a pull request's preview (and Node), not the canary. The
+ * probe level (docs/t05/LEVEL-SPLIT.md S7) is listed only there, so that no published address, the canary's included, offers
+ * it or carries its code. The build says it (vite.config.mjs: a preview, unless VITE_NO_WORKBENCH=1), folded in like TESTING above; WORKBENCH_LEVELS in app/src/bench.js
+ * says which levels, and tests/unit/level-bench.test.mjs holds the entries below to it.
+ */
+const WORKBENCH = typeof __WORKBENCH__ === "undefined" || __WORKBENCH__;
+
 /** @type {Record<string, () => Promise<Level>>} */
 export const LEVELS = {
   t00: () => Promise.resolve(t00),
   ...(TESTING ? { t05: () => import("../levels/t05/level.js").then((m) => m.default) } : {}),
+  ...(WORKBENCH ? { _probe: () => import("../levels/_probe/level.js").then((m) => m.default) } : {}),
 };
 export const DEFAULT_LEVEL = "t00";
 
