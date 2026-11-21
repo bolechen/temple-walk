@@ -129,7 +129,13 @@ export function buildSite(M) {
   const altar = buildAltar(), ap = altar.parts;
   walk.posts.push(...altar.walk.posts);
   root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
-  const fills = hall.fill.map(([x, y, z, i, d]) => { const l = new THREE.PointLight(0xfff4e8, 0, d, 1.6); l.position.set(x, y, z); l.userData.full = i; root.add(l); return l; });
+  const fills = hall.fill.map((/** @type {any[]} */ f) => {
+    const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
+    const l = aim ? new THREE.SpotLight(c, 0, d, 0.95, 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
+    l.position.set(x, y, z); l.userData.full = i; root.add(l);
+    if (l instanceof THREE.SpotLight && aim) { l.target.position.set(aim[0], aim[1], aim[2]); root.add(l.target); }
+    return l;
+  });
   // Each frame (yard.js): the fill follows how far inside the eye is, eased, so that from the court the doorway stays dark
   // and walking in the hall's timber comes up out of the dark over two or three seconds. A still picture takes it settled.
   // (A jump of the eye, a door or a tool's pose, is a cut: it takes the light of where it lands at once.)

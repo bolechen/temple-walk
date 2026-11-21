@@ -39,11 +39,16 @@ export const HALL = Object.freeze({
   rafter: 2.88,          // a rafter's run, between purlins: ten rafters front to back (the structural review of #425, from the depth between the eave purlins)
 });
 /**
- * The fill under the roof while he is inside (white box): the level it reaches (a little over the 10 the round before
- * #481 had always on, so that station E's middle tone is over L* 10 in first person); over how many metres in from the front wall it comes up; and how fast the eye takes it (seconds to cover about
- * two thirds of a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
+ * The fill under the roof while he is inside (white box), in three kinds, each the level it reaches once he is well in:
+ * `door`, the light the doors and windows let in, four spots just inside the front wall turned to the altar and the back
+ * wall, so that the front wall's inner face, which the light comes through, is the darkest in the hall (with lamps hung
+ * overhead before it, the band over the doors' heads read 2.4 times the back wall, #493); `top`, one lamp high over the
+ * middle of the floor for the timber; `bounce`, what the floor before the altar gives back, three lamps half a metre under
+ * the floor, which reach what looks down and leave the floor itself, looking up, unlit. Then over how many metres before
+ * the threshold it starts and how far in it is whole, and how fast the eye takes it (seconds to cover about two thirds of
+ * a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
-export const FILL = Object.freeze({ lux: 16, out: 9, depth: 3, ease: 0.5 });
+export const FILL = Object.freeze({ door: 25, top: 18, bounce: 25, out: 9, depth: 3, ease: 0.5 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
@@ -249,11 +254,15 @@ export function buildHall(M) {
     },
     // The same inside as a box the mist does not fill (fog.js, FOGSHUT): from the floor up to the ridge, within the walls.
     fogShut: { x0: -(X + H.out - H.wall), x1: X + H.out - H.wall, z0: zB - H.out + H.wall, z1: ZS[0] + H.front - H.wall, y0: y0, y1: H.ridge },
-    // A neutral fill under the roof, so that the white box's frame and floor can be seen from inside (the hall's own
-    // light, from its door and its lamps, is phase two: docs/t05/PLAN.md, PRD.md §2.1). [x, y, z, intensity, distance]:
-    // the intensity is what it reaches once he is well inside; from the court it is out, so that the doorway reads dark
-    // (`within` below, and the site's tick, raise it as he goes in).
-    fill: [[-12, y0 + 10, -6], [12, y0 + 10, -6], [-12, y0 + 10, -14], [12, y0 + 10, -14], [0, y0 + 13, -10]].map(([x, y, z]) => [x, y, z, FILL.lux, 26]),
+    // The fill under the roof (FILL), so that the white box's frame, floor and figures can be seen from inside (the hall's
+    // own light, from its door and its lamps, is phase two: docs/t05/PLAN.md, PRD.md §2.1). [x, y, z, intensity, distance,
+    // colour, aim]: a spot where an aim is given, a lamp otherwise; the intensity is what it reaches once he is well
+    // inside; from the court it is out, so that the doorway reads dark (`within` below, and the site's tick, raise it).
+    fill: [
+      ...[-17, -6, 6, 17].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.8, y0 + 4, zB + 1]]),
+      [0, y0 + 13, -9, FILL.top, 26, 0xfff4e8],
+      ...[-10, 0, 10].map((x) => [x, y0 - 0.5, -9, FILL.bounce, 22, 0xe8dccb]),
+    ],
     // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.out metres before the
     // threshold, then rising smoothly to FILL.depth metres in (PRD.md §2.1's "how far inside", its cheapest form).
     within: (x, y, z) => {

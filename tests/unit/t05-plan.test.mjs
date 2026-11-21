@@ -170,7 +170,25 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
   for (let i = 0; i < 80; i++) last = s.tick(0.05, eye(...STATION.E), false);
   assert.equal(last, 1, "settled once he stands inside");
   assert.equal(s.tick(0.05, eye(...STATION.A), false), 0, "a jump of the eye takes the light of where it lands");
-  assert.ok(FILL.lux > 0 && FILL.depth > 0 && frames > 0);
+  assert.ok(FILL.door > 0 && FILL.top > 0 && FILL.bounce > 0 && FILL.depth > 0 && frames > 0);
+});
+
+test("the fill comes from the doors, from over the floor and from the floor: none of it hung before the front wall, none against the figures, the bounce under the floor (#493)", async () => {
+  const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
+  const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
+  const spots = h.fill.filter((f) => f[6]), lamps = h.fill.filter((f) => !f[6]);
+  assert.equal(spots.length, 4, "a spot for each of the four openings' light");
+  for (const [x, y, z, , , , aim] of spots) {
+    assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X, `a door's light stands just inside the front wall (${x}, ${z.toFixed(2)})`);
+    assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar and the back wall, so the front wall takes none of it");
+    assert.ok(y > y0 + 3 && y < y0 + 8, "at about the height of the doors' middle");
+  }
+  const bounce = lamps.filter((f) => f[1] < y0), top = lamps.filter((f) => f[1] > y0);
+  assert.equal(bounce.length, 3); assert.equal(top.length, 1);
+  for (const [, y, z] of bounce) assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3, "the floor's bounce: under the floor, before the altar, so the floor itself takes none of it");
+  for (const [x, y, z] of top) assert.ok(z > ALTAR.zF + 3 && y > y0 + 10, "the one lamp overhead hangs high and well before the figures");
+  for (const [, , , i, d] of h.fill) assert.ok(i > 0 && d > 0);
+  assert.deepEqual([FILL.door, FILL.top, FILL.bounce].map((v) => v > 0), [true, true, true]);
 });
 
 test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {
