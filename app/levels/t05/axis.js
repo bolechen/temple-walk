@@ -83,17 +83,18 @@ export function treeBlocks(eye, to, t) {
   return false;
 }
 const clear = (t) => !SIGHTS.lines.some((l) => treeBlocks(SIGHTS.eye, l.to, t));
+/** No tree within 17 m of the archway, north or south, whose trunk or crown comes within 8 m of the axis: such crowns stood behind its ridges seen from cam07 and from the hall, like a pair of ears (the T05 lead's review of #492; a trunk at 8 m with a crown 3 m wide still did). */
+export const ARCHWAY_CLEAR = Object.freeze({ z: 17, x: 8 });
+export const nearArchway = (t) => Math.abs(t.z - AXIS.paifangZ) < ARCHWAY_CLEAR.z && Math.abs(t.x) - t.rx < ARCHWAY_CLEAR.x;
 const grow = () => {
   const rnd = seeded(482), out = [], rr = () => +(0.25 + rnd() * 0.25).toFixed(2), crown = () => ({ rx: +(2.7 + rnd() * 0.9).toFixed(2), ry: +(2.1 + rnd() * 0.7).toFixed(2) });
-  const add = (tree, push) => { for (let k = 0; k <= 7; k++) { const t = { ...tree, x: +(tree.x + Math.sign(tree.x) * push * k).toFixed(2) }; if (clear(t)) { out.push(Object.freeze(t)); return; } } };   // moved out until it stands clear, else left out
+  const add = (tree, push) => { for (let k = 0; k <= 7; k++) { const t = { ...tree, x: +(tree.x + Math.sign(tree.x) * push * k).toFixed(2) }; if (clear(t) && !nearArchway(t)) { out.push(Object.freeze(t)); return; } } };   // moved out until it stands clear (of the lines of sight and of the archway's neighbourhood), else left out
   // the way between the gates: pairs about 9 m apart, each off its place a little, two places left empty
   const lane = []; for (let z = FOOT.inner.z1 + 7.8; z <= FOOT.outer.z0 - 8; z += 9) lane.push(z);
   lane.forEach((z, n) => { for (const sx of [-1, 1]) { const dz = (rnd() * 2 - 1) * 0.8, dx = (rnd() * 2 - 1) * 0.5, r = rr(), c = crown(); if ((sx === 1 && n === 2) || (sx === -1 && n === 4)) continue; add({ x: sx * (5.5 + dx), z: +(z + dz).toFixed(2), y: 0, r, ...c }, 0.4); } });
   // the terrace between the hall and the archway (42 m): each side on its own, by hand and unevenly, 5.5 to 8.5 m off the axis, no pairs
-  const TERRACE_TREES = { [-1]: [84.5, 97.2, 106.8], [1]: [82.8, 90.3, 101.5] };
+  const TERRACE_TREES = { [-1]: [81.6, 86.4, 95.2], [1]: [79.6, 90.3, 94.8] };
   for (const sx of [-1, 1]) for (const z of TERRACE_TREES[sx]) { const r = rr(), c = crown(), x = 5.5 + rnd() * 3; add({ x: sx * x, z, y: SECOND.y, r, ...c }, 0.5); }
-  // between the archway and the gate: a pair, a little apart
-  for (const sx of [-1, 1]) { const r = rr(), c = crown(); add({ x: sx * (5.5 + rnd() * 0.6), z: +(127 + (rnd() * 2 - 1) * 1.5).toFixed(2), y: SECOND.y, r, ...c }, 0.5); }
   return Object.freeze(out);
 };
 export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });

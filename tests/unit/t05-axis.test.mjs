@@ -173,3 +173,25 @@ test("no tree crown stands in cam07's view of the Great Hall's ridge, along its 
   const blocked = []; for (const p of pts) for (const t of TRUNKS.list) if (hits(p, t)) blocked.push(`${p.map((n) => n.toFixed(1))} by the crown at (${t.x}, ${t.z})`);
   assert.deepEqual(blocked, [], "no crown is in the line of sight");
 });
+
+test("no tree stands within 17 m of the archway whose crown comes within 8 m of the axis, and none shows over its roofs from cam07 or from the hall's front (#492 review)", async () => {
+  const { ARCHWAY_CLEAR, nearArchway } = AX, { buildPaifang } = await import("../../app/src/paifang.js");
+  assert.deepEqual({ ...ARCHWAY_CLEAR }, { z: 17, x: 8 });
+  assert.deepEqual(TRUNKS.list.filter(nearArchway).map((t) => [t.x, t.z]), [], "none in the archway's neighbourhood");
+  assert.ok(TRUNKS.list.every((t) => Math.abs(t.z - AXIS.paifangZ) >= ARCHWAY_CLEAR.z || Math.abs(t.x) - t.rx >= ARCHWAY_CLEAR.x), "by their own numbers");
+  // The archway's top edge, seen from the front: a ray down onto it at each x; and over that edge, in its plane, points up to 4 m above it
+  // that the eye sees the sky through. From cam07 (in the inner gate's passage) and from the hall's platform looking back, none of them
+  // may be behind a trunk or a crown: over the roofs there is sky, not a pair of ears.
+  const pf = buildPaifang(M); pf.group.position.set(0, SECOND.y, AXIS.paifangZ); pf.group.updateMatrixWorld(true);
+  const meshes = []; pf.group.traverse((o) => o.isMesh && meshes.push(o));
+  const ray = new THREE.Raycaster(), top = (x) => { ray.set(new THREE.Vector3(x, SECOND.y + 20, AXIS.paifangZ), new THREE.Vector3(0, -1, 0)); const h = ray.intersectObjects(meshes, false); return h.length ? h[0].point.y : null; };
+  // each line carried on past the archway's plane, out to the hall's side or the gate's, where the trees behind it stand
+  const along = (eye, p) => { const far = eye[2] > p[2] ? AXIS.hallZ - 25 : AXIS.innerZ, k = (far - eye[2]) / (p[2] - eye[2]); return [eye[0] + (p[0] - eye[0]) * k, eye[1] + (p[1] - eye[1]) * k, far]; };
+  const eyes = [[0, SECOND.y + 1.6, AXIS.innerZ + 1], [0, SECOND.y + 1.6, AXIS.hallZ + 11]], blocked = []; let n = 0;
+  for (let x = -7.4; x <= 7.4 + 1e-9; x += 0.4) {
+    const y0 = top(x); if (y0 === null) continue;
+    for (let y = y0 + 0.1; y <= y0 + 4; y += 0.5) for (const eye of eyes) for (const t of TRUNKS.list) { n++; if (treeBlocks(eye, [x, y, AXIS.paifangZ], t) || treeBlocks(eye, along(eye, [x, y, AXIS.paifangZ]), t)) blocked.push(`from z ${eye[2]}: (${x.toFixed(1)}, ${(y - SECOND.y).toFixed(1)}) by the tree at (${t.x}, ${t.z})`); }
+  }
+  assert.ok(n > 1000, "many lines were tried");
+  assert.deepEqual(blocked.slice(0, 6), [], `${blocked.length} lines over the archway's roofs are stopped by a tree`);
+});
