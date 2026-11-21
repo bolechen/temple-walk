@@ -380,8 +380,10 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
   #title .title-top { bottom: calc(53.3% + 16px); }
   #title .title-name { padding-bottom: 0; }
   #title .mark { right: auto; left: calc(100% - var(--h1) * .08 + 10px); top: calc(var(--h1) * .525 - var(--markW) / 2); }
-  #enterBtn { padding: 6px 26px 14px; }
-  #againBtn { padding: 4px 14px; }
+  #title .title-low { top: calc(70% + 10px); }
+  #title .title-note { margin-top: 0; }
+  #enterBtn { padding: 7px 26px 15px; }   /* (44 px high: a thumb's size, which the phone audit holds) */
+  #againBtn { padding: 6px 14px; }
 }
 #loading { width: min(280px, 70vw); margin: 24px auto 0; text-align: left; }
 /* Opened by a change of language in the pause menu (#140): not the title, only a sheet that says the words are being
