@@ -1430,12 +1430,16 @@ createGame({
   level: L,   // which temple: whether it keeps a place, plays the opening, raises the prologue's title (#385)
   traceStubs: (k) => props.setTraces(k),   // the stubs other visitors left in the censer today (同修留痕)
   site, walker, scene,
-  where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null }),
+  where: () => ({ x: pos.x, z: pos.z, yaw, up: upIn ? upIn.id : null, hall: inside && !upIn ? hallIn.room.id : null }),
+  hallIds: site.halls.map((h) => h.id),
   // Up on a balcony walked round: which one; the stair's foot in the room he is in, if it has one; go up or come down.
   up: () => (upIn ? upIn.id : null), stair: () => (inside && hallIn.room.stair) || null, lofts: site.lofts,
   climb: (id) => climbTo(site.lofts[id]), descend: () => climbTo(null),
   // Stand him somewhere at once, facing a way (coming back to where a visit was left, or to the start of the path).
-  place(x, z, turn, up = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
+  // Stood where a kept place says: on a balcony, in a hall's room (#375: indoors first, so that the room's floor is the one
+  // asked, as a change of language does), or on the ground; a spot that falls in something moves to the nearest open floor,
+  // in a room else its door, out of doors else the foot of the path.
+  place(x, z, turn, up = null, hallId = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } const hall = hallId ? site.halls.find((h) => h.id === hallId) : null; if (hall) indoors(hall); { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else if (hall) { x = pos.x; z = pos.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
   start: site.start,
   // Go somewhere at once behind the veil, as through a door: to a place out of doors, or to one inside a hall.
   async travel(x, z, turn, hallId) {
