@@ -161,9 +161,10 @@ jobs:
       - name: Hand the floor on to the test shards
         uses: actions/upload-artifact@v4
         with:
-          name: floor-${{ github.run_id }}-${{ github.run_attempt }}
+          name: floor-${{ github.run_id }}
           path: app/shared/walk/*.bin
           retention-days: 1
+          overwrite: true
           if-no-files-found: error
 
   # The unit tests (the plan, the walker, the building generator, the seasons) shared among five machines (#442): every
@@ -187,7 +188,7 @@ jobs:
       - name: The floor, from the `floor` job
         uses: actions/download-artifact@v4
         with:
-          name: floor-${{ github.run_id }}-${{ github.run_attempt }}
+          name: floor-${{ github.run_id }}
           path: app/shared/walk
       - name: Unit tests, this machine's share
         run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5
@@ -211,7 +212,7 @@ jobs:
       - name: The floor, from the `floor` job
         uses: actions/download-artifact@v4
         with:
-          name: floor-${{ github.run_id }}-${{ github.run_attempt }}
+          name: floor-${{ github.run_id }}
           path: app/shared/walk
       - name: The same unit tests on the walker over the baked floor (#265), this machine's share
         run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5 --import ./tools/walk/swap.mjs

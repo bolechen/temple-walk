@@ -94,11 +94,11 @@ test("pages.yml: the publication waits for both sets of unit tests, the build an
   assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5 --import \.\/tools\/walk\/swap\.mjs/);
   for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3, 4, 5\]/, `${j}: five machines, as SHARDS says`);
   // the floor is baked once, by `floor`, and handed to every shard as an artifact before any test reads it (#442)
-  assert.match(jobOf(y, "floor"), /node tools\/bake-walk\.mjs/); assert.match(jobOf(y, "floor"), /upload-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/);
+  assert.match(jobOf(y, "floor"), /node tools\/bake-walk\.mjs/); assert.doesNotMatch(y, /floor-[^\n]*run_attempt/, "the floor's name has no run_attempt: re-running only the failed jobs must find it"); assert.match(jobOf(y, "floor"), /overwrite: true/); assert.match(jobOf(y, "floor"), /upload-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n/);
   for (const j of ["tests", "grid"]) {
     const body = jobOf(y, j);
     assert.match(body, /needs: \[changes, floor\]/, `${j} waits for the floor`);
-    assert.match(body, /download-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}[\s\S]*path: app\/shared\/walk/, `${j} takes the floor as it is`);
+    assert.match(body, /download-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n[\s\S]*path: app\/shared\/walk/, `${j} takes the floor as it is`);
     assert.ok(body.indexOf("download-artifact") < body.indexOf("unit-shard.cjs"), `${j} has the floor before its tests run`);
     assert.doesNotMatch(body, /node tools\/bake-walk\.mjs/, `${j} does not bake it again`);
   }
