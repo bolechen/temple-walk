@@ -10,6 +10,7 @@ import { PURLIN, PING, buildHall, DOOR } from "../../src/building.js";
 export { BODY };
 import { makePlaque, makeWallPanel } from "../../src/plaque.js";
 import { CENSER } from "../../src/censer.js";
+import { LIT } from "./windows.js";
 
 export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0, GROVE_IN: 20.5 };   // GROVE_IN: where the bamboo closes in on the forecourt
 export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
@@ -85,7 +86,7 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
 export function buildSite(M) {
   const root = new THREE.Group();
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
-  const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {};
+  const litWindows = [], walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {};
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
   // front and back purlins on a hall or a storeyed building; on a lesser hall (`lodge`) a quarter and eight parts in a
   // hundred more, 0.27. A pointed (tent) roof rises half its span.
@@ -93,7 +94,12 @@ export function buildSite(M) {
     if (tent) return (deep + (o.brackets === false ? 0 : (2 * PURLIN * (o.cai || 0.21)) / 0.21)) / 2;   // a pointed roof: half its span
     return (deep + (2 * PURLIN * (o.cai || 0.21)) / 0.21) * (o.lodge ? 0.27 : 1 / 3); };
   const put = (opts, at, q = 0, lvl = 0, base) => {
-    const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, b = buildHall(M, { ...opts, rise: opts.rise ?? ju(opts), ground: y });
+    const y = base !== undefined ? base : lvl ? LEVELS[lvl - 1].y : 0, key = (opts.hall?.id ?? opts.plaque?.text ?? "?") + (opts.storey ? "#" + opts.storey : "");
+    const b = buildHall(M, { ...opts, rise: opts.rise ?? ju(opts), ground: y, lit: LIT[key] });
+    for (const w of b.windows) {   // where each bay stands in the world, for the measuring tools and the tests
+      const [ax, az] = turn(w.x0, w.z, q), [bx, bz] = turn(w.x1, w.z, q);
+      litWindows.push({ ...w, building: key, n: turn(0, w.face === "front" ? 1 : -1, q), a: [ax + at[0], az + at[1]], b: [bx + at[0], bz + at[1]], y0: w.y0 + y, y1: w.y1 + y });
+    }
     b.group.position.set(at[0], y, at[1]); b.group.rotation.y = (q * Math.PI) / 2; root.add(b.group);
     for (const r of b.walk.solids) walk.solids.push(r.h === undefined ? place(r, at, q) : { ...place(r, at, q), top: r.h + y });
     for (const r of b.walk.decks) walk.decks.push({ ...place(r, at, q), h: r.h + y });
@@ -568,7 +574,7 @@ export function buildSite(M) {
   const censer = new THREE.Vector3(0, 0, 13);
   walk.posts.push({ x: censer.x, z: censer.z, r: CENSER.reach, eyeR: CENSER.ears + 0.1, top: censer.y + CENSER.height + 0.05 });   // the eye kept off its ears too
 
-  return { root, walk, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
+  return { root, walk, litWindows, shade, closed, paving, hall, halls, buildings, lofts, doorways, views, viewUp, places, seats, drawnSeats, cedars, trees: [...seasonal, ...cedars], strikers, start: views.arrive, censer, sunFocus: [0, -25], summitPorch: [0, topZ + 7.5 + 0.8] };
 }
 
 // ---- Furnishings ----

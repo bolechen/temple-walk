@@ -205,21 +205,26 @@ export function buildHall(M, opts) {
   };
   const sill = p.platH + 0.16, head = Math.min(sill + 2.86, topY - 0.5), hasTransom = topY - head > 0.4;
   // kind: 0 a door leaf (lattice over a panel), 1 a transom, 2 a window of upright bars
-  const leaf = (x0, x1, y0, y1, kind, z, flip) => {
+  // `code` says how brightly the bay behind this leaf glows at dusk and at night (windows.js); it rides in the whole
+  // part of the leaf's u coordinate, sixteen to a leaf, so that it survives mergeStatic, which keeps only uv.
+  const leafAt = (x0, x1, y0, y1, kind, z, flip, code = 0) => {
     const g2 = new THREE.PlaneGeometry(x1 - x0, y1 - y0);
     if (flip) g2.rotateY(Math.PI);
     g2.translate((x0 + x1) / 2, (y0 + y1) / 2, z);
     const n = Math.max(1, Math.round((x1 - x0) / 1.05)), uv = g2.attributes.uv;
-    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * n, kind === 2 ? 201.25 + uv.getY(i) * 1.77 : (kind ? 100 : 0) + uv.getY(i) * (kind ? 0.7 : 3.02));
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * n + code * 16, kind === 2 ? 201.25 + uv.getY(i) * 1.77 : (kind ? 100 : 0) + uv.getY(i) * (kind ? 0.7 : 3.02));
     lat.push(g2);
   };
   const mid = Math.floor(nx / 2);
+  const windows = [];   // every lattice bay as built, with the glow it was given: what tests and tools read
   const face = (mode, z, sign) => {   // one long side of the building; sign = +1 front, -1 back
     if (mode === "open") return;
-    const zz = z - sign * 0.03, flip = sign < 0;
+    const zz = z - sign * 0.03, flip = sign < 0, side = sign > 0 ? "front" : "back";
     for (let i = 0; i < nx; i++) {
       const x0 = xs[i] + 0.25, x1 = xs[i + 1] - 0.25, centre = i === mid;
+      const lit = p.lit?.[side]?.[i] || [0, 0], code = lit[0] * 8 + lit[1], leaf = (a, b, c, d, kind, e, f) => leafAt(a, b, c, d, kind, e, f, code);
       if (mode === "lattice") {
+        windows.push({ face: side, bay: i, dusk: lit[0], night: lit[1], door: Math.abs(i - mid) <= (nx >= 5 ? 1 : 0) || nx < 3, x0, x1, y0: sill, y1: topY, z: zz });
         // The middle bays are doors; the bays beyond them are windows of upright bars over a white sill wall.
         const door = Math.abs(i - mid) <= (nx >= 5 ? 1 : 0) || nx < 3;
         if (centre && p.dark) { leaf(x0, x0 + 1.05, sill, head, 0, zz, flip); leaf(x1 - 1.05, x1, sill, head, 0, zz, flip); }
@@ -618,5 +623,5 @@ export function buildHall(M, opts) {
     body: p.walkAll ? null : { x0: -PX - 0.5, x1: PX + 0.5, z0: zB - 0.5, z1: zF + 0.5 }, core: { x0: -X - 0.4, x1: X + 0.4, z0: ZB - 0.4, z1: Z + 0.4 }, crest: g.userData.crest || null, floor: p.platH, edge: p.platH + (p.rail ? 1.2 : 0.3) });
   // What his shoes come down on here, for the sound of his steps: a timber gallery on an upper storey, stone below.
   for (const r of [...walk.decks, ...walk.ramps]) r.floor ??= p.platBase > 0 ? "wood" : "stone";
-  return { group: g, aoAt: ao, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
+  return { group: g, windows, aoAt: ao, walk, plat, sets, ping, corners, cai: p.cai, parts: { ludou: 0.46 * K, nidao: 0.9 * K, hua: 1.02 * K, man: 1.32 * K, ling: 1.0 * K }, cols: perimeter.map((c) => [c.x, c.z]), roof: { EZ, purlin: PURLIN_IN, tent, at: (d) => EAVE_Y + profile(d) }, EX, EZ, eaveY: EAVE_Y, ridgeY: EAVE_Y + RISE, colTop: COL_TOP, platH: p.platH, run, frontZ: Z, zF, zB, roofAt: (d) => EAVE_Y + profile(d), loft, rail: g.userData.railRuns || null };
 }

@@ -18,14 +18,14 @@ export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uWinNight = U.uWinNight; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;")
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : ""))
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT, uWinNight; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : ""))
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
@@ -169,11 +169,13 @@ export function createMaterials() {
       float panel=(1.-zone)*(1.-frame)*smoothstep(.0,.03,min(min(lx-.16,.89-lx),min(q.y-.16,1.02-q.y)));
       col=woodCol(vWP,vec3(9.,1.1,9.))*(1.-.25*panel); col=mix(col,vec3(.01,.009,.008),hole);
       rough_=mix(.8,1.,hole); bump_=(frame+bar*zone+rail)*.012-hole*.03+panel*.008;
-      // Lamplight behind the lattice after dusk: brightest low down where the lamp stands, fading up the paper;
-      // each room its own strength, and one leaf in eight dark.
-      float leaf=floor(vUv2.x), room=n2(vec2(leaf*.31,2.)), on=step(.125,h21(vec2(leaf,7.)));
-      float up=tr?.25:exp(-pow(abs((q.y-.85)/1.25),2.));
-      emit_=mix(uWin*vec3(.24,.145,.11),uWin,up)*uLamp*hole*on*(.35+.75*room)*1.25;`, { snow: false }),
+      // Lamplight behind the lattice after dusk, where the plan says a bay is lit (windows.js, ART-REVIEW A2): the
+      // whole part of u carries a code of sixteen leaves (dusk level * 8 + night level, each 0..7, and the bay's
+      // leaves count from there); a bay of level 0 stays dark paper. Brightest low down where the lamp stands,
+      // fading up the paper, each leaf a little its own.
+      float code=floor((vUv2.x+4.)/16.), leaf=vUv2.x-code*16., lv=mix(floor(code/8.),mod(code,8.),uWinNight)/7.;
+      float up=tr?.2:exp(-pow(abs((q.y-.85)/1.1),2.));
+      emit_=mix(uWin*vec3(.2,.13,.1),uWin,up)*uLamp*hole*lv*3.2*(.88+.24*h21(vec2(floor(leaf),7.)));`, { snow: false }),
 
     bronze: procMat("bronze", { roughness: 0.5, metalness: 0.75, envMapIntensity: 1.0 }, `
       float p=smoothstep(.4,.72,fbm3(vWP*5.)); col=mix(vec3(.16,.125,.085),vec3(.16,.27,.22),p*.75);  // verdigris
