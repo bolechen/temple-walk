@@ -137,14 +137,17 @@ if PO:
   u = (P0 - wr0) @ ax0 / L0; v = (P0 - wr0) @ lat0; w = (P0 - wr0) @ n0
   sc = PO.get("scale", T.get("scale", 0.97)); u0, u1, bd = PO.get("u0", 0.4), PO.get("u1", 0.6), math.radians(PO["bend_deg"])
   stp = lambda x: np.clip((x - u0) / (u1 - u0), 0, 1) ** 2 * (3 - 2 * np.clip((x - u0) / (u1 - u0), 0, 1))
-  grid = np.linspace(0, 1.05, 400); tg = bd * stp(grid); ds = np.diff(grid, prepend=0) * L0 * sc
-  cx_, cz_ = np.cumsum(np.cos(tg) * ds), np.cumsum(np.sin(tg) * ds); th_ = bd * stp(u)
-  du = np.interp(u, grid, cx_) - w * sc * np.sin(th_); dn = np.interp(u, grid, cz_) + w * sc * np.cos(th_)
+  def bendgeo(bd):
+    grid = np.linspace(0, 1.05, 400); tg = bd * stp(grid); ds = np.diff(grid, prepend=0) * L0 * sc
+    cx_, cz_ = np.cumsum(np.cos(tg) * ds), np.cumsum(np.sin(tg) * ds); th_ = bd * stp(u)
+    return np.interp(u, grid, cx_) - w * sc * np.sin(th_), np.interp(u, grid, cz_) + w * sc * np.cos(th_)
+  du, dn = bendgeo(bd)
   a_ = math.radians(PO["pitch_deg"]); D = np.array([0, -math.cos(a_), math.sin(a_)]); N = np.array([0, math.sin(a_), math.cos(a_)])
   t_ = math.radians(PO.get("turn_deg", 5)); N = math.cos(t_) * N + math.sin(t_) * np.cross(D, N); X = np.cross(D, N)
   TP = T.get("taper")
-  def place(W):
-    Q = W + np.outer(du, D) + np.outer(dn, N) + np.outer(-v * sc, X)
+  def place(W, geo=None):
+    du_, dn_ = geo if geo is not None else (du, dn)
+    Q = W + np.outer(du_, D) + np.outer(dn_, N) + np.outer(-v * sc, X)
     RD = PO.get("round")
     if RD:   # the wrist's section rounded (the 3D review: long / short ≤ 1.25 so the turned hand meets the forearm unseen):
       # over its last `round.length` metres its width across (X) is drawn in toward `round.ratio` times its thickness
@@ -413,9 +416,13 @@ if PO and PO.get("solve"):
   for (a, b), zz in zip(map(tuple, np.floor(st[sel][:, :2] / 0.02).astype(int)), st[sel][:, 2]):
     if zz > cf.get((a, b), -9): cf[(a, b)] = zz
   W0 = np.array(PO["wrist0"], float)
-  def gap(d):
-    Qd = place(W0 + [0, 0, d]); kk = np.floor(Qd[:, :2] / 0.02).astype(int)
-    g = np.array([q[2] - cf[(a, b)] for q, (a, b) in zip(Qd, map(tuple, kk)) if (a, b) in cf])
+  palm_only = u < u0 if PO["solve"].get("palm_only") else np.ones(len(u), bool)
+  def gaps(Qd):
+    kk = np.floor(Qd[:, :2] / 0.02).astype(int)
+    return np.array([q[2] - cf.get((a, b), -9.0) for q, (a, b) in zip(Qd, map(tuple, kk))])
+  def gap(d, geo=None, sel_=None):
+    g = gaps(place(W0 + [0, 0, d], geo)); sel_ = palm_only if sel_ is None else sel_
+    g = g[sel_ & (g > -8)]
     return g.min() if len(g) else 9.0
   lo_, hi_ = 0.0, 0.8
   for _ in range(30):
@@ -423,6 +430,15 @@ if PO and PO.get("solve"):
     if gap(mid) < PO["solve"]["gap"]: lo_ = mid
     else: hi_ = mid
   dsol = hi_; W = W0 + [0, 0, dsol]; AR = dict(AR); AR["shift"] = float(dsol)
+  if PO["solve"].get("bend_range"):
+    # the fingers then bent from the knuckles toward the back of the hand as far as the knee lets them (within
+    # `bend_range` degrees), their tips kept `solve.tip_gap` metres off it
+    fingers = u >= u0; b_best = 0.0
+    for bdeg in np.arange(0, PO["solve"]["bend_range"][0] - 0.01, -1.0):
+      if gap(dsol, bendgeo(math.radians(bdeg)), fingers) >= PO["solve"].get("tip_gap", 0.01): b_best = bdeg
+      else: break
+    du, dn = bendgeo(math.radians(b_best)); log["pose"]["bend_deg"] = float(b_best)
+    log["pose"]["tip_gap_m"] = round(float(gap(dsol, None, fingers)), 4)
   hand_co = place(W); tw = W
   log["pose"].update({"wrist0": W0.tolist(), "solved_shift_m": round(float(dsol), 4), "wrist": W.round(4).tolist(), "gap_m": round(float(gap(dsol)), 4)})
   Qd = place(W); kk = np.floor(Qd[:, :2] / 0.02).astype(int); gg = np.array([q[2] - cf.get((a, b), -9) for q, (a, b) in zip(Qd, map(tuple, kk))])
