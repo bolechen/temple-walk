@@ -441,7 +441,7 @@ if PO and PO.get("solve"):
     du, dn = bendgeo(math.radians(b_best)); log["pose"]["bend_deg"] = float(b_best)
     log["pose"]["tip_gap_m"] = round(float(gap(dsol, None, fingers)), 4)
   hand_co = place(W); tw = W
-  np.save(os.path.join(out, "hand-final.npy"), hand_co)   # the hand as joined (hand.glb is it before the solve)
+  np.savez(os.path.join(out, "hand-final.npz"), points=hand_co, faces=hand_faces)   # the hand as joined (hand.glb is it before the solve)
   log["pose"].update({"wrist0": W0.tolist(), "solved_shift_m": round(float(dsol), 4), "wrist": W.round(4).tolist(), "gap_m": round(float(gap(dsol)), 4)})
   Qd = place(W); kk = np.floor(Qd[:, :2] / 0.02).astype(int); gg = np.array([q[2] - cf.get((a, b), -9) for q, (a, b) in zip(Qd, map(tuple, kk))])
   j_ = int(np.argmin(gg)); a_, b_ = map(int, kk[j_]); src = st[sel][np.all(np.floor(st[sel][:, :2] / 0.02).astype(int) == [a_, b_], axis=1)]

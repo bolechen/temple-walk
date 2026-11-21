@@ -24,8 +24,8 @@ def stood(p, H):
   t.merge_vertices(merge_tex=True, merge_norm=True); return t   # the glTF file splits points along its seams
 res = stood(os.path.join(out, "sakyamuni-varada.glb"), T["height"])
 hand = trimesh.load(os.path.join(out, "hand.glb"), force="mesh", process=False); hand.merge_vertices(merge_tex=True, merge_norm=True)
-if os.path.exists(os.path.join(out, "hand-final.npy")):   # the hand where the solve put it (same points, same order)
-  hand = trimesh.load(os.path.join(out, "hand.glb"), force="mesh", process=False); hand.vertices = np.load(os.path.join(out, "hand-final.npy")); hand.merge_vertices(merge_tex=True, merge_norm=True)
+if os.path.exists(os.path.join(out, "hand-final.npz")):   # the hand where the solve put it
+  hf = np.load(os.path.join(out, "hand-final.npz")); hand = trimesh.Trimesh(hf["points"], hf["faces"], process=False); hand.merge_vertices()
 vj = json.load(open(os.path.join(out, "varada.json"))) if os.path.exists(os.path.join(out, "varada.json")) else {}
 H = hand.vertices; tw = np.array(vj.get("pose", {}).get("wrist") or json.load(open(os.path.join(out, "hand.json")))["placed"]["wrist"])
 tip = H[np.argmin(H[:, 1])]; ax = (tip - tw) / np.linalg.norm(tip - tw); al = (H - tw) @ ax; L = float(al.max())
