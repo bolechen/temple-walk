@@ -281,10 +281,17 @@ export function buildSite(M) {
 
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
   const sp = putStack([
-    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 0 },
+    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true },   // (three treads up from the path, #478: it had none, and 0.45 m is more than he steps; open floor like the path's other pavilions, #274)
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
   ], [-12.5, 50.5], 1);
   sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
+  // Open floor on the written plan (`walkAll`) leaves no solid round the platform, so that his shoes could come down on its lip from the
+  // ground beside it (`edges`): the platform's own solid is put back, as a hall's is; the floor laid over it, the stair, is unchanged.
+  walk.solids.push({ ...place({ x0: -3.3, x1: 3.3, z0: -3.3, z1: 3.3 }, [-12.5, 50.5], 1), own: true });
+  // The open floor reaches the platform's lip, where the stair's cheek stones stand level with it: a post along the lip on each side of the stair keeps his shoes off them.
+  for (const sx of [-1, 1]) walk.posts.push(place({ x0: sx > 0 ? 0.9 : -1.9, x1: sx > 0 ? 1.9 : -0.9, z0: 2.6, z1: 2.84 }, [-12.5, 50.5], 1));
+  // The written plan walks round the stele's foot (the baked floor takes it from the mesh): 1.5 by 0.9 m, turned a quarter, and his own width.
+  walk.posts.push({ x0: -12.5 - 0.45 - BODY, x1: -12.5 + 0.45 + BODY, z0: 50.5 - 0.75 - BODY, z1: 50.5 + 0.75 + BODY, eyeTop: 3.45 });   // (`eyeTop`: the stele stands 3.6 m, and the following eye stays out of it all the way up)
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble
