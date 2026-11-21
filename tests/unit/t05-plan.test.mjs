@@ -192,6 +192,15 @@ test("the fill comes from the doors, from over the floor and from the floor: non
   assert.deepEqual([FILL.door, FILL.top, FILL.bounce].map((v) => v > 0), [true, true, true]);
 });
 
+test("the timber overhead takes more of the inside's light than the walls, from over the doors' middle up; the walls keep theirs (#493)", async () => {
+  const { TIMBER } = await import("../../app/levels/t05/hall.js");
+  const h = buildHall(M), y0 = HALL.floor;
+  assert.equal(h.timberShut(0, y0 + 1, -10), h.shut(0, y0 + 1, -10), "low in the hall, as the walls");
+  assert.ok(Math.abs(h.timberShut(0, y0 + 9, -10) - Math.min(1, HALL.inside * TIMBER.lift)) < 1e-9, "high up, TIMBER.lift times the walls'");
+  assert.equal(h.timberShut(0, y0 + 9, 30), 1, "outside the hall the sky is not shut out, timber or not");
+  for (let y = y0; y < y0 + 10; y += 0.05) { const a = h.timberShut(0, y, -10), b = h.timberShut(0, y + 0.05, -10); assert.ok(b >= a && b - a < 0.02, `no step at ${y.toFixed(2)}`); }
+});
+
 test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {
   const h = buildHall(M), X = XS[XS.length - 1], xi = X + HALL.out - HALL.wall, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall;
   // the east end wall's inner face at its front corner, inside the front wall's thickness: looking in, so inside

@@ -48,6 +48,8 @@ export const HALL = Object.freeze({
  * the threshold it starts and how far in it is whole, and how fast the eye takes it (seconds to cover about two thirds of
  * a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
+/** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
+export const TIMBER = Object.freeze({ lift: 2.2, from: 3.0, to: 4.5 });
 export const FILL = Object.freeze({ door: 25, top: 18, bounce: 1.3, out: 9, depth: 3, ease: 0.5 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
@@ -230,6 +232,14 @@ export function buildHall(M) {
   for (let k = 1; k <= 5; k++) for (const z of purlinZ(k)) purlinAt.add(z);
   for (const z of purlinAt) purlin(z, purlinY(z), PT);
 
+  const hallShut = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, nx = 0, ny = 1, nz = 0) => {
+    if (y < y0 - 0.01) return 1;
+    const xi = X + H.out - H.wall, zf = ZS[0] + H.front - H.wall, zb = zB - H.out + H.wall, ax = Math.abs(x);
+    if (ax < xi + 0.02 && z < zf + 0.02 && z > zb - 0.02) return H.inside;
+    if (ax > X + H.out + 0.02 || z > ZS[0] + H.front + 0.02 || z < zB - H.out - 0.02) return 1;
+    const inward = (ax >= xi && nx * Math.sign(x) < -0.5) || (z >= zf && nz < -0.5) || (z <= zb && nz > 0.5);
+    return inward ? H.inside : 1;
+  };
   return {
     // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
     // not a box's own 0 to 1, which laid the damp line slanting across every wall (the diagonal band the art review saw).
@@ -244,13 +254,17 @@ export function buildHall(M) {
     // the next wall, outside the inside, and took the whole sky there, which spread down the face (the end walls read
     // eight to ten times the back wall, the art review of #481). Within the walls' own thickness, a face that looks
     // into the hall is inside; one that looks out, or along the wall, is not.
-    shut: (x, y, z, nx = 0, ny = 1, nz = 0) => {
-      if (y < y0 - 0.01) return 1;
-      const xi = X + H.out - H.wall, zf = ZS[0] + H.front - H.wall, zb = zB - H.out + H.wall, ax = Math.abs(x);
-      if (ax < xi + 0.02 && z < zf + 0.02 && z > zb - 0.02) return H.inside;
-      if (ax > X + H.out + 0.02 || z > ZS[0] + H.front + 0.02 || z < zB - H.out - 0.02) return 1;
-      const inward = (ax >= xi && nx * Math.sign(x) < -0.5) || (z >= zf && nz < -0.5) || (z <= zb && nz > 0.5);
-      return inward ? H.inside : 1;
+    shut: hallShut,
+    // The timber overhead (beams, purlins, frames and the roof's underside) takes more of the inside's light than the walls
+    // and the figures: the light that comes in at the doors and off the floor reaches up into it, where a wall's face only
+    // sees the floor at a slant. In the white box without it the frames read as one dark layer (the art director on #493:
+    // station E's upper 40% at L* 9.0, main 13.9), so above the doors' middle its share rises smoothly to TIMBER.lift times
+    // the walls', between TIMBER.from and TIMBER.to over the floor; the walls, the columns and the figures keep theirs.
+    timberShut: (x, y, z, nx = 0, ny = 1, nz = 0) => {
+      const a = hallShut(x, y, z, nx, ny, nz);
+      if (a >= 1) return a;
+      const t = Math.min(1, Math.max(0, (y - y0 - TIMBER.from) / (TIMBER.to - TIMBER.from))), k = t * t * (3 - 2 * t);
+      return Math.min(1, a * (1 + (TIMBER.lift - 1) * k));
     },
     // The same inside as a box the mist does not fill (fog.js, FOGSHUT): from the floor up to the ridge, within the walls.
     fogShut: { x0: -(X + H.out - H.wall), x1: X + H.out - H.wall, z0: zB - H.out + H.wall, z1: ZS[0] + H.front - H.wall, y0: y0, y1: H.ridge },

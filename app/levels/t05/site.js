@@ -115,8 +115,9 @@ export function buildSite(M) {
   const hall = buildHall(M), hp = hall.parts;
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
-  root.add(mesh(merge(hp.wood), M.woodX, sh), mesh(merge(hp.woodZ), M.woodZ, sh), mesh(merge(hp.frame), M.woodZ, sh), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
-    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, sh), mesh(merge(hp.ridge), M.ridge));
+  const shT = { ao: hall.timberShut };   // the timber overhead takes more of it (hall.js, TIMBER)
+  root.add(mesh(merge(hp.wood), M.woodX, shT), mesh(merge(hp.woodZ), M.woodZ, shT), mesh(merge(hp.frame), M.woodZ, shT), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
+    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shT), mesh(merge(hp.ridge), M.ridge));
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
