@@ -1,0 +1,42 @@
+// ART-11 / PHOTO-02 recheck: bamboo start after 入山 (?enter, q=high), the first walk frame and the raised camera, at 16:9, 4:3, 9:16.
+const repo = "/home/user/temple-walk";
+const { chromium } = require(repo + "/node_modules/playwright");
+const http = require("http"), fs = require("fs"), path = require("path");
+const root = require(repo + "/tools/site.cjs").site(), out = process.argv[2];
+const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2", ".png": "image/png", ".wasm": "application/wasm" };
+const srv = http.createServer((req, res) => {
+  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
+  if (req.url.startsWith("/api/")) { res.writeHead(200, { "content-type": "application/json" }); return res.end(req.url.startsWith("/api/traces") ? '{"day":"2026-11-21","traces":{}}' : '{}'); }
+  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
+  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
+});
+(async () => {
+  fs.mkdirSync(out, { recursive: true });
+  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+  const base = `http://127.0.0.1:${srv.address().port}/`;
+  const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+  const result = [];
+  for (const [name, w, h] of [["16x9", 1280, 720], ["4x3", 1024, 768], ["9x16", 405, 720]]) {
+    const ctx = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, locale: "zh-CN" });
+    const p = await ctx.newPage(); const errs = [];
+    p.on("pageerror", (e) => errs.push(String(e.message).slice(0, 300)));
+    p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));
+    await p.goto(base + "?enter&q=high&season=summer&time=day", { waitUntil: "commit", timeout: 180000 });
+    await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 });
+    const f0 = await p.evaluate(() => window.__yard().frames);
+    await p.waitForFunction((f) => window.__yard().frames > f + 30, f0, { timeout: 300000 });
+    const walk = await p.evaluate(() => { const y = window.__yard(), pr = window.__probe(); return { x: y.x, z: y.z, yaw: y.yaw, view: pr.view, monkBox: pr.monkBox, post: pr.post }; });
+    await p.screenshot({ path: path.join(out, `start-walk-${name}.png`), timeout: 240000 });
+    await p.mouse.move(w / 2, h / 2);
+    await p.keyboard.press("p");   // real key: raise the camera
+    const f1 = await p.evaluate(() => window.__yard().frames);
+    await p.waitForFunction((f) => window.__yard().frames > f + 20, f1, { timeout: 300000 });
+    const raised = await p.evaluate(() => { const pr = window.__probe(); return { photo: pr.photo, post: pr.post, monkBox: pr.monkBox }; });
+    await p.screenshot({ path: path.join(out, `start-raised-${name}.png`), timeout: 240000 });
+    result.push({ name, w, h, walk, raised, errors: errs });
+    await ctx.close();
+  }
+  fs.writeFileSync(path.join(out, "art11.json"), JSON.stringify(result, null, 1));
+  console.log(JSON.stringify(result.map((r) => ({ n: r.name, view: r.walk.view, box: r.walk.monkBox, dofWalk: r.walk.post?.dof, photo: r.raised.photo, dof: r.raised.post?.dof, errs: r.errors.length }))));
+  await b.close(); srv.close();
+})().catch((e) => { console.error(e); process.exit(1); });
