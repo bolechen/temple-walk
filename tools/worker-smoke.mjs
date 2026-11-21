@@ -5,13 +5,14 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
-import net from "node:net";
 import path from "node:path";
+import { createRequire } from "node:module";
+const { serve } = createRequire(import.meta.url)("./site.cjs");
 
 const root = path.resolve(new URL("..", import.meta.url).pathname), cfgName = process.argv[2] || "wrangler.canary.jsonc";
 // A port the system hands out, not one picked at random from a hundred: two instances on one port made the second night's check talk to the
 // first instance (still running: `wrangler dev` is a tree of processes, and killing its `npx` leaves the rest), which answered it as that night.
-const freePort = () => new Promise((res, rej) => { const srv = net.createServer(); srv.once("error", rej); srv.listen(0, "127.0.0.1", () => { const { port } = /** @type {import("node:net").AddressInfo} */ (srv.address()); srv.close(() => res(port)); }); });
+const freePort = async () => { const srv = await serve(path.join(os.tmpdir(), "worker-smoke-port-only"), { api: false }), { port } = /** @type {import("node:net").AddressInfo} */ (srv.address()); await new Promise((r) => srv.close(r)); return port; };   // (tools/site.cjs's one server, asked for a port and stopped again)
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "worker-smoke-")), port = await freePort();
 fs.mkdirSync(path.join(tmp, "site")); fs.writeFileSync(path.join(tmp, "site", "index.html"), "<!doctype html><title>asset</title>");
 const cfg = JSON.parse(fs.readFileSync(path.join(root, cfgName), "utf8").replace(/^\s*\/\/.*$/gm, ""));

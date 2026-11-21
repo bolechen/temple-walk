@@ -76,7 +76,7 @@ test("the night's clock is set only by the smoke test: no Worker config defines 
 test("the smoke test takes a free port from the system and ends the whole tree of every Worker it starts", async () => {
   const fs = await import("node:fs"), src = fs.readFileSync(new URL("../../tools/worker-smoke.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(src, /Math\.random\(\) \* \d+\)/, "a port is not picked at random from a few hundred");
-  assert.match(src, /listen\(0, "127\.0\.0\.1"/, "the system hands the port out");
+  assert.match(src, /serve\(path\.join\(os\.tmpdir\(\), "worker-smoke-port-only"\), \{ api: false \}\)/, "the system hands the port out (through the one server of tools/site.cjs)");
   assert.equal([...src.matchAll(/spawn\("npx"/g)].length, 2);
   assert.equal([...src.matchAll(/detached: true/g)].length, 2, "each Worker starts as the head of its own process group");
   assert.ok([...src.matchAll(/process\.kill\(-/g)].length >= 2, "and its whole group is killed, not only the npx that started it");
