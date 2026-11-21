@@ -167,6 +167,19 @@ const scenarios = {
       const start = await where(); await o.page.keyboard.down("s");
       for (let i = 0; i < 6; i++) { await o.frames(2); const p1 = await where(); if (!p1.on) break; const p2 = await where(); if (p2.on) expect(Math.hypot(p2.x - start.x, p2.z - start.z) < 0.001, "he walked while the opening was playing: " + JSON.stringify([start, p2])); }
       await o.page.keyboard.up("s"); await o.close(); }
+    // T05 has no title of its own and no opening: the gate must be open from the first frame, and every way of walking works there (#462).
+    { const f = await open(b, base, "q=low&debug=0&level=t05&fast=1" + BARE);
+      expect(await f.page.evaluate(() => window.__level().id === "t05" && document.body.classList.contains("entered") && !window.__opening().active), "T05 should be walkable from the start (no title, no opening held)");
+      const pose = () => f.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, yaw: y.yaw, target: y.target }; });
+      const p0 = await pose(); await f.page.keyboard.down("w"); await f.frames(30); await f.page.keyboard.up("w");
+      const p1 = await pose(); expect(Math.hypot(p1.x - p0.x, p1.z - p0.z) > 0.2, "T05: W should walk him: " + JSON.stringify([p0, p1]));
+      await f.page.keyboard.down("a"); await f.frames(30); await f.page.keyboard.up("a");
+      const p2 = await pose(); expect(Math.abs(p2.yaw - p1.yaw) > 0.01, "T05: A should turn him: " + JSON.stringify([p1, p2]));
+      await f.page.keyboard.press("r"); await f.frames(10);
+      const vw = await f.page.evaluate(() => innerWidth), vh = await f.page.evaluate(() => innerHeight);
+      await f.page.mouse.click(vw / 2, vh * 0.72); await f.frames(20);
+      const p3 = await pose(); expect(p3.target !== null || Math.hypot(p3.x - p2.x, p3.z - p2.z) > 0.05, "T05: a tap on the ground should walk him: " + JSON.stringify([p2, p3]));
+      expect(f.errors.length === 0, f.errors.join("\n")); await f.close(); }
     // Stepped in, the same key walks him.
     const t = await open(b, base, "q=low&debug=0&fast=1" + BARE, { enter: false });
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
