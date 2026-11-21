@@ -62,7 +62,7 @@ export function createSky(renderer, scene, quality, focus) {
   // air they all read, from the hour's table; `sunK` is 1 but for a measuring tool.
   const lit = (m) => {
     U.uSunC.value.fromArray(m.sunCol).multiplyScalar(m.sunI * sunK * 0.2);
-    const l = U.uLight.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.6); const k = m.sunI * sunK * 0.14; l.r += m.sunCol[0] * k; l.g += m.sunCol[1] * k; l.b += m.sunCol[2] * k;
+    const l = U.uLight.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.6); l.r += m.sunCol[0] * m.sunI * sunK * 0.14; l.g += m.sunCol[1] * m.sunI * sunK * 0.14; l.b += m.sunCol[2] * m.sunI * sunK * 0.14;   // as it was written before `sunK`: with 1 the same numbers to the last bit (J01, #488)
   };
 
   return {
