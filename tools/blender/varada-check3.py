@@ -59,7 +59,9 @@ rep["robe"] = {"points": int(robe.sum()), "largest_move_mm": round(float(d_r.max
 moved_res = cKDTree(O).query(R, k=1)[0] > 0.001   # points of the result not where any point of the target was
 e_ = np.sort(res.edges, axis=1); u_, c_ = np.unique(e_, axis=0, return_counts=True); bverts = np.unique(u_[c_ == 1])
 near_arm_r = cKDTree(O[carried]).query(R, k=1)[0] < 0.4
-bv = bverts[moved_res[bverts] & near_arm_r[bverts] & ~(cKDTree(H).query(R[bverts], k=1)[0] < 0.06)]
+# (not the knee's new sheet, whose border is tucked under the figure's own surface on purpose and is measured apart)
+inknee_r = np.all((R[:, :2] > blo[:2] - sk) & (R[:, :2] < bhi[:2] + sk), axis=1) & (R[:, 2] > 0.8)
+bv = bverts[moved_res[bverts] & near_arm_r[bverts] & ~inknee_r[bverts] & ~(cKDTree(H).query(R[bverts], k=1)[0] < 0.06)]
 d_s, _ = cKDTree(R[~moved_res]).query(R[bv], k=1); d_s = d_s[d_s < 0.05]
 rep["contact"] = {"open_edge_points": int(len(d_s)), "gap_mm_p50": round(float(np.percentile(d_s, 50)) * 1000, 2) if len(d_s) else None,
                   "gap_mm_p95": round(float(np.percentile(d_s, 95)) * 1000, 2) if len(d_s) else None, "gap_mm_max": round(float(d_s.max()) * 1000, 2) if len(d_s) else None,
