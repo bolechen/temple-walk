@@ -14,6 +14,8 @@ const MAX_LAMPS = 14;
 export const RIPPLE = { max: 6, speed: 0.3, life: 2.0, lag: 0.25, width: 0.06 };
 
 export function createGround(scene, shade, censer, paving, trees = []) {
+  // The paving's own mist leaves out a shut hall's sums when the level names none (fog.js), as three's chunks do.
+  const shut = U.uFogShut.value.x < U.uFogShut.value.z;
   const rt = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
   const cam = new THREE.PerspectiveCamera(), texM = new THREE.Matrix4();
   // The light map: how far each spot of paving lies from the nearest wall, platform or trunk, worked out once when the
@@ -74,7 +76,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
       #include <lights_pars_begin>
       #include <shadowmap_pars_fragment>
       #include <shadowmask_pars_fragment>
-      ` + NOISE + FOGLAYER + FOGSHUT + declare(["stone", "snow"]) + TRAIL + /* glsl */`
+      ` + NOISE + FOGLAYER + (shut ? FOGSHUT : "") + declare(["stone", "snow"]) + TRAIL + /* glsl */`
       varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
       uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform float uCrownLeaf; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       uniform vec4 uRip[${RIPPLE.max}];
@@ -228,7 +230,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         if(!(refl.r>=0.)) refl=vec3(0.); refl=min(refl,vec3(32.));
         float kr=fres*mix(.05+damp*.24,1.,puddle)*(1.-joint*.7);
         vec3 c=mix(lit,refl,clamp(kr,0.,1.));
-        ${fogMix("c", "dist", "vWP.y", "vWP")}
+        ${fogMix("c", "dist", "vWP.y", shut ? "vWP" : undefined)}
         gl_FragColor=vec4(c,1.);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>

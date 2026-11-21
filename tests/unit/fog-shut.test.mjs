@@ -28,3 +28,15 @@ test("outside the box the mist is as before; inside it, the part of the line wit
   // A line straight along an axis (a zero component in its direction) is handled.
   assert.ok(Math.abs(fogShut([0, 10, -5], [0, 10, -20], box) - 1) < 1e-9);
 });
+
+test("a level that names no hall compiles three's fog chunks without the box's sums; naming one adds them, and they stay", async () => {
+  const THREE = await import("three"), { layerFog } = await import("../../app/src/fog.js"), C = THREE.ShaderChunk;
+  layerFog();
+  const none = [C.fog_pars_vertex, C.fog_vertex, C.fog_pars_fragment, C.fog_fragment].join("\n");
+  assert.ok(!/fogShut|vFogW|uFogShut/.test(none), "no box: not a word of it in the chunks (T00 draws the shaders it drew before #481)");
+  assert.ok(C.fog_fragment.includes("vFogDepth * vFogDepth"), "the mist's depth is the plain distance");
+  layerFog({ shut: true });
+  assert.ok(C.fog_fragment.includes("fogShut( cameraPosition, vFogW )") && C.fog_vertex.includes("vFogW =") && C.fog_pars_fragment.includes("uniform vec4 uFogShut"));
+  layerFog();
+  assert.ok(C.fog_fragment.includes("fogShut("), "asked again without one, the box's sums stay (a page names its level once)");
+});

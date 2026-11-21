@@ -157,7 +157,7 @@ await loading.step(tr("山路"));
 const M = createMaterials();
 const site = L.build(M);
 // A closed hall the level says the mist does not fill (fog.js; T05's great hall): its box, for every shader's fog.
-if (site.fogShut) { const f = site.fogShut; U.uFogShut.value.set(f.x0, f.z0, f.x1, f.z1); U.uFogShutY.value.set(f.y0, f.y1); }
+if (site.fogShut) { const f = site.fogShut; U.uFogShut.value.set(f.x0, f.z0, f.x1, f.z1); U.uFogShutY.value.set(f.y0, f.y1); layerFog({ shut: true }); }   // its sums go into the chunks now, before anything is drawn; a level with none compiles the shaders it always did
 const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
 /** @type {{ bake: any, outline: any }} */ let walkBaked = { bake: null, outline: null };   // the bake's settings and his outline, for the debug panel's drawing (src/walkviz.js)
