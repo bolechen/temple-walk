@@ -1,0 +1,22 @@
+{
+ "picture": "tools/out/gpu/20261121-180340/cam02_summer-day_base.png",
+ "size": [
+  1920,
+  1080
+ ],
+ "region_rows_cols": [
+  594,
+  1069,
+  384,
+  1536
+ ],
+ "joints": 68,
+ "ratio_median": 0.7757807921923148,
+ "ratio_p10_p90": [
+  0.5494100418700723,
+  0.8427990865640927
+ ],
+ "width_spread_median": 0.3805957683420049,
+ "stone_pairs": 159,
+ "stone_diff_median": 0.07833466716397947
+}
