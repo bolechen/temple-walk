@@ -605,6 +605,27 @@ if PO and PO.get("cap_top"):
   bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3])
 bm.to_mesh(me); bm.free(); me.update()
 log["joined"] = {"hand_points": len(hand_co), "hand_faces": len(hand_faces), "how": "joined over the wrist, the hand's wrist sunk into the forearm (no boolean: the figure is many open shells)"}
+CL = cfg.get("cleanup")
+if CL:
+  # last: pieces of fewer than `cleanup.island` faces lying within `cleanup.pad` metres of the knee box (seen from the
+  # front) or of the hand are taken out (scraps the cuts left; the 3D review: no isolated piece under 50 faces)
+  bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
+  pad = CL.get("pad", 0.3); hb_lo = hand_co.min(0) - pad; hb_hi = hand_co.max(0) + pad
+  def near_(c): return (np.all((c[:2] > blo[:2] - pad) & (c[:2] < bhi[:2] + pad)) and c[2] > 0.5) or np.all((c > hb_lo) & (c < hb_hi))
+  cand_f = set(f.index for f in bm.faces if near_(np.array([f.calc_center_median().x, f.calc_center_median().z, -f.calc_center_median().y])))
+  seen = set(); small = []
+  for fi in cand_f:
+    if fi in seen: continue
+    comp, stack = [], [bm.faces[fi]]; seen.add(fi); big = False
+    while stack:
+      g = stack.pop(); comp.append(g)
+      if len(comp) >= CL.get("island", 50): big = True; break
+      for e in g.edges:
+        for h in e.link_faces:
+          if h.index not in seen: seen.add(h.index); stack.append(h)
+    if not big: small += comp
+  bmesh.ops.delete(bm, geom=list(set(small)), context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+  bm.to_mesh(me); bm.free(); me.update(); log["cleanup"] = {"island": CL.get("island", 50), "pad_m": pad, "faces_taken_out": len(set(small))}
 # back to the file's own frame and units, so the rest of the pipeline (thinning, baking) takes it as it took r1
 co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
 S3 = np.c_[co[:, 0], co[:, 2], -co[:, 1]]; B3 = S3 / k; B3 = np.c_[B3[:, 0], -B3[:, 2], B3[:, 1]] + off

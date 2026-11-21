@@ -172,8 +172,8 @@
   "smooth": 50.0,
   "note": "round 2: the old hand pressed into the knee it lay on (the box seen from the front; its head stops under the old wrist, which the new hand covers); the knee's front is the left knee's mirrored front corrected to meet the right knee round the box's sides and foot",
   "behind": 0.08,
-  "skirt": 0.04,
-  "tuck": 0.005,
+  "skirt": 0.06,
+  "tuck": 0.002,
   "grid": 0.015,
   "island": 50,
   "neighbors": 200,
@@ -297,5 +297,9 @@
    5.35,
    4.85
   ]
+ },
+ "cleanup": {
+  "island": 50,
+  "pad": 0.3
  }
 }
