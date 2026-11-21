@@ -151,6 +151,30 @@
    "bytes": 572205,
    "sha256": "85207b618aeb31da3d380dcb4dd1ea8ff8c9e19d384d8ee9504c7fb87475c6df",
    "rev": "1d378f0631849c4ab117703d22bcb9dd0a8a995d"
+  },
+  {
+   "path": "shots/t4-cam05-bright.png",
+   "bytes": 1144142,
+   "sha256": "0941793d7ed7162ce9ec5a2077dcecde3138cf8df8f3091c182e8bc808b31b6f",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
+  },
+  {
+   "path": "shots/t4-ceil-n-bright.png",
+   "bytes": 985446,
+   "sha256": "13ba4b82c7c56a40a08b46c9374187a63c9c23b4e2d601781bd88c873370a35e",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
+  },
+  {
+   "path": "shots/t4-ceil-s-bright.png",
+   "bytes": 946762,
+   "sha256": "678e2db7386ebc88e1896e174e949986b084e4a3e0b7a67be0ef597622be6d4c",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
+  },
+  {
+   "path": "shots/t4-passage-back-n.png",
+   "bytes": 1207737,
+   "sha256": "8663b525f15070f62674b681a7e8287bfefeab8d2239b5a562e83d91cc78d643",
+   "rev": "b9fed8bf3e27e7b23430b998f380957d0f3700f3"
   }
  ]
 }
