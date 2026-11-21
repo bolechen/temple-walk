@@ -663,15 +663,36 @@ if AR:
         log.setdefault("arm_cap", {}).setdefault("runs", []).append({"edges": len(es), "middle": [round(cc.x, 3), round(cc.z, 3), round(-cc.y, 3)], "min": vv_.min(0).round(3).tolist(), "max": vv_.max(0).round(3).tolist()})
         # (each triangle faces away from the forearm's axis, elbow to wrist as carried: the run's edges come from faces
         # wound either way, the forearm's outside and the robe's inside, so the neighbours' winding cannot say it)
-        c = bm.verts.new(cc); A_ = Ev + Edisp; B_ = np.array(tw, float); ab = (B_ - A_) / np.linalg.norm(B_ - A_)
+        # (two-sided, as two fans 1 mm apart at their middles, each turned to its own side: different views see the
+        # same fan from either side, and a line of sight from either meets the fan turned toward it first)
+        A_ = Ev + Edisp; B_ = np.array(tw, float); ab = (B_ - A_) / np.linalg.norm(B_ - A_)
+        ccs = np.array([cc.x, cc.z, -cc.y]); rad = (ccs - A_) - ((ccs - A_) @ ab) * ab; rad /= max(np.linalg.norm(rad), 1e-9)
+        dl_ = AR.get("cap_under_gap", 0.001) / 2; rb = Vector((rad[0], -rad[2], rad[1]))
+        cO = bm.verts.new(cc + rb * dl_); cI = bm.verts.new(cc - rb * dl_)
         for e in es:
           a, b = e.verts[0], e.verts[1]
-          ps = np.array([[q.co.x, q.co.z, -q.co.y] for q in (a, b, c)]); nn = np.cross(ps[1] - ps[0], ps[2] - ps[0]); mid = ps.mean(0)
-          rad = (mid - A_) - ((mid - A_) @ ab) * ab
-          try: bm.faces.new([a, b, c] if nn @ rad > 0 else [b, a, c]); capped_u += 1
+          ps = np.array([[q.co.x, q.co.z, -q.co.y] for q in (a, b)] + [ccs]); nn = np.cross(ps[1] - ps[0], ps[2] - ps[0])
+          out_ab = nn @ rad > 0
+          try: bm.faces.new([a, b, cO] if out_ab else [b, a, cO]); bm.faces.new([b, a, cI] if out_ab else [a, b, cI]); capped_u += 2
           except ValueError: pass
       log.setdefault("arm_cap", {})["under_edges"] = len(edge_u); log["arm_cap"]["under_runs"] = sum(len(es) >= 3 for es in runs.values()); log["arm_cap"]["under_faces"] = int(capped_u)
     gone_n = n_dead; bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    if AR.get("lining"):
+      # (a backing behind the opening, the 3D review's other way and the T05 lead's ruling: the carried forearm is lined
+      # with its own surface `lining.depth` metres inside, wound the other way, so that a line of sight through any gap
+      # left in its underside meets a face turned toward it, never the back of one; the lining is not seen otherwise)
+      LN = AR["lining"]; bm.normal_update(); bm.verts.ensure_lookup_table(); lo_, hi_ = np.array(LN["min"]), np.array(LN["max"])
+      inl = lambda v: v[oi] < len(moved) and moved[v[oi]] and np.all(st[v[oi]] > lo_) and np.all(st[v[oi]] < hi_)
+      lf = [f for f in bm.faces if all(inl(v) for v in f.verts)]; nv = {}
+      for f in lf:
+        for v in f.verts:
+          if v.index not in nv: nv[v.index] = bm.verts.new(v.co - v.normal * LN.get("depth", 0.005))
+      nl = 0
+      for f in lf:
+        try: bm.faces.new([nv[v.index] for v in reversed(f.verts)]); nl += 1
+        except ValueError: pass
+      lp = np.array([[q.co.x, q.co.z, -q.co.y] for q in nv.values()]); np.save(os.path.join(out, "arm-lining.npy"), lp)
+      log.setdefault("arm_cap", {})["lining_faces"] = nl
     bm.verts.layers.int.remove(oi)
     bm.to_mesh(me); bm.free(); me.update()
     co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]

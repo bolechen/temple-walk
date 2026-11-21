@@ -315,9 +315,22 @@
   ],
   "cap_under": true,
   "cap_under_x": [
-   -1.65,
+   -2.2,
    -1.3
-  ]
+  ],
+  "lining": {
+   "min": [
+    -2.25,
+    3.45,
+    0.3
+   ],
+   "max": [
+    -1.25,
+    4.05,
+    1.9
+   ],
+   "depth": 0.005
+  }
  },
  "cleanup": {
   "island": 50,
@@ -326,6 +339,74 @@
   "note": "done on the exported file by tools/blender/varada-tidy.py, read as the measure reads it; the Blender pass took scraps of the hand's own surface (black specks in the views) and is off. The face-processed figure already has four two-face pieces in the knee box from the generator",
   "hand": false,
   "zmin": 1.0,
-  "blender": false
+  "blender": false,
+  "lining_box": [
+   [
+    -1.7,
+    3.4,
+    1.0
+   ],
+   [
+    -1.25,
+    3.85,
+    1.75
+   ]
+  ],
+  "lining_depth": 0.005,
+  "lining_face": [
+   0.6,
+   -0.2,
+   0.77
+  ],
+  "fill_blobs": [
+   [
+    [
+     -1.48,
+     3.595,
+     1.46
+    ],
+    [
+     0.075,
+     0.045,
+     0.07
+    ]
+   ],
+   [
+    [
+     -1.41,
+     3.595,
+     1.4
+    ],
+    [
+     0.03,
+     0.03,
+     0.03
+    ]
+   ],
+   [
+    [
+     -1.55,
+     3.565,
+     1.43
+    ],
+    [
+     0.03,
+     0.025,
+     0.03
+    ]
+   ],
+   [
+    [
+     -1.42,
+     3.64,
+     1.67
+    ],
+    [
+     0.025,
+     0.025,
+     0.025
+    ]
+   ]
+  ]
  }
 }
