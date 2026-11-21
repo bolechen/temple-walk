@@ -274,7 +274,7 @@ export function buildHall(M) {
     // inside; from the court it is out, so that the doorway reads dark (`within` below, and the site's tick, raise it).
     fill: [
       ...[-10, 10].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.9, y0 + 4, zB + 1]]),
-      [0, y0 + 13, -9, FILL.top, 26, 0xfff4e8],
+      [0, y0 + 8, -9, FILL.top, 26, 0xfff4e8],
       [0, y0 - 0.5, -9, FILL.bounce, 26, 0xe8dccb],
     ],
     // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.out metres before the
