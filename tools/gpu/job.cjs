@@ -5,10 +5,10 @@
 // `level` names the level every page is opened on (?level=, docs/t05/LEVEL-SPLIT.md S6; the prologue when it is left out).
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path"), { execSync } = require("child_process");
+const { serve } = require(require("fs").existsSync(require("path").join(__dirname, "site.cjs")) ? "./site.cjs" : "../site.cjs");   // staged beside it by gpu-render.sh, or in the checkout
+const fs = require("fs"), path = require("path"), { execSync } = require("child_process");
 const [root, out, specArg = "{}"] = process.argv.slice(2);
 const spec = JSON.parse(specArg.trim().startsWith("{") ? specArg : Buffer.from(specArg, "base64").toString("utf8"));   // the launcher sends it as base64: a job's variables are single lines
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".jpg": "image/jpeg", ".png": "image/png", ".glb": "model/gltf-binary", ".ktx2": "image/ktx2", ".wasm": "application/wasm", ".css": "text/css", ".woff2": "font/woff2", ".svg": "image/svg+xml" };
 const sh = (c) => { try { return execSync(c, { stdio: ["ignore", "pipe", "pipe"], timeout: 20000 }).toString().trim(); } catch (e) { return "(failed) " + String(e.stderr || e.message).slice(0, 200); } };
 
 // Ways of asking Chromium for the graphics card, most direct first. The first that reports a real GPU is used.
@@ -36,14 +36,8 @@ function fingerprint(dir) {
 (async () => {
   fs.mkdirSync(out, { recursive: true });
   const report = { started: new Date().toISOString(), host: { gpu: sh("nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader"), cpu: sh("nproc"), egl: sh("ls /usr/share/glvnd/egl_vendor.d 2>&1"), vulkan: sh("ls /usr/share/vulkan/icd.d /etc/vulkan/icd.d 2>&1"), libs: sh("ldconfig -p | grep -i -E 'nvidia|libEGL|libvulkan' | cut -c1-90 | head -30"), dev: sh("ls /dev | grep -i -E 'nvidia|dri' ; ls /dev/dri 2>&1") }, tried: {}, bench: [], shots: [], errors: [] };
-  const srv = http.createServer((req, res) => {
-    let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
-    if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-    res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-    
-    fs.createReadStream(p).pipe(res);
-  });
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); const base = `http://127.0.0.1:${srv.address().port}/`;
+  let srv;
+  srv = await serve(root); const base = `http://127.0.0.1:${srv.address().port}/`;
 
   let browser = null, how = null, launchWith = null;
   pick: for (const [name, flags] of Object.entries(FLAGS)) for (const channel of ["chromium", undefined]) {

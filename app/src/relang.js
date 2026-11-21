@@ -35,3 +35,13 @@ export function takeRelang(storage, opts = {}) {
   try { raw = storage.getItem(RELANG_KEY); storage.removeItem(RELANG_KEY); } catch {}
   try { return sanitizeRelang(JSON.parse(raw || "null"), opts); } catch { return null; }
 }
+
+/** The parts of an address that say where to stand and how it looks (a link, a tool's pose). A change of language made by the
+ *  visitor is the visitor's own walk, so these leave the address once the walk is handed across: the page that opens would
+ *  otherwise take it for the link opened afresh and stand him where the link stood (#402). */
+export const POSE_PARAMS = ["cam", "show", "shot", "in", "up", "season", "time", "view", "devpose"];
+/** The address with those parts taken out; everything else (the language, the tier, `?off=`) and the hash stay. */
+export function withoutPose(href) {
+  const u = new URL(href); for (const k of POSE_PARAMS) u.searchParams.delete(k);
+  return u.href;
+}

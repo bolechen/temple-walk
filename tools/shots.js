@@ -1,19 +1,13 @@
 // Renders every named view of the site (see `views` in app/src/site.js) to tools/out/<name>.png.
 // usage: node tools/shots.js [--level=<id>] [--size=WxH] [--off=part,…] [--tag=-x] [name ...]     e.g. node tools/shots.js gate library; --size=1280x536 for the 2.39:1 art views
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const { doorwaysReady } = require("./doorway-ready.cjs");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out");
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}   // a bad escape, or a path that climbs out of the app, is not served
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" });
-  
-  fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+  srv = await serve(root);
   fs.mkdirSync(out, { recursive: true });
   const base = `http://127.0.0.1:${srv.address().port}/`;
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });

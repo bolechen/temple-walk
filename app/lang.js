@@ -2,7 +2,7 @@
 // put into the visitor's language (src/i18n.js), so a Japanese or English visitor never sees it change under them.
 // The loading bar (loading.js), a plain script, finds `t` on the window.
 import { t, localize, lang, setLang } from "./src/i18n.js";
-import { peekRelang } from "./src/relang.js";
+import { peekRelang, withoutPose } from "./src/relang.js";
 
 localize(document);
 // Opened by a change of language in the pause menu (#140): the title is covered by a sheet that says, in the new
@@ -18,6 +18,11 @@ const bindLang = () => document.querySelectorAll("[data-lang]").forEach((b) => {
   el.setAttribute("aria-pressed", String(el.dataset.lang === lang));
   if (el.closest(".langs")) el.hidden = el.dataset.lang === lang;
   // Chosen in the pause menu, the walk is handed across the reload (yard.js keeps it, src/relang.js); on the title it is not.
-  el.addEventListener("click", () => { if (el.dataset.lang !== lang && el.closest("#menu")) window.templeRelang?.(el.dataset.lang); setLang(el.dataset.lang); });
+  el.addEventListener("click", () => {
+    // Where the walk has gone since a link brought him in is the visitor's own; once it is kept, the link's place leaves the
+    // address (the language reload would otherwise be read as the link opened afresh, #402). Not kept: the address stays.
+    if (el.dataset.lang !== lang && el.closest("#menu") && window.templeRelang?.(el.dataset.lang)) { try { history.replaceState(history.state, "", withoutPose(location.href)); } catch {} }
+    setLang(el.dataset.lang);
+  });
 });
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bindLang); else bindLang();

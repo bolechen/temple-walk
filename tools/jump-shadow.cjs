@@ -1,16 +1,12 @@
 // His shadow in a jump (#141): the court seen low from beside and behind him at the top of a jump, to set before and after
 // side by side. usage: node tools/jump-shadow.cjs <outdir> [season-hour ...]   (default: summer-day autumn-dusk)
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site(), out = path.resolve(process.argv[2] || path.join(__dirname, "out", "jump-shadow"));
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  const base = path.resolve(root), full = path.resolve(base, "." + decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"));
-  if (!full.startsWith(base) || !fs.existsSync(full) || fs.statSync(full).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(full)] || "application/octet-stream" }); fs.createReadStream(full).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 960, height: 540 }, deviceScaleFactor: 1, locale: "zh-CN" });
   const errs = []; p.on("pageerror", (e) => errs.push(e.message));
