@@ -335,3 +335,7 @@ node --import ./tools/spike/swap.mjs --test $(cat tools/spike/walker-tests.txt) 
 node --import ./tools/spike/swap.mjs tools/edges.mjs       # edges 跑在新 walker 上
 HF_TOKEN=… tools/gpu-render.sh t4-small "$(cat docs/t00/refactor/collision-spike/t4-spec.json)"   # T4：旧、新交替各三次
 ```
+
+## 十三、补记：并列面让烘焙随远处的树改变（#477，2026-11-21）
+
+#533 之后，把远处银杏换成别的，大雄宝殿月台脚下仍差 6 格。根：three-mesh-bvh 返回同距的面时，顺序由 BVH 的分裂定，分裂跟着场景里每一个三角形；而烘焙有两处靠「先返回的是谁」下结论。其一 `bake.mjs` 的 `inside()`（月台石座背面与踏步正面重合）：同距（1 mm 内）的面现在全算「第一个」，有背面就算在里面。其二每格向下的射线：墙脚（朝下）与台面（朝上）同高，谁先返回决定台面上方有没有一人高的空气，墙里的假地面时有时无；现在同距时固定顺序（朝下的在前，`hitOrder`）。`BAKE.version` 29。`bake.mjs` 里其余取第一个的地方（`shapecast` 的 `what` 只是名字）逐个看过，表在证据说明里。两关 walk-diff（对 main 5a387d8b，#493 的佛坛已在其中）：T00 关 191 格（0.478 m²），T05 关 238 格（0.595 m²；佛坛、像座、天王脚下与 main 逐格相同；无量殿一带 main 自己因 BVH 排布变了而与我们对上了），一格没开，命名地点都在，`edges:grid`、`nearplane:grid` 干净；1 mm 的理由、逐处原因、图与单测见 `docs/t00/evidence/477-inside-ties/README.md`。

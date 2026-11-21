@@ -1,0 +1,65 @@
+{
+ "site": {
+  "commit": "99316ba068fc0dd78ce27b6be8365493099b8107",
+  "entry": "assets/index-hwu_OP7A.js",
+  "files": 184,
+  "sha256": "d058bf6acc27d9d20064c51124a54d6602b3eb876fb69b7ce4a65c2e6a198510"
+ },
+ "host": "Tesla T4, 620.70.06, 15360 MiB",
+ "shots": [
+  {
+   "name": "cam01@summer-day@third",
+   "file": "cam01_summer-day_third.png",
+   "tris": 113190,
+   "calls": 57
+  },
+  {
+   "name": "cam02@summer-day@third",
+   "file": "cam02_summer-day_third.png",
+   "tris": 113190,
+   "calls": 57
+  },
+  {
+   "name": "cam03@summer-day@first",
+   "file": "cam03_summer-day_first.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "cam04@summer-day@third",
+   "file": "cam04_summer-day_third.png",
+   "tris": 55988,
+   "calls": 36
+  },
+  {
+   "name": "cam05@summer-day@third",
+   "file": "cam05_summer-day_third.png",
+   "tris": 55952,
+   "calls": 35
+  },
+  {
+   "name": "cam06@summer-day@third",
+   "file": "cam06_summer-day_third.png",
+   "tris": 55988,
+   "calls": 36
+  },
+  {
+   "name": "cam07@summer-day@third",
+   "file": "cam07_summer-day_third.png",
+   "tris": 340586,
+   "calls": 117
+  },
+  {
+   "name": "sakya@summer-day@first",
+   "file": "sakya_summer-day_first.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "sakya@summer-day@third",
+   "file": "sakya_summer-day_third.png",
+   "tris": 55952,
+   "calls": 35
+  }
+ ]
+}
