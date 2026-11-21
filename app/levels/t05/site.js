@@ -9,6 +9,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
+import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
 export const PLATFORM = Object.freeze({ w: 55.8, d: 25.91, h: 3.0, zS: 0.4 });
@@ -16,10 +17,10 @@ export const PLATFORM = Object.freeze({ w: 55.8, d: 25.91, h: 3.0, zS: 0.4 });
 export const TERRACE = Object.freeze({ w: 37, d: 15, zN: 0.4, zS: 15.4 });
 /** The flight up the terrace's middle (SITE.md §6: proposed 8–10 m wide, about 18 steps; stairGeo lays 0.18 m steps, so 17). */
 export const FLIGHT = Object.freeze({ w: 9, rise: PLATFORM.h });
-/** The compound's walls (our proposal: OSM gives no outline for them, SITE.md §2), and the gap in the south one. */
-export const COMPOUND = Object.freeze({ x: 42, zN: -40, zS: 62, h: 3.2, t: 0.8, gate: 4 });
-/** The way from the outer gate's place (PLAN item 5: the arrival stays where it will be once the axis is built, 0, +215). */
-export const WAY = Object.freeze({ x: 6, zS: 221, wallH: 1.2, t: 0.5 });
+/** The compound's walls (our proposal: OSM gives no outline for them, SITE.md §2); the south one stops at the Wuliang hall's platform, `gate` either side of the axis (./axis.js). */
+export const COMPOUND = Object.freeze({ x: 42, zN: -40, zS: 62, h: 3.2, t: 0.8, gate: HALL_HALF });
+/** The way from the outer gate's place (PLAN item 5: the arrival stays where it is, 0, +215), between the walls of ./axis.js: x is the walls' centre, wallH the forecourt's, south of the outer gate. */
+export const WAY = Object.freeze({ x: LANE.hw, zS: 221, wallH: 1.2, t: LANE.t });
 /** Where he arrives, and the two stations of SITE.md §5 this item reaches: A in the court, B on the terrace. */
 export const ARRIVE = [0, 215];
 export const STATION = Object.freeze({ A: [0, 55], B: [0, TERRACE.zS - 1] });   // SITE.md puts B at z = +17, past the terrace's 15 m; it stands 1 m inside the edge
@@ -77,26 +78,31 @@ export function buildSite(M) {
   };
   wall(-C.x, C.zN, C.x, C.zN, C.h, C.t); wall(-C.x, C.zN, -C.x, C.zS, C.h, C.t); wall(C.x, C.zN, C.x, C.zS, C.h, C.t);
   wall(-C.x, C.zS, -C.gate, C.zS, C.h, C.t); wall(C.gate, C.zS, C.x, C.zS, C.h, C.t);
-  // The way from the outer gate's place: a paved strip between two low walls, closed at its far end.
-  wall(-W.x, C.zS + C.t / 2, -W.x, W.zS, W.wallH, W.t); wall(W.x, C.zS + C.t / 2, W.x, W.zS, W.wallH, W.t); wall(-W.x, W.zS, W.x, W.zS, W.wallH, W.t);
-  walk.decks.push({ x0: -C.x, x1: C.x, z0: C.zN, z1: C.zS + 0.2, h: 0, floor: "paving" }, { x0: -W.x, x1: W.x, z0: C.zS - 0.2, z1: W.zS, h: 0, floor: "paving" });
-  const paving = [{ level: 1, y: 0.012, x: W.x, zS: W.zS, zN: C.zS }];
+  walk.decks.push({ x0: -C.x, x1: C.x, z0: C.zN, z1: C.zS + 0.2, h: 0, floor: "paving" });
+
+  // The axis before the court (./axis.js): the way from the outer gate's place, the second terrace that the inner gate, the
+  // archway and the Wuliang hall stand on, the walls round both, and the places held for the monument pavilion and the lamp.
+  const ax = buildAxis(M, { C, W });
+  stone.push(...ax.stone); plaster.push(...ax.plaster); steps.push(...ax.steps); (root.userData.flights ||= []).push(...ax.flights);
+  for (const k of ["solids", "decks", "ramps", "posts"]) walk[k].push(...ax.walk[k]);
+  shade[0].push(...ax.shade[0]); shade[1].push(...ax.shade[1]);
+  const paving = ax.paving;
 
   // The town's plain round the walls (the county is flat, SITE.md §4.1), laid outside the walls only: inside them is the paving.
-  const far = 3000, lift = 0.06, flat = (x0, x1, z0, z1) => earth.push(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(-Math.PI / 2).translate((x0 + x1) / 2, lift, (z0 + z1) / 2));
-  const cx = C.x + C.t / 2, cn = C.zN - C.t / 2, cs = C.zS + C.t / 2, wx = W.x + W.t / 2, ws = W.zS + W.t / 2;
-  flat(-far, far, -far, cn); flat(-far, -cx, cn, far); flat(cx, far, cn, far);
-  flat(-cx, -wx, cs, far); flat(wx, cx, cs, far); flat(-wx, wx, ws, far);
+  const lift = 0.06, flat = (x0, x1, z0, z1) => earth.push(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(-Math.PI / 2).translate((x0 + x1) / 2, lift, (z0 + z1) / 2));
+  for (const r of ax.outside) flat(...r);
 
+  root.add(ax.group);
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
 
-  const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }];
+  const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }, ...ax.buildings];
   // Named views (shots.js draws each): the arrival, the two stations, and the court seen from the terrace.
   const views = {
     arrive: [ARRIVE[0], ARRIVE[1], 0, 0.05],
     a: [STATION.A[0], STATION.A[1], 0, 0.19],          // SITE.md §5.1: a 50° lens raised 11° holds the platform to the ridge
     b: [STATION.B[0], STATION.B[1], 0, 0.3],
+    ...ax.views,
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
