@@ -408,5 +408,26 @@
     ]
    ]
   ]
+ },
+ "remesh_trial": {
+  "box": [
+   [
+    -2.12,
+    3.45,
+    1.15
+   ],
+   [
+    -1.36,
+    3.72,
+    1.75
+   ]
+  ],
+  "margin": 0.015,
+  "voxel": 0.0015,
+  "shell": 0.003,
+  "close": 0.012,
+  "hand_clear": 0.0015,
+  "snap": 0.006,
+  "note": "trial of 2026-11-21 (the T05 lead's ruling: local remesh, one attempt), not part of the build: tools/blender/varada-remesh.py run after varada-tidy.py on build 81's geometry without its linings, fans and fills; it failed (docs/t05/evidence/514-r2-d/), so the build stays build 81"
  }
 }
