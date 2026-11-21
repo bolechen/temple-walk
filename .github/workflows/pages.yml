@@ -162,7 +162,7 @@ jobs:
       - name: The floor, from the cache or baked
         run: node tools/bake-walk.mjs
       - name: Unit tests, this machine's share
-        run: node --test $(node tools/ci/unit-shard.cjs ${{ matrix.shard }}/5)
+        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5
 
   # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it, shared the same way.
   grid:
@@ -183,7 +183,7 @@ jobs:
       - name: The floor, from the cache or baked
         run: node tools/bake-walk.mjs
       - name: The same unit tests on the walker over the baked floor (#265), this machine's share
-        run: WALKER=mesh node --import ./tools/walk/swap.mjs --test $(node tools/ci/unit-shard.cjs ${{ matrix.shard }}/5)
+        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5 --import ./tools/walk/swap.mjs
 
   # The site as the browser gets it: built once, driven through once, and the very same dist/ handed on for publication or the
   # preview.

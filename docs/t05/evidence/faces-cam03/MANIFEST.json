@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam03-16x9-first.png",
+   "bytes": 993412,
+   "sha256": "ab35e350b2cbeef074003002fb25c32a01317b63a870490624b699d5d4154ba8",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "cam03-16x9-third.png",
+   "bytes": 1189090,
+   "sha256": "6d53fa997bb74a0af5310bb280f22821a9f591013169898246a90e9d0a542947",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "cam03-4x3-first.png",
+   "bytes": 795551,
+   "sha256": "802177bf4e10dfe7327647ccc20641c628a9d07a58150178a7a5eb60c9c88811",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "cam03-4x3-third.png",
+   "bytes": 898134,
+   "sha256": "376301f03eaa5b223959ca8e157247a2737fa7955e9bb1a2614762033b5aa570",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "cam03-phone-first.png",
+   "bytes": 944825,
+   "sha256": "727c26ddcd6af41839188098be163bf6b8712355658e779c75496c8f74447f29",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "cam03-phone-third.png",
+   "bytes": 992961,
+   "sha256": "6b4a56142cbb20de962a441595f60348a856ad097ed778a59607f6b830e2d6f4",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 123120,
+   "sha256": "5e6d838dc605b253d3f73ab07aed4da61bf3af8e2cc7252a3e4ab11d0481d1ac",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "in2-phone-first.png",
+   "bytes": 948998,
+   "sha256": "bdadfe72e9b235be40596e9c718260a1e97d91360fc28c2c938ee50045e2aa9b",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "in2-phone-third.png",
+   "bytes": 988906,
+   "sha256": "1f9b96ddb7e47008c5885f37fa35106d93ce9fecab798be019ffb134d0cf628e",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "in4.5-phone-first.png",
+   "bytes": 959598,
+   "sha256": "eaa8a3c3bc8675def661620e3ed38e8fa8f3663fb23c99eb9013d60e75432409",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "in4.5-phone-third.png",
+   "bytes": 1021343,
+   "sha256": "5d90c32c2ff07949791320ed6a7fc36a39d179ee137119d4124b24d93a313283",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "in7-phone-first.png",
+   "bytes": 989863,
+   "sha256": "efe6144f5ce8f4fe54daae030d5759146bc01e858eaf1dba193c980ffc2a2c43",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "in7-phone-third.png",
+   "bytes": 1116176,
+   "sha256": "4f5c23f86b4285944126c5d7f6420110ac0bec771b44cc02419f1a48a69ad88a",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "turn15-phone-first.png",
+   "bytes": 1030919,
+   "sha256": "9f2f8827b46206033834490208d1ab3a07b732492f3081617c43392ea1e8ec45",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "turn15-phone-third.png",
+   "bytes": 1096697,
+   "sha256": "7afe9f012f993070745f36b008a1c749ea8be2eebf5b0910165daf5f787fc620",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "turn30-phone-first.png",
+   "bytes": 983216,
+   "sha256": "f7db5fd54d32ab9bbbb7efcb882fdbbbb83258fe3ffc5932695093e597f04a78",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "turn30-phone-third.png",
+   "bytes": 1066518,
+   "sha256": "52378f9cc5e9516619e2c521a94001ea4509e39a2a2fd8ee7733e830d2253958",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "turn45-phone-first.png",
+   "bytes": 781257,
+   "sha256": "26ad229f401a1403a4e0c6e78f886cdd9ddc16cfa654be58666894f23a7298df",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  },
+  {
+   "path": "turn45-phone-third.png",
+   "bytes": 711363,
+   "sha256": "397f26d069f8e70123ac209dc91cd5b055f28e1f8bdd2e3d196b77431b28cd0a",
+   "rev": "8a7777b5023b359cc6c1ffae78d811f27b411065"
+  }
+ ]
+}

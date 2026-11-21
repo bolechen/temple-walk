@@ -188,7 +188,7 @@ const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus)
 // The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
 // its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
 const SKY_AT = L.skyAt || [0, 0]; sky.at(SKY_AT[0], 0, SKY_AT[1]);
-const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
+const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving, site.trees));
 // A level that has no far hills, no bamboo or no censer of its own (#409: T05 stands in a flat town) builds none of them.
 const NONE = { setMood() {}, update() {} };
 // #183's spike: ?terrain=dem|made draws the far land from a heightmap instead of the hill rings (the default is unchanged).
@@ -279,7 +279,7 @@ function setMood(season, time) {
   sky.setMood(mood);
   U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
   layers();
-  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
+  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); ground.setMood?.(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
   renderer.toneMappingExposure = mood.exp;
