@@ -34,19 +34,20 @@ import t00 from "../levels/t00/level.js";
  */
 
 /**
- * Whether this build is the workbench's: the dev server and a pull request's preview (and Node, where the tests run). A
- * level still being made (T05's white box, #409) is listed only there: the owner's rule of 2026-11-20, so that the canary
- * and the public page neither offer it nor carry its code. Written out in full, so that the bundler folds it and leaves
- * the level's chunk out of a canary or production build altogether (tests/unit/level-bench.test.mjs scans each). Which
+ * Whether this build is one testers see: the dev server, a pull request's preview and the canary (and Node, where the
+ * tests run). A level still being made (T05's white box, #409) is listed only there, so that the public page neither
+ * offers it nor carries its code: the owner's rule of 2026-11-20 kept it to the workbench, and on 2026-11-21 the owner
+ * opened it to the canary too (「t05 改成 canary 可以测」). Written out in full, so that the bundler folds it and
+ * leaves the level's chunk out of a production build altogether (tests/unit/level-bench.test.mjs scans each). Which
  * levels these are is BENCH_LEVELS in app/src/bench.js, which the build's configuration also reads; the test holds the
  * entries below to it.
  */
-const WORKBENCH = typeof __DEPLOY__ === "undefined" || __DEPLOY__ === "preview";
+const TESTING = typeof __DEPLOY__ === "undefined" || __DEPLOY__ === "preview" || __DEPLOY__ === "canary";
 
 /** @type {Record<string, () => Promise<Level>>} */
 export const LEVELS = {
   t00: () => Promise.resolve(t00),
-  ...(WORKBENCH ? { t05: () => import("../levels/t05/level.js").then((m) => m.default) } : {}),
+  ...(TESTING ? { t05: () => import("../levels/t05/level.js").then((m) => m.default) } : {}),
 };
 export const DEFAULT_LEVEL = "t00";
 

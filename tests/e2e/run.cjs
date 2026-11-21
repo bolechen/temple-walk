@@ -178,6 +178,41 @@ const scenarios = {
     expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
+  // production not at all, where ?level=t05 walks the prologue and says what was asked. Each is built here as it is
+  // published (VITE_DEPLOY), with nothing fetched from outside. On the canary he walks T05 a little with the prologue's
+  // book, visit and kept place already in the browser, and none of them is read or written: T05 keeps nothing of the
+  // prologue's, and the prologue's records stay the prologue's.
+  "level-targets": { tier: 2, async run(b) {
+    const { execFileSync } = require("child_process"), os = require("os"), { serve } = require("../../tools/site.cjs");
+    const top = path.join(__dirname, "..", ".."), local = (u) => /^https?:\/\/127\.0\.0\.1[:/]/.test(u) || u.startsWith("data:") || u.startsWith("blob:");
+    const route = ["**/*", (r) => (local(r.request().url()) ? r.continue() : r.fulfill({ status: 204, body: "" }))];
+    const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.visit.v1": JSON.stringify({ metres: 123, seconds: 456 }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" }) };
+    for (const target of ["canary", "production"]) {
+      const out = fs.mkdtempSync(path.join(os.tmpdir(), `temple-${target}-`));
+      try {
+        execFileSync(process.execPath, [path.join(top, "node_modules/vite/bin/vite.js"), "build", "--logLevel", "warn", "--outDir", out, "--emptyOutDir"], { cwd: top, env: { ...process.env, VITE_DEPLOY: target }, stdio: ["ignore", "inherit", "inherit"] });
+        const srv = await serve(out);
+        try {
+          const t = await open(b, srv.base, "level=t05&q=low&fast=1" + BARE, { route, init: target === "canary" ? `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) localStorage.setItem(k, p[k]); })()` : undefined });
+          const lv = await t.page.evaluate(() => window.__level());
+          if (target === "production") expect(lv.id === "t00" && lv.asked === "t05" && lv.known === false, "production should not know T05: " + JSON.stringify(lv));
+          else {
+            expect(lv.id === "t05" && lv.known === true, "the canary should walk T05: " + JSON.stringify(lv));
+            const w = await t.page.evaluate(() => window.__walker()); expect(w.mode !== "old" && w.bytes > 0, "T05's own floor on the canary: " + JSON.stringify(w));
+            const s0 = await t.state(); expect(Math.hypot(s0.x, s0.z - 215) < 1, "on the canary he arrives at T05's gate, not where the prologue kept him: " + JSON.stringify(s0));
+            await t.page.evaluate(() => window.__walk([[0, 200]]));
+            await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 200) < 0.6; }, 120000, "he did not walk on the canary's T05");
+            await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
+            const book = await t.page.evaluate(() => window.__journey()); expect(!book.seals?.bell, "T05 should not show the prologue's seals: " + JSON.stringify(book));
+            const kept = await t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
+            for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} as it was: ${kept[k]}`);
+          }
+          expect(t.errors.length === 0, `${target}: ` + t.errors.join("\n")); await t.close();
+        } finally { srv.close(); }
+      } finally { fs.rmSync(out, { recursive: true, force: true }); }
+    }
+  } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are
   // kept for `__events()`. No picture is looked at, so the place is built but not drawn.
   events: { tier: 1, async run(b, base) {
@@ -2559,6 +2594,34 @@ const scenarios = {
     expect(u.found === remote && u.said === 1 && u.hud.includes("update"), "a newer build should be said once at the foot: " + JSON.stringify(u));
     expect(await t.page.evaluate(() => document.body.dataset.ready === "1" && performance.getEntriesByType("navigation").length === 1), "the page should not have reloaded itself");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // Sharing from an app's own browser (#344, src/share.js): in WeChat the system cannot take the book's page, so a sheet
+  // shows it as an <img> to press and hold, says so, and adds that the page opens in the browser from the corner; and a
+  // shared link naming a scene brings a first visit there once the opening has shown the mountain.
+  share: { tier: 2, async run(b, base) {
+    const WECHAT = "Mozilla/5.0 (Linux; Android 14; Pixel 8a Build/AP2A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.6478.188 Mobile Safari/537.36 XWEB/1260117 MicroMessenger/8.0.50.2701(0x28003253) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN";
+    const t = await open(b, base, "q=low&cam=0,30,0,0" + BARE, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, userAgent: WECHAT });
+    await t.page.evaluate(() => window.__book()); await t.until(async () => (await t.page.evaluate(() => !!document.getElementById("bookImg").src)), 60000, "the book's page was never drawn");
+    expect(await t.page.isVisible("#bookShare"), "the book should offer 分享 in WeChat too");
+    await t.page.click("#bookShare"); await t.until(() => t.page.evaluate(() => window.__saveSheet().open), 20000, "the sheet to save from never opened");
+    const sh = await t.page.evaluate(() => ({ ...window.__saveSheet(), line: document.getElementById("saveTitle").textContent, w: document.getElementById("saveImg").getBoundingClientRect().width, events: window.__eventLog().filter((e) => e.name === "demo.share").map((e) => e.data) }));
+    expect(sh.app === "wechat" && sh.img === "IMG" && sh.src && sh.w > 200 && sh.wechat && !sh.download && sh.line.includes("长按"), "in WeChat: the page as an <img> to press and hold, the line about opening in the browser, no download: " + JSON.stringify(sh));
+    expect(sh.events.some((d) => d.method === "save" && d.from === "book" && d.scene === "goshuin"), "the share should be counted as saved: " + JSON.stringify(sh.events));
+    await t.page.click("#saveClose"); expect(!(await t.page.evaluate(() => window.__saveSheet().open)), "收下 puts the sheet away");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A friend's link to the bell, opened for the first time: the opening as ever, then he stands at the bell.
+    const u = await open(b, base, "q=low&from=bell&utm_source=share&utm_content=book" + BARE, { enter: false });
+    await u.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 }); await u.page.click("#enterBtn");
+    await u.until(() => u.page.evaluate(() => window.__opening().active), 30000, "a first visit should still be shown the mountain");
+    await u.page.keyboard.press("Escape");
+    await u.until(async () => { const s = await u.state(), p = await u.page.evaluate(() => window.__places.bell.at); return Math.hypot(s.x - p[0], s.z - p[1]) < 2.5; }, 120000, "the link to the bell did not bring him to the bell");
+    expect((await u.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "bell", "demo.ready should say the link named the bell");
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A name the list does not hold is no scene: he starts at the foot of the path.
+    const v = await open(b, base, "q=low&from=../../evil" + BARE, { enter: false });
+    await v.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 });
+    expect((await v.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "", "an unknown scene is not named");
+    expect(v.errors.length === 0, v.errors.join("\n")); await v.close();
   } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the
   // finder's corners or thirds, the settings panel clear of the shutter, Esc written by 收起 where there is a keyboard;
