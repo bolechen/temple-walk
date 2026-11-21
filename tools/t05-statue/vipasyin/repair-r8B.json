@@ -1,0 +1,107 @@
+{
+ "turn": -90,
+ "source": "vipasyin.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.916,
+   "band": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.47,
+   "k": 0.902,
+   "band": 0.05
+  },
+  {
+   "op": "tilt",
+   "note": "head bowed 10.0° about the neck (#463, the 3D review: the face seen from 10 m below reads frowning and pouting when made for the level)",
+   "c": [
+    0,
+    0.05,
+    0.725
+   ],
+   "deg": 10.0,
+   "z0": 0.735,
+   "fade": 0.035,
+   "rx": 0.1151,
+   "fx": 0.0201
+  },
+  {
+   "op": "attenuate",
+   "note": "the knit between the brows kept to 30% of its depth (#463, the 3D review)",
+   "seed": [
+    0.0,
+    -0.05405,
+    0.849
+   ],
+   "r": 0.0344,
+   "sr": 0.0688,
+   "k": 0.3,
+   "iter": 500
+  },
+  {
+   "op": "attenuate",
+   "note": "the philtrum shallower, k 0.5 (#463)",
+   "seed": [
+    0.0,
+    -0.04031,
+    0.79091
+   ],
+   "r": 0.0138,
+   "sr": 0.0344,
+   "k": 0.5,
+   "iter": 300
+  },
+  {
+   "op": "push",
+   "note": "left corner of the mouth up 5 cm (#463)",
+   "seed": [
+    0.02865,
+    -0.03461,
+    0.78494
+   ],
+   "r": 0.0172,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.0057
+  },
+  {
+   "op": "push",
+   "note": "right corner of the mouth up 5 cm (#463)",
+   "seed": [
+    -0.02865,
+    -0.03461,
+    0.78494
+   ],
+   "r": 0.0172,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "d": 0.0057
+  }
+ ]
+}
