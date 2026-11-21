@@ -167,6 +167,7 @@ export function createMaterials() {
       float ti=floor(max(st.y,0.)), tf=max(st.y,0.)-ti, zc=-1.-st.y, x=st.x;
       vec3 sg; if(cheek) sg=stCheek(zc,sed,Nn*STREAD+SNOSE); else sg=stTread(x,W,ti,sed);
       float up=smoothstep(.45,.65,vWN.y), dn=max(.97-tf,0.)*(STREAD+SNOSE)/.94;      // (dn: how far in metres from the tread's nose)
+      float nearK=1.-smoothstep(5.,9.,length(vWP-cameraPosition));      // what is worked into the stone's edges is for the eye within a few metres; by nine it is back to plain stone
       float sid=sg.x, px=fwidth(x)+.4*fwidth(st.y), joint=0., jd=.4, rim=0., fillw=0., chip=0., chipRim=0.;
       if(sg.y<.05){
         // A joint is not one line: along its length it is open for a stretch (a hair to a finger's width, light on a tread where it
@@ -184,9 +185,9 @@ export function createMaterials() {
         rim=smoothstep(jw+.001,jw+.005,dj)*(1.-smoothstep(jw+.005,jw+.018,dj))*seen*(1.-fillw);
         // Where a joint meets the tread's nose a corner has come away: a chip two to four centimetres across.
         if(!cheek&&up>.5&&h21(vec2(jk*5.3+ti*1.9,sed+8.))<.88){      // (nine in ten, never all, each its own size and its own place on the edge)
-          float rx=.01+.012*h21(vec2(jk+ti*1.3,sed+2.)), ry=.008+.014*h21(vec2(jk*2.1+ti,sed+6.)), dn0=(h21(vec2(jk+ti*.7,sed+4.))-.4)*.02;
-          float e=length(vec2(sg.y/rx,(dn-dn0)/ry)); chip=1.-smoothstep(.55,1.,e);
-          chipRim=smoothstep(.55,.8,e)*(1.-smoothstep(.8,1.05,e))*step(dn0,dn); } }
+          float rx=.014+.014*h21(vec2(jk+ti*1.3,sed+2.)), ry=.012+.014*h21(vec2(jk*2.1+ti,sed+6.)), dn0=(h21(vec2(jk+ti*.7,sed+4.))-.4)*.02;
+          float e=length(vec2(sg.y/rx,(dn-dn0)/ry)); chip=(1.-smoothstep(.55,1.,e))*nearK;
+          chipRim=smoothstep(.55,.8,e)*(1.-smoothstep(.8,1.05,e))*step(dn0,dn)*nearK; } }
       float sr=h21(vec2(sid*1.37+ti*.61+ck*50.,sed+.3));
       vec3 tint=mix(vec3(.95,.98,1.03),vec3(1.05,1.01,.94),h21(vec2(sid+11.,ti+sed+ck*7.)));   // each stone a little cooler or warmer
       vec3 w3=triW(vWN), q=vWP*.75+vec3(h21(vec2(sid,ti+sed)),h21(vec2(ti+sed,sid+3.)),h21(vec2(sid+5.,sed)))*6.;   // and cut from another part of the scan
@@ -199,7 +200,7 @@ export function createMaterials() {
       float damp=(1.-ck)*up*clamp(.75*side+.55*corner,0.,1.);
       float layer=${CHEEK_STONE.width}-st.x, stoneF=ck*step(0.,.012-min(layer,st.x));     // a cheek's outer stone, as against the panel set back under it
       col*=1.-.22*ck*(1.-stoneF);
-      col*=1.25*(1.-.11*(1.-up)*(1.-ck))*mix(1.,.88+.2*smoothstep(0.,1.,d),(1.-ck)*up);              // a riser is a little duller than the tread above it, and a tread is paler toward the nose than at the back
+      col*=mix(1.,1.25*(1.-.11*(1.-up)*(1.-ck))*mix(1.,.88+.2*smoothstep(0.,1.,d),(1.-ck)*up),nearK);              // a riser is a little duller than the tread above it, and a tread is paler toward the nose than at the back
       col*=1.+.07*ck*step(sid,.5);                                                        // the cap at the head stands a little paler
       float foot=1.-smoothstep(0.,.45,st.z), rr=(1.-ck)*(1.-up)*(1.-smoothstep(0.,.1,st.z));   // low on a cheek, low on a riser: where water stands
       float streak=0.; if(stoneF*(1.-up)>.5) streak=smoothstep(.5,.85,n2(vec2(zc*12.+sed*7.,st.z*.5)));
@@ -218,15 +219,15 @@ export function createMaterials() {
       // narrowing toward its ends, a little different slab to slab; it stands a tenth or more above the tread, with a dark line along
       // the edge where it turns under. A cheek's top has its two edges worn the same way, narrower.
       float fwn=max(fwidth(dn),1e-4), crest=0., edge_=0.;   // (the worn band and the line under it only while they are wide enough to be seen: far off the nose is just a little older)
-      if(ck<.5&&up>.5&&dn<.085){      // (and only within a hand of the nose: the rest of the tread never asks)
-        float uu=abs(x)/(.5*max(W,.1)), prof=1.-.7*smoothstep(.33,1.,uu);
-        float bw=(.04+.022*prof)*mix(1.,.8+.4*n2(vec2(x*8.+sed*3.,ti*5.1+1.)),uCrestVary)*mix(1.,.9+.2*h21(vec2(sid+ti,sed+5.)),uCrestVary);
-        crest=smoothstep(.003,bw*.35,dn)*(1.-smoothstep(bw*.35,bw,dn))*(1.-chip)*mix(1.,.8+.4*n2(vec2(x*5.+ti*2.,sed)),uCrestVary)*uCrest*smoothstep(1.,3.,bw/fwn);
-        edge_=(1.-smoothstep(0.,.009,dn))*smoothstep(.4,1.5,.014/fwn);
+      if(ck<.5&&up>.5&&dn<.12){      // (and only within a hand of the nose: the rest of the tread never asks)
+        float uu=abs(x)/(.5*max(W,.1)), prof=1.-.85*smoothstep(.15,1.,uu);
+        float bw=(.026+.04*prof)*mix(1.,.8+.4*n2(vec2(x*8.+sed*3.,ti*5.1+1.)),uCrestVary)*mix(1.,.75+.55*h21(vec2(sid+ti,sed+5.)),uCrestVary);   // (widest and palest over the middle third of the tread, drawn in toward its ends; and each slab a little its own)
+        crest=smoothstep(.003,bw*.35,dn)*(1.-smoothstep(bw*.35,bw,dn))*(1.-chip)*mix(1.,.8+.4*n2(vec2(x*5.+ti*2.,sed)),uCrestVary)*mix(1.,.7+.6*h21(vec2(sid*3.1+ti,sed+9.)),uCrestVary)*(.45+.55*prof)*uCrest*nearK*smoothstep(1.,3.,bw/fwn);
+        edge_=(1.-smoothstep(0.,.009,dn))*smoothstep(.4,1.5,.014/fwn)*nearK;
       }
       float de=min(st.x,${CHEEK_STONE.width}-st.x), arrC=ck*up*stoneF*(1.-smoothstep(0.,.02,de));
-      float lip=(1.-ck)*(1.-up)*step(.93,tf);                       // the front of the nosing slab, under the lip
-      col*=(1.-jd*joint)*(1.+.14*rim*(.4+.6*up)+.62*crest+.16*arrC)*(1.-.5*edge_-.32*lip-.55*chip)*(1.+.1*chipRim);
+      float lip=(1.-ck)*(1.-up)*step(.925,tf)*(1.-smoothstep(.004,.03,(.97-tf)*1.5))*nearK;   // the top two or three centimetres of the nosing slab's face, its foot soft (geo.js gives that face its height in tf)
+      col*=(1.-jd*joint)*(1.+.14*rim*(.4+.6*up)+.62*crest+.16*arrC)*(1.-.5*edge_-.4*lip-.8*chip)*(1.+.1*chipRim);
       ao_=min(ao_,1.-mix(.6,.1,up)*joint*(1.-fillw)); bump_=-joint*(1.-fillw)*.004-.005*edge_-.005*chip+.002*crest;   // (a deep riser joint takes no sky or sun at all)
       // A bamboo leaf lies here and there on a tread, nearest the edges, and none on the worn middle.
       float lfm=0.;
