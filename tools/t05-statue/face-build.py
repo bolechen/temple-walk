@@ -16,9 +16,10 @@ import sys, json, subprocess, os, math, copy
 here = os.path.dirname(os.path.abspath(__file__)); root = os.path.dirname(os.path.dirname(here))
 name, tag = sys.argv[1], sys.argv[2]
 opt = dict((a[2:].split("=", 1) + [True])[:2] for a in sys.argv[3:] if a.startswith("--"))
-tilt = float(opt.get("tilt", 10)); D = os.path.join(root, "tools/out/t05/tripo-six")
+tilt = float(opt.get("tilt", 10))
 spec = json.load(open(os.path.join(here, name, "repair.json")))
 face = json.load(open(os.path.join(here, name, "face.json")))   # the figure's face landmarks before any face op (stage frame, metres)
+D = os.path.join(root, face.get("dir", "tools/out/t05/tripo-six"))   # where its files are (Sakyamuni's sample is in tripo-370)
 H = face["height"]; FILEH = face["fileHeight"]; s = H / FILEH
 B = lambda x, y, z: [round(x / s, 5), round(-z / s, 5), round(y / s, 5)]
 base_ops = [o for o in spec["ops"] if o["op"] in ("squeeze", "zband", "xband", "smooth", "laplace", "headscale")]
