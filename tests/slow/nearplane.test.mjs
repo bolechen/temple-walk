@@ -11,13 +11,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "../unit/dom-stub.mjs";
 import * as THREE from "three";
-import { levelPlan, need, isPrologue } from "../unit/level-plan.mjs";
+import { levelPlan, need, isPrologue, needWalkedPlan, LEVEL_ID } from "../unit/level-plan.mjs";
 import { followEye, createFollow } from "../../app/src/eye.js";
 import { FOV_RANGE } from "../../app/src/settings.js";
 import { censerGeometry } from "../../app/src/censer.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });   // both faces: from inside a wall its back faces are what would show
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
+await needWalkedPlan("nearplane", `WALK_LEVEL=${LEVEL_ID} pnpm run nearplane:grid`);
 const { site, walker } = await levelPlan(M);
 // The censer on the axis of the first court is drawn by props.js (censer.js), not by the plan: stood in with the rest (a level with none has none).
 if (site.censer) site.root.add(new THREE.Mesh(censerGeometry().translate(site.censer.x, site.censer.y, site.censer.z), named("censer")));

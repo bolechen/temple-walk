@@ -90,10 +90,12 @@ if (!relang) document.documentElement.classList.remove("relang");
 // The floor baked from the drawn meshes (#265, #274): fetched while the place is built, and walked on everywhere (the
 // courts and the path, the summit pavilion's balcony, every room) unless `?walker=old` asks for the written plan.
 // Only the bytes are fetched here; they are opened once the plan is built, and let go.
-const WALKER = walkerMode(Q.get("walker"));
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
+// A level that does not keep its written plan up to what is drawn (T05) refuses `?walker=old`, and says so once.
+const WALKER = walkerMode(Q.get("walker"), L), WALKER_ASKED = Q.get("walker") === "old" && WALKER !== "old" ? "old" : undefined;
+if (WALKER_ASKED) console.info(`?walker=old: ${L.id} keeps no written plan to walk on; walking on the baked floor`);
 // Opened by a crossing from another temple (行脚图, #449, src/pilgrimage.js): the visit handed across, taken once, for this
 // level only; an address that names its own place drops it, as a change of language's is. The ink curtain index.html's
 // first script kept shut (`html.crossing`) is drawn back once this temple can be drawn (crossingBack below); a handover
@@ -187,7 +189,7 @@ const walker = await (async () => {
     let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, () => "floors"); body = /** @type {any} */ (null);
     const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids, { doors: site.halls });
     walkBaked = { bake: d.header.bake || null, outline: d.header.outline || null };
-    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
+    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length, ...(WALKER_ASKED ? { asked: WALKER_ASKED } : {}) } });
   } catch (e) {
     console.warn("[walk] the baked floor could not be read; walking on the written plan:", e);
     return Object.assign(old, { stats: { mode: "old", failed: String(e) } });
