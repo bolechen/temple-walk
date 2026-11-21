@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "photo/start-raised-16x9.png",
+   "bytes": 1445330,
+   "sha256": "39ddc336667d00e4134bd0928473a8ca7fb5a7a236e3c53d8cdfd29fdf73f9a3",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "photo/start-raised-4x3.png",
+   "bytes": 1233024,
+   "sha256": "a3b79aa67c20c671d77b408daf790c7e36373cef5b9cf6214a419cda071ca353",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "photo/start-raised-9x16.png",
+   "bytes": 470326,
+   "sha256": "3a20952c2903950a754f6d22977ae2b2866159edc56efe516a730c0737594cb6",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "photo/start-walk-16x9.png",
+   "bytes": 1426103,
+   "sha256": "9a46851ce2ee425714f62f8f7ef0ff495fd47e157bf9bb680a71c28bec14a4ff",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "photo/start-walk-4x3.png",
+   "bytes": 1214916,
+   "sha256": "fc1a13d682ec8d490d42311d6b163957a89a98257c8485ef3fb708db8d9eb3d6",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "photo/start-walk-9x16.png",
+   "bytes": 457082,
+   "sha256": "20278d74dfa194ef44009866a470cbac0c3dbba40aab2912e45f0a628a360de3",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "shots/cam01.png",
+   "bytes": 1516785,
+   "sha256": "eeb0c0c6f0b72cd0292bbc5453c2215d30e648c478f4300d80bf419ce7700036",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "shots/cam02.png",
+   "bytes": 1448184,
+   "sha256": "278e2da932da4a3ddd14c83d494b9f912c0b6c77ec8717d6a9088399d0d46f3e",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "shots/cam03.png",
+   "bytes": 1200008,
+   "sha256": "9b8289bab51fdfb09c4c315e35e7ebc0fd656caf2a8b95a3f8590918ef90a8f6",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "shots/cam04.png",
+   "bytes": 1203044,
+   "sha256": "fbeb1c3ee137f661891a7679fdfa4488a2f3f9cc4c94b2b0718220d9eb601ee4",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "shots/cam05.png",
+   "bytes": 1151432,
+   "sha256": "d1193dd4284d7a4f72d6176ae88f0c8d73c770fe6aed8c4840afb4c19d4fdc19",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  },
+  {
+   "path": "shots/cam06.png",
+   "bytes": 1288254,
+   "sha256": "ce9f4a09e9d537e47a6a0cb3f541930ee7f3cef79425e222fb49261ce105a46a",
+   "rev": "0f4b10bd48fad47bba22e3f3c3fc7eb5d75ebace"
+  }
+ ]
+}

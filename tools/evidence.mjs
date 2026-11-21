@@ -7,7 +7,7 @@
 //   node tools/evidence.mjs pull <dir> [--into <out>]   fetch <dir>'s binaries by its manifest (hash-checked) into tools/out/evidence/<store path>/, which git ignores
 //   node tools/evidence.mjs mirror [--dry-run]  copy what the manifests list from the original (CONFIG.fallback) to the R2 bucket; CI's job (#247)
 //   node tools/evidence.mjs verify-store        every manifest entry read from the bucket over its S3 interface (the repository's four secrets), size and SHA-256
-//   node tools/evidence.mjs check               offline, for CI: manifests well-formed, no file over 1 MB, no unlisted binary
+//   node tools/evidence.mjs check               offline, for CI: manifests well-formed, no file over 1 MB, at most one picture in a folder
 //
 // Where the bytes are read from is stated once, in tools/evidence.config.json's `base` (or EVIDENCE_BASE for a try-out);
 // `fallback` is where they were first put (Hugging Face): the original, the copy `mirror` fills the `base` store from,
@@ -79,7 +79,10 @@ export function manifestProblems(m) {
   return bad;
 }
 
-/** Offline checks over a repository root: well-formed manifests and no file over 1 MB under an evidence folder. */
+/** Pictures that may stay in git: at most one (a collage) in each evidence folder; every other picture is pushed and listed in the manifest. */
+const PICTURE = /\.(png|jpe?g|webp)$/i;
+
+/** Offline checks over a repository root: well-formed manifests, no file over 1 MB and at most one picture under an evidence folder. */
 export function checkTree(root = ROOT, files = null) {
   const bad = [];
   const all = files ?? walk(path.join(root, "docs")).map((f) => path.relative(root, f).split(path.sep).join("/"));
@@ -93,6 +96,16 @@ export function checkTree(root = ROOT, files = null) {
   for (const f of inEvidence) {
     const size = fs.statSync(path.join(root, f)).size;
     if (size > LIMIT) bad.push(`${f}: ${size} bytes, over 1 MB — push it with tools/evidence.mjs and keep the manifest`);
+  }
+  // A folder is docs/<level>/evidence/<dir>; a picture anywhere below it counts toward it.
+  const pictures = new Map();
+  for (const f of inEvidence.filter((x) => PICTURE.test(x))) {
+    const m = /^(.*?\/evidence\/[^/]+)\//.exec(f);
+    const folder = m ? m[1] : path.posix.dirname(f);
+    pictures.set(folder, [...(pictures.get(folder) ?? []), f]);
+  }
+  for (const [folder, list] of pictures) {
+    if (list.length > 1) bad.push(`${folder}: ${list.length} pictures in git (${list.map((f) => path.posix.basename(f)).join(", ")}) — keep one collage at most; push the rest with tools/evidence.mjs and keep the manifest`);
   }
   return bad;
 }
@@ -269,6 +282,9 @@ export async function verify({ all = false, root = ROOT, log = console.log } = {
   return fails;
 }
 
+/** Where verify-store puts one object while it reads it back: named by its key, not by its content, since two objects of the same bytes (two pictures that came out alike) are read at the same time and a shared name made one read the other's file after it had been removed (#288's gable-top pair, which turned every mirror run red). */
+export const verifyTmp = (e) => path.join(os.tmpdir(), `verify-${process.pid}-${sha256(Buffer.from(e.key)).slice(0, 16)}`);
+
 /** The bucket's own word: every manifest entry read over its S3 interface (never the public domain), size and SHA-256. */
 export async function verifyStore({ log = console.log } = {}) {
   const missing = SECRETS.filter((n) => !process.env[n]);
@@ -277,7 +293,7 @@ export async function verifyStore({ log = console.log } = {}) {
   const fails = [];
   let ok = 0;
   await pool(entries, 8, async (e) => {
-    const tmp = path.join(os.tmpdir(), `verify-${process.pid}-${e.sha256.slice(0, 16)}`);
+    const tmp = verifyTmp(e);
     try {
       await aws("get-object", ["--key", e.key, tmp, "--output", "json"]);
       const buf = fs.readFileSync(tmp);

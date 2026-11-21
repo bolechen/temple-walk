@@ -16,9 +16,9 @@ test("there are seven seals, each with everything the page shows", () => {
   assert.match(KEY, /\.v1$/, "the stored book carries a version");
 });
 
-test("a new visitor's book is empty and points at the bell", () => {
+test("a new visitor's book is empty and points at the incense (#436)", () => {
   const j = createJourney(memory());
-  assert.equal(j.count(), 0); assert.equal(j.done(), false); assert.equal(j.next().id, "bell");
+  assert.equal(j.count(), 0); assert.equal(j.done(), false); assert.equal(j.next().id, "incense");
   assert.equal(j.finished, null); assert.equal(j.verse, null);
   assert.deepEqual(j.list().map((s) => s.got), [null, null, null, null, null, null, null]);
 });
@@ -34,11 +34,21 @@ test("the bell must be struck three times", () => {
   assert.equal(j.next().id, "incense");
 });
 
+test("the first seal is the incense; once any seal is held the order of SEALS comes back (#436)", () => {
+  const only = (id) => { const j = createJourney(memory()); if (id === "bell") { j.strike(); j.strike(); j.strike(); } else j.earn(id); return j; };
+  assert.equal(createJourney(memory()).next().id, "incense", "no seal: the great hall");
+  assert.equal(only("incense").next().id, "bell", "only the incense: the first seal not yet held, which is the bell");
+  assert.equal(only("bell").next().id, "incense", "only the bell: the first not yet held, which is the incense");
+  assert.equal(only("tea").next().id, "bell", "any other first seal: back to SEALS' order");
+  const j = createJourney(memory()); j.strike(); assert.equal(j.next().id, "incense", "one stroke of the bell is not a seal");
+  assert.deepEqual(SEALS.map((s) => s.id), ["bell", "incense", "tea", "sutra", "well", "lamp", "sit"], "the order of the seals does not move");
+});
+
 test("a seal is earned once, in any order, and unknown seals are refused", () => {
   let t = 1000; const j = createJourney(memory(), () => t++);
   assert.equal(j.earn("sit"), true); assert.equal(j.earn("sit"), false);
   assert.equal(j.earn("nothing"), false); assert.equal(j.count(), 1);
-  assert.equal(j.next().id, "bell", "the hint still starts from the foot of the mountain");
+  assert.equal(j.next().id, "bell", "any seal held: SEALS' own order, from the foot of the mountain");
   assert.ok(j.list().find((s) => s.id === "sit").got >= 1000);
 });
 
@@ -67,7 +77,7 @@ test("the book survives leaving and coming back", () => {
 
 test("a damaged or foreign book is replaced by a fresh one rather than breaking the visit", () => {
   for (const bad of ["{not json", "null", "[]", '{"v":2,"seals":{"bell":1}}', '{"v":1}', '{"v":1,"seals":"x"}', "12"]) {
-    const j = createJourney(memory(bad)); assert.equal(j.count(), 0, bad); assert.equal(j.next().id, "bell");
+    const j = createJourney(memory(bad)); assert.equal(j.count(), 0, bad); assert.equal(j.next().id, "incense");
   }
   const j = createJourney(memory('{"v":1,"born":7,"seals":{"tea":5,"ghost":9,"well":"x"},"strikes":99,"verse":{"text":"看脚下。"}}'));
   assert.equal(j.count(), 1); assert.equal(j.has("tea"), true); assert.equal(j.strikes, 3); assert.equal(j.verse.from, "");

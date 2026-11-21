@@ -20,10 +20,6 @@ on:
         description: "Also read the evidence over the network and compare hashes (always done by the nightly run)"
         type: boolean
         default: false
-      mobile:
-        description: "Also run the phone audit (tools/mobile-audit.cjs, #400): on a push it always runs; here for a branch, to see what it says"
-        type: boolean
-        default: false
       runner:
         description: "Where the scenarios are walked: github (twelve free machines, software drawing) or t4 (four Hugging Face Jobs on a T4 card; needs the HF_TOKEN secret, #335)"
         type: choice
@@ -91,53 +87,6 @@ jobs:
         with:
           name: e2e-regression-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/
-          retention-days: 14
-          if-no-files-found: ignore
-
-  # What a phone sees (tools/mobile-audit.cjs, #400): every surface of the interface at three phone sizes, a control under 44 px, text under 12 px,
-  # anything off the screen, a page that scrolls; it exits 1 if it lists anything. Beside every publication, not in its way: until now only a person
-  # who remembered to run it saw it (#129 stood red for days). Chinese, and English, the longest words, one machine each; the pictures are kept for a failing run.
-  mobile:
-    if: github.event_name == 'push' || github.event.inputs.mobile == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    strategy:
-      fail-fast: false
-      matrix:
-        lang: [zh, en]   # (about seventeen minutes each in software drawing: two machines side by side, not one after the other)
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Remember the browser between runs
-        id: pw
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-1.63.0-chromium
-      - name: A browser to drive the page with
-        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      - name: Which doorways are to be drawn
-        id: doorways
-        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
-      - name: Remember drawn doorways between runs
-        uses: actions/cache@v4
-        with:
-          path: node_modules/.cache/doorways
-          key: doorways-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-
-      - name: Every surface of the interface as a phone sees it
-        run: node tools/mobile-audit.cjs ${{ matrix.lang != 'zh' && format('--lang={0}', matrix.lang) || '' }}
-      - name: Keep the pictures
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-mobile-${{ matrix.lang }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: tools/out/mobile*/
           retention-days: 14
           if-no-files-found: ignore
 

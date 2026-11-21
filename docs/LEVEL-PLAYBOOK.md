@@ -248,6 +248,7 @@
 | `mesh.userData.walk = "post"` | 要绕着走、不许踩的矮物件：射线穿过它看下面的地，它从地面起按他在它那个高度的伸出挡住。高不过 0.6 米、宽 0.4 到 1.2 米、自成一个网格的小东西烘焙也会自己认成这一类 | 茶寮的蒲团、矮茶案连同桌上的东西、院里茶案连同凳（`site.js`） | `gridwalker.test`「画出来的每个蒲团和凳都是座位」；`edges:grid` |
 | `mesh.userData.walk = "floor"` | 要让他踩上去的东西，圆边、斜面也算（烘焙平常只把 15° 以内的面算作地：台阶是一级一级的踏面，垂带的斜顶不能站）。整件都是地：它的边不挡他，鞋够得着它的地方他就站在它的顶面上 | 山顶凌霄阁前的蒲团（`site.js`）；佛前和祖师案前的拜垫（`interior.js`：上香的站位就在垫上） | 命名地点检查（殿门、`lookback` 机位、上香的站位都在它上面）；`edges:grid` 膝盖以下 |
 | `mesh.userData.walk = false` | 画了但不在路上：不进烘焙 | 远处的雾片、光柱、调试面板画的格子（透明、`alphaTest`、`ShaderMaterial` 的材质已自动排除） | `edges:grid`、`nearplane:grid` |
+| `mesh.userData.bake = false`（#288） | 画了、眼睛要躲开，但不进**地面**烘焙：头顶够不到、脚下踩不到的东西。和 `walk = false` 的区别：`walk = false` 是整件不在路上，眼睛的层次（`eyegather`）也跳过它；`bake = false` 只对地面烘焙（`tools/walk/bake.mjs` 的 `gather`）生效，眼睛仍收它，镜头退不进也穿不过 | 山门通道的天花和梁格（`building.js`）：不进烘焙，镜头从门洞里退出来也不会穿过天花看到屋顶内侧 | `form-288.test` 第 7 条（烘焙里没有、眼睛里有）、`spring-arm`、`nearplane:grid` |
 | 殿门 `hall.stop`（`site.js` 登记殿门那一行算出来的矩形） | 画出来开着、走进去由触发器管的门：门线以里关上 | 每座能进的殿 | `edges.test`「进殿在门槛」 |
 | `site.closed`（`site.js`，一个矩形加一句为什么） | 画出来是地面、却不该走进去的地方 | 山门两侧间（前后都是关着的板门，从门洞往旁边一步就进去了）；前院两侧竹林（竹子不进烘焙，边界只能写成意图；与旧 walker 的「竹林在两侧合拢」是同一个数 `SITE.GROVE_IN`）。#274 把其余各层查了一遍，加了一处：龙井龛里的池子（石槛只有 0.24 米，比一步低，他原来能跨进去站在水面上） | `walk-diff`「画的地面能站、旧数据走不到的」一栏，每处超过 1 m² 都要在 PR 里说一句；慢测 `eyeroom` |
 | 座位 `site.seats` / 殿内 `seat()`、`sitAt()`（`kind`：`stool` / `cushion`） | 能坐的地方，和画它的同一行 | 每只蒲团和凳 | `gridwalker.test` 按 `CUSHION`/`STOOL` 的尺寸把画出来的坐具一个个找出来，对上座位 |

@@ -12,6 +12,7 @@ import { layerFog } from "./src/fog.js";
 import { softShadows } from "./src/shadows.js";
 import { createGround } from "./src/ground.js";
 import { createBackdrop } from "./src/backdrop.js";
+import { loadHeightmap, terrainAsked } from "./src/terrain-far.js";
 import { createProps } from "./src/props.js";
 import { createPost } from "./src/post.js";
 import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
@@ -68,6 +69,8 @@ import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
 import { createDirector, shotPose, placePoint as placePointOf, holdShot } from "./src/director.js";
 import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
+import { takeCrossing } from "./src/pilgrimage.js";
+import { inkArrive, inkLift } from "./src/ink.js";
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -87,6 +90,12 @@ const WALKER = walkerMode(Q.get("walker"));
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
+// Opened by a crossing from another temple (行脚图, #449, src/pilgrimage.js): the visit handed across, taken once, for this
+// level only; an address that names its own place drops it, as a change of language's is. The ink curtain index.html's
+// first script kept shut (`html.crossing`) is drawn back once this temple can be drawn (crossingBack below); a handover
+// that came to nothing lifts it at once.
+const crossing = (() => { let c = null; try { c = takeCrossing(sessionStorage, { level: LV.id }); } catch {} return c && !["cam", "show", "shot", "in", "up", "enter", "tour", "at", "play", "seals"].some((k) => Q.has(k)) ? c : null; })();
+if (!crossing) inkLift();
 let walkFile = WALKER === "old" ? null : (() => {
   const t0 = performance.now();
   return fetch(asset(`shared/walk/${L.id}.bin`)).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.arrayBuffer(); })
@@ -155,6 +164,8 @@ if (quality.softShadow && !OFF.has("softshadow")) softShadows(SHADOW_BOX);
 await loading.step(tr("山路"));
 const M = createMaterials();
 const site = L.build(M);
+// A closed hall the level says the mist does not fill (fog.js; T05's great hall): its box, for every shader's fog.
+if (site.fogShut) { const f = site.fogShut; U.uFogShut.value.set(f.x0, f.z0, f.x1, f.z1); U.uFogShutY.value.set(f.y0, f.y1); layerFog({ shut: true }); }   // its sums go into the chunks now, before anything is drawn; a level with none compiles the shaders it always did
 const roofMap = bakeShelter(site.walk.roofs); useShelter(roofMap);   // what the roofs keep out of the snow
 part("site", () => scene.add(site.root));
 /** @type {{ bake: any, outline: any }} */ let walkBaked = { bake: null, outline: null };   // the bake's settings and his outline, for the debug panel's drawing (src/walkviz.js)
@@ -187,10 +198,14 @@ const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus)
 // The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
 // its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
 const SKY_AT = L.skyAt || [0, 0]; sky.at(SKY_AT[0], 0, SKY_AT[1]);
-const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving));
+const ground = part("ground", () => createGround(scene, site.shade, site.censer, site.paving, site.trees));
 // A level that has no far hills, no bamboo or no censer of its own (#409: T05 stands in a flat town) builds none of them.
 const NONE = { setMood() {}, update() {} };
-const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land)) : NONE;
+// #183's spike: on the workbench (the dev server, a preview) ?terrain=dem|made draws the far land from a heightmap instead
+// of the hill rings; the canary and the public page never read it (terrainAsked, src/debuggate.js).
+const TERRAIN_ASKED = L.backdrop ? terrainAsked({ dev: !!import.meta.env.DEV, hostname: location.hostname, search: location.search }) : null;
+const TERRAIN = TERRAIN_ASKED ? await loadHeightmap(asset, TERRAIN_ASKED).catch((e) => { console.warn("terrain:", e.message); return null; }) : null;
+const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land, TERRAIN)) : NONE;
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
@@ -268,7 +283,8 @@ const joyaNight = () => eventFor({ query: Q, bench: import.meta.env.DEV || /-tem
 let beforeJoya = null;
 if (joyaNight()) { beforeJoya = { season: state.season, time: state.time, follow: state.follow }; state.season = "winter"; state.time = "night"; state.follow = false; }
 // Across a change of language the season and hour of this visit are as they were, a hand's choice of hour too (#140).
-if (relang && relang.season && relang.time && !Q.has("season") && !Q.has("time")) { state.season = relang.season; state.time = relang.time; state.follow = relang.follow && !prologueDay; }
+{ const carried = relang || crossing;   // (a crossing from another temple carries the visit's season and hour too, #449)
+  if (carried && carried.season && carried.time && !Q.has("season") && !Q.has("time")) { state.season = carried.season; state.time = carried.time; state.follow = carried.follow && !prologueDay; } }
 let mood = null;
 let afterMood = null;   // set further down, once there are rooms: what a change of hour means to someone indoors
 // The mist's layers, as the hour gives them (indoors, where the rooms stand sixty metres under the courts, `dress`
@@ -277,9 +293,9 @@ const layers = () => { const L = mood.fogLayer; U.uFogLayer.value.set(OFF.has("l
 function setMood(season, time) {
   state.season = season; state.time = time; mood = moodOf(season, time);
   sky.setMood(mood);
-  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
+  U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uWinNight.value = mood.winNight; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
   layers();
-  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
+  backdrop.setMood(mood); bamboo.setMood(mood); props.setMood(mood); post.setMood(mood); trees.setMood(mood); ground.setMood?.(mood); drift.setMood(mood, U.uLight.value); trail.enable(mood.snow > 0.01);
   if (glowCloud) { glowCloud.material.uniforms.uOp.value = Math.min(0.7, mood.lamp * 0.45); glowCloud.visible = mood.lamp > 0.01; }
   monk.setSun(SUN_DIR, mood.sunI / 3);
   renderer.toneMappingExposure = mood.exp;
@@ -854,6 +870,7 @@ function frame(now) {
   if (glowCloud) glowCloud.material.uniforms.uPx.value = pxH;
   { const w = windAt(mood?.wind ?? 0, t); U.uWind.value.set(WIND_DIR[0] * w, WIND_DIR[1] * w); if (!still) U.uWindPath.value.addScaledVector(U.uWind.value, dt); }   // the breeze (wind.js); a frozen picture keeps its lean
   U.uT.value = t; sky.update(t); backdrop.update(t); props.update(t, dt, still, pxH); well.update(still ? 0 : dt, pos.x, pos.z, inside); ground.update?.(still ? 0 : dt); flock.update(still ? 0 : dt, t); drift.update(t, camera.position, pxH);
+  site.tick?.(dt, camera.position, still || frames < 3);   // what the level does by where the eye is (T05: the hall's fill as he walks in)
   for (const s of site.strikers) if (s.swing && s.t0) s.swing.position.z = logSwing(s, riteNow());   // drawn back and let go, or only tapped: it touches the bell and swings itself out
   load.tris = renderer.info.render.triangles; load.calls = renderer.info.render.calls; renderer.info.reset();
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
@@ -874,7 +891,7 @@ function frame(now) {
   } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready && bodySettled) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
+  if (++frames >= 3 && !document.body.dataset.ready && bodySettled) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); if (crossing) crossingBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1268,7 +1285,7 @@ window.__cost = (n = 40) => {
   return +((performance.now() - t0) / n).toFixed(2);
 };
 // What each part of the scene weighs: meshes, and triangles as drawn (instances counted).
-window.__trees = () => ({ cedars: trees.cedars ? trees.cedars.length : 0, hash: trees.cedars ? geometryHash(trees.cedars.map((c) => c.geometry)) : null });   // the cedars' grown wood, for the Node/browser check
+window.__trees = () => ({ cedars: trees.cedars ? trees.cedars.length : 0, hash: trees.cedars ? geometryHash(trees.cedars.map((c) => c.geometry)) : null, ginkgos: trees.ginkgos ? trees.ginkgos.length : 0, ginkgoHash: trees.ginkgos ? geometryHash(trees.ginkgos.map((g) => g.geometry)) : null });   // (the cedars' and the ginkgoes' grown wood)   // the cedars' grown wood, for the Node/browser check
 window.__census = () => {
   const out = {};
   for (const top of scene.children) {
@@ -1410,6 +1427,12 @@ function relangBack() {
   const b = /** @type {HTMLElement | null} */ (menuEl.querySelector(`[data-lang="${lang}"]`)); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: "nearest" }); }
   for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, hear, { once: true });
 }
+// Back after a crossing from another temple (#449): this temple can be drawn, so the ink curtain it came up behind is drawn back, and
+// how long the crossing took (from the press to the temple drawn, and to the walk his) is kept and named. Sound waits for the first touch or key.
+function crossingBack() {
+  inkArrive(crossing).then((a) => track("pilgrimage.arrive", { from: a.from, to: a.to, ms: a.ms, walk_ms: a.walkMs }));
+  for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, hear, { once: true });
+}
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
 // see-through. When something in a screenshot will not be explained, ask this before guessing.
@@ -1422,14 +1445,15 @@ window.__pick = (px, py, n = 6) => {
 function directShot(id, opts) {
   if (!id) return director.back({ soft: true });   // the observance is over: a swing still on its way arrives first
   if (upIn) return false;   // up on a balcony he sees with his own eyes only: no place's shot is taken there
-  const p = site.places[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
+  const p = site.places[id] || site.restPlaces?.[id] || rooms.spots[id]; if (!p || (p.room || null) !== (inside ? hallIn.room.id : null)) return false;   // a place, or a spot before something in a hall that has a shot of its own (the 功德箱)
   const foot = p.y ?? walker.heightAt(p.at[0], p.at[1]), going = director.go(id, p, foot, opts);
   if (going) { try { warmShot(p, foot); } catch (e) { console.warn("[director] the shot could not be made ready:", e); } }   // a picture made ready or not, the observance goes on
   return going;
 }
 window.__direct = (id) => directShot(id);
 createGame({
-  hints, ui, tier: quality.name, relang: !!relang,
+  hints, ui, tier: quality.name, relang: !!relang, crossing: !!crossing,
+  visit: () => ({ season: state.season, time: state.time, follow: !!state.follow }),   // what a crossing to another temple hands across (#449)
   level: L,   // which temple: whether it keeps a place, plays the opening, raises the prologue's title (#385)
   traceStubs: (k) => props.setTraces(k),   // the stubs other visitors left in the censer today (同修留痕)
   site, walker, scene,
@@ -1515,6 +1539,7 @@ function warmShot(p, foot) {
 window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: hints.state().tip, cues: cueState() });
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
+window.__lamp = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 // A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).

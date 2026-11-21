@@ -27,6 +27,7 @@ import t00 from "../levels/t00/level.js";
  * @property {boolean} [keepsPlace] keeps where he was under yunjing.place.v1 (the prologue only, until each level keeps its own; #385)
  * @property {boolean} [opening] plays the opening after 入山 (opening.js, which knows only the prologue's way)
  * @property {boolean} [title] raises the prologue's title at its gate
+ * @property {{ place: string, line: string }} [how] the line at the foot of the title page: "region · road" (a region's name, never a real city's) and one sentence of this temple's own (#445); none, none shown
  * @property {[number, number]} [skyAt] where the sky's dome stands (x, z), so that its far side stays within the eye's 800 m from everywhere walked (#409; the origin by default)
  *
  * What the floor's bake needs beyond what a level builds is in app/levels/<id>/bake.js, which only the Node tools read
@@ -44,12 +45,32 @@ import t00 from "../levels/t00/level.js";
  */
 const TESTING = typeof __DEPLOY__ === "undefined" || __DEPLOY__ === "preview" || __DEPLOY__ === "canary";
 
+/**
+ * Whether this build is the workbench's alone: the dev server and a pull request's preview (and Node), not the canary. The
+ * probe level (docs/t05/LEVEL-SPLIT.md S7) is listed only there, so that no published address, the canary's included, offers
+ * it or carries its code. The build says it (vite.config.mjs: a preview, unless VITE_NO_WORKBENCH=1), folded in like TESTING above; WORKBENCH_LEVELS in app/src/bench.js
+ * says which levels, and tests/unit/level-bench.test.mjs holds the entries below to it.
+ */
+const WORKBENCH = typeof __WORKBENCH__ === "undefined" || __WORKBENCH__;
+
 /** @type {Record<string, () => Promise<Level>>} */
 export const LEVELS = {
   t00: () => Promise.resolve(t00),
   ...(TESTING ? { t05: () => import("../levels/t05/level.js").then((m) => m.default) } : {}),
+  ...(WORKBENCH ? { _probe: () => import("../levels/_probe/level.js").then((m) => m.default) } : {}),
 };
 export const DEFAULT_LEVEL = "t00";
+
+/**
+ * How the map of temples walked (行脚图, #449) names a temple: the region and nothing finer, never a town (the owner's rule
+ * of 2026-11-21, as the title's line says where in #445), and the two characters its seal is cut with. Behind the same test
+ * of the build as LEVELS, so that the public page neither names nor carries a temple it does not list.
+ * @type {Record<string, { region: string, seal: string }>}
+ */
+export const PLACES = {
+  t00: { region: "江南", seal: "云径" },
+  ...(TESTING ? { t05: { region: "关外", seal: "奉明" } } : {}),
+};
 
 /**
  * The level an address asks for. A name not in the list falls back to the prologue, saying what was asked.

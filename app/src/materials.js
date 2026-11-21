@@ -4,6 +4,7 @@
 import * as THREE from "three";
 import { NOISE, WOOD, BUMP, U } from "./glsl.js";
 import { TRI, declare, bind } from "./textures.js";
+import { STAIR, CHEEK_STONE } from "./geo.js";
 import { TRAIL } from "./trail.js";
 import { SHELTER } from "./shelter.js";
 
@@ -14,18 +15,18 @@ import { SHELTER } from "./shelter.js";
 // which is how a scanned surface (textures.js) gives its relief. `tex` names the scans the body samples.
 // Snow settles on whatever faces the sky unless `snow` is false or a roof is over it (shelter.js), and takes his
 // footprints (trail.js).
-export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
+export function procMat(key, params, body, { snow = true, tex = [], stair = false, glsl = "", uniforms = null } = {}) {
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex);
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uWinNight = U.uWinNight; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
-      .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;")
+      .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? "\nattribute vec4 stair; varying vec4 vSt;" : ""))
       .replace("#include <begin_vertex>", `#include <begin_vertex>
-        vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;`);
+        vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;${stair ? " vSt=stair;" : ""}`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : ""))
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform float uWinNight; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? " varying vec4 vSt;" : "") + "\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : "") + glsl)
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
@@ -50,6 +51,12 @@ export function procMat(key, params, body, { snow = true, tex = [] } = {}) {
   return m;
 }
 
+// How a flight's stones are laid (the `steps` material below). A level that wants them otherwise sets what it changes on
+// `M.steps.userData.stairStyle` while its site is built (before the first frame; the page walks one level): `stoneW`
+// the slab's width across a tread, in metres, which sets how many slabs a flight has (two to five, one more or fewer now and
+// then); `cheekL` how long a stone down a cheek runs, in metres (a cap of 0.46 m stands at the head whatever this is); `leaves`
+// whether bamboo leaves lie on the treads; `moss` whether moss grows on the shaded flights. These are the prologue's own.
+export const STAIR_STYLE = Object.freeze({ stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true });
 export function createMaterials() {
   // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
   const wood = (key, grain, turn, base = ".125,.07,.05") => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
@@ -146,16 +153,85 @@ export function createMaterials() {
         wet=smoothstep(.35,.75,fbm3(vWP*.35+7.))*.7; rough_=mix(Nr.w,.35,wet); nd_=Nr.xyz*1.3;   // damp in patches, wherever the wall stands (it used to be wet below the height of the court, which was the whole approach)
       }
       col*=mix(1.,.6,wet);`, { tex: ["stone", "blocks"] }),
-    // A stair is dressed stone on every face, not the rubble of the wall beside it: pale where feet fall, a tone
-    // darker in the riser, moss only low in the corners.
+    // A stair is laid of cut stone, not poured: every flight, whichever hall or terrace it serves, reads its stones from the
+    // `stair` numbers geo.js writes into it (what each means is set out there), so no triangle is added and the same flight
+    // is cut the same way every time. A tread is two to five slabs across with joints that do not line up from one tread
+    // to the next; a cheek is a cap at the head and then long stones; the middle of each tread is worn pale and a little
+    // glossy where feet fall, its ends and the corner under the riser above stay dark and damp, and moss grows only on a
+    // few treads of the flights the sun does not reach (one that comes down toward the north) and in the joints low on a
+    // cheek; a bamboo leaf or two lies where feet do not sweep.
     steps: procMat("steps", { roughness: 0.8, envMapIntensity: 0.4 }, `
-      vec3 w=triW(vWN), q=vWP*.75; vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
-      float up=smoothstep(.4,.6,vWN.y), trod=smoothstep(.3,.7,fbm2(vWP.xz*.6+2.));
-      col=mix(vec3(.21,.212,.2),vec3(.31,.31,.29),up)*mix(vec3(1.),A,.9)*(.92+.2*trod*up);
-      float moss=smoothstep(.56,.76,fbm3(vWP*.9+2.))*(1.-up); col=mix(col,vec3(.1,.13,.07),moss*.45);
-      float cy=fract(vWP.y/.46), cx=fract((vWP.x+vWP.z)/1.3+floor(vWP.y/.46)*.5), joint=(1.-smoothstep(0.,.022,min(min(cy,1.-cy)*.46,min(cx,1.-cx)*1.3)))*(1.-up);
-      col*=1.-.6*joint; bump_=-joint*.006;
-      rough_=mix(Nr.w,.45,.3*up); nd_=Nr.xyz*.8;`, { tex: ["stone"] }),
+      vec4 st=vSt; float cd=floor(st.w+.5), Nn=mod(cd,64.), r1=floor(cd/64.), shd=mod(r1,4.); r1=floor(r1/4.);
+      float sed=mod(r1,16.), W=floor(r1/16.)/20.;
+      bool cheek=st.y<0.; float ck=cheek?1.:0.;
+      float ti=floor(max(st.y,0.)), tf=max(st.y,0.)-ti, zc=-1.-st.y, x=st.x;
+      vec2 sg; if(cheek) sg=stCheek(zc,sed,Nn*STREAD+SNOSE); else sg=stTread(x,W,ti,sed);
+      float sid=sg.x, px=fwidth(x)+.4*fwidth(st.y), joint=0.;
+      if(sg.y<.05){ float dj=sg.y+(n2(vWP.xz*13.+vWP.y*9.)-.5)*.005, jw=.0025+.003*h21(vec2(sid,sed+4.));
+        joint=(1.-smoothstep(jw,jw+.006+px,dj))*(1.-smoothstep(.03,.1,px)); }      // a joint is only drawn as long as it can be told apart
+      float up=smoothstep(.45,.65,vWN.y);
+      float sr=h21(vec2(sid*1.37+ti*.61+ck*50.,sed+.3));
+      vec3 tint=mix(vec3(.95,.98,1.03),vec3(1.05,1.01,.94),h21(vec2(sid+11.,ti+sed+ck*7.)));   // each stone a little cooler or warmer
+      vec3 w3=triW(vWN), q=vWP*.75+vec3(h21(vec2(sid,ti+sed)),h21(vec2(ti+sed,sid+3.)),h21(vec2(sid+5.,sed)))*6.;   // and cut from another part of the scan
+      vec3 A=triA(tStoneA,q,w3)/mStone; vec4 Nr=triN(tStoneN,q,w3);
+      col=mix(vec3(.21,.212,.2),vec3(.31,.31,.29),up)*mix(vec3(1.),A,.72)*tint*(.85+.3*sr);
+      // Where on a tread: how near the cheek, how near the riser above (0) or the nose (1), how near the line feet follow.
+      float side=1.-smoothstep(0.,.3,W*.5-abs(x)), d=clamp((tf-.13)/.85,0.,1.), corner=1.-smoothstep(0.,.4,d);
+      float walk=exp(-pow(abs(x)/clamp(.22*W+.2,.42,.9),2.));
+      float wear=(1.-ck)*up*walk*(.35+1.2*h21(vec2(sid+2.,ti*1.7+sed)))*(.5+.5*smoothstep(.05,.6,d));   // some slabs are walked more than others
+      float damp=(1.-ck)*up*clamp(.75*side+.55*corner,0.,1.);
+      float layer=${CHEEK_STONE.width}-st.x, stoneF=ck*step(0.,.012-min(layer,st.x));     // a cheek's outer stone, as against the panel set back under it
+      col*=1.-.22*ck*(1.-stoneF);
+      col*=1.+.07*ck*step(sid,.5);                                                        // the cap at the head stands a little paler
+      float foot=1.-smoothstep(0.,.45,st.z), rr=(1.-ck)*(1.-up)*(1.-smoothstep(0.,.1,st.z));   // low on a cheek, low on a riser: where water stands
+      float streak=0.; if(stoneF*(1.-up)>.5) streak=smoothstep(.5,.85,n2(vec2(zc*12.+sed*7.,st.z*.5)));
+      col*=1.-.4*damp-.25*streak-.22*ck*foot-.25*rr;
+      col=mix(col,col*vec3(1.5,1.47,1.32)+.03,clamp(wear,0.,1.));
+      // Moss: which treads carry it, by the sun the flight sees; where on them, by the damp.
+      float tr=h21(vec2(ti*2.3+sed*5.1,sed+.9)), has=step(tr,shd<.5?.06:shd<1.5?.24:.55), cs=shd>1.5?.7:shd>.5?.35:.12;
+      float moss=0.;
+      if((has+ck)*uMoss>.5){      // (the noise is only worked out where moss may be: a few treads, and the cheeks)
+        float mn=fbm2(vWP.xz*2.4+sed*3.1+vWP.y*1.3);
+        moss=max(has*up*(1.-ck)*smoothstep(.52,.78,mn*.85+.5*max(side,corner)-.5*walk)*(1.-clamp(wear,0.,1.)),
+                 max(has*rr*smoothstep(.58,.8,mn*.9+.3*rr), ck*cs*smoothstep(.52,.76,mn+.4*foot+.25*joint)));
+        if(moss>.002) col=mix(col,mix(vec3(.065,.085,.045),vec3(.11,.14,.065),n2(vWP.xz*31.))*mix(vec3(1.),A,.5),moss*.65);
+      }
+      col*=1.-.42*joint; ao_=min(ao_,1.-.25*joint); bump_=-joint*.004;
+      // A bamboo leaf lies here and there on a tread, nearest the edges, and none on the worn middle.
+      float lfm=0.;
+      if(uLeaves>.5&&ck<.5&&up>.5&&px<.04){
+        float cx=floor((x+W*.5)/.5), hc=h21(vec2(cx*1.3+sed,ti*.7+2.));
+        if(hc<mix(.1,.34,max(side,corner))*(1.-.85*walk)){
+          vec2 c=vec2((cx+.2+.6*h21(vec2(cx,ti+9.)))*.5-W*.5,.08+.28*h21(vec2(ti+1.,cx+5.)));
+          float an=h21(vec2(cx+3.,ti+sed))*3.14159, L=.05+.015*h21(vec2(cx,ti));
+          vec2 dr=vec2(cos(an),sin(an)), r=vec2(x,tf*(STREAD+SNOSE))-c; float s_=dot(r,dr), t_=dot(r,vec2(-dr.y,dr.x));
+          float hw=.0105*pow(max(1.-s_*s_/(L*L),0.),.7), lf=(1.-smoothstep(hw-.002,hw,abs(t_)))*step(abs(s_),L)*(1.-smoothstep(.02,.04,px));
+          vec3 lc=mix(vec3(.2,.17,.065),vec3(.12,.13,.05),h21(vec2(cx+7.,ti)))*(1.+.35*(1.-smoothstep(0.,.0016,abs(t_))));
+          col=mix(col,lc,lf*.9); bump_+=lf*.0015; lfm=lf;
+        }
+      }
+      rough_=mix(Nr.w,.45,.3*up); rough_=mix(rough_,.5,clamp(wear,0.,1.)*.7); rough_=mix(rough_,.38,damp*.4); rough_=mix(rough_,.95,moss); rough_=mix(rough_,.9,lfm);
+      nd_=Nr.xyz*.65+vec3(h21(vec2(sid+1.,ti+sed))-.5,0.,h21(vec2(ti+2.,sid+sed))-.5)*.05*up;`, { tex: ["stone"], stair: true, uniforms: (m) => { const st = { ...STAIR_STYLE, ...(m.userData.stairStyle || {}) }; return { uStoneW: { value: st.stoneW }, uCheekL: { value: st.cheekL }, uLeaves: { value: st.leaves ? 1 : 0 }, uMoss: { value: st.moss ? 1 : 0 } }; }, glsl: `
+      const float STREAD=${STAIR.tread.toFixed(3)}, SNOSE=${STAIR.nosing.toFixed(3)};
+      uniform float uStoneW, uCheekL, uLeaves, uMoss;   // the level's own way with stone (STAIR_STYLE)
+      // How many slabs cut a tread across (two to five by its width, one more or fewer now and then), and where their joints fall.
+      float stCount(float W,float i,float sed){
+        float nb=W<1.35?max(2.,floor(W/(.5625*uStoneW))):clamp(floor(W/uStoneW+.5),3.,5.), r=h21(vec2(i+.5,sed+3.));
+        return clamp(nb+(r>.72?1.:0.)-(r<.22?1.:0.),2.,5.);
+      }
+      float stBreak(float k,float n,float W,float i,float sed){ return W*(-.5+(k+(h21(vec2(i*3.7+k,sed*1.3+9.))-.5)*.55)/n); }
+      // (the slab's number across a tread, the distance to the nearest joint)
+      vec2 stTread(float x,float W,float i,float sed){
+        float n=stCount(W,i,sed), id=0., dj=1e3;
+        for(int k=1;k<5;k++){ if(float(k)>=n) break; float b=stBreak(float(k),n,W,i,sed); id+=step(b,x); dj=min(dj,abs(x-b)); }
+        return vec2(id,dj);
+      }
+      // (the stone's number down a cheek, the distance to the nearest joint): a cap at the head, then stones a metre long or more, none shorter than a third of a metre at the foot.
+      vec2 stCheek(float z,float sed,float foot){
+        float id=step(.46,z), dj=abs(z-.46), b=.46;
+        for(int j=0;j<5;j++){ b+=uCheekL+.6*h21(vec2(float(j)+sed*1.7,sed+2.)); if(b>foot-.35) break; id+=step(b,z); dj=min(dj,abs(z-b)); }
+        return vec2(id,dj);
+      }` }),
 
     // vUv2 = (leaf index + position across the leaf, height mapped to 0..3.02); transoms are offset by 100 and mapped to 0...7.
     lattice: procMat("lattice", { roughness: 0.85, envMapIntensity: 0.3, side: THREE.DoubleSide }, `
@@ -169,11 +245,13 @@ export function createMaterials() {
       float panel=(1.-zone)*(1.-frame)*smoothstep(.0,.03,min(min(lx-.16,.89-lx),min(q.y-.16,1.02-q.y)));
       col=woodCol(vWP,vec3(9.,1.1,9.))*(1.-.25*panel); col=mix(col,vec3(.01,.009,.008),hole);
       rough_=mix(.8,1.,hole); bump_=(frame+bar*zone+rail)*.012-hole*.03+panel*.008;
-      // Lamplight behind the lattice after dusk: brightest low down where the lamp stands, fading up the paper;
-      // each room its own strength, and one leaf in eight dark.
-      float leaf=floor(vUv2.x), room=n2(vec2(leaf*.31,2.)), on=step(.125,h21(vec2(leaf,7.)));
-      float up=tr?.25:exp(-pow(abs((q.y-.85)/1.25),2.));
-      emit_=mix(uWin*vec3(.24,.145,.11),uWin,up)*uLamp*hole*on*(.35+.75*room)*1.25;`, { snow: false }),
+      // Lamplight behind the lattice after dusk, where the plan says a bay is lit (windows.js, ART-REVIEW A2): the
+      // whole part of u carries a code of sixteen leaves (dusk level * 8 + night level, each 0..7, and the bay's
+      // leaves count from there); a bay of level 0 stays dark paper. Brightest low down where the lamp stands,
+      // fading up the paper, each leaf a little its own.
+      float code=floor((vUv2.x+4.)/16.), leaf=vUv2.x-code*16., lv=mix(floor(code/8.),mod(code,8.),uWinNight)/7.;
+      float up=tr?.2:exp(-pow(abs((q.y-.85)/1.1),2.));
+      emit_=mix(uWin*vec3(.2,.13,.1),uWin,up)*uLamp*hole*lv*3.2*(.88+.24*h21(vec2(floor(leaf),7.)));`, { snow: false }),
 
     bronze: procMat("bronze", { roughness: 0.5, metalness: 0.75, envMapIntensity: 1.0 }, `
       float p=smoothstep(.4,.72,fbm3(vWP*5.)); col=mix(vec3(.16,.125,.085),vec3(.16,.27,.22),p*.75);  // verdigris
@@ -201,6 +279,10 @@ export function createMaterials() {
     // A plain small-squared ceiling (ping'an): bare boards between the ribs.
     pingan: procMat("pingan", { roughness: 0.95, envMapIntensity: 0.1 }, `
       col=woodCol(vWP,vec3(9.,1.1,9.))*.62*(.9+.2*h21(floor(vWP.xz/.4))); rough_=.95; emit_=col*uAmb*.02;`, { snow: false }),
+    // The boards of a gate passage's ceiling (#288): out of doors under a roof, lit by the paving and the day coming in at both
+    // ends, which a hall's ceiling, lit by lamps, is not.
+    passage: procMat("passage", { roughness: 0.95, envMapIntensity: 0.1 }, `
+      col=woodCol(vWP,vec3(9.,1.1,9.))*.85*(.9+.2*h21(floor(vWP.xz/.4))); rough_=.95; emit_=col*uAmb*.37;`, { snow: false }),
     // Window paper on the inside of the south wall, the day coming through it; at night it is only paper.
     paper: procMat("paper", { roughness: 1, envMapIntensity: 0 }, `
       col=vec3(.66,.64,.58)*(.94+.06*n3(vWP*11.)); rough_=1.;
@@ -267,6 +349,15 @@ export function createMaterials() {
     bark: procMat("bark", { roughness: 0.95, envMapIntensity: 0.15 }, `
       vec3 q=vWP*vec3(1.4,.85,1.4), w=triW(vWN); vec3 A=triA(tBarkA,q,w)/mBark; vec4 Nr=triN(tBarkN,q,w);
       col=vec3(.13,.082,.055)*A; col=mix(col,vec3(.12,.15,.08)*A,smoothstep(.5,.75,fbm3(vWP*1.5))*.5);   // moss on the weather side
+      rough_=Nr.w; nd_=Nr.xyz*1.8;
+      // a tree's foot (trees.js gives it a v below -1: how far above the paving it is) is drifted over with snow for its
+      // lowest thirty centimetres, so that it goes down into the blanket round it and does not stand on it (#92)
+      // and lit a little by the sky, as the paving's snow is (that is lit by hand): in the shade it would be greyer than the snow it lies in
+      if(vUv2.y<-.5&&uSnow>.001){ float d_=uSnow*smoothstep(.32,.04,-vUv2.y-1.)*(.85+.15*fbm3(vWP*3.)); col=mix(col,vec3(.82,.86,.92),d_); rough_=mix(rough_,.95,d_); nd_*=1.-d_; ao_=mix(ao_,max(ao_,.85),d_); emit_+=vec3(.82,.86,.92)*uAmb*.25*d_; }`, { tex: ["bark"] }),
+    // The young ginkgo's own bark (#162): the same scan and the same snow at the foot, a greyer brown.
+    barkGinkgo: procMat("barkGinkgo", { roughness: 0.95, envMapIntensity: 0.15 }, `
+      vec3 q=vWP*vec3(1.4,.85,1.4), w=triW(vWN); vec3 A=triA(tBarkA,q,w)/mBark; vec4 Nr=triN(tBarkN,q,w);
+      col=vec3(.145,.118,.096)*A; col=mix(col,vec3(.12,.14,.09)*A,smoothstep(.55,.8,fbm3(vWP*1.5))*.3);   // a young ginkgo's bark: grey-brown, shallowly furrowed (the Flora of China, quoted second-hand), not the cedar's red-brown; a little moss
       rough_=Nr.w; nd_=Nr.xyz*1.8;
       // a tree's foot (trees.js gives it a v below -1: how far above the paving it is) is drifted over with snow for its
       // lowest thirty centimetres, so that it goes down into the blanket round it and does not stand on it (#92)
