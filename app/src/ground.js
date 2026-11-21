@@ -131,7 +131,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         vec2 p=vWP.xz;
         // Flagstones of unequal size, each a slightly different stone. Rows run 0.6 to 0.9 m deep and each row is cut into flags
         // 0.6 to 1.1 m long, every row begun at its own place; down the axis runs a path of the same stone, a little paler,
-        // between two lines of kerb stones. Joints are about a centimetre wide, one notch darker than the stone.
+        // between two lines of kerb stones. Joints are under a centimetre wide, one notch darker than the stone.
         bool onAxis=p.y>-.95&&p.y<53.9, path=onAxis&&abs(p.x)<1.7, kerb=onAxis&&!path&&abs(p.x)<2.02;
         vec2 id; vec4 fl=flags(p,path,id);
         float edge=min(min(p.x-fl.x,fl.y-p.x),min(p.y-fl.z,fl.w-p.y));
@@ -139,7 +139,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         edge+=(n2(p*9.)-.5)*.006;
         // The joint is drawn a pixel wide at least, and thins into the stone's own darkening where the eye is far enough
         // that it would be less than a pixel (a hairline of full strength would crawl).
-        float hw=.0065, fw=max(fwidth(edge),1e-4), joint=(1.-smoothstep(hw-.5*fw,hw+.5*fw,edge))*min(1.,2.*hw/fw);
+        float hw=.0045, fw=max(fwidth(edge),1e-4), joint=(1.-smoothstep(hw-.5*fw,hw+.5*fw,edge))*min(1.,2.*hw/fw);
         float tone=h21(id);
         // Each slab is cut from a different part of the scanned stone.
         vec2 su0=p*.75, suv=su0+vec2(h21(id+3.),h21(id+7.))*5., sgx=dFdx(su0), sgy=dFdy(su0); vec3 sA=textureGrad(tStoneA,suv,sgx,sgy).rgb/mStone, sN=textureGrad(tStoneN,suv,sgx,sgy).xyz;

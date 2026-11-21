@@ -1,13 +1,13 @@
 // What a picture of the court says about its floor (#467, ART-REVIEW A4): how much happens in the lowest third of the frame, and
 // how wide the joints between the flags read on the screen.
-//   node tools/ground-metrics.cjs [--h=<eye height in metres>] [--pitch=<radians down is positive>] [--vfov=<degrees>] a.png b.png …
+//   node tools/ground-metrics.cjs [--h=<eye height in metres>] [--pitch=<radians down is positive>] [--vfov=<degrees>] [--joint=<cm>] a.png b.png …
 // Per picture, over the lowest third of its rows (which is paving in every view of the court):
 //   lumaStd     standard deviation of the luminance after each row's own mean is taken off (so that the fall of light with
 //               distance does not count): how much the floor varies across the picture.
 //   edge        the share of pixels whose luminance differs from the next pixel's, across or down, by more than 4/255:
 //               the density of edges (joints, flag edges, shadow edges, leaves).
 //   rowStd      standard deviation of the rows' own mean luminance: how much the floor varies from the foot of the picture up.
-//   jointPx     the width on the screen of a 1 cm joint, worked out from the lens and eye height given (default: 1080p,
+//   jointPx     the width on the screen of a joint (0.9 cm unless --joint=<cm> says otherwise), worked out from the lens and eye height given (default: 1080p,
 //               vfov 50°, eye 1.6 m, level) as the mean over the same rows of the two ways a joint can run: toward the
 //               eye (w·f/d) and across (w·f·h/d²), each at least one pixel wide as the drawing makes it. It does not read the
 //               picture: it says what width the joints, by their width in the world, take on a screen of this kind.
@@ -16,7 +16,7 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 
 const args = process.argv.slice(2), opt = (k, d) => { const a = args.find((x) => x.startsWith(`--${k}=`)); return a ? Number(a.slice(k.length + 3)) : d; };
-const files = args.filter((a) => !a.startsWith("--")), eye = opt("h", 1.6), pitch = opt("pitch", 0), vfov = opt("vfov", 50), jointCm = opt("joint", 1.3);
+const files = args.filter((a) => !a.startsWith("--")), eye = opt("h", 1.6), pitch = opt("pitch", 0), vfov = opt("vfov", 50), jointCm = opt("joint", 0.9);
 
 (async () => {
   const b = await chromium.launch(), p = await b.newPage(), out = {};
