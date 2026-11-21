@@ -90,6 +90,53 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  # What a phone sees (tools/mobile-audit.cjs, #400): every surface of the interface at three phone sizes, a control under 44 px, text under 12 px,
+  # anything off the screen, a page that scrolls; it exits 1 if it lists anything. Beside every publication, not in its way: until now only a person
+  # who remembered to run it saw it (#129 stood red for days). Chinese, and English, the longest words; the pictures are kept for a failing run.
+  mobile:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to drive the page with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
+      - name: Every surface of the interface as a phone sees it
+        run: node tools/mobile-audit.cjs
+      - name: ... and in English
+        run: node tools/mobile-audit.cjs --lang=en
+      - name: Keep the pictures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-mobile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            tools/out/mobile/
+            tools/out/mobile-en/
+          retention-days: 14
+          if-no-files-found: ignore
+
   # Every scenario, once a night and when asked: the machines take a share of the list each, made by tests/e2e/shards.cjs from the
   # last measured time of every scenario (tests/e2e/durations.json; `node tests/e2e/shards.cjs update <reports>` refreshes them after a run), so
   # that none runs much longer than another: taken in turn, four machines ran 35 to 48 minutes of the same list. Asked for by name, the
