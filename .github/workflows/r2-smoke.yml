@@ -35,6 +35,10 @@ jobs:
       R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
     steps:
+      # Only the one script is needed from the checkout.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/ci
       - name: The four secrets are all present
         run: |
           bash tools/ci/r2-secrets-check.sh
