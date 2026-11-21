@@ -34,7 +34,15 @@ dirs = {"front": Vector((0, -1, 0)), "left": Vector((1, 0, 0)), "right": Vector(
 from PIL import Image, ImageDraw
 for vname in views:
   d = dirs[vname]; cam.location = C + d * 20
-  cam.rotation_euler = (C - cam.location).to_track_quat("-Z", "Z" if vname not in ("below", "top") else "Y").to_euler()
+  cam.rotation_euler = (C - cam.location).to_track_quat("-Z", "Y").to_euler()
+  if vname not in ("below", "top"):   # stand the camera upright: its own up toward the world's up
+    from mathutils import Euler
+    q = (C - cam.location).to_track_quat("-Z", "Y"); up = q @ Vector((0, 1, 0)); want = Vector((0, 0, 1)); fwd = (C - cam.location).normalized()
+    ang = up.angle(want - fwd * want.dot(fwd)) if (want - fwd * want.dot(fwd)).length > 1e-6 else 0
+    from mathutils import Quaternion
+    for sgn in (1, -1):
+      qq = Quaternion(fwd, sgn * ang) @ q
+      if (qq @ Vector((0, 1, 0))).dot(want) > 0.99: cam.rotation_euler = qq.to_euler(); break
   f = f"{out}-{vname}.png"; sc.render.filepath = f; bpy.ops.render.render(write_still=True)
   # the picture's axes in the stage's frame: right and up
   ax = {"front": ((1, 0, 0), (0, 1, 0)), "left": ((0, 0, -1), (0, 1, 0)), "right": ((0, 0, 1), (0, 1, 0)), "below": ((-1, 0, 0), (0, 0, -1)), "top": ((1, 0, 0), (0, 0, -1))}[vname]

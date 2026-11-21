@@ -49,7 +49,7 @@ _, lab = connected_components(coo_matrix((np.ones(len(E)), (E[:, 0], E[:, 1])), 
 frac = np.bincount(lab, weights=inbox, minlength=lab.max() + 1) / np.maximum(np.bincount(lab, minlength=lab.max() + 1), 1)
 whole = frac >= K.get("whole", 0.8); part = (frac >= K.get("part", 0.4)) & ~whole
 keep = (whole[lab] | part[lab]) & inbox & below
-for lo2, hi2 in K.get("drop", []): keep &= ~np.all((st > lo2) & (st < hi2), axis=1)   # scraps of robe that touch the hand   # every shell kept is still cut at the wrist and the box (a hand shell may run on into the sleeve)
+for lo2, hi2 in K.get("drop", []): keep &= ~np.all((st > lo2) & (st < hi2), axis=1)   # scraps of robe touching the hand (a box on the robe's shells alone took fingers with it: the shells do not follow the parts)   # every shell kept is still cut at the wrist and the box (a hand shell may run on into the sleeve)
 log["donor"]["shells_whole"] = int(whole[np.unique(lab[inbox])].sum()); log["donor"]["shells_part"] = int(part[np.unique(lab[inbox])].sum())
 me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
 bm = bmesh.new(); bm.from_mesh(me); bm.verts.ensure_lookup_table()
