@@ -1,0 +1,67 @@
+name: Phone audit
+
+# What a phone sees (tools/mobile-audit.cjs, #400): every surface of the interface at three phone sizes, a control under 44 px, text under 12 px, anything off
+# the screen, a page that scrolls; it exits 1 if it lists anything. Beside every publication, not in its way: until now only a person who remembered to
+# run it saw it (#129 stood red for days). Chinese, and English, the longest words, one machine each, about twenty-three minutes apiece in software drawing;
+# the pictures are kept for a failing run.
+# A file of its own, not a job of e2e.yml: that workflow's push runs replace one another (a push cancels the run before it), and a
+# twenty-three-minute audit never got to the end of one while pull requests were being merged every few minutes (2026-11-21, the first run on main
+# was cancelled by the next merge). Here a push waits behind the audit that is running and replaces only another that is still waiting, so the
+# newest main is always audited and no audit is cut off half way.
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", "tests/e2e/**", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "tools/site.cjs", "tools/bake-doorways.mjs"]
+  workflow_dispatch:   # on a branch, to see what it says
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.event_name == 'push' && 'main' || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [zh, en]   # (about seventeen minutes each in software drawing: two machines side by side, not one after the other)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to drive the page with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
+      - name: Every surface of the interface as a phone sees it
+        run: node tools/mobile-audit.cjs ${{ matrix.lang != 'zh' && format('--lang={0}', matrix.lang) || '' }}
+      - name: Keep the pictures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-mobile-${{ matrix.lang }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/mobile*/
+          retention-days: 14
+          if-no-files-found: ignore
+
