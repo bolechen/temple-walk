@@ -98,7 +98,7 @@
    ],
    "solve": {
     "gap": 0.002,
-    "below": 3.68
+    "below": 3.6
    }
   }
  },
@@ -137,7 +137,8 @@
     -42,
     33
    ]
-  }
+  },
+  "front": 0.003
  },
  "knee_r1": {
   "box": [
@@ -208,7 +209,6 @@
    -0.5,
    -0.2
   ],
-  "cut_z": 1.64,
   "cut_ymax": 4.1,
   "note": "the shoulder's centre and the elbow read from sections of f1 (y 5.9: x -1.58..-1.25, z -1.25..-0.46; the forearm a round tube 0.2-0.25 m across lying on the thigh from z -0.3 to 1.45)",
   "upper_axis": [
@@ -229,6 +229,7 @@
   ],
   "slack": 1.4,
   "facing": 0.2,
-  "stretch": 3.0
+  "stretch": 3.0,
+  "cut_dz": 0.02
  }
 }

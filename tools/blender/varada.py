@@ -232,8 +232,10 @@ if Kn.get("mode") == "surface":
   dcore = distance_transform_edt(~core) * gs; tt_ = np.clip(dcore / sk, 0, 1); GZ = GZ - tk * tt_ * tt_ * (3 - 2 * tt_)
   lay &= dcore <= sk
   ci = np.clip(np.round((fc0[cand, 0] - xs[0]) / gs).astype(int), 0, len(xs) - 1); cj = np.clip(np.round((fc0[cand, 1] - ys[0]) / gs).astype(int), 0, len(ys) - 1)
-  incore = core[cj, ci]
-  gone_f = cand[incore & (fc0[cand, 2] > GZ[cj, ci] - Kn.get("behind", 0.08))]
+  incore = core[cj, ci]; inlay = lay[cj, ci]
+  # inside the core everything in front of the knee goes; in the band where the sheet's edge is sunk under the figure's
+  # own surface, only what stands in front of the sheet (it would show as a patch over it)
+  gone_f = cand[(incore & (fc0[cand, 2] > GZ[cj, ci] - Kn.get("behind", 0.08))) | (inlay & ~incore & (fc0[cand, 2] > GZ[cj, ci] + Kn.get("front", 0.003)))]
   bmesh.ops.delete(bm, geom=[bm.faces[i] for i in gone_f], context="FACES")
   bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
   # scraps left round the box (pieces of fewer than `island` faces within `skirt` of it) go too
@@ -396,7 +398,8 @@ if AR:
     bestE, bestR = np.full(len(st), np.inf), np.zeros_like(st)
     for a0, a1 in zip(pts[:-1], pts[1:]):
       dvec = a1 - a0; tpar = np.clip((st - a0) @ dvec / (dvec @ dvec), 0, 1); foot = a0 + np.outer(tpar, dvec); off_ = st - foot
-      e = ((off_[:, plane[0]] / radii[0]) ** 2 + (off_[:, plane[1]] / radii[1]) ** 2) ** 0.5
+      third = 3 - plane[0] - plane[1]   # past either end of a segment the distance along it counts too
+      e = ((off_[:, plane[0]] / radii[0]) ** 2 + (off_[:, plane[1]] / radii[1]) ** 2 + (off_[:, third] / min(radii)) ** 2) ** 0.5
       better = e < bestE; bestE[better] = e[better]; bestR[better] = off_[better]
     return bestE, bestR / np.maximum(np.linalg.norm(bestR, axis=1), 1e-9)[:, None]
   ap = np.array(AR["axis_pts"]); slack = AR.get("slack", 1.4); fac = AR.get("facing", 0.2)
@@ -412,7 +415,7 @@ if AR:
   st = st + dsp
   mv = np.linalg.norm(dsp, axis=1); band = (upper & ((w_sh < 0.999) | (w_in < 0.999)) & (mv > 0))
   # what is left of the old hand past the new wrist, and the forearm's own end cap there
-  cutz = AR.get("cut_z"); gone_n = 0
+  cutz = (tw[2] + AR["cut_dz"]) if "cut_dz" in AR else AR.get("cut_z"); gone_n = 0
   me = ob.data; me.vertices.foreach_set("co", to_blender(st).ravel()); me.update()
   if cutz is not None:
     bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
