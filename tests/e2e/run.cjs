@@ -681,12 +681,12 @@ const scenarios = {
   // Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded.
   // (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
   exitframe: { tier: 3, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom", { viewport: { width: 480, height: 320 } });
+    const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom&fast=1", { viewport: { width: 480, height: 320 } });   // (fast: the veil through a door pauses a sixth as long)
     await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
     const halls = await t.page.evaluate(() => window.__halls.map((h) => h.id)), log = {}, bad = [];
     for (const id of halls) {
-      await t.page.evaluate((h) => window.__inside(h), id); await t.until(() => t.page.evaluate((h) => window.__yard().room === h, id), 120000, "could not go into " + id);
-      await t.frames(5);
+      await t.page.evaluate((h) => window.__inside(h), id); await t.page.waitForFunction((h) => window.__yard().room === h, id, { polling: 50, timeout: 120000 });   // (waited on directly: t.until looks only every 1.2 s)
+      { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f + 5, f0, { polling: 20, timeout: 120000 }); }
       await t.page.evaluate(() => window.__inside(null));
       await t.page.waitForFunction(() => !window.__yard().inside, null, { polling: 10, timeout: 120000 });
       const rows = [];
