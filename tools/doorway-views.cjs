@@ -3,17 +3,13 @@
 // usage: node tools/doorway-views.cjs [hall=main] [--doorway=hires|live] [--before] [--halls] [--moods [--seasons=spring,…]] [--dists=12,6,2] [--angles=-30,0,30] [--mood=summer-day] [--size=640x400] [--q=high] [--view=first] [--tag=] [--baked]
 // Each picture's door and the lattice beside it, in pixels, go to rects.json (doorway-light.py measures them).
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path");
+const fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out", "doorway");
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const base = `http://127.0.0.1:${srv.address().port}/`, hallId = process.argv.slice(2).find((a) => !a.startsWith("--")) || "main", before = process.argv.includes("--before");
   const dists = arg("dists", "12,6,2").split(",").map(Number), angles = arg("angles", "-30,0,30").split(",").map(Number), [season, time] = arg("mood", "summer-day").split("-");
   const [vw, vh] = arg("size", "640x400").split("x").map(Number);

@@ -6,7 +6,7 @@
 //
 //   node tools/music.mjs                       summer-day and winter-night
 //   node tools/music.mjs autumn-dusk           one mood
-import http from "node:http"; import fs from "node:fs"; import path from "node:path"; import { execFileSync } from "node:child_process";
+import fs from "node:fs"; import path from "node:path"; import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url), { chromium } = require("playwright");
@@ -84,14 +84,8 @@ window.balance = async () => {
 window.chunk = (i, n) => { const a = window.__pcm.subarray(i, i + n); let s = ""; for (let k = 0; k < a.length; k += 0x8000) s += String.fromCharCode.apply(null, a.subarray(k, k + 0x8000)); return btoa(s); };
 </script>`;
 
-const types = { ".js": "text/javascript", ".html": "text/html", ".css": "text/css", ".woff2": "font/woff2" };
-const srv = http.createServer((req, res) => {
-  const u = decodeURIComponent(req.url.split("?")[0]);
-  if (u === "/" || u === "/music.html") { res.writeHead(200, { "content-type": "text/html" }); return res.end(page); }
-  const p = path.resolve(app, "." + path.posix.normalize(u)); if (!p.startsWith(app + path.sep) || !fs.existsSync(p)) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
-await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+const { serve } = require("./site.cjs");
+const srv = await serve(app, { api: false, handler: (req, res, u) => (u === "/" || u === "/music.html") && (res.writeHead(200, { "content-type": "text/html" }), res.end(page), true) });
 const base = `http://127.0.0.1:${srv.address().port}/`, browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
 fs.mkdirSync(out, { recursive: true });
 const report = {};

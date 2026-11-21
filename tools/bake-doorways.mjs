@@ -65,20 +65,8 @@ const allNames = (id, fp) => ({ ...names(id, fp), ...inNames(id, fp) });
 
 // Serve a built site and open it in Chromium with software rendering, as the tests do.
 async function withPage(root, query, fn) {
-  const http = require("http"), { chromium } = require("playwright");
-  const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".png": "image/png", ".css": "text/css", ".woff2": "font/woff2", ".glb": "model/gltf-binary", ".wasm": "application/wasm", ".ktx2": "image/ktx2", ".jpg": "image/jpeg" };
-  const srv = http.createServer((req, res) => {
-    // A canary or production build asks the Worker for the day's traces (#340); this server holds only the site's files, so
-    // it answers as a Worker with an empty day would, as tests/e2e/lib.cjs does.
-    if (req.url.startsWith("/api/")) {
-      if (req.url.startsWith("/api/traces")) { res.writeHead(200, { "content-type": "application/json" }); return res.end('{"day":null,"traces":{}}'); }
-      res.writeHead(204); return res.end();
-    }
-    let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), full = join(root, "." + rel); if (full.startsWith(root)) p = full; } catch {}
-    if (!p || !existsSync(p) || statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-    res.writeHead(200, { "content-type": types[extname(p)] || "application/octet-stream" }); res.end(readFileSync(p));
-  });
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r));
+  const { chromium } = require("playwright"), { serve } = require("./site.cjs");
+  const srv = await serve(root);
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   try {
     const page = await (await b.newContext({ viewport: { width: 320, height: 200 }, locale: "zh-CN" })).newPage(), errs = [];

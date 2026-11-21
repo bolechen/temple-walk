@@ -4,19 +4,15 @@
 // usage: node tools/litter-film.cjs [--cam=x,z,yaw,pitch] [--when=autumn-day] [--from=40] [--secs=60] [--fps=8] [--size=WxH] [--out=tools/out/litter/film]
 //   → <out>/f00000.png … and <out>.mp4 (ffmpeg), and <out>.json: the breeze and what lay on the ground at each second
 const { chromium } = require("playwright");
-const http = require("http"), fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
+const fs = require("fs"), path = require("path"), { execFileSync } = require("child_process");
 const root = require("./site.cjs").site();
 const arg = (k, d) => (process.argv.find((a) => a.startsWith(`--${k}=`)) || `--${k}=${d}`).split("=")[1];
 const cam = arg("cam", "-7.5,33,-0.38,-0.32"), [season, time] = arg("when", "autumn-day").split("-"), from = Number(arg("from", "40")), secs = Number(arg("secs", "60")), fps = Number(arg("fps", "8"));
 const [W, H] = arg("size", "960x540").split("x").map(Number), out = path.resolve(arg("out", path.join(__dirname, "out", "litter", "film")));
-const types = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".webp": "image/webp", ".css": "text/css", ".woff2": "font/woff2", ".wasm": "application/wasm" };
-const srv = http.createServer((req, res) => {
-  let p = null; try { const rel = decodeURIComponent(req.url.split("?")[0]).replace(/^\/$/, "/index.html"), base = path.resolve(root), full = path.resolve(base, "." + path.posix.normalize("/" + rel)); if (full.startsWith(base + path.sep)) p = full; } catch {}
-  if (!p || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
-  res.writeHead(200, { "content-type": types[path.extname(p)] || "application/octet-stream" }); fs.createReadStream(p).pipe(res);
-});
+const { serve } = require("./site.cjs");
+let srv;
 (async () => {
-  await new Promise((r) => srv.listen(0, "127.0.0.1", r)); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
+  srv = await serve(root); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1, locale: "zh-CN" }), errs = [];
   p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));
