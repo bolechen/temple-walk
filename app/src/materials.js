@@ -55,8 +55,8 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
 // `M.steps.userData.stairStyle` while its site is built (before the first frame; the page walks one level): `stoneW`
 // the slab's width across a tread, in metres, which sets how many slabs a flight has (two to five, one more or fewer now and
 // then); `cheekL` how long a stone down a cheek runs, in metres (a cap of 0.46 m stands at the head whatever this is); `leaves`
-// whether bamboo leaves lie on the treads; `moss` whether moss grows on the shaded flights. These are the prologue's own.
-export const STAIR_STYLE = Object.freeze({ stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true });
+// whether bamboo leaves lie on the treads; `moss` whether moss grows on the shaded flights; `crest` how strongly the worn band along each tread's nose is lit (1 as the prologue has it, 0 none: for a hard light that would string the noses into white lines); `crestVary` how much that band's width and brightness differ from slab to slab (1, or 0 for every slab alike). These are the prologue's own.
+export const STAIR_STYLE = Object.freeze({ stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true, crest: 1, crestVary: 1 });
 export function createMaterials() {
   // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
   const wood = (key, grain, turn, base = ".125,.07,.05") => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
@@ -220,8 +220,8 @@ export function createMaterials() {
       float fwn=max(fwidth(dn),1e-4), crest=0., edge_=0.;   // (the worn band and the line under it only while they are wide enough to be seen: far off the nose is just a little older)
       if(ck<.5&&up>.5&&dn<.085){      // (and only within a hand of the nose: the rest of the tread never asks)
         float uu=abs(x)/(.5*max(W,.1)), prof=1.-.7*smoothstep(.33,1.,uu);
-        float bw=(.04+.022*prof)*(.8+.4*n2(vec2(x*8.+sed*3.,ti*5.1+1.)))*(.9+.2*h21(vec2(sid+ti,sed+5.)));
-        crest=smoothstep(.003,bw*.35,dn)*(1.-smoothstep(bw*.35,bw,dn))*(1.-chip)*(.8+.4*n2(vec2(x*5.+ti*2.,sed)))*smoothstep(1.,3.,bw/fwn);
+        float bw=(.04+.022*prof)*mix(1.,.8+.4*n2(vec2(x*8.+sed*3.,ti*5.1+1.)),uCrestVary)*mix(1.,.9+.2*h21(vec2(sid+ti,sed+5.)),uCrestVary);
+        crest=smoothstep(.003,bw*.35,dn)*(1.-smoothstep(bw*.35,bw,dn))*(1.-chip)*mix(1.,.8+.4*n2(vec2(x*5.+ti*2.,sed)),uCrestVary)*uCrest*smoothstep(1.,3.,bw/fwn);
         edge_=(1.-smoothstep(0.,.009,dn))*smoothstep(.4,1.5,.014/fwn);
       }
       float de=min(st.x,${CHEEK_STONE.width}-st.x), arrC=ck*up*stoneF*(1.-smoothstep(0.,.02,de));
@@ -242,9 +242,9 @@ export function createMaterials() {
         }
       }
       rough_=mix(Nr.w,.45,.3*up); rough_=mix(rough_,.5,clamp(wear,0.,1.)*.7); rough_=mix(rough_,.38,damp*.4); rough_=mix(rough_,.95,moss); rough_=mix(rough_,.9,lfm);
-      nd_=Nr.xyz*.65+vec3(h21(vec2(sid+1.,ti+sed))-.5,0.,h21(vec2(ti+2.,sid+sed))-.5)*.05*up;`, { tex: ["stone"], stair: true, uniforms: (m) => { const st = { ...STAIR_STYLE, ...(m.userData.stairStyle || {}) }; return { uStoneW: { value: st.stoneW }, uCheekL: { value: st.cheekL }, uLeaves: { value: st.leaves ? 1 : 0 }, uMoss: { value: st.moss ? 1 : 0 } }; }, glsl: `
+      nd_=Nr.xyz*.65+vec3(h21(vec2(sid+1.,ti+sed))-.5,0.,h21(vec2(ti+2.,sid+sed))-.5)*.05*up;`, { tex: ["stone"], stair: true, uniforms: (m) => { const st = { ...STAIR_STYLE, ...(m.userData.stairStyle || {}) }; return { uStoneW: { value: st.stoneW }, uCheekL: { value: st.cheekL }, uLeaves: { value: st.leaves ? 1 : 0 }, uMoss: { value: st.moss ? 1 : 0 }, uCrest: { value: st.crest }, uCrestVary: { value: st.crestVary } }; }, glsl: `
       const float STREAD=${STAIR.tread.toFixed(3)}, SNOSE=${STAIR.nosing.toFixed(3)};
-      uniform float uStoneW, uCheekL, uLeaves, uMoss;   // the level's own way with stone (STAIR_STYLE)
+      uniform float uStoneW, uCheekL, uLeaves, uMoss, uCrest, uCrestVary;   // the level's own way with stone (STAIR_STYLE)
       // How many slabs cut a tread across (two to five by its width, one more or fewer now and then), and where their joints fall.
       float stCount(float W,float i,float sed){
         float nb=W<1.35?max(2.,floor(W/(.5625*uStoneW))):clamp(floor(W/uStoneW+.5),3.,5.), r=h21(vec2(i+.5,sed+3.));
