@@ -150,6 +150,12 @@ const scenarios = {
       // the foot of what stands under his feet, the line about the visit (at most two lines) and the name's room under the row of links
       const low = ["enterBtn", "againBtn", "titleSeals"].map((id) => document.getElementById(id)).filter((e) => e && vis(e));
       if (low.length) out.again = Math.round(innerHeight - Math.max(...low.map((e) => e.getBoundingClientRect().bottom)));
+      // the seal signs 8 to 12 px under the sub (portrait), and the line about the place, the line about the visit and beginning again keep 12 px between them
+      const sub = document.querySelector("#title .sub").getBoundingClientRect(), mark = document.querySelector("#title .mark").getBoundingClientRect();
+      out.markGap = vis(document.querySelector("#title .mark")) ? Math.round(mark.top - sub.bottom) : null;
+      const apart = (a, b) => !(a.right + 12 <= b.left || b.right + 12 <= a.left || a.bottom + 12 <= b.top || b.bottom + 12 <= a.top);
+      const group = ["titleSeals", "againBtn"].map((id) => document.getElementById(id)).filter((e) => e && vis(e)).concat([...document.querySelectorAll("#title .how b")].filter(vis));
+      out.crowded = []; for (let i = 0; i < group.length; i++) for (let j = i + 1; j < group.length; j++) if (!apart(group[i].getBoundingClientRect(), group[j].getBoundingClientRect())) out.crowded.push((group[i].id || group[i].tagName) + "/" + (group[j].id || group[j].tagName));
       const seals = document.getElementById("titleSeals"); out.sealsH = seals && vis(seals) ? Math.round(seals.getBoundingClientRect().height) : 0;
       const h1 = document.querySelector("#title h1").getBoundingClientRect(); out.h1 = [Math.round(h1.top), Math.round(h1.height)];
       out.linksBottom = links.length ? Math.round(Math.max(...links.map((l) => l.bottom))) : 0;
@@ -165,6 +171,8 @@ const scenarios = {
       expect(r.n > 3 && r.monk.length === 0, `${label} ${w}x${h}: the title stands on him (${r.monk.join(", ")}): ` + JSON.stringify(r));
       expect(r.links.length === 0, `${label} ${w}x${h}: the title meets the row of links (${r.links.join(", ")}): ` + JSON.stringify(r));
       if (opts.again) expect(r.again === null || r.again >= 24, `${label} ${w}x${h}: what stands under his feet ends ${r.again} px from the foot of the picture: ` + JSON.stringify(r));
+      expect(r.crowded.length === 0, `${label} ${w}x${h}: these stand closer than 12 px: ${r.crowded.join(", ")}: ` + JSON.stringify(r));
+      if (h > 460 && r.markGap !== null) expect(r.markGap >= 6 && r.markGap <= 16, `${label} ${w}x${h}: the seal signs ${r.markGap} px under the sub, not 8 to 12: ` + JSON.stringify(r));
       expect(r.sealsH <= 46, `${label} ${w}x${h}: the line about the visit is more than two lines (${r.sealsH} px): ` + JSON.stringify(r));
       if (h <= 460 && r.h1[1] > 0) expect(r.h1[1] >= 44 && r.h1[0] >= r.linksBottom + 16, `${label} ${w}x${h}: the name should be at least 44 px high and 16 px under the links: ` + JSON.stringify(r));
     };

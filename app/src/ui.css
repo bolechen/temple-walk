@@ -356,7 +356,7 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
 #title .title-name { position: relative; display: inline-block; padding-bottom: calc(10px + var(--markW)); }
 #title h1 { font: 400 var(--h1)/1.05 var(--brush); margin: 0; letter-spacing: .08em; text-indent: .08em; color: var(--paper); text-shadow: 0 2px 30px rgba(0,0,0,.6); }
 #title .sub { font: 400 clamp(13px, 2.3vmin, 17px)/1 var(--kai); letter-spacing: .5em; text-indent: .5em; margin: 2.2vmin 0 0; color: var(--on-2); }
-#title .mark { position: absolute; right: calc(var(--h1) * .08); top: calc(100% + 10px); width: var(--markW); aspect-ratio: 1; background: var(--stamp, var(--seal)) center / 100% 100% no-repeat; display: grid; place-items: center; font: clamp(15px, 3.1vmin, 26px)/1.08 var(--seal-face); color: #f3ead9; transform: rotate(-3deg); filter: drop-shadow(0 2px 12px rgba(0,0,0,.4)); }
+#title .mark { position: absolute; right: calc(var(--h1) * .08); top: calc(100% - var(--markW)); width: var(--markW); aspect-ratio: 1; background: var(--stamp, var(--seal)) center / 100% 100% no-repeat; display: grid; place-items: center; font: clamp(15px, 3.1vmin, 26px)/1.08 var(--seal-face); color: #f3ead9; transform: rotate(-3deg); filter: drop-shadow(0 2px 12px rgba(0,0,0,.4)); }
 /* The line about the visit is a footnote under the way in, with beginning again after it. */
 #title .title-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 12px; margin-top: 4px; }
 #titleSeals { font: 400 var(--t-s)/1.4 var(--kai); letter-spacing: .2em; text-indent: .2em; margin: 0; color: #e5b9a4; text-shadow: var(--lift); }
@@ -377,7 +377,7 @@ body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #
      and the group stands just clear of his head (the links are well above it); the seal is at the end of the name's own line, centred on it;
      under his feet the way in is a little tighter, so that the footnote and beginning again still clear the foot of the picture. */
   #title { --h1: 12.5vmin; --markW: 38px; }
-  #title .title-top { bottom: calc(53.3% + 12px); }
+  #title .title-top { bottom: calc(53.3% + 16px); }
   #title .title-name { padding-bottom: 0; }
   #title .mark { right: auto; left: calc(100% - var(--h1) * .08 + 10px); top: calc(var(--h1) * .525 - var(--markW) / 2); }
   #enterBtn { padding: 6px 26px 14px; }
@@ -401,7 +401,7 @@ html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.r
 #title .how span { margin-top: .7em; letter-spacing: .2em; opacity: .85; }
 #title .how { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); margin: 0; font: 400 var(--t-s)/1 var(--kai); letter-spacing: .3em; color: var(--on); text-shadow: var(--lift); }
 /* A phone on its side has no room under 入山: only the region and the road are kept, in the lower left corner, clear of the way in (#445). */
-@media (max-height: 460px) { #title .how span { display: none; } #title .how { right: auto; left: max(16px, env(safe-area-inset-left, 0px)); text-align: left; letter-spacing: .2em; } #title .how b { margin-inline: 0; } }
+@media (max-height: 460px) { #title .how span { display: none; } #title .how { right: auto; bottom: auto; top: calc(14px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); text-align: left; letter-spacing: .2em; } #title .how b { margin-inline: 0; } }
 .title-links { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); display: flex; gap: 6px 18px; }
 .title-links .chip { color: var(--on-2); font-size: var(--t-s); }
 .title-links .chip { white-space: nowrap; }
