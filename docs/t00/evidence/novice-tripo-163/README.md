@@ -16,6 +16,7 @@
 | `winter-night-code-vs-tripo.png` | 冬夜同一帧同一光，上：`?body=code`，下：Tripo 加皮肤自发光（`SKIN_GLOW` 0.03，`novice.js` 的 `skinMaterial`）。脸部平均亮度（两张正面，线性亮度）Tripo／代码：加光前 0.66、0.59，加光后 1.17、1.05（3D 评审要 ≥ 0.7）（钉在 `3d678cb8`） |
 | `portrait-summer-day.png` | 夏昼，Tripo 加皮肤自发光后：白天的肤色没有发亮（钉在 `3d678cb8`） |
 | `cloth-summer-day.png`、`cloth-autumn-dusk.png`、`cloth-winter-night.png` | 袍和裤的颜色（美术审图三 #469 的必须改）：`tools/portrait.js`，上代码身体，中 Tripo 原版（秋暮那张中间是第一次调过头、没采用的），下按块顶点色调过的（`novice.js` 的 `CLOTH`）（钉在 `35bb08ba`） |
+| `t05-code-vs-tripo.png` | T05（`?level=t05`）第三人称机位 b、c、d，夏昼：左 `?body=code`，右默认 Tripo（`node tools/shots.js --level=t05 [--body=code] b@summer-day@third c@summer-day@third d@summer-day@third`）。T05 没有自己的身体代码，用的是同一个 `monk.js` 和 `novice.js` |
 | `pixels.txt` | `--sleeve` 的逐像素数 |
 | `collage.jpg` | 五姿、背带、吃茶机位、页面吃茶 |
 

@@ -81,6 +81,12 @@
    "rev": "0e1347f7f615b43997ebf059219b1fc1cf93e45f"
   },
   {
+   "path": "t05-code-vs-tripo.png",
+   "bytes": 4318836,
+   "sha256": "d826282281d75f7e32558a12707b004502461b5176668e9a9d98dbdee5019a7c",
+   "rev": "e0b690c4f5c9974771f30449b6a3c0cfa2476d5e"
+  },
+  {
    "path": "winter-night-code-vs-tripo.png",
    "bytes": 1898826,
    "sha256": "d0540dda8c6b2bffa358a6519e39999fcca04f5b40cad38b98e1fad4c7c36d96",
