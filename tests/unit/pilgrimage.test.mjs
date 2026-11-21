@@ -210,6 +210,7 @@ test("index.html's first script shuts the curtain exactly when a usable crossing
   const code = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]).find((c) => c.includes(CROSSING_KEY));
   assert.ok(code, "the first script is in index.html and names the crossing's key");
   assert.ok(html.indexOf(code) < html.indexOf("<canvas") && html.indexOf(code) < html.indexOf('<script type="module"'), "it comes before anything is built or painted");
+  assert.ok(html.indexOf(code) < html.indexOf('<link rel="stylesheet"'), "above the stylesheet: a script placed after it waits for the sheet and holds back <body>, which the tests read the moment the page commits (quick (stairs) failed on it in CI)");
   const run = (stored, search, now = NOW) => {
     const added = [];
     const sessionStorage = { getItem: (k) => { if (stored === "throw") throw new Error("denied"); return k === CROSSING_KEY ? stored : null; } };
