@@ -113,8 +113,8 @@ test("coming out of every hall, the eye stays within the dark behind its door", 
 // #396: him in the picture where the eye has little room. Coming out of a hall's door the leaves stood right behind him and
 // the eye, held half a metre off, hid him (`monkHidden` under 0.6 m of arm); below a platform, his back to it, the eye rose
 // onto the platform and the balustrade stood between it and him. In both he must be seen: the eye a metre or more back from
-// the point over his head, nothing drawn between it and his chest, and him at least 15% of the picture's height.
-const ray = new THREE.Ray(), seesChest = (c, x, foot, z) => { const to = new THREE.Vector3(x, foot + 1.0, z).sub(new THREE.Vector3(...c)), len = to.length(); ray.origin.set(...c); ray.direction.copy(to).normalize(); const h = bvh.raycastFirst(ray, THREE.DoubleSide); return !h || h.distance > len - 0.05; };
+// the point over his head, nothing drawn between it and his waist (he is a child, 1.22 m: a line to 1 m clears a balustrade that hides all of him below the head), and him at least 15% of the picture's height.
+const ray = new THREE.Ray(), seesChest = (c, x, foot, z) => { const to = new THREE.Vector3(x, foot + 0.5, z).sub(new THREE.Vector3(...c)), len = to.length(); ray.origin.set(...c); ray.direction.copy(to).normalize(); const h = bvh.raycastFirst(ray, THREE.DoubleSide); return !h || h.distance > len - 0.05; };
 const tallness = (c, x, foot, z, yaw) => {
   const aim = aimAt(c, [x, foot, z], yaw, frame, FOV); if (!aim) return 0;
   const cam = new THREE.PerspectiveCamera(FOV, ASPECT, 0.1, 500); cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
@@ -150,5 +150,7 @@ test("below a hall's platform, his back to it, he is in the picture (#396)", () 
     }
     assert.ok(found, `${id}: found no ground beside the platform on either side`);
   }
+  // and where the preview showed only the top of his head over the great hall's balustrade (0c66cfe, after-west-wall)
+  for (const pitch of [0.04, -0.07, -0.2]) seen(-18.8, -12, -Math.PI / 2, `below main's platform at the preview's spot, looking ${pitch}`, bad, pitch);
   assert.deepEqual(bad, [], bad.join("\n"));
 });

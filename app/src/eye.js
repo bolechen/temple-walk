@@ -70,9 +70,12 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   const riseAt = (dist, sd = s0) => {
     const key = sd + ":" + dist; if (rises.has(key)) return rises.get(key);
     const p = base(dist, sd), n = sightNeed(dist, sd, p[1]); let r = null;
-    // (risen over something, the eye must also see him past it, his chest from where it stands: from on a platform behind
-    // him its balustrade hid all of him below, #396; where no rise it may take sees him, that point is closed to it)
-    const sees = (k) => k < 0.01 || !space?.sees || space.sees([p[0], p[1] + k, p[2]], [x, foot + 1.0, z]);
+    // (risen over something, or standing over ground higher than his, the eye must also see him past it, his waist from
+    // where it stands (he is a child of 1.22 m: a line to his chest cleared a balustrade that hid all of him below the
+    // head): from on a platform behind him its balustrade hid him, #396; where no rise it may take sees him, that point is
+    // closed to it)
+    const over = groundAt(p[0], p[2]) > foot + 0.3;
+    const sees = (k) => (k < 0.01 && !over) || !space?.sees || space.sees([p[0], p[1] + k, p[2]], [x, foot + 0.5, z]);
     if (n <= MAXRISE) for (let k = Math.max(0, n); k <= MAXRISE + 1e-6; k += 0.15) if (!drawn(p[0], p[1] + k, p[2]) && sees(k)) { r = k; break; }
     rises.set(key, r); return r;
   };
@@ -135,6 +138,13 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
     for (let s = Math.max(0, dist - 0.5); s <= Math.min(dist + 1.0, Math.max(d, dist)) + 1e-6; s += 0.25) L = Math.max(L, need(s, sd, y));
     return Math.min(L, MAXRISE);
   };
+  // Where it will stand, risen by `liftAt` (more than `riseAt` asked at that one spot: it rises ahead of a platform's edge),
+  // over ground higher than his feet, it must still see him past what it rose over: else it comes in a quarter-metre at a
+  // time until it does (#396: on the platform behind him, risen, the balustrade hid all but the top of his head).
+  if (space?.sees && arm) {
+    const seen = (dd) => { const b = base(dd); return !(groundAt(b[0], b[2]) > foot + 0.3) || space.sees([b[0], b[1] + liftAt(dd), b[2]], [x, foot + 0.5, z]); };
+    while (d > 0.25 && !seen(d)) { d -= 0.25; stop = stop || true; }
+  }
   const open = space && arm ? (dist, sd = s0) => !shutAt(dist, sd) : (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
   // The floor the eye must never be under, at a distance: whatever is there to stand on, and a hand's breadth.
   const floorAt = (dist, sd = s0) => { const [cx, , cz] = base(dist, sd); return walker.landAt(cx, cz) + 0.12; };
