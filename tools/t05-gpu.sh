@@ -9,6 +9,7 @@
 #                                                       any drift fall on both alike
 #   SEVEN="<7 near files, east to west>" SETS=seven370 tools/t05-gpu.sh <a> <b> <c>   the seven as made, each with its anchors,
 #                                                       in clay and painted twice over, and four pictures of the line-up
+#   SEVEN=… SETS=masks370 tools/t05-gpu.sh <a> <b> <c>   the seven painted with and without their masks, high and low tier
 #   SETS=lod370 tools/t05-gpu.sh <near.glb> <mid.glb> <far.glb>    issue #370's Śākyamuni sample: its three levels of
 #                                                       detail, each repeated on all seven seats, in clay and painted,
 #                                                       with the empty hall, all taken in turn twice over in one job
@@ -45,6 +46,17 @@ if (process.env.SETS === "seven370") {
     { name: "door3-winter", shoot: { paint: true, mood: "winter", view: "door3" } }, { name: "door-winter", shoot: { paint: true, mood: "winter", view: "door" } },
     { name: "cam06-winter", shoot: { paint: true, mood: "winter", view: "cam06" } }, { name: "row-winter", shoot: { paint: true, mood: "winter", view: "front10", over: { at: [0, 7.0, -1.0], look: [0, 8.8, -17.6], fov: 72, exp: 3.8 } } } ] });
   for (const k of [1, 2]) { sets.push({ name: "none-" + k, statues: [], views: V }, { name: "seven-clay-" + k, statues: L, paint: false, views: V }, { name: "seven-paint-" + k, statues: L, paint: true, views: V }); }
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
+}
+if (process.env.SETS === "masks370") {
+  // what the masks cost (#370 round 6): the seven painted with and without their masks, inside the hall, at the high tier
+  // (1920×1080, GTAO) and the low (960×540, no AO), each pair taken in turn twice over in one job
+  const N = ["kasyapa-t05", "krakucchanda-t05", "sikhin-t05", "vipasyin-t05", "visvabhu-t05", "kanakamuni-t05", "sakyamuni-370"], X = [16.45, 11.33, 5.8, 0, -5.8, -11.33, -16.45];
+  const HT = [8.6, 8.75, 8.9, 9.0, 8.9, 8.75, 8.6];
+  const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0 }, paint: "clay", colour: c }));
+  const V = ["door3", "cam06", "front10"], sets = [];
+  for (const k of [1, 2]) for (const [t, size, ao] of [["high", [1920, 1080], true], ["low", [960, 540], false]])
+    sets.push({ name: `nomask-${t}-${k}`, statues: L, size, ao, paint: { masks: false }, views: V }, { name: `mask-${t}-${k}`, statues: L, size, ao, paint: true, views: V });
   console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
 }
 if (process.env.SETS === "lod370") {

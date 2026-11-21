@@ -15,12 +15,12 @@ exports.run = async ({ open, out, log, size = [1920, 1080], frames = 120, sets }
     await ctx.close();
   }
   for (const set of sets.filter((x) => !x.shots)) for (const view of set.views || ["door3", "side3"]) {
-    const { ctx, page } = await open(`w=${size[0]}&h=${size[1]}&ao=${set.ao === false ? 0 : 1}`, size, 1);
+    const sz = set.size || size, { ctx, page } = await open(`w=${sz[0]}&h=${sz[1]}&ao=${set.ao === false ? 0 : 1}`, sz, 1);   // a set may name its own size (#370: the low tier at 960×540)
     await page.evaluate((l) => window.hall.setStatues(l), set.statues);
     if (set.paint !== undefined) await page.evaluate((p) => window.hall.paint(p), set.paint);
     const r = await page.evaluate(([v, n, m]) => { window.hall.setMood(m); window.hall.view(v); const s = window.hall.stats(); return { ...s, ms: window.hall.cost(n), info: window.hall.info() }; }, [view, frames, set.mood || "winter"]);
     const file = `${set.name}-${view}.png`; await page.screenshot({ path: path.join(out, file) });
-    rows.push({ set: set.name, view, ao: set.ao !== false, paint: set.paint ?? null, file, ...r }); log(set.name, view, JSON.stringify(r)); await ctx.close();
+    rows.push({ set: set.name, view, size: sz, ao: set.ao !== false, paint: set.paint ?? null, file, ...r }); log(set.name, view, JSON.stringify(r)); await ctx.close();
   }
   return rows;
 };

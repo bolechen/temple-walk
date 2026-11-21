@@ -447,10 +447,13 @@ function paint(on = true) {
   for (const f of figures) {
     const A = f.s.colour && ANCHORS[f.s.colour];
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
-    const key = o.env === false ? "noenv" : "env";
+    // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
+    // masks cost a frame (#370 round 6)
+    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "");
     f.painted ??= {};
-    const masks = { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
-    f.painted[key] ??= paintMaterial(recipe, A.anchors, f.pivot, o.env === false ? { masks } : { masks, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+    const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
+    const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
+    f.painted[key] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks } : { masks, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
     f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
     for (const m of f.meshes) m.material = f.painted[key];
   }
