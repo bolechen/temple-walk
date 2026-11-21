@@ -1887,21 +1887,27 @@ const scenarios = {
     await press(); expect((await R()).closing === true, "a tap passed over a first watch");
     // holding and letting go half way carries on
     const ink = () => t.page.evaluate(() => +getComputedStyle(document.querySelector("#endingHold .mark")).opacity);
+    // A press held part of the way and read, all inside the page: a hold is 1.5 s of the page's own clock, and a round trip from here to
+    // a page drawing a frame in a second (software, a busy machine) may take longer than that, which passed the close over under the reading.
+    const halfHold = (read) => t.page.evaluate(async (src) => {
+      const el = document.getElementById("ending"), look = eval(src), P = () => window.__endingPass();
+      el.dispatchEvent(new PointerEvent("pointerdown", { pointerId: 7, bubbles: true }));
+      while (P().holding && P().progress <= 0.3) await new Promise((r) => requestAnimationFrame(r));
+      const out = look(); el.dispatchEvent(new PointerEvent("pointerup", { pointerId: 7, bubbles: true })); return out;
+    }, read.toString());
     expect(await ink() === 0, "a ring is drawn though nothing is held");
-    await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the ring did not fill while held");
-    expect(await ink() > 0, "no ring while held");
-    expect(await t.page.evaluate(() => document.getElementById("endingHold").getAttribute("aria-valuenow") !== null), "the ring says nothing to a screen reader");
-    await t.page.mouse.up(); p = await P(); expect((await R()).closing === true && p.progress === 0 && !p.holding, "letting go half way did not carry on: " + JSON.stringify(p));
+    const mid = await halfHold(() => ({ o: +getComputedStyle(document.querySelector("#endingHold .mark")).opacity, now: document.getElementById("endingHold").getAttribute("aria-valuenow"), p: window.__endingPass() }));
+    expect(mid.o > 0 && mid.now !== null && mid.p.progress > 0.3, "no ring, or nothing for a screen reader, while held: " + JSON.stringify(mid));
+    p = await P(); expect((await R()).closing === true && p.progress === 0 && !p.holding, "letting go half way did not carry on: " + JSON.stringify(p));
     await t.until(async () => await ink() === 0, 10000, "the ring did not go when the press ended");
     // with reduced motion nothing sweeps: the angle stays whole and only the ink comes up
     await t.page.emulateMedia({ reducedMotion: "reduce" });
-    await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the calm ring did not fill while held");
-    const calm = await t.page.evaluate(() => { const m = document.querySelector("#endingHold .mark"); return { k: m.style.getPropertyValue("--k"), o: +getComputedStyle(m).opacity }; });
+    const calm = await halfHold(() => { const m = document.querySelector("#endingHold .mark"); return { k: m.style.getPropertyValue("--k"), o: +getComputedStyle(m).opacity }; });
     expect(calm.k === "1" && calm.o > 0.2 && calm.o < 1, "with reduced motion the ring should keep its angle and only come up in ink: " + JSON.stringify(calm));
-    await t.page.mouse.up(); await t.page.emulateMedia({ reducedMotion: "no-preference" }); await t.until(async () => await ink() === 0, 10000, "the calm ring did not go");
+    await t.page.emulateMedia({ reducedMotion: "no-preference" }); await t.until(async () => await ink() === 0, 10000, "the calm ring did not go");
     // a press that is lost (the window loses focus while held) is let go, and the next press counts
-    await t.page.mouse.down(); await t.until(async () => (await P()).holding, 20000, "a press was not held"); await t.page.evaluate(() => window.dispatchEvent(new Event("blur")));
-    p = await P(); expect(!p.holding && p.progress === 0, "a press lost with the window's focus stayed held: " + JSON.stringify(p)); await t.page.mouse.up();
+    const lost = await halfHold(() => { window.dispatchEvent(new Event("blur")); return window.__endingPass(); });
+    expect(!lost.holding && lost.progress === 0, "a press lost with the window's focus stayed held: " + JSON.stringify(lost));
     // holding all the way passes it over
     await t.page.mouse.down(); await settle(); await t.page.mouse.up();
     const after = await book();
