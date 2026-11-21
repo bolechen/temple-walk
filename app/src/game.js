@@ -26,6 +26,7 @@ import { WISHES, decodeLamp, lampLink } from "./wishes.js";
 import { drawLampCard, fitLines } from "./lampcard.js";
 import { processedLine } from "./credits.js";
 import { createJoya } from "./joya-ui.js";
+import { createHoldRing } from "./holdring.js";
 
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id));
 
@@ -63,7 +64,7 @@ export function createGame(y) {
   // The three sheets the visit holds out (src/ui.js): a slip of paper, a work read closely, the book. Each is put away
   // by its own button, by Esc, or by E once it has been read; the slip by Esc is still taken.
   const ui = y.ui;
-  ui.layer("slip", { confirm: "slipTake" }).layer("bless", { kind: "modal" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } });
+  ui.layer("slip", { confirm: "slipTake" }).layer("bless", { kind: "modal" }).layer("piece", { confirm: "pieceClose" }).layer("book", { keys: { b: "bookClose" } }).layer("bookMore", { kind: "modal", confirm: "bookMoreClose" });
   $("slipTake")?.addEventListener("click", () => ui.close("slip"));
   // A slip is written down the page, and a long line in a short window (a phone on its side) would run to more columns than the
   // screen is wide. It is fitted when it opens (#203): the same layout with smaller writing, down to 14 px, and only if that
@@ -285,22 +286,22 @@ export function createGame(y) {
     // after the page was frozen (hidden, or no frame for FROZEN ms: some in-app browsers send no visibilitychange) is
     // taken for the wake and ignored, however late after the screen came on it lands.
     const HOLD = 1500, FROZEN = 2000, seenBefore = replay || !!journey.closed;
-    const ring = $("endingHold"), word = $("endingHoldWord"), arc = /** @type {SVGCircleElement | null} */ (ring?.querySelector(".fill"));
-    word.textContent = seenBefore ? t("轻点略过") : t("按住略过"); ring.setAttribute("aria-label", word.textContent);
-    let frozen = false, lastFrame = performance.now(), ignored = 0, held = null, pressed = null, raf = 0, said = -1;
-    const show = (k) => { if (arc) arc.style.strokeDashoffset = String(1 - k); const v = Math.round(k * 10) * 10; if (v !== said) { said = v; ring.setAttribute("aria-valuenow", String(v)); } };
-    const letGo = () => { held = null; pressed = null; show(0); };
+    const host = $("endingHold"), word = $("endingHoldWord"), ring = createHoldRing(host);
+    word.textContent = seenBefore ? t("轻点略过") : t("按住略过"); host.setAttribute("aria-label", word.textContent);
+    // (once it has been seen a tap is enough, and a tap needs no ring: it is drawn only for the hold)
+    let frozen = false, lastFrame = performance.now(), ignored = 0, held = null, pressed = null, raf = 0;
+    const letGo = () => { held = null; pressed = null; ring.release(); };
     const give = (how) => { if (!skip) { skip = true; skipHow = how; letGo(); } };
     const freeze = () => { frozen = true; letGo(); };
     const seen = () => freeze();
-    const frame = () => { const now = performance.now(); if (now - lastFrame > FROZEN) freeze(); lastFrame = now; if (held !== null) { const k = Math.min(1, (now - held) / HOLD); show(k); if (k >= 1) give("hold"); } raf = requestAnimationFrame(frame); };
+    const frame = () => { const now = performance.now(); if (now - lastFrame > FROZEN) freeze(); lastFrame = now; if (held !== null) { const k = Math.min(1, (now - held) / HOLD); ring.progress(k); if (k >= 1) give("hold"); } raf = requestAnimationFrame(frame); };
     raf = requestAnimationFrame(frame); document.addEventListener("visibilitychange", seen);
     const down = (id) => {
       if (pressed !== null) return;
       // A frame may not have run since the page came back: ask the clock too, not only the loop.
       if (performance.now() - lastFrame > FROZEN) frozen = true;
       if (frozen) { frozen = false; ignored++; pressed = id; held = null; return; }   // the wake: this press, its release and its holding count for nothing
-      pressed = id; held = performance.now();
+      pressed = id; held = performance.now(); if (!seenBefore) ring.press();
     };
     const up = (id) => {
       if (pressed !== id) return;
@@ -313,7 +314,7 @@ export function createGame(y) {
     const key = (e) => { if (e.key !== "Escape" && e.key !== "Enter" && e.key !== " ") return; e.preventDefault(); e.stopPropagation(); if (!e.repeat) down("k" + e.key); };
     const keyUp = (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") up("k" + e.key); };
     window.addEventListener("keydown", key, true); window.addEventListener("keyup", keyUp, true);
-    passState = () => ({ seenBefore, frozen, holding: held !== null, ignored, how: skipHow, progress: arc ? 1 - +arc.style.strokeDashoffset : 0 });
+    passState = () => ({ seenBefore, frozen, holding: held !== null, ignored, how: skipHow, progress: ring.value / 100, ring: ring.held });
     awake.hold();   // the screen stays on while it is played, where the browser allows (src/awake.js)
     try {
       await rites.close(() => on() && !skip, (t) => {
@@ -536,7 +537,7 @@ export function createGame(y) {
     const blank = SEALS.length - journey.count();
     $("bookHint").textContent = next ? `${journey.closed ? t("帐上还空着{n}处。", { n: "〇一二三四五六七"[blank], k: blank }) : ""}${[t(next.hint), told()].filter(Boolean).join("　")}` : `${t("七印圆满。这一页可以存下来，也可以分享。时节已开，留影与歇脚里可选。")}${told()}`;
     // (an empty book has nothing to begin again: 重新朝山 is offered once there is a seal to give up)
-    if (!ui.isOpen("book")) { leaf0?.classList.add("drawing"); $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; $("bookReset").hidden = !journey.count(); $("bookReplay").hidden = !(journey.closed && journey.done()); ui.open("book", { onClose: announce }); }
+    if (!ui.isOpen("book")) { leaf0?.classList.add("drawing"); $("bookReset").textContent = t("重新朝山"); $("bookReset").dataset.asked = ""; $("bookReset").hidden = !journey.count(); $("bookReplay").hidden = !(journey.closed && journey.done()); $("bookMoreBtn").hidden = $("bookReset").hidden && $("bookReplay").hidden; ui.open("book", { onClose: announce }); }
     page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label.split(" · ").map(glyphs).join(" · ") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
@@ -575,7 +576,11 @@ export function createGame(y) {
     if (s) await sitDown(s);
     await wait(1); await finale(() => true, true);
   }
-  $("bookReplay")?.addEventListener("click", () => { track("demo.ending.replay", { phase: "start" }); replayEnding(); });
+  // 更多 (#473, the art review's one way of laying out the foot of the book): a small paper of what is seldom wanted, one to a line.
+  // Whatever is pressed on it, the paper goes first and then the thing is done.
+  $("bookMoreBtn")?.addEventListener("click", () => ui.open("bookMore", { onClose: () => { const b = $("bookReset"); b.dataset.asked = ""; b.textContent = t("重新朝山"); } }));
+  $("bookMoreClose")?.addEventListener("click", () => ui.close("bookMore"));
+  $("bookReplay")?.addEventListener("click", () => { ui.close("bookMore"); track("demo.ending.replay", { phase: "start" }); replayEnding(); });
   window.__replayEnding = () => replayEnding(); window.__endingPass = () => passState();
   $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 

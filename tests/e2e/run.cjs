@@ -1840,9 +1840,19 @@ const scenarios = {
     p = await P(); expect((await R()).closing === true && p.ignored === 1, "the press after the wake skipped the close, or was not counted: " + JSON.stringify([p, await R(), await t.page.evaluate(() => { const e = document.elementFromPoint(120, 120); const n = document.getElementById("ending"), c = getComputedStyle(n), r = n.getBoundingClientRect(); return [e && (e.id || e.tagName), n.hidden, c.display, c.zIndex, c.pointerEvents, c.position, [r.x, r.y, r.width, r.height], n.parentElement.id || n.parentElement.tagName, innerWidth, innerHeight]; })]));
     await press(); expect((await R()).closing === true, "a tap passed over a first watch");
     // holding and letting go half way carries on
+    const ink = () => t.page.evaluate(() => +getComputedStyle(document.querySelector("#endingHold .mark")).opacity);
+    expect(await ink() === 0, "a ring is drawn though nothing is held");
     await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the ring did not fill while held");
+    expect(await ink() > 0, "no ring while held");
     expect(await t.page.evaluate(() => document.getElementById("endingHold").getAttribute("aria-valuenow") !== null), "the ring says nothing to a screen reader");
     await t.page.mouse.up(); p = await P(); expect((await R()).closing === true && p.progress === 0 && !p.holding, "letting go half way did not carry on: " + JSON.stringify(p));
+    await t.until(async () => await ink() === 0, 10000, "the ring did not go when the press ended");
+    // with reduced motion nothing sweeps: the angle stays whole and only the ink comes up
+    await t.page.emulateMedia({ reducedMotion: "reduce" });
+    await t.page.mouse.down(); await t.until(async () => (await P()).progress > 0.3, 20000, "the calm ring did not fill while held");
+    const calm = await t.page.evaluate(() => { const m = document.querySelector("#endingHold .mark"); return { k: m.style.getPropertyValue("--k"), o: +getComputedStyle(m).opacity }; });
+    expect(calm.k === "1" && calm.o > 0.2 && calm.o < 1, "with reduced motion the ring should keep its angle and only come up in ink: " + JSON.stringify(calm));
+    await t.page.mouse.up(); await t.page.emulateMedia({ reducedMotion: "no-preference" }); await t.until(async () => await ink() === 0, 10000, "the calm ring did not go");
     // a press that is lost (the window loses focus while held) is let go, and the next press counts
     await t.page.mouse.down(); await t.until(async () => (await P()).holding, 20000, "a press was not held"); await t.page.evaluate(() => window.dispatchEvent(new Event("blur")));
     p = await P(); expect(!p.holding && p.progress === 0, "a press lost with the window's focus stayed held: " + JSON.stringify(p)); await t.page.mouse.up();
@@ -1854,7 +1864,8 @@ const scenarios = {
     await begin(); p = await P(); expect(p.seenBefore === true, "the second watch should know it has been seen: " + JSON.stringify(p));
     await t.page.evaluate(() => window.__freeze(5000, false)); await t.frames(2); await late(); await press();
     p = await P(); expect((await R()).closing === true && p.ignored === 1, "a frame gap alone did not make the first press a wake: " + JSON.stringify(p));
-    await press(); await settle();
+    await t.page.mouse.move(120, 120); await t.page.mouse.down(); p = await P(); expect(p.holding && !p.ring, "a watch that has been seen drew a ring for a tap: " + JSON.stringify(p));
+    await t.page.mouse.up(); await settle();
     expect(await book() === after, "passing over a second watch changed the book");
     // --- 再看一回
     const events = () => t.page.evaluate(() => window.__eventLog().map((e) => e.name || e.event || e[0]));
@@ -1863,9 +1874,16 @@ const scenarios = {
     await t.page.reload(); await t.until(async () => t.page.evaluate(() => document.body.dataset.ready === "1"), 120000, "the page after a reload");
     await t.page.evaluate(() => { try { window.__enter?.(); } catch {} });
     const kept = await t.page.evaluate(() => localStorage.getItem("yunjing.journey.v1"));
-    await t.page.evaluate(() => window.__book()); await t.until(async () => t.page.evaluate(() => !document.getElementById("bookReplay").hidden || !window.__ui().stack.includes("book")), 30000, "the book");
-    expect(!(await t.page.evaluate(() => document.getElementById("bookReplay").hidden)), "a full book that has seen the close offers no way to watch it again");
-    await t.page.evaluate(() => document.getElementById("bookReplay").click());
+    await t.page.evaluate(() => window.__book()); await t.until(async () => t.page.isVisible("#book .row"), 30000, "the book");
+    // The foot of the book is always four, in one line, the seal last and alone; the rest is on the small paper (更多).
+    const foot = await t.page.evaluate(() => [...document.querySelectorAll("#book .row > *")].filter((e) => e.offsetParent !== null).map((e) => { const r = e.getBoundingClientRect(); return { id: e.id, top: Math.round(r.top), h: Math.round(r.height), w: Math.round(r.width), right: Math.round(r.right), stamp: e.classList.contains("stamp") }; }));
+    expect(foot.map((f) => f.id).join() === "bookShare,bookSave,bookMoreBtn,bookClose", "the foot of the book is not 分享 保存 更多 合上: " + JSON.stringify(foot));
+    expect(new Set(foot.map((f) => f.top)).size === 1 && foot.every((f) => f.h >= 44 && f.w >= 44) && foot.filter((f) => f.stamp).map((f) => f.id).join() === "bookClose" && foot[foot.length - 1].right <= (await t.page.evaluate(() => innerWidth)) - 16, "the foot of the book is not one line of four, the seal alone: " + JSON.stringify(foot));
+    await t.page.click("#bookMoreBtn"); await t.until(async () => t.page.isVisible("#bookMore"), 10000, "更多 did not open");
+    const more = await t.page.evaluate(() => [...document.querySelectorAll("#bookMore .chip, #bookMore .stamp")].filter((e) => e.offsetParent !== null).map((e) => { const r = e.getBoundingClientRect(); return { id: e.id, top: Math.round(r.top), h: Math.round(r.height), stamp: e.classList.contains("stamp") }; }));
+    expect(more.map((m) => m.id).join() === "bookReplay,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper is not one thing to a line, none a seal: " + JSON.stringify(more));
+    await t.page.click("#bookReplay");
+    await t.until(async () => !(await t.page.isVisible("#bookMore")) && !(await t.page.isVisible("#book")), 20000, "the book and its paper did not go before the close");
     await t.until(async () => (await R()).closing === true, 120000, "再看一回 did not play the close");
     await t.page.mouse.down(); await settle(); await t.page.mouse.up();
     const now = await t.page.evaluate(() => localStorage.getItem("yunjing.journey.v1")); const bare = (x) => JSON.stringify({ ...JSON.parse(x), told: 0 });   // (the line about the seasons being open is said once when the book is first seen full: not the close's doing)
@@ -2961,7 +2979,7 @@ const scenarios = {
     await t.page.keyboard.press("t"); expect(await t.page.isVisible("#moodPanel"), "T should open the seasons once they are the visitor's"); await t.page.keyboard.press("Escape");
     // Begin the book again: the seals go, the seasons stay, and closing the book says once that they are open.
     await t.page.click("#bookBtn"); await t.until(() => t.page.isVisible("#book"), 60000, "the seal at the top left did not open the book");
-    await t.page.click("#bookReset"); await t.page.click("#bookReset");
+    await t.page.click("#bookMoreBtn"); await t.page.click("#bookReset"); await t.page.click("#bookReset");
     await t.until(async () => !(await t.page.isVisible("#book")), 20000, "重新朝山 did not close the book");
     const j = await t.journey(); expect(j.count === 0 && j.opened && j.told, "重新朝山 should empty the book and keep the seasons, having said so: " + JSON.stringify({ count: j.count, opened: j.opened, told: j.told }));
     expect(await offered() && (await t.page.evaluate(() => window.__hud().said)).includes("seasons"), "the seasons should stay open, and the visitor be told");

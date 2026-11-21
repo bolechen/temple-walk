@@ -115,6 +115,7 @@ export default {
   "继续": "Continue",
   "拍照": "Take a photo",
   "收起": "Close",
+  "更多": "More",
   "设置": "Settings",
   "按下快门": "Press the shutter",
   "拍照设置": "Photo settings",

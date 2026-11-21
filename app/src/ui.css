@@ -321,6 +321,13 @@ body.bare .rail, body.bare #moodTag, body.bare #hint { display: none; }
 #print { position: absolute; inset: 0; background: var(--veil-deep); display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 14px; padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
 #print img { max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; align-self: center; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
 #print .row, #book .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+#book .row { flex-wrap: nowrap; }   /* always four: 分享 保存 更多 合上, the seal last and on the first line (#473) */
+/* 更多: a small paper of what is seldom wanted, one to a line, no seal on it. */
+#bookMore { position: absolute; inset: 0; z-index: 36; display: grid; place-items: center; background: var(--veil); touch-action: none; }
+.more-card { width: min(78vw, 280px); box-sizing: border-box; padding: 14px 12px; display: grid; justify-items: center; gap: 4px; color: var(--ink-1); }
+.more-card .chip { width: 100%; min-height: 44px; color: var(--ink-1); text-shadow: none; }
+.more-card #bookReset { color: var(--ink-3); }
+.more-card .chip[hidden] { display: none; }
 
 /* ---- The opening (src/opening.js): nothing over the picture while the eye comes down the mountain ---- */
 body.opening .rail, body.opening #jumpBtn, body.opening #bookBtn, body.opening #goal, body.opening #way, body.opening #act, body.opening #hint, body.opening #say, body.opening #moodTag, body.opening #breathWord, body.opening #stick, body.opening #cross, body.opening #dropBtn, body.opening #prologue { opacity: 0 !important; pointer-events: none; }
@@ -657,12 +664,16 @@ body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal
 #endingTitle span { font: 400 clamp(17px, 2.6vmin, 24px)/1.4 var(--kai, serif); letter-spacing: .5em; text-indent: .5em; }
 #endingTitle em { margin-top: 14px; font: 400 clamp(14px, 2vmin, 18px)/1.4 var(--kai, serif); font-style: normal; letter-spacing: .4em; text-indent: .4em; opacity: .72; }
 #ending { overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-#endingHold { position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 10px; min-height: 44px; }
-#endingHold svg { width: 44px; height: 44px; transform: rotate(-90deg); }
-#endingHold circle { fill: none; stroke-width: 3; }
-#endingHold .track { stroke: rgba(243,236,220,.22); }
-#endingHold .fill { stroke: var(--paper, #f3ecdc); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
-#endingHold small { font: 400 13px/1 var(--kai, serif); letter-spacing: .2em; color: rgba(243,236,220,.7); text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+/* The ring drawn while something is held (src/holdring.js): the one-breath ring of paper.js over a conic gradient that uncovers it clockwise from twelve; at rest there is none. */
+.holdring { display: flex; align-items: center; gap: 10px; min-height: 52px; pointer-events: none; }
+.holdring .mark { width: 52px; height: 52px; flex: none; --k: 0; opacity: 0; transition: opacity .2s ease;
+  background: conic-gradient(from 0deg, var(--on, #f2ede2) calc(var(--k) * 360deg), rgba(242,237,226,.2) 0);
+  -webkit-mask: var(--enso-light, radial-gradient(closest-side, transparent 86%, #000 88%, transparent 95%)) center / 100% 100% no-repeat; mask: var(--enso-light, radial-gradient(closest-side, transparent 86%, #000 88%, transparent 95%)) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
+.holdring.held .mark { opacity: 1; transition: opacity .12s ease; }
+.holdring.calm.held .mark { transition: none; }
+.holdring small { font: 400 13px/1 var(--kai, serif); letter-spacing: .2em; color: rgba(243,236,220,.7); text-shadow: 0 1px 6px rgba(0,0,0,.7); }
+#endingHold { position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 @media (prefers-reduced-motion: reduce) { #endingLine, #endingTitle { transition: none; } }
 
 /* ---- In English ----
