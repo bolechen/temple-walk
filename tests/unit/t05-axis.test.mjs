@@ -68,13 +68,15 @@ test("nothing outside the walls of the way or of the terrace can be stood on; th
   }
 });
 
-test("between the court and the terrace the only way across is over the hall's platform; between the terrace and the way, over the gate's", () => {
+test("between the court and the terrace the only way across is the Wuliang hall's passage; between the terrace and the way, the inner gate's", () => {
   const open = (w, z, lo, hi) => { const xs = []; for (let x = lo; x <= hi + 1e-9; x += 0.1) if (!w.blocked(x, z)) xs.push(+x.toFixed(1)); return xs; };
+  const mid = HALL.xs[3], gmid = GATE.xs[2];
   for (const [name, w] of both) {
+    // z = 62 lies inside the hall, behind its back wall: open in the passage and on the porch outside the side walls, not in the rooms either side of the passage.
     const a = open(w, COMPOUND.zS, -COMPOUND.x - 1, COMPOUND.x + 1);
-    assert.ok(a.length > 50 && a.every((x) => Math.abs(x) < FOOT.hall.x1), `${name}: along the court's south wall only the hall's platform is open: ${a[0]} … ${a[a.length - 1]}`);
+    assert.ok(a.some((x) => Math.abs(x) < 0.5) && a.every((x) => Math.abs(x) < mid - 0.3 || Math.abs(x) > HALL.xs[5] - 0.2) && a.every((x) => Math.abs(x) < FOOT.hall.x1), `${name}: along the court's south wall, across the hall: ${a.join(" ")}`);
     const b = open(w, AXIS.innerZ + 0.2, -SECOND.hw - 1, SECOND.hw + 1);
-    assert.ok(b.length > 50 && b.every((x) => Math.abs(x) < FOOT.inner.x1), `${name}: along the terrace's south end only the gate's platform is open: ${b[0]} … ${b[b.length - 1]}`);
+    assert.ok(b.some((x) => Math.abs(x) < 0.5) && b.every((x) => Math.abs(x) < gmid + 0.3 || Math.abs(x) > GATE.xs[3] - 0.2) && b.every((x) => Math.abs(x) < FOOT.inner.x1), `${name}: along the terrace's south end, across the gate: ${b.join(" ")}`);
   }
 });
 
@@ -85,7 +87,7 @@ test("from where he arrives, the outer gate's, the inner gate's, the archway's, 
     assert.ok(t, `${id} is a named view`); assert.ok(t.new, `${id}: reached on the floor baked from what is drawn`); assert.ok(t.old, `${id}: reached by the written plan's walker`);
     const v = site.views[id]; assert.ok(!grid.blocked(v[0], v[1]) && !old.blocked(v[0], v[1]), `${id} stands on open floor`);
   }
-  assert.ok(near(grid.heightAt(...site.views.outer), 0) && near(grid.heightAt(...site.views.inner), SECOND.y) && near(grid.heightAt(...site.views.mouth), 0));
+  assert.ok(near(grid.heightAt(...site.views.outer), 0.5) && near(grid.heightAt(...site.views.inner), SECOND.y) && near(grid.heightAt(...site.views.mouth), 0));   // (the outer gate's platform is 0.5 m)
   assert.equal(file.header.targets.filter((t) => !t.new || !t.old).length, 0, "every named place is reached on both floors");
   assert.ok(site.views.mouth[1] < FOOT.hall.z0 - stairProfile(SECOND.y).run, "the court's mouth is beyond the foot of the hall's back steps");
 });
@@ -120,7 +122,7 @@ test("every size on the axis has a row in docs/t05/SOURCES.md §13, with how far
 test("what he walks round is the same on both floors: points just off each wall, each platform and each block agree", () => {
   const probes = [];
   for (const sx of [-1, 1]) {
-    for (const z of [130, 170, 205, 215]) probes.push([sx * (LANE.hw - 0.4 - 0.6), z], [sx * (LANE.hw + 0.4 + 0.6), z]);
+    for (const z of [130, 170, 195, 215]) probes.push([sx * (LANE.hw - 0.4 - 0.6), z], [sx * (LANE.hw + 0.4 + 0.6), z]);
     for (const z of [70, 90, 110]) probes.push([sx * (SECOND.hw - 0.4 - 0.6), z], [sx * (SECOND.hw + 0.4 + 0.6), z]);
     probes.push([sx * (FOOT.hall.x1 + 0.9), 60.4], [sx * (FOOT.hall.x1 + 0.9), 64], [sx * (FOOT.inner.x1 + 0.9), 117.5], [sx * (FOOT.inner.x1 + 0.9), 123]);
   }

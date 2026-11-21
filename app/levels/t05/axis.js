@@ -5,14 +5,14 @@
 // great hall and the Wuliang hall (docs/t05/SCOPE-OPTIONS.md §二 B, docs/t05/SITE.md §1.1, §4.2). Every number here, and
 // how far it is a published measurement, a summary or our own, is in docs/t05/SOURCES.md §13.
 //
-// What this file draws is ground and stone: no gate, hall or archway is built here (items 9 and 10). The two building
-// platforms that the terrace is cut round, and their steps, are drawn as plain stone blocks to be taken out when
-// the buildings come, which stand on their own platforms at the same footprints (`HALL`, `GATE` are theirs to read).
+// What this file draws is ground and stone, and, from ./gates.js, the three buildings on it: the outer gate, the inner gate
+// and the Wuliang hall (item 9). The archway between the inner gate and the hall is item 10's: its place is held.
 //
 // Heights are from the court's paving (y = 0), as site.js has them; x east, z south, the great hall's front column line
 // is z = 0 and the court's paving stops at the court's south wall, z = +62.
 import * as THREE from "three";
-import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
+import { box, merge, mesh, BODY } from "../../src/geo.js";
+import { buildShells } from "./gates.js";
 
 /** Where each of the axis's buildings stands along it (z, x = 0). Proposals but for the Wuliang hall's z, which is OSM's (S26, an inference). */
 export const AXIS = Object.freeze({ outerZ: 208, innerZ: 120, paifangZ: 100, hallZ: 67.2 });
@@ -68,9 +68,9 @@ export function slabAround(rect, holes, top) {
  * @param {{ C: { x: number, zN: number, zS: number, t: number }, W: { x: number, zS: number, wallH: number, t: number } }} at the court's walls and the way's end, which site.js owns
  */
 export function buildAxis(M, { C, W }) {
-  const stone = [], plaster = [], steps = [], flights = [], shade = [[], []];
-  const walk = { solids: [], decks: [], ramps: [], posts: [] };
-  const top = SECOND.y, pad = BODY + 0.02;
+  const stone = [], plaster = [], shade = [[], []];
+  const walk = { solids: [], decks: [], ramps: [], posts: [], roofs: [] };
+  const top = SECOND.y;
 
   // A wall between two points, from the ground to h. Plaster on a stone plinth, with the written plan's rectangle (drawn wider by his width).
   const wall = (x0, z0, x1, z1, h, t, into) => {
@@ -81,33 +81,15 @@ export function buildAxis(M, { C, W }) {
     walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, eyeTop: h + 0.3 });
     shade[into].push(r);
   };
-  // A flight of steps from a platform's edge at z = zEdge, going down south (dir +1) or north (-1), `rise` high; with his written plan.
-  const flight = (w, rise, zEdge, dir) => {
-    const g = stairGeo(w, rise), run = g.run ?? stairProfile(rise).run;
-    const m = new THREE.Matrix4().makeTranslation(0, 0, zEdge);
-    if (dir < 0) m.multiply(new THREE.Matrix4().makeRotationY(Math.PI));
-    steps.push(g.geo.applyMatrix4(m)); flights.push({ w, rise, sides: [-1, 1], m });
-    const foot = zEdge + dir * run, [a, b] = dir > 0 ? [zEdge, foot] : [foot, zEdge];
-    walk.ramps.push({ x0: -w / 2 + pad, x1: w / 2 - pad, z0: a - (dir > 0 ? 0.8 : 0.3), z1: b + (dir > 0 ? 0.3 : 0.8), base: 0, h: rise, low: [0, foot], high: [0, zEdge], floor: "stone" });
-    for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? w / 2 - BODY - 0.021 : -w / 2 - CHEEK - BODY, x1: sx > 0 ? w / 2 + CHEEK + BODY : -w / 2 + BODY + 0.021, z0: dir > 0 ? zEdge + 0.02 : foot - BODY - 0.06, z1: dir > 0 ? foot + BODY + 0.06 : zEdge - 0.02, h: rise });
-    return { foot, run };
-  };
-  // A platform as a plain stone block with the written plan's mass (the buildings of item 9 stand on theirs instead).
-  const block = (r, h) => {
-    stone.push(box(r.x1 - r.x0, h, r.z1 - r.z0, (r.x0 + r.x1) / 2, h / 2, (r.z0 + r.z1) / 2));
-    walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, top: h });
-    walk.decks.push({ ...r, h, floor: "stone" });
-  };
-
   // ---- The second terrace: the slab, the two platforms cut out of it, and their steps ----
   const T = { x0: -SECOND.hw, x1: SECOND.hw, z0: SECOND.zN, z1: AXIS.innerZ + SECOND.wallT / 2 };
   stone.push(...slabAround(T, [FOOT.hall, FOOT.inner], top));
   walk.decks.push({ ...T, h: top, floor: "stone" });
-  block(FOOT.hall, HALL.platH); block(FOOT.inner, top);
-  shade[0].push({ ...FOOT.hall });
-  // The Wuliang hall's back steps down into the court, the inner gate's front steps down into the way.
-  flight(HALL.stepsBack, HALL.platH, FOOT.hall.z0, -1);
-  flight(GATE.steps, top, FOOT.inner.z1, +1);
+  // The three buildings (./gates.js): each on its own platform, which the slab is cut round; the hall's back steps lead down into
+  // the court, the inner gate's front steps down into the way.
+  const sh = buildShells(M, { AXIS, GATE, HALL, FOOT, SECOND });
+  for (const k of Object.keys(walk)) walk[k].push(...sh.walk[k]);
+  shade[0].push(...sh.shade[0]); shade[1].push(...sh.shade[1]);
 
   // ---- Walls: the terrace's two sides and the stub either side of the gate; the way's two sides; the forecourt's, low, and the wall that closes it ----
   const wt = SECOND.wallT, wh = top + SECOND.wallH, gx = FOOT.inner.x1;
@@ -128,6 +110,7 @@ export function buildAxis(M, { C, W }) {
 
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
+  group.add(sh.group);
   group.add(
     mesh(merge([box(mw, 0.45, mw, mx, M0.y + 0.225, mz)]), M.stone),
     mesh(merge([box(mw - 0.7, 3.4, mw - 0.7, mx, M0.y + 0.45 + 1.7, mz)]), M.plaster()),
@@ -148,9 +131,9 @@ export function buildAxis(M, { C, W }) {
     mouth: [0, FOOT.hall.z0 - 2.9, 0, 0.12],
   };
   const buildings = [
-    { name: "无量殿台基", ...FOOT.hall, y: 0 }, { name: "内山门台基", ...FOOT.inner, y: 0 },
+    ...sh.buildings,
     { name: "碑亭位", x0: M0.x0, x1: M0.x1, z0: M0.z0, z1: M0.z1, y: M0.y },
     { name: "二层高台", ...T, y: 0 },
   ];
-  return { stone, plaster, steps, flights, walk, shade, paving, outside, group, views, buildings };
+  return { stone, plaster, walk, shade, paving, outside, group, views, buildings, closed: sh.closed };
 }
