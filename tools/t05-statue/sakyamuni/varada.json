@@ -300,6 +300,8 @@
  },
  "cleanup": {
   "island": 50,
-  "pad": 0.3
+  "pad": 0.0,
+  "weld": 1e-05,
+  "note": "only inside the knee box (seen from the front) and the hand's own bounds; the face-processed figure already has four two-face pieces there from the generator"
  }
 }
