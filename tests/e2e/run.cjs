@@ -146,8 +146,8 @@ const scenarios = {
     await t.until(async () => { const h = await hud(); return !h.tip && !h.goal && !h.moodTag && !(await t.page.isVisible("#hint")) && !(await t.page.isVisible("#goal")) && !(await t.page.isVisible("#way")); }, 60000, "the words on the picture never left it");
     // A first visitor, before the first seal, is told once that a small thing done at a place is stamped (#445); the line
     // says nothing of how many.
-    await t.page.keyboard.down("w");
-    try { await t.until(async () => (await hud()).said.includes("stamp"), 90000, "a first visitor was never told that a walk can earn a seal"); } finally { await t.page.keyboard.up("w"); }
+    await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w");
+    try { await t.until(async () => (await hud()).said.includes("stamp"), 90000, "a first visitor was never told that a walk can earn a seal: " + JSON.stringify(await hud()).slice(0, 300)); } finally { await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift"); }
     expect((await t.journey()).seals && !Object.keys((await t.journey()).seals).length, "the line about stamps should come before any seal");
     expect(/朱印/.test(await t.page.textContent("#hint")) && !/[七].*(处|枚)/.test(await t.page.textContent("#hint")), "the line should say a seal can be earned, not how many: " + (await t.page.textContent("#hint")));
     for (const id of ["moodPanel", "print", "photoBar", "frame", "book", "slip", "toast", "act"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);

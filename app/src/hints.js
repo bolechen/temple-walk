@@ -84,7 +84,7 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     if (coarse && !dragged && !now && walked > 60) tip("pinch", t("双指开合，拉远拉近"), 6);
     if (coarse && dragged && !pinched && !now && said.has("walk")) tip("pinch", t("双指开合，拉远拉近"), 6);   // a drag kept from before: told now the line is free
     // Once the line about walking has gone, a first visitor is told once that a small thing done at a place is stamped (#445).
-    if (!now && said.has("walk") && !said.has("stamp") && walked > 6) tip("stamp", t("每到一处，做一件小事，可以盖一枚朱印"), 7);
+    if (!now && said.has("walk") && !said.has("stamp") && walked > 4) tip("stamp", t("每到一处，做一件小事，可以盖一枚朱印"), 7);
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }
