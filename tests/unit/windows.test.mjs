@@ -11,6 +11,8 @@ const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? 
 // The one hall the plan lights in every bay at dusk: prototype 05 shows the Guanyin hall's whole row of paper lit, deep
 // and pale by turns, and ART-REVIEW A2 says "only 05's windows show a lamp". The art director kept it so (#509); the
 // limit of a third of the windows is there to stop a courtyard full of lamps, which is the other halls' case.
+// art-gate item 7 (#512): a lamp the prototype or target picture names may light its whole hall (T00: art5, the Guanyin
+// hall); then its bays still differ, and no other hall in the picture lights with it.
 const LIT_THROUGHOUT = new Set(["guanyin"]);
 const windows = () => buildSite(M).litWindows;
 const lit = (ws, col) => ws.filter((w) => w[col] > 0);
@@ -31,6 +33,15 @@ test("no building but the Guanyin hall is lit in every bay at dusk, and it is li
   const ws = windows(), by = (id) => ws.filter((w) => w.building === id);
   assert.deepEqual([...LIT_THROUGHOUT], ["guanyin"]); assert.equal(lit(by("guanyin"), "dusk").length, by("guanyin").length);
   for (const id of new Set(ws.map((w) => w.building))) if (!LIT_THROUGHOUT.has(id)) assert.ok(lit(by(id), "dusk").length < by(id).length, id);
+});
+test("art-gate item 7: where a hall is lit throughout its bays differ, and the other halls keep to a third", () => {
+  const ws = windows();
+  for (const id of LIT_THROUGHOUT) {
+    const mine = ws.filter((w) => w.building === id && w.face === "front").sort((a, b) => a.bay - b.bay);
+    for (const col of ["dusk", "night"]) for (let i = 1; i < mine.length; i++) { const a = mine[i - 1][col], b = mine[i][col]; assert.ok(a > 0 && b > 0 && Math.abs(a - b) / Math.max(a, b) >= 0.15, `${id} bays ${i - 1}/${i} at ${col}: ${a} and ${b} are too alike`); }
+  }
+  // The great hall is the other lamp ART-REVIEW A2 names ("the great hall and the Guanyin hall"); every other hall keeps to a third of its bays.
+  for (const id of new Set(ws.map((w) => w.building))) if (!LIT_THROUGHOUT.has(id) && id !== "main") { const mine = ws.filter((w) => w.building === id); assert.ok(lit(mine, "dusk").length <= mine.length / 3, `${id}: ${lit(mine, "dusk").length} of ${mine.length} bays lit at dusk`); }
 });
 test("what is lit is the data: every key names a building and every bay it names exists", () => {
   const ws = windows(), have = new Set(ws.map((w) => `${w.building}|${w.face}|${w.bay}`));
