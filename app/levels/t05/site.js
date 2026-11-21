@@ -12,6 +12,7 @@ import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
+import { buildSurround } from "./surround.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
  * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
@@ -135,7 +136,7 @@ export function buildSite(M) {
   if (!offAltar) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
-    const l = aim ? new THREE.SpotLight(c, 0, d, 1.2, 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
+    const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
     l.position.set(x, y, z); l.userData.full = i; root.add(l);
     if (l instanceof THREE.SpotLight && aim) { l.target.position.set(aim[0], aim[1], aim[2]); root.add(l.target); }
     return l;
@@ -154,6 +155,7 @@ export function buildSite(M) {
   };
 
   root.add(ax.group);
+  root.add(buildSurround(M, C));   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
 
