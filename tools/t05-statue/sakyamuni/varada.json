@@ -115,7 +115,7 @@
    ],
    "solve": {
     "gap": 0.002,
-    "below": 3.6,
+    "below": 3.5,
     "palm_only": true,
     "bend_range": [
      -25,
@@ -265,6 +265,7 @@
   "slack": 1.4,
   "facing": 0.2,
   "stretch": 3.0,
-  "cut_dz": 0.14
+  "cut_dz": 0.14,
+  "cut_below_y": 3.64
  }
 }

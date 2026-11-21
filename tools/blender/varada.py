@@ -498,6 +498,8 @@ if AR:
     bm = bmesh.new(); bm.from_mesh(me); bm.faces.ensure_lookup_table()
     moved = mv > 0.5 * dl
     dead = [f for f in bm.faces if all(moved[v.index] and st[v.index, 2] > cutz and st[v.index, 1] < AR.get("cut_ymax", 4.1) for v in f.verts)]
+    if AR.get("cut_below_y"):   # what of the old hand moved with the forearm but hangs below it (the old wrist over the knee)
+      cby = AR["cut_below_y"]; dead += [f for f in bm.faces if all(moved[v.index] and st[v.index, 1] < cby for v in f.verts)]
     # faces between a moved point and one left (the forearm's welded seam on the thigh) drawn out past `stretch` times
     # their length and over 2 cm are taken out rather than left as slivers
     stretched = 0
