@@ -662,7 +662,8 @@ const scenarios = {
     await t.page.evaluate(() => window.__view("first"));
     const look = async () => { await t.page.evaluate(() => window.__pose(6.5, 14.3, Math.PI, -0.75)); await t.frames(2);
       return t.page.evaluate(() => { const seen = window.__probe().lum; window.__trail(false); return window.__probe().lum - seen; }); };   // in one go: the next frame shows them again
-    const dark = await look(); await t.shot("e2e-snow-prints"); expect(dark > 0.6, `his prints should show in the snow: they darken the picture by ${dark.toFixed(2)} ` + JSON.stringify(walked));
+    // (without them the same view differs by 0; the picture drawn in software gave over 0.6, a T4 0.56: the line is between nothing and clearly something)
+    const dark = await look(); await t.shot("e2e-snow-prints"); expect(dark > 0.3, `his prints should show in the snow: they darken the picture by ${dark.toFixed(2)} ` + JSON.stringify(walked));
     await t.page.evaluate(() => window.__inside("chan")); await t.until(async () => (await t.state()).room === "chan", 60000, "could not go into the meditation hall");
     await t.until(async () => !(await t.page.evaluate(() => document.getElementById("veil").className)), 30000, "the veil never lifted"); await t.frames(2);
     let p = await t.probe(); expect(p.snow === 0 && !p.drift, `indoors no snow should lie or fall: snow ${p.snow}, falling ${p.drift}`);
@@ -1584,7 +1585,7 @@ const scenarios = {
     expect((await t.page.evaluate(() => window.__prologue())).shown === 1, "the title should rise once in a pilgrimage");
     // Coming back: 接着走, no opening, no bell, no title.
     await t.page.waitForTimeout(2600); await t.page.reload({ waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
-    expect((await t.page.textContent("#enterBtn")) === "接着走", "a returning visitor should be offered to go on");
+    await t.until(async () => (await t.page.textContent("#enterBtn")) === "接着走", 30000, "a returning visitor should be offered to go on");   // (the title is lettered a few frames after the page says it is ready)
     await stepIn(t); await t.frames(3); o = await O(t);
     expect(!o.active && o.phase === "idle" && o.cues.mountainBell === 0, "a returning visitor should step straight in: " + JSON.stringify(o));
     expect((await t.page.evaluate(() => window.__prologue())).titled, "the title is kept for the pilgrimage");
@@ -2528,6 +2529,8 @@ const scenarios = {
     const t = await open(b, base, "q=low&cam=0,30,0,0&view=third" + BARE, { viewport: { width: 640, height: 400 } });
     const sample = () => t.page.evaluate(() => { window.__jump = []; const read = () => { const s = window.__yard(); window.__jump.push([s.footY, s.jumping, s.z]); if (window.__jump.length < 400 && (s.jumping || window.__jump.length < 3)) requestAnimationFrame(read); }; requestAnimationFrame(read); });
     // #141: the patch that stands for his shadow keeps to the ground under him all through the jump, fainter at the top.
+    // (It eases in over the first moments after the walk is his, and on a card that draws sixty frames a second the jump could begin inside that: wait for it to be as it will stay.)
+    { let was = -1; await t.untilFrames(async () => { const op = (await t.state()).shadowOp; const still = Math.abs(op - was) < 1e-3 && op > 0.1; was = op; if (!still) await t.frames(3); return still; }, 600, "his shadow never settled"); }
     await t.page.evaluate(() => { window.__sh = []; const read = () => { const s = window.__yard(); window.__sh.push([s.footY, s.h, s.shadowY, s.shadowOp]); if (window.__shOn) requestAnimationFrame(read); }; window.__shOn = true;; requestAnimationFrame(read); });
     const z0 = (await t.state()).z; await sample(); await t.page.keyboard.press("Space");
     await t.until(async () => (await t.page.evaluate(() => window.__jump.some((j) => j[1]))) && !(await t.state()).jumping, 120000, "Space did not send him up and bring him down");
