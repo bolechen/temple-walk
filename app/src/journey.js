@@ -106,8 +106,10 @@ export function createJourney(store, now = () => Date.now(), { closedBefore = fa
     adopt(season) { if (s.closed && s.closedSeason === null && season) { s.closedSeason = season; save(); } },
     // The seals in order, each with the moment it was earned (or null).
     list: () => SEALS.map((d) => ({ ...d, got: s.seals[d.id] || null })),
-    // The first observance not yet made, going up the mountain; null once the book is full.
-    next: () => SEALS.find((d) => !s.seals[d.id]) || null,
+    // The first observance not yet made, going up the mountain; null once the book is full. A book with no seal at all
+    // is first sent to the great hall's incense, the shortest and best-placed observance and the one most visitors
+    // finish (#436, the owner's trial of 2026-11-21); once any seal is held the order of SEALS is back.
+    next: () => (count() === 0 ? SEAL.incense : SEALS.find((d) => !s.seals[d.id])) || null,
     // Earn a seal. Returns true only the first time. `extra.verse` is kept with the library's seal.
     earn(id, extra) {
       if (!SEAL[id] || s.seals[id]) return false;
