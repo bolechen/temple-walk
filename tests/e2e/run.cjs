@@ -157,6 +157,8 @@ const scenarios = {
   } },
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
+    // The foot of the title says where this is and what road leads up, and nothing of how many seals (#445).
+    { const how = await t.page.textContent("#title .how"); expect(how.includes("江南") && how.includes("竹林") && !/[七]|朱印|小事/.test(how), "the title's foot should be the prologue's own line: " + how); }
     // First the title: the temple's name, a way in, and nothing else in the way.
     expect(await t.page.isVisible("#title") && (await t.page.textContent("#title h1")) === "山门之外" && (await t.page.textContent("#title .sub")).includes("云径禅寺"), "the title is missing");
     expect(!(await t.page.isVisible("#photoBtn")) && !(await t.page.isVisible("#bookBtn")) && !(await t.page.isVisible("#act")), "the walking controls should wait behind the title");
@@ -192,6 +194,12 @@ const scenarios = {
     expect((await hud()).said.includes("walk") && (await t.page.textContent("#hint")).includes("行走"), "an arriving visitor was not told how to walk");
     expect(!(await t.page.isVisible("#keys")), "the list of keys should wait until it is asked for");
     await t.until(async () => { const h = await hud(); return !h.tip && !h.goal && !h.moodTag && !(await t.page.isVisible("#hint")) && !(await t.page.isVisible("#goal")) && !(await t.page.isVisible("#way")); }, 60000, "the words on the picture never left it");
+    // A first visitor, before the first seal, is told once that a small thing done at a place is stamped (#445); the line
+    // says nothing of how many.
+    await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w");
+    try { await t.until(async () => (await hud()).said.includes("stamp"), 90000, "a first visitor was never told that a walk can earn a seal: " + JSON.stringify(await hud()).slice(0, 300)); } finally { await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift"); }
+    expect((await t.journey()).seals && !Object.keys((await t.journey()).seals).length, "the line about stamps should come before any seal");
+    expect(/朱印/.test(await t.page.textContent("#hint")) && !/[七].*(处|枚)/.test(await t.page.textContent("#hint")), "the line should say a seal can be earned, not how many: " + (await t.page.textContent("#hint")));
     for (const id of ["moodPanel", "print", "photoBar", "frame", "book", "slip", "toast", "act"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
