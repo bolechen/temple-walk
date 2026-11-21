@@ -66,7 +66,9 @@
    ],
    "tol": 0.02,
    "close": 0.03,
-   "blur": 0.012
+   "blur": 0.012,
+   "ch": 2
   }
- ]
+ ],
+ "depth": "tools/out/t05/seven/chest/vipasyin-depth.png"
 }

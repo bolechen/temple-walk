@@ -20,6 +20,7 @@ uniform vec4 uFace[8];
 uniform float uEdge;
 uniform sampler2D uMaskF;
 uniform sampler2D uMaskB;
+uniform sampler2D uMaskS;
 varying vec3 vFig;
 varying vec3 vFigN;
 float pEll(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 q = (p - a.xyz) / b.xyz; float k = min(b.x, min(b.y, b.z));
@@ -32,11 +33,19 @@ float pHalf(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; return smoothstep
 // a = (x0, y0, the depth past which it reaches, on), b = (x1, y1, channel, side). The mask is a picture over the
 // rectangle x0..x1 × y0..y1, worked out from the figure's own surface (tools/t05-hall/mask.py), so its edges follow the
 // folds and the collar instead of a box's straight sides; only the surface on its own side and facing that way takes it.
-float pMap(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec2 uv = (p.xy - a.xy) / (b.xy - a.xy);
+float pMap(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.;
+  // b.w: 1 front, 2 back, 3 the figure's right side (picture across = z); +10 when the alpha holds the depth seen
+  float code = mod(b.w, 10.); bool depth = b.w > 9.5;
+  vec3 q = code < 1.5 ? p : code < 2.5 ? vec3(-p.x, p.y, -p.z) : vec3(p.z, p.y, -p.x);   // q.z toward that picture's eye
+  float nz = code < 1.5 ? vFigN.z : code < 2.5 ? -vFigN.z : -vFigN.x;
+  vec2 uv = ((code < 2.5 ? p.xy : p.zy) - a.xy) / (b.xy - a.xy);
   if (uv.x < 0. || uv.y < 0. || uv.x > 1. || uv.y > 1.) return 0.;
-  float s = b.w; if (s * p.z < s * a.z || s * vFigN.z < -.1) return 0.;
-  vec4 t = s > 0. ? texture2D(uMaskF, uv) : texture2D(uMaskB, vec2(1. - uv.x, uv.y));
-  return b.z < .5 ? t.r : b.z < 1.5 ? t.g : b.z < 2.5 ? t.b : t.a; }
+  if (q.z < a.z || nz < -.1) return 0.;
+  vec4 t = code < 1.5 ? texture2D(uMaskF, uv) : code < 2.5 ? texture2D(uMaskB, vec2(1. - uv.x, uv.y)) : texture2D(uMaskS, uv);
+  // the mask's alpha holds the depth of the surface its picture saw ((depth toward the eye + 3.5) / 7); a surface lying
+  // behind that one (the robe behind a forearm) was not seen and takes none of it
+  if (depth && q.z < t.a * 7. - 3.5 - .06 - .2 * (1. - nz)) return 0.;   // more room where the picture only grazed the surface
+  return b.z < .5 ? t.r : b.z < 1.5 ? t.g : t.b; }
 // a band round the figure whose middle line rises as y0 + c·x² (a neckline, a sash), half-height h, across |x| < w, in front of z0
 float pBand(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; float d = abs(p.y - (a.x + a.y * p.x * p.x)) - a.z;
   d = max(d, abs(p.x) - b.x); d = max(d, b.y - p.z); return 1. - smoothstep(-uEdge, uEdge, d); }
@@ -116,8 +125,11 @@ function leafUniforms(leaf, A) {
   }
   if (leaf.type === "band") { const y0 = val(s.y0, A), c = val(s.c ?? 0, A), h = val(s.h, A), w = val(s.w, A), z0 = val(s.z0 ?? -99, A);
     if ([y0, c, h, w, z0].some((x) => x === undefined)) return out; return [y0, c, h, 1, w, z0, 0, 0]; }
-  if (leaf.type === "map") { const M = A[s.m === "back" ? "maskBack" : "maskFront"]; if (!M || !M.rect) return out;
-    const [x0, y0, x1, y1] = M.rect; return [x0, y0, M.z ?? (s.m === "back" ? 99 : -99), 1, x1, y1, s.ch ?? 0, s.m === "back" ? -1 : 1]; }
+  if (leaf.type === "map") { const key = { front: "maskFront", back: "maskBack", right: "maskRight" }[s.m]; const M = A[key]; if (!M || !M.rect) return out;
+    // rect: x0, y0, x1, y1 of the picture (across: x from the front and back, z from the side); z: how far toward that
+    // picture's eye a surface must lie to take it (front: z, back: -z, right side: -x)
+    const [x0, y0, x1, y1] = M.rect, code = { front: 1, back: 2, right: 3 }[s.m];
+    return [x0, y0, M.z ?? -99, 1, x1, y1, s.ch ?? 0, code + (M.depth ? 10 : 0)]; }
   return out;
 }
 
@@ -149,7 +161,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none } };
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
     const c = lin(z.color);

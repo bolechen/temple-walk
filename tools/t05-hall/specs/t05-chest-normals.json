@@ -91,6 +91,45 @@
     "square": true,
     "grid": false
    }
+  },
+  {
+   "name": "krakucchanda-depth",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.4,
+    "half": 1.2,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "vipasyin-depth",
+   "ortho": {
+    "i": 1,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.4,
+    "half": 1.2,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
+  },
+  {
+   "name": "kanakamuni-depth",
+   "ortho": {
+    "i": 2,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.4,
+    "half": 1.2,
+    "square": true,
+    "grid": false,
+    "depth": true
+   }
   }
  ]
 }

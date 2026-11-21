@@ -34,7 +34,9 @@
    ],
    "tol": 0.06,
    "close": 0.03,
-   "blur": 0.012
+   "blur": 0.012,
+   "ch": 2
   }
- ]
+ ],
+ "depth": "tools/out/t05/seven/chest/krakucchanda-depth.png"
 }

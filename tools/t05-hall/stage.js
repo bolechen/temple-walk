@@ -449,7 +449,7 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     const key = o.env === false ? "noenv" : "env";
     f.painted ??= {};
-    const masks = { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file] };
+    const masks = { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
     f.painted[key] ??= paintMaterial(recipe, A.anchors, f.pivot, o.env === false ? { masks } : { masks, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
     f.painted[key].userData.update(); if (o.envIntensity) f.painted[key].envMapIntensity = o.envIntensity;
     for (const m of f.meshes) m.material = f.painted[key];
@@ -475,16 +475,22 @@ function ortho(i, side = "front", z = {}) {
   [[0x8a8a8a, 0.25], [0xffffff, 0.6], [0xff3030, 0.9]].forEach(([col, op], c) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pts[c], 3));
     const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op, depthTest: false })); l.renderOrder = 10; orthoGrid.add(l); });
   if (z.grid !== false) P.add(orthoGrid);   // a picture for tools/t05-hall/mask.py is drawn without the grid
-  if (side === "side") orthoGrid.rotation.y = -Math.PI / 2; else orthoGrid.rotation.y = 0;   // the side view looks from the figure's right (viewer's left), +z to the right of the picture
+  orthoGrid.rotation.y = side === "side" ? -Math.PI / 2 : side === "back" ? Math.PI : 0;   // the side view looks from the figure's right (viewer's left), +z to the right of the picture
   const d = 20, cx = z.cx ?? 0, cy = z.cy ?? 3, hh = z.half ?? 3.5;
   const asp = z.square ? 1 : W / H;   // keep metres square on a wide picture (#370; #287 drew its grids square at 1400 px)
   Object.assign(orthoCam, { left: -hh * asp, right: hh * asp, top: hh, bottom: -hh });
-  const at = side === "side" ? new THREE.Vector3(-d, cy, cx) : new THREE.Vector3(cx, cy, d);
-  orthoCam.position.copy(P.localToWorld(at.clone())); orthoCam.up.set(0, 1, 0); orthoCam.lookAt(P.localToWorld(at.clone().add(side === "side" ? new THREE.Vector3(d, 0, 0) : new THREE.Vector3(0, 0, -d))));
+  // from behind (#370 round 6, a mask for the back): +x is on the picture's left
+  const at = side === "side" ? new THREE.Vector3(-d, cy, cx) : side === "back" ? new THREE.Vector3(cx, cy, -d) : new THREE.Vector3(cx, cy, d);
+  orthoCam.position.copy(P.localToWorld(at.clone())); orthoCam.up.set(0, 1, 0); orthoCam.lookAt(P.localToWorld(at.clone().add(side === "side" ? new THREE.Vector3(d, 0, 0) : side === "back" ? new THREE.Vector3(0, 0, d) : new THREE.Vector3(0, 0, -d))));
   orthoCam.updateProjectionMatrix();
   const keep = scene.overrideMaterial; scene.overrideMaterial = null;
   const hidden = []; scene.traverse((o) => { if (o.isMesh && !isIn(o, f.obj) && o.visible) { o.visible = false; hidden.push(o); } });
-  const mats = new Map(); if (!z.lit) f.obj.traverse((o) => { if (o.isMesh) { mats.set(o, o.material); o.material = new THREE.MeshNormalMaterial(); } });
+  // { depth: true }: the depth of the nearest surface toward the eye, in the figure's frame, as grey: (z·s + 3.5) / 7, s = 1
+  // from the front and -1 from behind (#370 round 6: a mask is laid only on the surface its picture saw, mask.py)
+  const depthMat = z.depth ? new THREE.ShaderMaterial({ uniforms: { uToFig: { value: P.matrixWorld.clone().invert() }, uS: { value: side === "back" ? -1 : 1 }, uSide: { value: side === "side" ? 1 : 0 } },
+    vertexShader: "uniform mat4 uToFig; uniform float uSide; varying float vZ; void main() { vec3 f = (uToFig * modelMatrix * vec4(position, 1.)).xyz; vZ = uSide > .5 ? -f.x : f.z; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+    fragmentShader: "uniform float uS; uniform float uSide; varying float vZ; void main() { float g = clamp((vZ * (uSide > .5 ? 1. : uS) + 3.5) / 7., 0., 1.); gl_FragColor = vec4(vec3(g), 1.); }" }) : null;
+  const mats = new Map(); if (!z.lit) f.obj.traverse((o) => { if (o.isMesh) { mats.set(o, o.material); o.material = depthMat ?? new THREE.MeshNormalMaterial(); } });
   const ex = renderer.toneMappingExposure; if (z.lit) renderer.toneMappingExposure = z.exp ?? 4.5; else renderer.toneMapping = THREE.NoToneMapping; renderer.setClearColor(0x202020); const bg = scene.background; scene.background = new THREE.Color(0x202020); sky.visible = false;
   renderer.render(scene, orthoCam);
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = ex; scene.background = bg; sky.visible = true;

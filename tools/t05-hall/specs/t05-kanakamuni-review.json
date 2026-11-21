@@ -160,6 +160,35 @@
     ],
     "lampColor": 16764826
    }
+  },
+  {
+   "name": "chest-warm",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "front10",
+    "over": {
+     "at": [
+      1.0,
+      9.02,
+      -11.8
+     ],
+     "look": [
+      0,
+      9.62,
+      -17.6
+     ],
+     "fov": 22,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     0.8,
+     8.62,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
   }
  ]
 }

@@ -23,12 +23,24 @@ x0, y0, x1, y1 = spec["rect"]
 mpp = (x1 - x0) / W   # metres a pixel (the picture is square in metres)
 bg = np.all(np.abs(img - img[0, 0]) < 0.02, axis=2)   # the backdrop: the corner's colour
 n = img * 2 - 1
-px = lambda x, y: (int(round((x - x0) / mpp)), int(round((y1 - y) / mpp)))
+back = spec.get("side") == "back"   # a picture from behind has +x on its left (the shader reads it so, pMap in paint.js)
+px = lambda x, y: (int(round(((x1 - x) if back else (x - x0)) / mpp)), int(round((y1 - y) / mpp)))
 out = np.zeros((H, W, 4), np.uint8)
-report = {"file": os.path.basename(spec["out"]), "rect": spec["rect"], "z": spec.get("z", -99), "channels": []}
-for ch, z in enumerate(spec["channels"]):
-  bx0, by0 = px(z["box"][0], z["box"][3]); bx1, by1 = px(z["box"][2], z["box"][1])
+regs = []
+report = {"file": os.path.basename(spec["out"]), "rect": spec["rect"], "z": spec.get("z", -99), "depth": bool(spec.get("depth")), "channels": []}
+for ci, z in enumerate(spec["channels"]):
+  ch = z.get("ch", ci)   # which channel of the picture: R and G are the bare skin and the gilt edge, B a garment (paint/recipe.json)
+  bx0, by0 = px(z["box"][2] if back else z["box"][0], z["box"][3]); bx1, by1 = px(z["box"][0] if back else z["box"][2], z["box"][1])
   allow = np.zeros((H, W), bool); allow[max(by0, 0):min(by1, H), max(bx0, 0):min(bx1, W)] = True; allow &= ~bg
+  if "ring_of" in z:
+    # a band of `width` metres just outside another channel's region, inside this channel's box (the gilt along a
+    # robe's edge, lying on the robe beside the bare skin)
+    base = regs[z["ring_of"]]; w = max(1, int(round(z["width"] / mpp)))
+    reg = ndi.binary_dilation(base, structure=ndi.generate_binary_structure(2, 1), iterations=w) & ~base & allow
+    regs.append(reg)
+    m = ndi.gaussian_filter(reg.astype(np.float32), sigma=z.get("blur", 0.008) / mpp)
+    out[..., ch] = np.clip(m * 255, 0, 255).astype(np.uint8)
+    report["channels"].append({"zone": z["zone"], "pixels": int(reg.sum()), "area_m2": round(float(reg.sum()) * mpp * mpp, 3)}); continue
   tol = z.get("tol", 0.06)
   # a pixel joins its neighbour where the normals differ by less than tol (both ways along each axis)
   dx = np.linalg.norm(n[:, 1:] - n[:, :-1], axis=2) < tol; dy = np.linalg.norm(n[1:] - n[:-1], axis=2) < tol
@@ -53,15 +65,28 @@ for ch, z in enumerate(spec["channels"]):
   k = max(1, int(round(z.get("close", 0.03) / mpp)))
   st = ndi.generate_binary_structure(2, 1)
   reg = ndi.binary_closing(reg, structure=st, iterations=k) & allow
-  reg = ndi.binary_fill_holes(reg)
-  m = ndi.gaussian_filter(reg.astype(np.float32), sigma=z.get("blur", 0.012) / mpp)
+  reg = ndi.binary_fill_holes(reg); regs.append(reg)
+  # surfaces seen edge-on lie on the picture's silhouette; let the region run on into the empty backdrop a little, so the
+  # blur does not fade them (a bare arm's side, seen from neither front nor back)
+  spill = reg | (ndi.binary_dilation(reg, structure=st, iterations=max(1, int(round(3 * z.get("blur", 0.012) / mpp)))) & bg)
+  m = ndi.gaussian_filter(spill.astype(np.float32), sigma=z.get("blur", 0.012) / mpp)
   out[..., ch] = np.clip(m * 255, 0, 255).astype(np.uint8)
   report["channels"].append({"zone": z["zone"], "pixels": int(reg.sum()), "area_m2": round(float(reg.sum()) * mpp * mpp, 3)})
-out[..., 3] = np.maximum(out[..., 3], 0) if len(spec["channels"]) > 3 else 255   # alpha is a channel only when four are used
+if spec.get("depth"):
+  # alpha: the depth of the surface the picture saw (tools/t05-hall.cjs ortho with "depth": true), grown a little into the
+  # backdrop so the silhouette's edge keeps a depth; the shader lays the mask only on that surface (pMap in paint.js)
+  d = np.asarray(Image.open(spec["depth"]).convert("L")).astype(np.float32)
+  dbg = np.abs(d - d[0, 0]) < 1.5; idx = ndi.distance_transform_edt(dbg, return_distances=False, return_indices=True)
+  out[..., 3] = d[idx[0], idx[1]].astype(np.uint8)
+else:
+  out[..., 3] = 255
+assert len(spec["channels"]) <= 3, "the fourth channel is the depth (or 255)"
 os.makedirs(os.path.dirname(spec["out"]), exist_ok=True)
 Image.fromarray(out, "RGBA").save(spec["out"])
 # a picture to look at: the normals with the mask laid over in red
 if spec.get("preview"):
-  pv = (img * 255).astype(np.uint8).copy(); a = out[..., 0:1].astype(np.float32) / 255
-  pv = (pv * (1 - 0.55 * a) + np.array([255, 40, 40]) * 0.55 * a).astype(np.uint8); Image.fromarray(pv).save(spec["preview"])
+  pv = (img * 255).astype(np.float32)
+  for c, col in ((0, (255, 40, 40)), (1, (255, 220, 0)), (2, (255, 40, 40))):
+    a = out[..., c:c + 1].astype(np.float32) / 255; pv = pv * (1 - 0.55 * a) + np.array(col) * 0.55 * a
+  Image.fromarray(pv.astype(np.uint8)).save(spec["preview"])
 print(json.dumps(report, ensure_ascii=False))

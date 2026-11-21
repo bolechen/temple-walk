@@ -1,0 +1,61 @@
+{
+ "normals": "tools/out/t05/seven/chest/sakyamuni-normals-front.png",
+ "rect": [
+  -2.8,
+  3.0,
+  1.0,
+  6.8
+ ],
+ "z": -0.6,
+ "out": "tools/t05-hall/paint/masks/sakyamuni-front.png",
+ "preview": "tools/out/t05/seven/chest/sakyamuni-mask-front.png",
+ "channels": [
+  {
+   "zone": "面与手（袒露的胸、肩、右臂）",
+   "seeds": [
+    [
+     -0.47,
+     5.44
+    ],
+    [
+     -1.39,
+     5.88
+    ],
+    [
+     -1.61,
+     4.63
+    ],
+    [
+     -1.77,
+     3.9
+    ],
+    [
+     -0.9,
+     5.0
+    ]
+   ],
+   "box": [
+    -2.8,
+    3.4,
+    0.8,
+    6.45
+   ],
+   "tol": 0.05,
+   "close": 0.03,
+   "blur": 0.012
+  },
+  {
+   "zone": "衣缘描金",
+   "ring_of": 0,
+   "width": 0.06,
+   "box": [
+    -1.3,
+    4.3,
+    0.8,
+    6.4
+   ],
+   "blur": 0.006
+  }
+ ],
+ "depth": "tools/out/t05/seven/chest/sakyamuni-depth-front.png"
+}
