@@ -160,14 +160,14 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         // Water: one continuous ramp, standing water -> soaked -> damp.
         float low=fbm2(p*.17+3.)+(uWet-1.)*.34;   // one smooth field only, so that no puddle has a straight edge where a flag ends (and it is steps.js's puddleAt exactly)
         // Water stands only in the hollows. The edge of a puddle is as wide as the field makes it close by (the ramp is .04 of it, some
-        // forty centimetres of stone). Seen from a raised eye (the following eye behind him, a raised camera: three metres up and more)
+        // forty centimetres of stone). Seen from a raised eye (the following eye behind him, a raised camera: two and a half metres up and more)
         // a far puddle lies at a graze all the same, one pixel of the picture a third of a metre of stone, and that ramp shrank to a
         // pixel or two so that the water ended in a line: there the ramp is stretched, about the same edge, to a few pixels' worth of
         // ground (the field changes about .1 a metre), and the mirror begins a little way in from it, leaving a rim of wet stone. From
         // his own eyes (1.6 m) nothing changes: standing water at a graze is a mirror with a sharp edge, as wet stone should be (J01).
         // Before the rain (uWet 0: winter) there is no water at all, whatever the field says.
         float reach=max(length(dFdx(p)),length(dFdy(p)));   // the most ground one pixel covers, along the line of sight
-        float rise=smoothstep(2.4,3.4,cameraPosition.y-vWP.y);
+        float rise=smoothstep(1.9,2.7,cameraPosition.y-vWP.y);
         float edgeW=mix(.04,clamp(1.2*reach,.04,.22),rise);
         float puddle=smoothstep(.59-.5*edgeW,.59+.5*edgeW,low)*step(.001,uWet), damp=smoothstep(.3,.58,low);
         alb*=mix(.66,.44,damp); alb=mix(alb,alb*.55+vec3(.012,.015,.014),puddle);
