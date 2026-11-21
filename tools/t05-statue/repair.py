@@ -48,13 +48,23 @@ def region(seed, r):
   w = np.where(keep, 0.5 - 0.5 * np.cos(np.pi * np.clip(1 - d / r, 0, 1)), 0.0)   # 1 at the seed, 0 at r
   return keep, w
 for op in spec["ops"]:
-  if op["op"] in ("squeeze", "headscale"):
+  if op["op"] in ("squeeze", "headscale", "zband", "xband"):
     before = co.copy(); z = co[:, 2]
     if op["op"] == "squeeze":
       # narrow the throne under the figure: below `below` (file units of height) the points come in toward the axis by
       # `k` across and in depth, easing back to 1 over `band` above it, so a lotus wider than the knees fits its seat
       t = np.clip((z - op["below"]) / op.get("band", 0.03), 0, 1); k = 1 + (op["k"] - 1) * (1 - t)
       co[:, 0] *= k; co[:, 1] *= k
+    elif op["op"] == "zband":
+      # shorten (k < 1) the trunk between z0 and z1 (file units of height): points inside come down toward z0 by k, and
+      # everything above comes down by what the band lost, so the head and shoulders keep their shape (3D review risk 3:
+      # the upper body read long)
+      z0, z1, k = op["z0"], op["z1"], op["k"]
+      co[:, 2] = np.where(z <= z0, z, np.where(z <= z1, z0 + (z - z0) * k, z - (z1 - z0) * (1 - k)))
+    elif op["op"] == "xband":
+      # widen or narrow across only (x), between z0 and z1, easing in and out over `fade` either side (the shoulders)
+      z0, z1, k, f = op["z0"], op["z1"], op["k"], op.get("fade", 0.03)
+      t = np.clip(np.minimum((z - (z0 - f)) / f, ((z1 + f) - z) / f), 0, 1); co[:, 0] *= 1 + (k - 1) * t
     else:
       # give one figure's head its own proportions (a face of its own among seven of one family): scale about the head's
       # centre `c` by `s` (x across, y depth, z up), fading to nothing between the chin `z0` and `z0 - fade`
