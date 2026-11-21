@@ -1,6 +1,6 @@
 # One figure's face, from its generated original to a baked statue and its paint anchors, in one command (issue #463):
 #
-#   python3 tools/t05-statue/face-build.py <name> <tag> [--tilt=10] [--anchors-from=<anchors.json>] [--colour=<anchor file name>]
+#   python3 tools/t05-statue/face-build.py <name> <tag> [--tilt=10] [--anchors-from=<anchors.json>] [--colour=<anchor file name>] [--anchors-only]
 #
 # Reads tools/t05-statue/<name>/repair.json for the figure's own fixes (whatever is not a face op: squeeze, zband,
 # xband, smoothing of a cuff), adds the face's ops in order — the bow (`tilt`, deg from --tilt), the brow's knit and the
@@ -15,7 +15,7 @@
 import sys, json, subprocess, os, math, copy
 here = os.path.dirname(os.path.abspath(__file__)); root = os.path.dirname(os.path.dirname(here))
 name, tag = sys.argv[1], sys.argv[2]
-opt = dict(a[2:].split("=", 1) for a in sys.argv[3:] if a.startswith("--"))
+opt = dict((a[2:].split("=", 1) + [True])[:2] for a in sys.argv[3:] if a.startswith("--"))
 tilt = float(opt.get("tilt", 10)); D = os.path.join(root, "tools/out/t05/tripo-six")
 spec = json.load(open(os.path.join(here, name, "repair.json")))
 face = json.load(open(os.path.join(here, name, "face.json")))   # the figure's face landmarks before any face op (stage frame, metres)
@@ -38,22 +38,30 @@ run = lambda *a: subprocess.run([sys.executable, *a], check=True, capture_output
 def repair(ops, out):
   j = os.path.join(here, name, f"repair-{tag}.json"); json.dump({**{k: v for k, v in spec.items() if k != "ops"}, "ops": ops}, open(j, "w"), ensure_ascii=False, indent=1)
   run(os.path.join(here, "repair.py"), os.path.join(D, face["source"]), j, out); return j
-pre = os.path.join(D, f"{name}-{tag}-pre.glb"); repair(base_ops + [tilt_op] + small, pre)
+only = "anchors-only" in opt   # the mesh as built already; redo the paint anchors only
+pre = os.path.join(D, f"{name}-{tag}-pre.glb")
+if not only: repair(base_ops + [tilt_op] + small, pre)
 mouth = bowed([0, F["mouth"][1], F["mouth"][2]])
 pts = {"height": H, "mouth": [0, round(mouth[1], 3)], "browY": round(bowed([0, F["browY"], F["knit"][2]])[1], 3), "tilt": tilt, "slitWin": 0.03}
 pj = os.path.join(here, name, f"points-{tag}.json"); json.dump(pts, open(pj, "w"))
-fops = json.loads(run(os.path.join(here, "face-ops.py"), pre, pj, f"--recipe={os.path.join(here, 'face/recipe.json')}"))
-final = os.path.join(D, f"{name}-{tag}.glb"); j = repair(base_ops + [tilt_op] + small + fops, final)
-for t, e in (("60000", "0.02"), ("20000", "0.05"), ("6000", "0.1")):
-  subprocess.run(["node", os.path.join(root, "tools/t05-statue.mjs"), final, os.path.join(D, f"{name}-{tag}.{t}.glb"), f"--tris={t}", f"--error={e}"], check=True, capture_output=True)
-run(os.path.join(here, "bake.py"), final, os.path.join(D, f"{name}-{tag}.60000.glb"), os.path.join(D, f"{name}-{tag}b.60000.glb"), "--size=2048", "--uv=xatlas",
-    f"--head={round(neck['z0'] / s - 0.002, 4)}", "--cage=0.0012", "--ray=0.0025")
+final = os.path.join(D, f"{name}-{tag}.glb"); j = os.path.join(here, name, f"repair-{tag}.json")
+if not only:
+  fops = json.loads(run(os.path.join(here, "face-ops.py"), pre, pj, f"--recipe={os.path.join(here, 'face/recipe.json')}"))
+  j = repair(base_ops + [tilt_op] + small + fops, final)
+  for t, e in (("60000", "0.02"), ("20000", "0.05"), ("6000", "0.1")):
+    subprocess.run(["node", os.path.join(root, "tools/t05-statue.mjs"), final, os.path.join(D, f"{name}-{tag}.{t}.glb"), f"--tris={t}", f"--error={e}"], check=True, capture_output=True)
+  run(os.path.join(here, "bake.py"), final, os.path.join(D, f"{name}-{tag}.60000.glb"), os.path.join(D, f"{name}-{tag}b.60000.glb"), "--size=2048", "--uv=xatlas",
+      f"--head={round(neck['z0'] / s - 0.002, 4)}", "--cage=0.0012", "--ray=0.0025")
 # paint anchors: the unbowed set turned with the head; then the lids, the mouth and the eight landmarks from the mesh
 if "anchors-from" in opt:
-  src = json.load(open(opt["anchors-from"])); a = src["anchors"]
-  for k, v in list(a.items()):
-    if isinstance(v, list) and len(v) == 3 and all(isinstance(q, (int, float)) for q in v) and v[1] > neck["z0"] - neck["fade"] and abs(v[0]) < neck["rx"] and k not in ("skinMax", "chinMax", "skinMin"):
-      a[k] = [round(q, 3) for q in bowed(v)]
+  src = json.load(open(opt["anchors-from"])); a = src["anchors"]; mouth0 = list(a["mouth"])
+  # only the face's named points turn with the head; the boxes' corners (far behind the face, they would rise when turned
+  # and open a gap of robe colour across the cheeks) move down with the mouth instead
+  for k in ("neckFront", "neckBack", "hairFront", "hairBack", "earL", "earR", "eyeL", "eyeR", "mouth", "urna", "neckB", "lobeL", "lobeR"):
+    if k in a: a[k] = [round(q, 3) for q in bowed(a[k])]
+  drop = a["mouth"][1] - mouth0[1]
+  for k in ("jawMin", "chinMin"):
+    if k in a: a[k][1] = round(a[k][1] + drop, 3)
   eyes = {"eyeL": a["eyeL"][:2], "eyeR": a["eyeR"][:2]}
   pts2 = {**pts, "eyes": eyes}; json.dump(pts2, open(pj, "w")); r = json.loads(run(os.path.join(here, "face-ratios.py"), "mesh", final, pj))
   e = r["eyes"]; a["lidL"] = [a["eyeL"][0], e["eyeL"]["y"], e["eyeL"]["rise"]]; a["lidR"] = [a["eyeR"][0], e["eyeR"]["y"], e["eyeR"]["rise"]]
@@ -62,7 +70,7 @@ if "anchors-from" in opt:
   # out to the corners (a rim of skin round a narrower painted lip read as a pout: the 3D review's third round)
   top, bot = r["slit"] + (r["points"]["upperLip"][0] - r["points"]["slit"][0]) + 0.02, r["slit"] - (r["points"]["slit"][0] - r["points"]["lowerLip"][0]) - 0.03
   a["mouth"] = [a["mouth"][0], round((top + bot) / 2, 3), a["mouth"][2]]; a["lipH"] = round((top - bot) / 2, 3); a["lipHalf"] = round((abs(c["L"]) + abs(c["R"])) / 2 + 0.01, 3)
-  for k in ("jawMin", "chinMin"): a[k][1] = round(a[k][1] + (a["mouth"][1] - src["anchors"]["mouth"][1]), 3)
+  for k in ("jawMin", "chinMin"): a[k][1] = round(a[k][1] + (a["mouth"][1] - (mouth0[1] + drop)), 3)   # and with the mouth's own move from the bow to the measured slit
   colour = opt.get("colour", f"{name}-t05")
   json.dump(src, open(os.path.join(root, "tools/t05-hall/paint", colour + ".json"), "w"), ensure_ascii=False, indent=1)
   print(json.dumps({"ratios": {k: r[k] for k in ("mouthW", "lipH", "lipFwd", "sulcus", "w_m", "faceW_m")}, "lid": [a["lidL"], a["lidR"]], "lipHalf": a["lipHalf"], "anchors": colour}))
