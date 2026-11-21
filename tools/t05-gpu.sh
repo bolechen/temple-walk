@@ -30,7 +30,7 @@ cp "$A" "$STAGE/app/s/0.glb"; cp "$B" "$STAGE/app/s/1.glb"; cp "$C" "$STAGE/app/
 # SETS=seven370 also takes the seven figures, east to west, in SEVEN (space-separated near-level files) as s/10..16.glb
 if [ -n "${SEVEN:-}" ]; then i=10; for f in $SEVEN; do cp "$f" "$STAGE/app/s/$i.glb"; i=$((i+1)); done; fi
 cp app/favicon.svg "$STAGE/app/favicon.svg"                       # job.cjs probes the card on a same-origin page
-cp tools/gpu/job.cjs tools/gpu/t05-hall-gpu.cjs "$STAGE/"
+cp tools/gpu/job.cjs tools/gpu/t05-hall-gpu.cjs tools/site.cjs "$STAGE/"   # job.cjs serves the page with site.cjs (#418)
 SPEC="$(SETS="${SETS:-}" node -e '
 const S = (u, x, turn, extra = {}) => ({ url: "s/" + u + ".glb", x, h: x ? 8.8 : 9.0, turn, paint: "clay", ...extra });
 const T = -Math.PI / 2, three = [S(0, 0, T), S(1, 5.8, T), S(2, -5.8, T)];
