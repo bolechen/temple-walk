@@ -106,3 +106,16 @@ test("the three builds send the same cache headers: hashed files for a year, the
   // what is fetched by a plain name keeps the platform's revalidation: no rule of ours over shared/ as a whole, over the doorways' manifest, or over the floor
   for (const p of Object.keys(rules)) assert.ok(!["/shared/*", "/shared/doorways/*"].includes(p) && !/^\/shared\/(walk|textures|models)\b/.test(p) && !/t00\.(json|bin)/.test(p), `a rule over ${p} would cache a plain name`);
 });
+
+// #642: the public page wears the body built in code until the new face with its eyes shut is made; the canary and a preview wear the Tripo body as before.
+// The address can still ask for any of the three bodies in every build.
+test("the default body by build (#642): code in production, tripo in canary and preview; ?body= still asks for any in all three", async () => {
+  const { bodyChoice } = await import("../../app/src/novice.js"), q = (s) => new URLSearchParams(s);
+  assert.equal(bodyChoice(q("")), "tripo", "unit tests run as a preview");
+  for (const [deploy, def] of [["production", "code"], ["canary", "tripo"], ["preview", "tripo"]]) {
+    assert.equal(bodyChoice(q(""), deploy), def, `${deploy}: the default body`);
+    assert.equal(bodyChoice(null, deploy), def, `${deploy}: no address at all`);
+    assert.equal(bodyChoice(q("body=nonsense"), deploy), def, `${deploy}: an unknown body is the default`);
+    for (const b of ["code", "tripo", "sculpt"]) assert.equal(bodyChoice(q("body=" + b), deploy), b, `${deploy}: ?body=${b}`);
+  }
+});
