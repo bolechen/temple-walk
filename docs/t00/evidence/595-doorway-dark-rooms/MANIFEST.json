@@ -1,0 +1,102 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 83618,
+   "sha256": "cdaa84a87143f1dcfe9514100c018a18d6e92bc8ea9a5ae5106821cfc2415437",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "far12m-chan-autumn-dawn-new.jpg",
+   "bytes": 326195,
+   "sha256": "e35f7f7820b062dc31ce2da03b77892c996fc3bce079fe2bdac048033b2a489d",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "far12m-chan-autumn-dusk-new.jpg",
+   "bytes": 372084,
+   "sha256": "8c2525624920642e6a061a89d696ab41c194ce1884c00f1116576a0f1f78697f",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "far12m-chan-spring-dusk-new.jpg",
+   "bytes": 394424,
+   "sha256": "e52038bdbc4b68be17e5d1684f081e69d7d605596fb54364eaf60881d7562f06",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "far12m-chan-summer-dusk-new.jpg",
+   "bytes": 339893,
+   "sha256": "931f013a47f8a1a2cc8d617e23af5f91c88bb831f18b9e5fb7aa1886b7cfb807",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "far12m-chan-winter-dusk-new.jpg",
+   "bytes": 367468,
+   "sha256": "19cb382510f6f76d4c26c6cb7975807947dd2d9082084de52fe91f252dd819ba",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-chan-autumn-dusk-main.jpg",
+   "bytes": 177352,
+   "sha256": "a0a56d81738806bd284805605e8ef69e88a936099ed0d6bd7a4870063a31db20",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-chan-autumn-dusk-new.jpg",
+   "bytes": 180718,
+   "sha256": "e635f7eae6364a198aaf5ad347ffe6fa2661fd72cbf75b678bf537a83c3d62d5",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-dahui-autumn-dusk-new.jpg",
+   "bytes": 161675,
+   "sha256": "c365eca41c5ea9a2274c65861f2d3ee84ea591a3549e057dac89b84aee8ae9ca",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-guanyin-autumn-dusk-new.jpg",
+   "bytes": 243734,
+   "sha256": "c6a9b2e22d7d02799f154c48a9bc2293e90ed9a27c02ad8d3eddc012e864f2e3",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-library-autumn-dusk-new.jpg",
+   "bytes": 172137,
+   "sha256": "39c9d6d373a67d0c0dab6c449ecb25f13429bf5413433ed9a0743c2385aeed81",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-lingxiao-autumn-dusk-new.jpg",
+   "bytes": 183569,
+   "sha256": "dd76d64aab117c7e37f08af35ebb204e28965c83af65ccc20afc571ccc951475",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-main-autumn-dusk-new.jpg",
+   "bytes": 233345,
+   "sha256": "6ad3a1789a4afb64d7d0b83a0257460ee3dc178b9188086bd39f0f57acdb3578",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-tea-autumn-dusk-new.jpg",
+   "bytes": 164910,
+   "sha256": "add3b7262cdfa669c7dc279ee4b14af2fffe8769f442c435021ce1a3d3c69877",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-yaoshi-autumn-dusk-main.jpg",
+   "bytes": 161017,
+   "sha256": "bcd7e4a5f68a8afa1de78bebd1fd79ec546ddd6f1866d4d0155a94a36dae4a84",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  },
+  {
+   "path": "near-yaoshi-autumn-dusk-new.jpg",
+   "bytes": 269598,
+   "sha256": "551a4e694ef4c8dc48a50ec0dcdda00a9ed5f4a498233aaff43ce551d15595e6",
+   "rev": "0428e40af48054cb2e28c5e93e9e8529765e034e"
+  }
+ ]
+}
