@@ -1,0 +1,482 @@
+{
+ "run": "20261122-163101",
+ "flavor": "t4-small",
+ "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+ "site": {
+  "commit": "12fd165931cfb5d19bdb116b267ec5f4ff4ee7ea",
+  "entry": "assets/index-DV5bzKze.js",
+  "files": 380,
+  "sha256": "0fe04c0836a2b539c23995011a290b10fe53f64441b23f8ccef13f803b6876e5"
+ },
+ "base": "main 34282d6 (this branch's base)",
+ "bench": [
+  {
+   "label": "platE-high-pr-0",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 6.12,
+   "fps": 69.5,
+   "ms": 14.39
+  },
+  {
+   "label": "platE-high-main-0",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 6.26,
+   "fps": 66.6,
+   "ms": 15.02
+  },
+  {
+   "label": "platW-high-pr-0",
+   "view": null,
+   "cam": "0,8,1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.92,
+   "fps": 65.2,
+   "ms": 15.34
+  },
+  {
+   "label": "platW-high-main-0",
+   "view": null,
+   "cam": "0,8,1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.89,
+   "fps": 70.5,
+   "ms": 14.18
+  },
+  {
+   "label": "AE-high-pr-0",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 6.28,
+   "fps": 60.4,
+   "ms": 16.56
+  },
+  {
+   "label": "AE-high-main-0",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 6.63,
+   "fps": 59.1,
+   "ms": 16.92
+  },
+  {
+   "label": "arrive-high-pr-0",
+   "view": "arrive",
+   "cam": null,
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 8.53,
+   "fps": 55.9,
+   "ms": 17.89
+  },
+  {
+   "label": "arrive-high-main-0",
+   "view": "arrive",
+   "cam": null,
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 7.89,
+   "fps": 56.3,
+   "ms": 17.76
+  },
+  {
+   "label": "platE-low-pr-0",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 3.03,
+   "fps": 148.9,
+   "ms": 6.72
+  },
+  {
+   "label": "platE-low-main-0",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 3.04,
+   "fps": 147.6,
+   "ms": 6.78
+  },
+  {
+   "label": "AE-low-pr-0",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 2.74,
+   "fps": 159.4,
+   "ms": 6.27
+  },
+  {
+   "label": "AE-low-main-0",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 2.37,
+   "fps": 173.3,
+   "ms": 5.77
+  },
+  {
+   "label": "platE-high-main-1",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.76,
+   "fps": 73.2,
+   "ms": 13.66
+  },
+  {
+   "label": "platE-high-pr-1",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.97,
+   "fps": 69.1,
+   "ms": 14.47
+  },
+  {
+   "label": "platW-high-main-1",
+   "view": null,
+   "cam": "0,8,1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.63,
+   "fps": 72.6,
+   "ms": 13.77
+  },
+  {
+   "label": "platW-high-pr-1",
+   "view": null,
+   "cam": "0,8,1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.63,
+   "fps": 72,
+   "ms": 13.89
+  },
+  {
+   "label": "AE-high-main-1",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 6.63,
+   "fps": 60.9,
+   "ms": 16.42
+  },
+  {
+   "label": "AE-high-pr-1",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.8,
+   "fps": 67.2,
+   "ms": 14.88
+  },
+  {
+   "label": "arrive-high-main-1",
+   "view": "arrive",
+   "cam": null,
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 7.51,
+   "fps": 60.3,
+   "ms": 16.58
+  },
+  {
+   "label": "arrive-high-pr-1",
+   "view": "arrive",
+   "cam": null,
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 7.84,
+   "fps": 61,
+   "ms": 16.39
+  },
+  {
+   "label": "platE-low-main-1",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 2.39,
+   "fps": 186.2,
+   "ms": 5.37
+  },
+  {
+   "label": "platE-low-pr-1",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 2.48,
+   "fps": 184.7,
+   "ms": 5.41
+  },
+  {
+   "label": "AE-low-main-1",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 2.79,
+   "fps": 191.6,
+   "ms": 5.22
+  },
+  {
+   "label": "AE-low-pr-1",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 2.71,
+   "fps": 197.2,
+   "ms": 5.07
+  },
+  {
+   "label": "platE-high-pr-2",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.58,
+   "fps": 74,
+   "ms": 13.51
+  },
+  {
+   "label": "platE-high-main-2",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.62,
+   "fps": 76.7,
+   "ms": 13.04
+  },
+  {
+   "label": "platW-high-pr-2",
+   "view": null,
+   "cam": "0,8,1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 6.18,
+   "fps": 71.6,
+   "ms": 13.97
+  },
+  {
+   "label": "platW-high-main-2",
+   "view": null,
+   "cam": "0,8,1.5708,0.06",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.43,
+   "fps": 72.2,
+   "ms": 13.85
+  },
+  {
+   "label": "AE-high-pr-2",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 5.96,
+   "fps": 66.6,
+   "ms": 15.02
+  },
+  {
+   "label": "AE-high-main-2",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 6.04,
+   "fps": 63.8,
+   "ms": 15.67
+  },
+  {
+   "label": "arrive-high-pr-2",
+   "view": "arrive",
+   "cam": null,
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 7.59,
+   "fps": 57.9,
+   "ms": 17.27
+  },
+  {
+   "label": "arrive-high-main-2",
+   "view": "arrive",
+   "cam": null,
+   "q": "high",
+   "size": [
+    1920,
+    1080
+   ],
+   "cost": 7.48,
+   "fps": 61.3,
+   "ms": 16.31
+  },
+  {
+   "label": "platE-low-pr-2",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 3.07,
+   "fps": 148.3,
+   "ms": 6.74
+  },
+  {
+   "label": "platE-low-main-2",
+   "view": null,
+   "cam": "0,8,-1.5708,0.06",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 2.72,
+   "fps": 165.5,
+   "ms": 6.04
+  },
+  {
+   "label": "AE-low-pr-2",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 3.49,
+   "fps": 134.7,
+   "ms": 7.42
+  },
+  {
+   "label": "AE-low-main-2",
+   "view": null,
+   "cam": "0,44,-1.5708,0.04",
+   "q": "low",
+   "size": [
+    390,
+    844
+   ],
+   "cost": 3.09,
+   "fps": 143.9,
+   "ms": 6.95
+  }
+ ]
+}
