@@ -1,0 +1,102 @@
+{
+ "v060 pool-16x9": {
+  "nearLeafCover": 7.6,
+  "nearLeafOutsideCorners": 6.3,
+  "nearLeafInBoxPlus5": 1.4,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "v060 pool-9x19.5": {
+  "nearLeafCover": 3.1,
+  "nearLeafOutsideCorners": 1.1,
+  "nearLeafInBoxPlus5": 0.5,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "main pool-16x9": {
+  "nearLeafCover": 10.7,
+  "nearLeafOutsideCorners": 9.4,
+  "nearLeafInBoxPlus5": 0.7,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "main pool-9x19.5": {
+  "nearLeafCover": 8.7,
+  "nearLeafOutsideCorners": 6.7,
+  "nearLeafInBoxPlus5": 1.1,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "new pool-16x9": {
+  "nearLeafCover": 16,
+  "nearLeafOutsideCorners": 14.3,
+  "nearLeafInBoxPlus5": 3,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "new pool-9x19.5": {
+  "nearLeafCover": 5.8,
+  "nearLeafOutsideCorners": 5.6,
+  "nearLeafInBoxPlus5": 4.9,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "leaf",
+  "toStele": "clear"
+ },
+ "d08 pool-16x9": {
+  "nearLeafCover": 17.8,
+  "nearLeafOutsideCorners": 15.6,
+  "nearLeafInBoxPlus5": 1.8,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "leaf",
+  "toStele": "clear"
+ },
+ "d08 pool-9x19.5": {
+  "nearLeafCover": 5.2,
+  "nearLeafOutsideCorners": 5,
+  "nearLeafInBoxPlus5": 3.1,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "clear pool-16x9": {
+  "nearLeafCover": 0,
+  "nearLeafOutsideCorners": 0,
+  "nearLeafInBoxPlus5": 0,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "clear pool-9x19.5": {
+  "nearLeafCover": 0,
+  "nearLeafOutsideCorners": 0,
+  "nearLeafInBoxPlus5": 0,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ }
+}
