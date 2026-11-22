@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 114618,
+   "sha256": "7cfd83a07ed5281d8bc14d3d59988314eda02b516d1b006749fdfc10f1008685",
+   "rev": "a871d6d7dd3e68083fd4e385a5e998051d58dbd9"
+  }
+ ]
+}

@@ -13,7 +13,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker, COMPOUND } = await import("../../app/levels/t05/site.js");
-const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap } = await import("../../app/levels/t05/surround.js");
+const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE, SHED_RISE, house } = await import("../../app/levels/t05/surround.js");
 const { HALL_HALF, LANE, SECOND } = await import("../../app/levels/t05/axis.js");
 const { HALL } = await import("../../app/levels/t05/hall.js");
 const { default: checks } = await import("../../app/levels/t05/checks.js");
@@ -166,4 +166,44 @@ test("it stands outside the walls, none of it walked on or in (left out of the b
   assert.ok(brick === 2 && near >= 3 && far >= 3 && shadowless === far, `the near meshes cast shadows (${near}), the far ones do not (${far}); ${brick} wall meshes`);
   assert.ok(tris > 5000 && tris < 45000, `${tris} triangles outside the walls`);
   assert.ok(plan.houses.filter((h) => h.row === 0 && h.cast).length >= 30 && plan.trees.filter((t) => t.cast).length >= 5, "the first row of houses and the trees by the walls are the real, shadow-casting geometry");
+});
+
+test("the roofs are mostly gable, a few hipped and a few leaning, in three tones of tile in three draws: the art director's step 5 (#573, #583)", () => {
+  const n = plan.houses.length, share = (f) => plan.houses.filter(f).length / n;
+  assert.ok(plan.houses.every((h) => ["gable", "hip", "shed"].includes(h.roof) && [0, 1, 2].includes(h.tone)), "every house has a shape and a tone");
+  assert.ok(share((h) => h.roof === "gable") >= 0.6 && share((h) => h.roof === "gable") <= 0.9, `gable roofs ${(share((h) => h.roof === "gable") * 100).toFixed(0)}%: the common one, but not the only one`);
+  assert.ok(share((h) => h.roof === "hip") >= 0.05 && share((h) => h.roof === "shed") >= 0.04, "a few hipped and a few leaning");
+  assert.ok(plan.houses.filter((h) => h.roof === "hip").every((h) => Math.min(h.w, h.d) >= 6) && plan.houses.filter((h) => h.roof === "shed").every((h) => h.ridge <= 5.3 && Math.min(h.w, h.d) <= 7), "hips on the broad houses, lean-tos on the narrow ones");
+  for (const [i, t] of TILE_TONES.entries()) assert.ok(Math.abs(share((h) => h.tone === i) - t.share) <= 0.12, `tone ${t.name}: ${(share((h) => h.tone === i) * 100).toFixed(0)}% against ${t.share * 100}%`);
+  assert.ok(TILE_TONES.reduce((a, t) => a + t.share, 0) > 0.999 && TILE_TONES.some((t) => t.mul < 1) && TILE_TONES.some((t) => t.mul > 1), "three shares make one; one tone darker than the base, one paler");
+  const near = [], far = [];
+  site.root.traverse((o) => { if (/roofs$/.test(o.name) && o.userData.surround) (o.userData.surround === "near" ? near : far).push(o); });
+  assert.ok(near.length === 3 && far.length === 3, `a mesh of roofs to each tone, near and far: ${near.length}, ${far.length}`);
+  assert.equal(new Set([...near, ...far].map((o) => o.material.name)).size, 3, "three materials, shared by the near and far roofs of a tone");
+  assert.ok(ROOF_SHARE.hip > 0 && ROOF_SHARE.shed < 1);
+});
+
+// The art director's first review of #630: a hip roof's faces look out and up (snow lies on them, the sun lights them); a lean-to's high side stands on brick, not in the air, and no lean-to stands in the row at the way's end.
+const normals = (g) => { const p = g.attributes.position, out = []; for (let i = 0; i < p.count; i += 3) { const a = new THREE.Vector3().fromBufferAttribute(p, i), b = new THREE.Vector3().fromBufferAttribute(p, i + 1), c = new THREE.Vector3().fromBufferAttribute(p, i + 2); out.push([b.clone().sub(a).cross(c.clone().sub(a)), a.clone().add(b).add(c).divideScalar(3)]); } return out; };
+test("a hip roof's faces look outward and up, not in and down", () => {
+  for (const alongX of [true, false]) {
+    const roofs = [], hs = { x: 10, z: 20, w: alongX ? 9 : 7, d: alongX ? 7 : 9, eave: 3, ridge: 5.2, alongX, roof: "hip" };
+    house(hs, [], roofs);
+    const g = roofs[0], centre = new THREE.Vector3(hs.x, 0, hs.z);
+    for (const [n, at] of normals(g)) { assert.ok(n.y > 0, `a hip face with its normal ${n.toArray().map((v) => v.toFixed(1))} looks down`); const out = at.clone().sub(centre); out.y = 0; assert.ok(n.x * out.x + n.z * out.z >= -1e-6, "and the face looks toward the house, not away"); }
+  }
+});
+test("a lean-to's high side has brick under it and the slope stays low; none stands in the row at the way's end", () => {
+  assert.ok(SHED_RISE <= 1.5);
+  assert.ok(!plan.houses.some((h) => h.roof === "shed" && h.where === "end"), "no lean-to in the end row");
+  for (const alongX of [true, false]) for (const x of [10, 11.3, 12.7, 14.1]) {
+    const roofs = [], walls = [], hs = { x, z: 20, w: alongX ? 9 : 6, d: alongX ? 6 : 9, eave: 3, ridge: 5.3, alongX, roof: "shed" };
+    house(hs, walls, roofs);
+    const r = new THREE.Box3().setFromBufferAttribute(roofs[0].attributes.position), wall = new THREE.Box3().setFromBufferAttribute(walls[1].attributes.position);
+    assert.ok(r.max.y - r.min.y <= SHED_RISE + 1e-6, `the slope rises ${(r.max.y - r.min.y).toFixed(2)} m`);
+    // across the slope the roof sticks out past the wall on its low side only; on the high side it stops at the wall's face
+    const [lo, hi] = alongX ? ["z", "z"] : ["x", "x"], sticks = [wall.min[lo] - r.min[lo], r.max[hi] - wall.max[hi]];
+    assert.ok(Math.min(...sticks) <= 1e-6 && Math.max(...sticks) > 0.3, `the roof sticks out by ${sticks.map((v) => v.toFixed(2))} on its two sides: one side none`);
+    assert.ok(wall.max.y >= r.max.y - 0.06 - 1e-6, `the brick rises to ${wall.max.y.toFixed(2)} under a high edge at ${r.max.y.toFixed(2)}`);
+  }
 });
