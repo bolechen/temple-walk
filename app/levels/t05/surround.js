@@ -74,14 +74,14 @@ export const onTowerLine = (x, z, pad = 0) => {
 const hash01 = (x, z, salt) => { const v = Math.sin(x * 12.9898 + z * 78.233 + salt * 37.719) * 43758.5453; return v - Math.floor(v); };
 /** The roof's shape: the gable roof is the town's common one; a few of the middling houses are hipped (four slopes), a few of the narrow ones lean (one slope). Ours (SOURCES.md §15), not read from anywhere. */
 export const ROOF_SHARE = Object.freeze({ hip: 0.22, shed: 0.8 });   // by the hash: under `hip` and the house at least 6 m each way, hipped; a narrow house (7 m or less across, ridge 5.3 or lower) with the other hash over `shed`, one slope
-const roofOf = (x, z, w, d, ridge) => {
+const roofOf = (x, z, w, d, ridge, where) => {
   const u = hash01(x, z, 1);
   if (u < ROOF_SHARE.hip && Math.min(w, d) >= 6) return "hip";
-  if (ridge <= 5.3 && Math.min(w, d) <= 7 && hash01(x, z, 3) > ROOF_SHARE.shed) return "shed";
+  if (where !== "end" && ridge <= 5.3 && Math.min(w, d) <= 7 && hash01(x, z, 3) > ROOF_SHARE.shed) return "shed";
   return "gable";
 };
 /** Three tones of tile: the old, dark one, the grey one (the base), and the newer, paler one. By the hash, about three in ten, five in ten, two in ten. */
-export const TILE_TONES = Object.freeze([{ name: "old", mul: 0.5, share: 0.3 }, { name: "grey", mul: 1, share: 0.5 }, { name: "pale", mul: 1.8, share: 0.2 }]);
+export const TILE_TONES = Object.freeze([{ name: "old", mul: 0.66, share: 0.3 }, { name: "grey", mul: 1, share: 0.5 }, { name: "pale", mul: 1.8, share: 0.2 }]);
 const toneOf = (x, z) => { const u = hash01(x, z, 2); return u < TILE_TONES[0].share ? 0 : u < TILE_TONES[0].share + TILE_TONES[1].share ? 1 : 2; };
 /**
  * The trees and houses, as data: { kind: "pine" | "cypress" | "bare", x, z, h, r, row, cast, strip, along } and { x, z, w, d, alongX, eave, ridge, row, cast }.
@@ -116,7 +116,7 @@ function plan(C) {
   const makeHouse = (cxh, czh, alongX, w, d, row, ridgeTo, where, ridgeFrom = 5) => {
     const onLine = onTowerLine(cxh, czh, Math.max(w, d) / 2), top = onLine ? L.firstRows : ridgeTo;
     const ridge = +clamp(pick(ridgeFrom, ridgeTo), 3.8, top).toFixed(2), hx = +cxh.toFixed(2), hz = +czh.toFixed(2);
-    houses.push(Object.freeze({ x: hx, z: hz, w: +w.toFixed(2), d: +d.toFixed(2), alongX, eave: 3, ridge, row, cast: row === 0, where, roof: roofOf(hx, hz, w, d, ridge), tone: toneOf(hx, hz) }));
+    houses.push(Object.freeze({ x: hx, z: hz, w: +w.toFixed(2), d: +d.toFixed(2), alongX, eave: 3, ridge, row, cast: row === 0, where, roof: roofOf(hx, hz, w, d, ridge, where), tone: toneOf(hx, hz) }));
   };
   const dims = () => { const long = pick(6.5, 10.5), short = pick(5, 7.5), alongX = rnd() < 0.5; return { alongX, w: alongX ? long : short, d: alongX ? short : long }; };
   /** A house along a wall: 6 to 9 m deep from it, 6 to 8.5 m along it (narrow enough that four or five show in a picture), the ridge running either way. `acrossX`: the wall runs along z. */
@@ -249,22 +249,31 @@ function bare(t, trunk) {
  * A house of one storey: grey-brick walls to the eaves and a roof of grey tile, the eaves standing 0.5 m out: a gable roof (the ridge along x or z), a hip roof (four slopes, the ridge
  * shorter than the house), or a lean-to (one slope, its high side to the temple or away from it).
  */
-function house(hs, walls, roofs) {
+/** How high a lean-to's slope rises over its low eave (m): a lean-to is a low shed, not a wall of tile. */
+export const SHED_RISE = 1.5;
+export function house(hs, walls, roofs) {
   const { x, z, w, d, eave, ridge, alongX } = hs, y0 = ground, over = 0.5, rise = ridge - eave;
   walls.push(box(w - 0.4, eave, d - 0.4, x, y0 + eave / 2, z));
   if (hs.roof === "hip") {
     const W = w + 2 * over, D = d + 2 * over, along = W >= D, half = Math.abs(W - D) / 2, v = [[-W / 2, 0, -D / 2], [W / 2, 0, -D / 2], [W / 2, 0, D / 2], [-W / 2, 0, D / 2]];
     const r1 = along ? [-half, rise, 0] : [0, rise, -half], r2 = along ? [half, rise, 0] : [0, rise, half];
-    const pos = [], quad = (a, b, c, e) => pos.push(...a, ...b, ...c, ...a, ...c, ...e), tri = (a, b, c) => pos.push(...a, ...b, ...c);
+    const pos = [], quad = (a, b, c, e) => pos.push(...a, ...c, ...b, ...a, ...e, ...c), tri = (a, b, c) => pos.push(...a, ...c, ...b);   // (wound so that the faces look out and up: snow lies on them and the sun lights them)
     const [A, B, C, Dd] = v;   // the four corners; the two long slopes, then the two hipped ends
     if (along) { quad(A, B, r2, r1); quad(C, Dd, r1, r2); tri(Dd, A, r1); tri(B, C, r2); }
     else { quad(B, C, r2, r1); quad(Dd, A, r1, r2); tri(A, B, r1); tri(C, Dd, r2); }
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals(); g.translate(x, y0 + eave, z); roofs.push(g); return;
   }
-  const lean = hs.roof === "shed", run = (alongX ? d : w) / 2 + over, len = (alongX ? w : d) + 2 * over;
-  const shape = new THREE.Shape(); shape.moveTo(-run, 0); shape.lineTo(run, 0); if (lean) shape.lineTo(run, rise); else shape.lineTo(0, rise); shape.closePath();
+  if (hs.roof === "shed") {   // one slope: the low side has its eave out over the wall, the high side stops at the wall's face with the brick rising to it (no tile wall hanging in the air)
+    const sr = Math.min(rise, SHED_RISE), span = alongX ? d : w, a = (span - 0.4) / 2, lo = span / 2 + over, len = (alongX ? w : d) + 2 * over, lenW = (alongX ? w : d) - 0.4, at = (u) => sr * (u + lo) / (lo + a);
+    const flip = hash01(x, z, 4) < 0.5, place = (g, l) => { g.translate(0, 0, -l / 2); if (flip) g.rotateY(Math.PI); if (alongX) g.rotateY(Math.PI / 2); g.translate(x, y0 + eave, z); };
+    const roof = new THREE.Shape(); roof.moveTo(-lo, 0); roof.lineTo(a, 0); roof.lineTo(a, sr); roof.closePath();
+    const gable = new THREE.Shape(); gable.moveTo(-a, 0); gable.lineTo(a, 0); gable.lineTo(a, sr - 0.05); gable.lineTo(-a, at(-a) - 0.05); gable.closePath();
+    const r = new THREE.ExtrudeGeometry(roof, { depth: len, bevelEnabled: false }), g = new THREE.ExtrudeGeometry(gable, { depth: lenW, bevelEnabled: false });
+    place(r, len); place(g, lenW); roofs.push(r); walls.push(g); return;
+  }
+  const run = (alongX ? d : w) / 2 + over, len = (alongX ? w : d) + 2 * over;
+  const shape = new THREE.Shape(); shape.moveTo(-run, 0); shape.lineTo(run, 0); shape.lineTo(0, rise); shape.closePath();
   const g = new THREE.ExtrudeGeometry(shape, { depth: len, bevelEnabled: false }); g.translate(0, 0, -len / 2);
-  if (lean && hash01(x, z, 4) < 0.5) g.rotateY(Math.PI);   // (its high side one way or the other)
   if (alongX) g.rotateY(Math.PI / 2);   // the extrusion's length now along x, the gable's section across z
   g.translate(x, y0 + eave, z); roofs.push(g);
 }
@@ -284,7 +293,7 @@ function brick(M) {
 function tiles(M) {
   return TILE_TONES.map((tone) => {
     const base = M.tile, m = base.clone(), was = base.onBeforeCompile, key = "surroundTile" + tone.name[0].toUpperCase() + tone.name.slice(1);
-    m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); if (tone.mul !== 1) sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", `diffuseColor.rgb=col*vec3(${tone.mul});`); };   // (a clone does not take the original's hook: every tone is given it, or it would draw as a plain material)
+    m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); if (tone.mul !== 1) sh.fragmentShader = sh.fragmentShader.replace("if(uSnow>.001){", `col*=vec3(${tone.mul});if(uSnow>.001){`); };   // (before the snow is mixed in: the snow keeps its own colour)   // (a clone does not take the original's hook: every tone is given it, or it would draw as a plain material)
     m.customProgramCacheKey = () => key; m.name = key;
     return m;
   });
