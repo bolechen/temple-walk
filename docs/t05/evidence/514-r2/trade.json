@@ -1,0 +1,145 @@
+[
+ {
+  "param": -30,
+  "palm_pitch": -17.6,
+  "finger_vs_down": 14.5,
+  "shift_m": 0.591,
+  "wrist": [
+   -1.72,
+   4.075,
+   1.95
+  ]
+ },
+ {
+  "param": -25,
+  "palm_pitch": -12.2,
+  "finger_vs_down": 9.6,
+  "shift_m": 0.519,
+  "wrist": [
+   -1.72,
+   4.075,
+   1.875
+  ]
+ },
+ {
+  "param": -20,
+  "palm_pitch": -7.3,
+  "finger_vs_down": 4.7,
+  "shift_m": 0.448,
+  "wrist": [
+   -1.72,
+   4.075,
+   1.8
+  ]
+ },
+ {
+  "param": -15,
+  "palm_pitch": -3.8,
+  "finger_vs_down": 1.6,
+  "shift_m": 0.385,
+  "wrist": [
+   -1.72,
+   4.025,
+   1.75
+  ]
+ },
+ {
+  "param": -10,
+  "palm_pitch": -0.1,
+  "finger_vs_down": 5.4,
+  "shift_m": 0.322,
+  "wrist": [
+   -1.72,
+   4.05,
+   1.675
+  ]
+ },
+ {
+  "param": -5,
+  "palm_pitch": 9.1,
+  "finger_vs_down": 10.2,
+  "shift_m": 0.277,
+  "wrist": [
+   -1.72,
+   4.05,
+   1.625
+  ]
+ },
+ {
+  "param": 0,
+  "palm_pitch": 9.8,
+  "finger_vs_down": 15.1,
+  "shift_m": 0.234,
+  "wrist": [
+   -1.72,
+   4.05,
+   1.575
+  ]
+ },
+ {
+  "param": 5,
+  "palm_pitch": 17.6,
+  "finger_vs_down": 20.1,
+  "shift_m": 0.195,
+  "wrist": [
+   -1.72,
+   4.05,
+   1.525
+  ]
+ },
+ {
+  "param": 10,
+  "palm_pitch": 16.7,
+  "finger_vs_down": 24.4,
+  "shift_m": 0.17,
+  "wrist": [
+   -1.72,
+   3.925,
+   1.55
+  ]
+ },
+ {
+  "param": 15,
+  "palm_pitch": 27.5,
+  "finger_vs_down": 29.4,
+  "shift_m": 0.145,
+  "wrist": [
+   -1.72,
+   3.925,
+   1.525
+  ]
+ },
+ {
+  "param": 20,
+  "palm_pitch": 32.7,
+  "finger_vs_down": 34.4,
+  "shift_m": 0.122,
+  "wrist": [
+   -1.72,
+   3.9,
+   1.5
+  ]
+ },
+ {
+  "param": 25,
+  "palm_pitch": 35.3,
+  "finger_vs_down": 35.5,
+  "shift_m": 0.12,
+  "wrist": [
+   -1.72,
+   3.925,
+   1.5
+  ]
+ },
+ {
+  "param": 30,
+  "palm_pitch": 43.8,
+  "finger_vs_down": 40.2,
+  "shift_m": 0.1,
+  "wrist": [
+   -1.72,
+   3.95,
+   1.475
+  ]
+ }
+]

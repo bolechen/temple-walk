@@ -1,0 +1,4 @@
+{"how": "as 514-r2-b/G-back-faces.json: rays of the hall's cameras round the corner behind the wrist, first hit a back face, on the 60k model the hall draws",
+ "remesh_trial": {"knee34-close": 401, "side3-left": 392, "side3-right": 123, "hand10": 4, "hand-level": 1, "aisle-west-a": 75, "aisle-west-b": 215},
+ "build81": {"knee34-close": 0, "side3-left": 0, "side3-right": 0, "hand10": 0, "hand-level": 0, "aisle-west-a": 36, "aisle-west-b": 86},
+ "rays": {"knee34-close": 961, "side3-left": 961, "side3-right": 961, "hand10": 961, "hand-level": 961, "aisle-west-a": 1681, "aisle-west-b": 1681}}
