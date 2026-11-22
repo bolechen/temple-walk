@@ -29,3 +29,5 @@ python3 tools/blender/version.py   # 打印「Blender 5.3.0 (bpy module, …)」
 ## 可重跑
 
 同一个输入、同一份参数，输出应当逐字节一致。会让结果不一致的地方，在各脚本开头写明。
+
+与愿印（#514）的输出做不到逐字节一致：两次之间差约 1 µm，原因见 `docs/t05/evidence/514-r2-final81/determinism.json`。验收口径（3D 评审 2026-11-22）是：所有者接受的参考文件是 `36d4abc2…`，重放看坐标最大差 ≤ 0.01 mm，不看哈希。用 `python3 tools/blender/varada-compare.py <重放的 glb> <参考 glb>` 判，不过就退出 1。

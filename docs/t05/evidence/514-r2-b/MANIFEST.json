@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "G-cam03.png",
+   "bytes": 836083,
+   "sha256": "6bf106f3df891ca047ca410943831192bd607f3f38547a0fd9f37d42b73291f7",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-cam04.png",
+   "bytes": 946937,
+   "sha256": "873509b4c12771d3582056219b60d4466de2ef972a393e4b60d932ba37e8d84d",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-figure10.png",
+   "bytes": 714820,
+   "sha256": "b4456af56f02c3fb4feca9789517d9074906a984788c7ecf34adfcf3af8f511f",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-hand-level.png",
+   "bytes": 808976,
+   "sha256": "1fac78f0c2df47e0c0192b69a5fad7eead46281e9ceaace30128eec93f5acbc2",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-hand10-diffuse.png",
+   "bytes": 799846,
+   "sha256": "3a62e73f5816b9db301149c16512930a9872d7ea1b4bc01e62b02da9ee43bd8d",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-hand10.png",
+   "bytes": 737370,
+   "sha256": "8ae7991b7917804178ea227b724a04aaa1de36ae0ec7d6f2e5c680ee19183310",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-hand34.png",
+   "bytes": 576272,
+   "sha256": "0fd809587d6d98ed1e5c6c8a1a46e158483e34d59c402f8ea66f94c71ef345c0",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-knee34-close.png",
+   "bytes": 615484,
+   "sha256": "396049c8318b0d6734541b8b17ea8fba98f926c1a8c8ca0e9315e5622d79169b",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-side.png",
+   "bytes": 735006,
+   "sha256": "47d995a52dbfb765927bd910718b050425752b81729ea3a05ad235cb5e8941f0",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-side3-left.png",
+   "bytes": 682380,
+   "sha256": "6b4e1dda2627a9957af543649cd810b1e3b682df3a04b09ac9cfa443189bece0",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "G-side3-right.png",
+   "bytes": 1105205,
+   "sha256": "c40de06f73d9df2c87fa5aa200542e4d0a3b8fda94492f00144e22506bd33202",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 161694,
+   "sha256": "3bf429daf65c8f5497c8bc8a3c62a9bbb2ed442b3d0f31e028458e1ed5ddc60d",
+   "rev": "81a966ddac8f01e53a53ebb015936547bccd4988"
+  }
+ ]
+}

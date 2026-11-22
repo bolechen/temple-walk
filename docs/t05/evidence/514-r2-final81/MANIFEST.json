@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "K-cam03.png",
+   "bytes": 835886,
+   "sha256": "21e294012c27fbacf1b346926df26f1b5cdbc92b6ff8f0d5ff591a8732f70be1",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-cam04.png",
+   "bytes": 946763,
+   "sha256": "9809539d13628d841cd83749f3495d2fb86dfe624289c9cdfdcab5df2025d20a",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-cam06.png",
+   "bytes": 797548,
+   "sha256": "64f823d882d81daf38da1f6fce749edfbc9aa9eed83877c06bf91eab0661c383",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-figure10.png",
+   "bytes": 713808,
+   "sha256": "999bd8cea2b114515a031b8b40e0525dc664102b46dd8c113e994b916f6131c9",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-hand-level.png",
+   "bytes": 814516,
+   "sha256": "dd63915aaf762ed4d0c541384243eb917183ff9a0d6440f4f873d58929bcd059",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-hand10-diffuse.png",
+   "bytes": 800277,
+   "sha256": "c26e15e8400ec37be2d262a9f372cd1372290cc103a945b94c1dcd494734f7b5",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-hand10.png",
+   "bytes": 737303,
+   "sha256": "62b9334cb75a301ff6463433602aed60c11643c114161d6771cbba719c68b796",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-hand34.png",
+   "bytes": 577302,
+   "sha256": "2dc65e8ed058cd8cd575deb677a74acdd656b4c1951ae4db21076a4d1c0c2a7a",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-knee34-close.png",
+   "bytes": 616619,
+   "sha256": "fe8121975efc24f53a7683fb5333890a9c04a84757c6d7c1766cb53dc6fbf669",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-side-diffuse.png",
+   "bytes": 770258,
+   "sha256": "9f3ed6556453ad8626f674085a32617558206eba63741070d97b981296feba64",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "K-side.png",
+   "bytes": 733825,
+   "sha256": "20988bad0a1bdf644b5cffe5524a5d2b69b44550f8ba5e33be6d6a0ce62910fc",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 133522,
+   "sha256": "238f6488e0cffc661063296390a37af6ec7be336e1e4f97cc72b4fa571ef5fd9",
+   "rev": "6947461bfde030cb617ac517058706fc4150a859"
+  }
+ ]
+}

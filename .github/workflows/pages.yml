@@ -271,7 +271,7 @@ jobs:
           include-hidden-files: true
 
   # What starting up, walking and the camera break most often, run before the site goes out and not beside it (#308) on the one
-  # site `build` made: `boot` (the page comes up clean and draws) and the stairs and the low drop, three machines side by side
+  # site `build` made: `boot` (the page comes up clean and draws) and the stairs and the low drop, four machines side by side
   # (#442: `boot` no longer waits for the others, nor each machine builds its own copy). Only when the site is built at all.
   # `e2e.yml`'s regression run no longer repeats them.
   quick:
@@ -284,8 +284,9 @@ jobs:
       matrix:
         include:
           - { name: boot, scenarios: "boot" }
-          - { name: a, scenarios: "drop-touch stairs-edge" }
-          - { name: b, scenarios: "stairs drop" }
+          - { name: drop-touch, scenarios: "drop-touch" }
+          - { name: drop, scenarios: "drop" }
+          - { name: stairs, scenarios: "stairs stairs-edge" }
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare

@@ -30,8 +30,8 @@ test("HF_TOKEN is read in one step of one job and nowhere else", () => {
 });
 
 test("the shards of a T4 run are the same plan as the free machines'", () => {
-  assert.match(job("t4"), /shard: \[1, 2, 3, 4\]/);
-  assert.match(job("t4"), /--shard=\$\{\{ matrix\.shard \}\}\/4/);
+  assert.match(job("t4"), /shard: \[1, 2, 3, 4, 5, 6, 7, 8, 9, 10\]/);
+  assert.match(job("t4"), /--shard=\$\{\{ matrix\.shard \}\}\/10/);
 });
 
 test("the launcher refuses to start with no token, naming it", () => {
@@ -42,7 +42,7 @@ test("the launcher refuses to start with no token, naming it", () => {
 
 test("the launcher fails on every way a Job can fail to deliver", () => {
   const s = fs.readFileSync(root + "tools/ci/t4-launch.sh", "utf8");
-  for (const must of [/hf jobs wait/, /did not complete/, /no e2e-report\.json came back/, /scenarios failed/, /Job did not start/, /hf jobs cancel/, /jobs\/\$NS\/\$JOB/]) assert.match(s, must);
+  for (const must of [/hf jobs inspect/, /did not complete/, /no e2e-report\.json came back/, /scenarios failed/, /Job did not start/, /hf jobs cancel/, /jobs\/\$NS\/\$JOB/]) assert.match(s, must);
 });
 
 test("the browser is told to use the card only when E2E_GPU is set, and a software run is refused then", () => {
