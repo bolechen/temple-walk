@@ -3895,21 +3895,27 @@ const scenarios = {
 
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // Seated on the summit, the way to stand up is offered at the foot of the picture, and on a phone the jump ring lies lower right: they must not lie on each
-  // other, in any language and on any of the phone's screens (the English 「Stand up」 on a 360 px screen overlapped the ring by 11 × 18 px; the phone audit saw it
-  // once it waited for that state, #614).
+  // The button at the foot of the picture says what he may do next (stand up, ring the bell, offer incense…), and on a phone the jump ring lies lower right: the
+  // button must not lie on the ring, in any language, with the longest of its words, on any of the phone's screens (the English 「Stand up」 on a 360 px screen
+  // overlapped the ring by 11 × 18 px, seen by the phone audit once it waited for the seated state, #614). The words are laid in a copy of the button, which
+  // takes the same rules by its id, so that the game's own tick, which puts the button away and brings it back, cannot change what is measured.
   "stand-up": { tier: 2, async run(b, base) {
+    const { pathToFileURL } = require("url"), path = require("path"), words = ["起身", "坐下", "撞钟", "上香", "吃茶", "合掌", "观看", "为人点灯", "登楼", "下楼", "静坐", "观水"];
+    const said = { zh: Object.fromEntries(words.map((w) => [w, w])) };
+    for (const l of ["en", "ja", "ko"]) { const m = (await import(pathToFileURL(path.join(__dirname, "../../app/locales", l + ".js")).href)).default; said[l] = Object.fromEntries(words.map((w) => [w, m[w] || w])); }
     for (const lang of ["zh", "en", "ja", "ko"]) for (const [w, h] of [[360, 640], [390, 844], [844, 390], [430, 932]]) {
       const t = await open(b, base, `q=low&lang=${lang}` + BARE, { viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
-      await t.page.evaluate(() => { const q = window.__places.sit; window.__pose(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); window.__rite("sit"); });
-      // (the three breaths, the line and its six seconds are on the observances' clock, held and stepped here until the sitting is over and the way to stand up is offered)
-      await t.page.evaluate(() => window.__riteClock(0));
-      await t.until(async () => { await t.page.evaluate(() => window.__riteClock(500)); return t.page.evaluate(() => { const a = document.getElementById("act"), c = getComputedStyle(a); return !a.hidden && c.visibility !== "hidden" && +c.opacity > 0.9 && !!a.textContent.trim(); }); }, 180000, `the way to stand up never came, ${lang} ${w}x${h}`);
-      const r = await t.page.evaluate(() => { const box = (e) => e.getBoundingClientRect(), a = box(document.getElementById("act")), out = [];
-        for (const id of ["jumpBtn", "turnBtn"]) { const e = document.getElementById(id); if (!e || getComputedStyle(e).display === "none") continue; const c = box(e), ww = Math.min(a.right, c.right) - Math.max(a.left, c.left), hh = Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top); if (ww > 1 && hh > 1) out.push(`${id} ${Math.round(ww)}x${Math.round(hh)}`); }
-        return { out, label: document.getElementById("act").textContent.trim(), l: Math.round(a.left), r: Math.round(a.right), w: innerWidth }; });
-      expect(r.out.length === 0, `「${r.label}」 (${r.l}..${r.r}) lies on ${r.out.join(", ")} in ${lang} at ${w}x${h}`);
-      expect(r.l >= 0 && r.r <= r.w, `「${r.label}」 runs off the screen in ${lang} at ${w}x${h}: ${r.l}..${r.r} of ${r.w}`);
+      const r = await t.page.evaluate((said) => {
+        const real = document.getElementById("act"), out = [];
+        for (const [zh, label] of Object.entries(said)) {
+          const c = real.cloneNode(false); c.hidden = false; c.removeAttribute("data-word"); c.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${label}</span>`; real.after(c);
+          const a = c.getBoundingClientRect();
+          for (const id of ["jumpBtn", "turnBtn"]) { const e = document.getElementById(id); if (!e || getComputedStyle(e).display === "none") continue; const q = e.getBoundingClientRect(), ww = Math.min(a.right, q.right) - Math.max(a.left, q.left), hh = Math.min(a.bottom, q.bottom) - Math.max(a.top, q.top); if (ww > 1 && hh > 1) out.push(`「${label}」 (${Math.round(a.left)}..${Math.round(a.right)}) lies on ${id} by ${Math.round(ww)}x${Math.round(hh)}`); }
+          if (a.left < 0 || a.right > innerWidth) out.push(`「${label}」 runs off the screen (${Math.round(a.left)}..${Math.round(a.right)} of ${innerWidth})`);
+          c.remove();
+        }
+        return out; }, said[lang]);
+      expect(r.length === 0, `in ${lang} at ${w}x${h}: ${r.join("; ")}`);
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },
