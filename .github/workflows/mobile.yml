@@ -1,11 +1,13 @@
 name: Phone audit
 
-# What a phone sees (tools/mobile-audit.cjs, #400): every surface of the interface at three phone sizes, a control under 44 px, text under 12 px, anything off
-# the screen, a page that scrolls; it exits 1 if it lists anything. Beside every publication, not in its way: until now only a person who remembered to
-# run it saw it (#129 stood red for days). Chinese, and English, the longest words, one machine each, about twenty-three minutes apiece in software drawing;
-# the pictures are kept for a failing run.
+# What a phone sees (tools/mobile-audit.cjs, #400, #614): every surface of the interface at four phone sizes, a control under 44 px, text under 12 px, anything off
+# the screen, a page that scrolls; it exits 1 if it lists anything. Beside every publication, not in its way: until then only a person who remembered to
+# run it saw it (#129 stood red for days). Chinese, and English, the longest words.
+# Quick since #614: the site is built once (`build`) and handed on, the pages are opened built but not drawn (the audit measures the interface's
+# DOM; a surface that lists anything is drawn again for its picture), every wait is for a condition, and the four sizes are shared by two machines for each
+# language. Before it: one machine for each language, 28 minutes of software drawing and fixed waits.
 # A file of its own, not a job of e2e.yml: that workflow's push runs replace one another (a push cancels the run before it), and a
-# twenty-three-minute audit never got to the end of one while pull requests were being merged every few minutes (2026-11-21, the first run on main
+# long audit never got to the end of one while pull requests were being merged every few minutes (2026-11-21, the first run on main
 # was cancelled by the next merge). Here a push waits behind the audit that is running and replaces only another that is still waiting, so the
 # newest main is always audited and no audit is cut off half way.
 on:
@@ -22,13 +24,54 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  mobile:
+  # The site, once (#614): every machine below drives these very files, as `quick` does in pages.yml, instead of each building its own copy
+  # (install, the baked floor, the doorways drawn in a browser).
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/prepare
+        with:
+          floor: "true"
+      - name: Remember the browser between runs
+        id: pw
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.63.0-chromium
+      - name: A browser to draw the doorways with
+        run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
+      - name: Which doorways are to be drawn
+        id: doorways
+        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
+      - name: Remember drawn doorways between runs
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/doorways
+          key: doorways-${{ steps.doorways.outputs.key }}
+          restore-keys: doorways-
+      - name: Build the site
+        run: pnpm run build
+      - name: Hand the built site to the audits
+        uses: actions/upload-artifact@v4
+        with:
+          path: dist
+          name: mobile-site-${{ github.run_id }}
+          retention-days: 1
+          overwrite: true
+          include-hidden-files: true
+
+  mobile:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        lang: [zh, en]   # (about seventeen minutes each in software drawing: two machines side by side, not one after the other)
+        lang: [zh, en]
+        # Two machines for each language: the four sizes, two and two (each takes about the same: the pages are opened built and not drawn).
+        group: [{ name: a, shapes: "upright,small" }, { name: b, shapes: "side,large" }]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -45,23 +88,28 @@ jobs:
           key: playwright-1.63.0-chromium
       - name: A browser to drive the page with
         run: pnpm exec playwright install ${{ steps.pw.outputs.cache-hit == 'true' && ' ' || '--with-deps' }} chromium
-      - name: Which doorways are to be drawn
-        id: doorways
-        run: echo "key=$(node tools/bake-doorways.mjs --key)" >> "$GITHUB_OUTPUT"
-      - name: Remember drawn doorways between runs
-        uses: actions/cache@v4
+      - uses: actions/download-artifact@v4
         with:
-          path: node_modules/.cache/doorways
-          key: doorways-${{ steps.doorways.outputs.key }}
-          restore-keys: doorways-
+          name: mobile-site-${{ github.run_id }}
+          path: dist
+      # tools/site.cjs would build `dist/` again when anything in app/ is newer than the last build: it is the build that was handed on.
+      - run: touch dist/.built
       - name: Every surface of the interface as a phone sees it
-        run: node tools/mobile-audit.cjs ${{ matrix.lang != 'zh' && format('--lang={0}', matrix.lang) || '' }}
-      - name: Keep the pictures
+        run: node tools/mobile-audit.cjs ${{ matrix.lang != 'zh' && format('--lang={0}', matrix.lang) || '' }} --shapes=${{ matrix.group.shapes }}
+      # The report of every run, passing or not: what was measured, the same list before and after a change to the audit.
+      - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-mobile-${{ matrix.lang }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: e2e-mobile-report-${{ matrix.lang }}-${{ matrix.group.name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/mobile*/report.json
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Keep the pictures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-mobile-${{ matrix.lang }}-${{ matrix.group.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: tools/out/mobile*/
           retention-days: 14
           if-no-files-found: ignore
-

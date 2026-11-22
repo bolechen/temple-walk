@@ -20,38 +20,45 @@ const { serve } = require("./site.cjs");
 let srv;
 // The place built but not drawn (tests/e2e/run.cjs, BARE): `?off=` hides parts and unbuilds none, so everything the interface asks of the walk is there.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// What the opening scripts below wait with, in the page: frames drawn, or a condition (installed in every page before its own scripts run).
+const HELPERS = () => {
+  window.__auditFrames = (n) => new Promise((r) => { let i = 0; const f = () => (++i >= n ? r() : requestAnimationFrame(f)); f(); });
+  window.__auditUntil = async (cond, ms = 15000) => { const t0 = performance.now(); while (!cond() && performance.now() - t0 < ms) await new Promise((r) => requestAnimationFrame(r)); };
+};
 // A surface that is only reached from another one's state.
 const NEEDS = { sitsay: "sit", clip: "clipping" };
 // Each surface: how to bring it up, and how to put it away again.
 const SURFACES = [
   ["title", null, null],
   // (a first visit is shown the mountain first, src/opening.js: passed over with Esc as a visitor may, as the eye comes down to him)
-  ["walk", "document.getElementById('enterBtn').click(); setTimeout(() => window.__opening().active && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })), 300)", null],
+  ["walk", "document.getElementById('enterBtn').click(); __auditFrames(10).then(() => window.__opening().active && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))", null],
   // The year-end bell's night (#341): its one line at the top of the picture, then its card's sheet (laid out by
   // __joyaPreview, since the night is open only on the visitor's clock or the workbench, and this server is neither).
   ["joya", "window.__joyaPreview(true)", "window.__joyaPreview(false)"],
-  ["joyaCard", "(async () => { window.__joyaPreview(true); await new Promise((r) => setTimeout(r, 200)); document.getElementById('joyaTake').click(); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
+  ["joyaCard", "(async () => { window.__joyaPreview(true); await __auditFrames(8); document.getElementById('joyaTake').click(); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
   ["prologue", "(() => { window.__pose(6.6, 53.4, Math.atan2(-6.6, 13.4), 0.05); window.__prologue(true); })()", null],
   // (with a temple closed, so that the map's row is there too, #449: the book's 更多 paper and the map's own sheet below keep it)
   ["menu", "document.body.classList.add('seasons'); window.__pilgrimage({ mark: 't00', season: 'autumn' }); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
   // The map of temples walked (#449, phase one): one temple closed and another still a fog, then both closed (a place to go, and the one he is in marked); and the ring of ink that a held Q fills.
   ["pilgrim", "(async () => { window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList li'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
   ["pilgrimGo", "(async () => { window.__pilgrimage({ mark: 't05', season: 'winter' }); window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList .go'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
-  ["pilgrimHold", "(async () => { window.__pilgrimage({ clock: 0 }); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true })); await new Promise((r) => setTimeout(r, 200)); window.__pilgrimage({ clock: 600 }); await new Promise((r) => setTimeout(r, 300)); })()", "window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true })); window.__pilgrimage({ clock: null })"],
+  ["pilgrimHold", "(async () => { window.__pilgrimage({ clock: 0 }); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true })); await __auditFrames(8); window.__pilgrimage({ clock: 600 }); await __auditFrames(8); })()", "window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true })); window.__pilgrimage({ clock: null })"],
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.
   // The close of the chapter (#473): the ring at its foot and the word beside it, held at a moment where the words are on; then the full book's page with its 更多 paper laid out as if 山顶再坐一回 were offered.
-  ["ending", "(() => { window.__riteClock(null); void window.__ending(); setTimeout(() => window.__riteClock(8000), 800); })()", "(async () => { const e = document.getElementById('ending'); for (let i = 0; i < 3 && !e.hidden; i++) { e.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 9 + i, bubbles: true })); await new Promise((r) => setTimeout(r, 1800)); } window.__riteClock(null); })()"],
-  ["bookMore", "(async () => { window.__book(); await new Promise((r) => setTimeout(r, 600)); document.getElementById('bookReplay').hidden = false; window.__pilgrimage({ mark: 't00' }); document.getElementById('bookMoreBtn').hidden = false; document.getElementById('bookMoreBtn').click(); })()", "document.getElementById('bookMoreClose').click(); document.getElementById('bookClose').click()"],
+  // (the one fixed wait left, 1800 ms in this surface's put-away: a first watch is passed over by holding a press for 1.5 s of the page's own real clock, the ring
+  // filling meanwhile (holdring.js), and no frame count or state stands for that time; the page keeps no way to fake that clock as the map's hold has, so the audit holds as a visitor does)
+  ["ending", "(() => { window.__riteClock(null); void window.__ending(); __auditFrames(10).then(() => window.__riteClock(8000)); })()", "(async () => { const e = document.getElementById('ending'); for (let i = 0; i < 3 && !e.hidden; i++) { e.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 9 + i, bubbles: true })); await new Promise((r) => setTimeout(r, 1800)); } window.__riteClock(null); })()"],
+  ["bookMore", "(async () => { window.__book(); await __auditFrames(8); document.getElementById('bookReplay').hidden = false; window.__pilgrimage({ mark: 't00' }); document.getElementById('bookMoreBtn').hidden = false; document.getElementById('bookMoreBtn').click(); })()", "document.getElementById('bookMoreClose').click(); document.getElementById('bookClose').click()"],
   ["saveSheet", "(async () => { window.__book(); for (let i = 0; i < 100 && !document.getElementById('bookImg').src; i++) await new Promise((r) => setTimeout(r, 100)); document.getElementById('bookShare').click(); })()", "document.getElementById('saveClose').click(); document.getElementById('bookClose').click()"],
   // 带走朱印帐 (#338): the link made in the book, and the sheet such a link brings (raised from this page's own save).
-  ["carryOut", "(async () => { window.__book(); await new Promise((r) => setTimeout(r, 800)); document.getElementById('bookMoreBtn').click(); await new Promise((r) => setTimeout(r, 300)); document.getElementById('bookCarry').click(); })()", "document.getElementById('carryClose').click(); document.getElementById('bookClose').click()"],
+  ["carryOut", "(async () => { window.__book(); await __auditUntil(() => { const i = document.getElementById('bookImg'); return i.complete && i.naturalWidth > 0; }); document.getElementById('bookMoreBtn').click(); await __auditFrames(8); document.getElementById('bookCarry').click(); })()", "document.getElementById('carryClose').click(); document.getElementById('bookClose').click()"],
   ["carryIn", "void window.__carryAsk()", "document.getElementById('carryInNo').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   // The photograph's settings with the short film's row, then a film being made (only the way to stop and a hair of progress), then its sheet (#342).
-  ["photoSettings", "window.__photo(true); setTimeout(() => document.getElementById('photoSettingsToggle').click(), 300)", "window.__photo(false)"],
-  ["clipping", "window.__photo(true); setTimeout(() => window.__clip({ start: true, secs: 40 }), 400)", "window.__clip({ stop: true })"],
+  ["photoSettings", "window.__photo(true); __auditFrames(10).then(() => document.getElementById('photoSettingsToggle').click())", "window.__photo(false)"],
+  ["clipping", "window.__photo(true); __auditFrames(12).then(() => window.__clip({ start: true, secs: 40 }))", "window.__clip({ stop: true })"],
   ["clip", null, "document.getElementById('clipBack')?.click(); window.__photo(false)"],
   ["piece", "window.__work(Object.keys(window.__gallery).map((k) => window.__gallery[k].item.work).find(Boolean))", "document.getElementById('pieceClose').click()"],
   // (the longest of the library's lines, fixed: which one a visitor is given depends on the day, and the audit must not depend on luck; tests/e2e `slipfit` lays every line, in every language, on both screens)
@@ -164,7 +171,7 @@ const badOf = (m, vw) => m.small.length + m.tiny.length + m.off.length + m.bare.
 // One screen size, each of the surfaces named, in one page: measured, photographed, and put away again.
 async function pass(b, [shape, vw, vh], names, bare, tag, report) {
   const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
-  const p = await ctx.newPage(), errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
+  const p = await ctx.newPage(), errs = []; await p.addInitScript(HELPERS); p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
   await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
   let bad = 0, seen = 0;
