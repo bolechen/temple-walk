@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tools/gpu-render.sh:*)",
+      "Bash(LEVEL=t05 tools/gpu-render.sh:*)",
+      "Bash(JOB_TIMEOUT=20m tools/gpu-render.sh:*)",
+      "Bash(node tools/evidence.mjs:*)"
+    ]
+  }
+}
