@@ -2976,6 +2976,11 @@ const scenarios = {
     seen.showUp = await eye("up to the balcony by its named view", 1);
     await t.page.evaluate(() => window.__show("court")); await t.until(async () => !(await t.state()).up, 30000, "the named view did not take him down");
     seen.showDown = await eye("down to the court by a named view", 12);
+    // Through a hall's door and out again (the room is sixty metres under the courts): the eye goes with him.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main" && !(await t.page.evaluate(() => document.getElementById("veil").className)), 60000, "could not go into the great hall");
+    seen.doorIn = await eye("in through the great hall's door", 12);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside && !(await t.page.evaluate(() => document.getElementById("veil").className)), 60000, "could not come out of the great hall");
+    seen.doorOut = await eye("out through the great hall's door", 12);
     // Into his own eyes (V) and, while the eye is still on its way, moved two hundred metres off: there, not crawling.
     await t.page.keyboard.press("v"); await t.frames(1); await t.page.evaluate(() => window.__pose(0, -110, 0, 0));
     seen.poseMidPush = await eye("moved while going into his eyes", 1);
