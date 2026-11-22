@@ -639,8 +639,12 @@ function resize() {
 // `?devpose` (the dev server only) writes `cam` into the address as he walks; the view he comes back to is still the walk's.
 const DEVPOSE = import.meta.env.DEV && Q.has("devpose");
 const FIXED_VIEW = (Q.has("shot") || Q.has("show") || Q.has("cam")) && !DEVPOSE;
+// A level may give a named view a lens of its own (`site.lens[name] = { first, third }`, in degrees: T05's cam06 is seen at 65° from his eyes, docs/t05/PRD.md §3):
+// `?show=<name>` then takes it where the fixed views take 52° and 44°, and a picture held upright is that much wider again as the fixed views' is. A view with no entry, and a page with no table, are as before.
+const viewLens = Q.has("show") && !Q.has("cam") ? site.lens?.[Q.get("show")] : null;
 const baseFov = () => {
-  const w = viewW(), h = viewH(), tall = w < h;
+  const w = viewW(), h = viewH(), tall = w < h, own = FIXED_VIEW && viewLens ? viewLens[view === "third" ? "third" : "first"] : null;
+  if (own) return own + (tall ? (view === "third" ? 14 : 16) : 0);
   return FIXED_VIEW ? (view === "third" ? (tall ? 58 : 44) : tall ? 68 : 52) : (view === "third" ? (tall ? 62 : 50) : tall ? 75 : 65) + settings.get().fov;
 };
 // With the camera raised, the angle drawn in or let out by the zoom (from the walk's angle, or from a shot's).

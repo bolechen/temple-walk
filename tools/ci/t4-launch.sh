@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run some end-to-end scenarios on a T4 in a Hugging Face Job and bring the result back (#335).
-#   HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/4 [-- more args for tests/e2e/run.cjs]
+#   HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/10 [-- more args for tests/e2e/run.cjs]
 #   HF_TOKEN=… tools/ci/t4-launch.sh boot photo
 # What it does: packs the checkout's tracked files and the built site (dist/, built first) into one archive, syncs it to
 # a private bucket under runs/<run>/, starts a Job on a T4 that runs tools/ci/t4-job.sh, waits for it, brings
@@ -53,7 +53,16 @@ JOB="$(printf '%s\n' "$STARTED" | sed 's/\x1b\[[0-9;]*m//g' | sed -n -e 's/.*\bi
 [ -n "$JOB" ] || fail "the Job did not start"
 echo "t4-launch: job https://huggingface.co/jobs/$NS/$JOB"
 START=$(date +%s)
-hf jobs wait "$NS/$JOB" --timeout "${T4_WAIT:-50m}"; WAIT=$?
+# Waiting is our own slow poll, not `hf jobs wait`: that asks the API about once a second, and ten shards started together (#335) used up the
+# account's 2500 requests per five minutes, so every launcher died on a 429 while its Job went on to finish. One look every 30 s (a shard's own offset
+# keeps them from asking together) is a few dozen requests in all; an answer that is not a stage (a 429, a dropped line) is asked again, never taken for the end.
+WAIT=1; LIMIT=$(( ${T4_WAIT_SECS:-3000} )); SHARD_N="$(printf '%s' "$ARGS" | sed -n 's#.*--shard=\([0-9]*\)/.*#\1#p')"; sleep $(( ${SHARD_N:-0} % 10 ))
+while [ $(( $(date +%s) - START )) -lt "$LIMIT" ]; do
+  STAGE="$(hf jobs inspect "$NS/$JOB" --format json 2>/dev/null | sed -n 's/.*"stage": *"\([A-Z_]*\)".*/\1/p' | head -1)"
+  case "$STAGE" in COMPLETED) WAIT=0; break ;; ERROR|CANCELED|CANCELLED|DELETED) WAIT=1; break ;; esac
+  sleep "${T4_POLL_SECS:-30}"
+done
+[ "$STAGE" = COMPLETED ] || [ "$STAGE" = ERROR ] || [ "$STAGE" = CANCELED ] || [ "$STAGE" = CANCELLED ] || [ "$STAGE" = DELETED ] || echo "t4-launch: gave up waiting after $LIMIT s (last stage: ${STAGE:-unknown})" >&2
 echo "t4-launch: job ended with wait status $WAIT after $(( $(date +%s) - START )) s"
 mkdir -p "$OUT"
 hf jobs logs "$NS/$JOB" > "$OUT/t4-job.log" 2>&1 || echo "t4-launch: could not fetch the Job's log" >&2

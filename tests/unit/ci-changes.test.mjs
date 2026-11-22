@@ -119,10 +119,10 @@ test("no pull request reads the evidence over the network to compare hashes; the
   }
   const e2e = read("e2e.yml");
   assert.match(e2e, /cron: "17 19/);
-  for (const name of ["at the public address", "in the original store", "holds what the manifests say \\(S3\\)"]) {
-    const i = e2e.search(new RegExp(name)); assert.ok(i > 0, name);
-    assert.match(e2e.slice(i, i + 500), /github\.event_name == 'schedule'/, name);
-  }
+  // the three reads are the steps of the `evidence` job, which runs in the nightly and when a run by hand asks, and nowhere else
+  const job = /\n  evidence:\n([\s\S]*?)\n  [a-z0-9-]+:\n|\n  evidence:\n([\s\S]*)$/.exec(e2e), body = job ? (job[1] ?? job[2]) : "";
+  assert.match(body, /if: [^\n]*github\.event_name == 'schedule' \|\| github\.event\.inputs\.evidence == 'true'/, "the evidence job runs in a pull request's way");
+  for (const name of ["at the public address", "in the original store", "holds what the manifests say \\(S3\\)"]) assert.ok(new RegExp(name).test(body), name + " is not a step of the evidence job");
 });
 
 // #308: what stops a bad walk or camera before it is live, and the way back.
@@ -136,9 +136,8 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   const quick = jobOf(y, "quick");
   assert.match(quick, /needs: \[changes, build\]\n/, "quick waits for the one build and for nothing else");
   assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
-  assert.match(quick, /scenarios: "boot"/);
-  assert.match(quick, /scenarios: "drop-touch stairs-edge"/);
-  assert.match(quick, /scenarios: "stairs drop"/);
+  // four machines, paired by what CI measured (boot 129 s, drop-touch 134, drop 107, stairs 91 + stairs-edge 32): the longest is 134 s
+  for (const sc of ["boot", "drop-touch", "drop", "stairs stairs-edge"]) assert.match(quick, new RegExp(`scenarios: "${sc}"`));
   assert.match(quick, /run\.cjs \$\{\{ matrix\.scenarios \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
   const site = jobOf(y, "build");
