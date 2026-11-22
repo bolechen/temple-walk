@@ -73,6 +73,7 @@ import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
 import { createProbes, PROBE_ON } from "./src/probe.js";
+import { SKY_TRIAL } from "./src/atmosphere.js";
 import { walkIsHis, heldUnder, viewKeyHeard } from "./src/walkgate.js";
 /** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
 const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
@@ -1380,7 +1381,8 @@ window.__litterDraw = (m) => { if (m !== undefined) U.uLitMode.value = m; return
 window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.position, (t) => { const w = windAt(mood?.wind ?? 0, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; }); return drift.litter?.(at) ?? null; };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__sun = (k) => { sky.scaleSun(k); return k; };   // the sun's light times k (tools/sun-lit.cjs: with it and without it, to see which paving is in direct sun, #488)
-window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
+window.__mood = (s, t) => { state.follow = false; setMood(s, t); };
+window.__skyTrial = (on) => { if (on !== undefined) { SKY_TRIAL.on = !!on; setMood(state.season, state.time); } return SKY_TRIAL.on; };   // #592 trial B: the sky from the sun's height, on or off while the page runs window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
 window.__flock = (go) => { if (go && flock.flush()) flutter(1); return flock.state(); };   // the birds going up now, if asked, and where they are
 window.__cues = cueState;   // how many times the wings and the far bell have sounded   // how many shutters and seals have sounded
