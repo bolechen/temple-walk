@@ -1,0 +1,170 @@
+{
+ "view": "cam06",
+ "size": [
+  800,
+  450
+ ],
+ "report": [
+  {
+   "mood": "spring-dawn",
+   "sky": false,
+   "file": "spring-dawn-table.png"
+  },
+  {
+   "mood": "spring-dawn",
+   "sky": true,
+   "file": "spring-dawn-sky.png"
+  },
+  {
+   "mood": "spring-day",
+   "sky": false,
+   "file": "spring-day-table.png"
+  },
+  {
+   "mood": "spring-day",
+   "sky": true,
+   "file": "spring-day-sky.png"
+  },
+  {
+   "mood": "spring-dusk",
+   "sky": false,
+   "file": "spring-dusk-table.png"
+  },
+  {
+   "mood": "spring-dusk",
+   "sky": true,
+   "file": "spring-dusk-sky.png"
+  },
+  {
+   "mood": "spring-night",
+   "sky": false,
+   "file": "spring-night-table.png"
+  },
+  {
+   "mood": "spring-night",
+   "sky": true,
+   "file": "spring-night-sky.png"
+  },
+  {
+   "mood": "summer-dawn",
+   "sky": false,
+   "file": "summer-dawn-table.png"
+  },
+  {
+   "mood": "summer-dawn",
+   "sky": true,
+   "file": "summer-dawn-sky.png"
+  },
+  {
+   "mood": "summer-day",
+   "sky": false,
+   "file": "summer-day-table.png"
+  },
+  {
+   "mood": "summer-day",
+   "sky": true,
+   "file": "summer-day-sky.png"
+  },
+  {
+   "mood": "summer-dusk",
+   "sky": false,
+   "file": "summer-dusk-table.png"
+  },
+  {
+   "mood": "summer-dusk",
+   "sky": true,
+   "file": "summer-dusk-sky.png"
+  },
+  {
+   "mood": "summer-night",
+   "sky": false,
+   "file": "summer-night-table.png"
+  },
+  {
+   "mood": "summer-night",
+   "sky": true,
+   "file": "summer-night-sky.png"
+  },
+  {
+   "mood": "autumn-dawn",
+   "sky": false,
+   "file": "autumn-dawn-table.png"
+  },
+  {
+   "mood": "autumn-dawn",
+   "sky": true,
+   "file": "autumn-dawn-sky.png"
+  },
+  {
+   "mood": "autumn-day",
+   "sky": false,
+   "file": "autumn-day-table.png"
+  },
+  {
+   "mood": "autumn-day",
+   "sky": true,
+   "file": "autumn-day-sky.png"
+  },
+  {
+   "mood": "autumn-dusk",
+   "sky": false,
+   "file": "autumn-dusk-table.png"
+  },
+  {
+   "mood": "autumn-dusk",
+   "sky": true,
+   "file": "autumn-dusk-sky.png"
+  },
+  {
+   "mood": "autumn-night",
+   "sky": false,
+   "file": "autumn-night-table.png"
+  },
+  {
+   "mood": "autumn-night",
+   "sky": true,
+   "file": "autumn-night-sky.png"
+  },
+  {
+   "mood": "winter-dawn",
+   "sky": false,
+   "file": "winter-dawn-table.png"
+  },
+  {
+   "mood": "winter-dawn",
+   "sky": true,
+   "file": "winter-dawn-sky.png"
+  },
+  {
+   "mood": "winter-day",
+   "sky": false,
+   "file": "winter-day-table.png"
+  },
+  {
+   "mood": "winter-day",
+   "sky": true,
+   "file": "winter-day-sky.png"
+  },
+  {
+   "mood": "winter-dusk",
+   "sky": false,
+   "file": "winter-dusk-table.png"
+  },
+  {
+   "mood": "winter-dusk",
+   "sky": true,
+   "file": "winter-dusk-sky.png"
+  },
+  {
+   "mood": "winter-night",
+   "sky": false,
+   "file": "winter-night-table.png"
+  },
+  {
+   "mood": "winter-night",
+   "sky": true,
+   "file": "winter-night-sky.png"
+  }
+ ],
+ "errors": []
+}
