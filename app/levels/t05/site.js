@@ -12,6 +12,8 @@ import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
+import { buildTower } from "./tower.js";
+import { buildSurround } from "./surround.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
  * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
@@ -42,6 +44,14 @@ const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
  * structure review has checked the Liao numbers.
  */
 export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false });
+
+/**
+ * The lens a named view is seen through where it is not the fixed views' 52° from his eyes and 44° from behind him (app/yard.js `baseFov`: `?show=<name>` reads this table;
+ * tools/cameras.mjs writes it into the manifest). cam06, back on the axis, is 65° from his eyes, as docs/t05/PRD.md §3 has it: the middle five of the seven and half of the one at
+ * each end are in the picture (the reference picture's), where 52° holds three and a half either side, almost cam03's. From behind him it is 50°, the angle the walk is seen at
+ * from there: 65° from his eyes is the walk's own angle, and the same reason makes 50° the walk's from behind (the T05 lead, after the art director's ruling, 2026-11-21).
+ */
+export const LENS = Object.freeze({ cam06: Object.freeze({ first: 65, third: 50 }) });
 
 export function buildSite(M) {
   Object.assign((M.steps.userData.stairStyle ||= {}), STAIR_STYLE);   // (one page walks one level, so the material is this level's for good)
@@ -154,6 +164,10 @@ export function buildSite(M) {
   };
 
   root.add(ax.group);
+  root.add(buildSurround(M, C));   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
+  // The old town's pagoda far to the west-south-west (./tower.js, #548 step two): a part of its own, left out by ?off=tower, nothing else reads it.
+  const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
+  if (!offTower) root.add(buildTower());
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
 
@@ -181,7 +195,7 @@ export function buildSite(M) {
   // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.
   Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
-    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
+    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
     places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }

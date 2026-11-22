@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The half of a T4 end-to-end run that happens inside the Hugging Face Job (#335, tools/ci/t4-launch.sh starts it).
 # The launcher put the checkout and the built site in /work/runs/$RUN; this unpacks them, asks Chromium for the card
-# through Vulkan and walks the scenarios it was given (E2E_ARGS: `--shard=2/4`, or scenario names), and leaves the
+# through Vulkan and walks the scenarios it was given (E2E_ARGS: `--shard=2/10`, or scenario names), and leaves the
 # report, the screenshots and the exit code in /work/out/$RUN. The exit code is also this script's own, so a job whose
 # scenarios failed is a failed job.
 set -uo pipefail

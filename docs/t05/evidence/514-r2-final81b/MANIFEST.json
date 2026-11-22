@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "L-shoulder3-front.png",
+   "bytes": 709954,
+   "sha256": "7728cad3cafa0c87a940ae775296b7aa27bc304d7b235263743d9b7aa79e2140",
+   "rev": "7582389cbb4545d61a2c9cab971857f193911c47"
+  },
+  {
+   "path": "L-shoulder34.png",
+   "bytes": 685521,
+   "sha256": "9825f273ac5fba3fdf16951862866388cafe454c8b32e91fb657650ba502e066",
+   "rev": "7582389cbb4545d61a2c9cab971857f193911c47"
+  }
+ ]
+}

@@ -72,6 +72,9 @@ import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
+import { walkIsHis, heldUnder, viewKeyHeard } from "./src/walkgate.js";
+/** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
+const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -87,10 +90,12 @@ if (!relang) document.documentElement.classList.remove("relang");
 // The floor baked from the drawn meshes (#265, #274): fetched while the place is built, and walked on everywhere (the
 // courts and the path, the summit pavilion's balcony, every room) unless `?walker=old` asks for the written plan.
 // Only the bytes are fetched here; they are opened once the plan is built, and let go.
-const WALKER = walkerMode(Q.get("walker"));
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
+// A level that does not keep its written plan up to what is drawn (T05) refuses `?walker=old`, and says so once.
+const WALKER = walkerMode(Q.get("walker"), L), WALKER_ASKED = Q.get("walker") === "old" && WALKER !== "old" ? "old" : undefined;
+if (WALKER_ASKED) console.info(`?walker=old: ${L.id} keeps no written plan to walk on; walking on the baked floor`);
 // Opened by a crossing from another temple (行脚图, #449, src/pilgrimage.js): the visit handed across, taken once, for this
 // level only; an address that names its own place drops it, as a change of language's is. The ink curtain index.html's
 // first script kept shut (`html.crossing`) is drawn back once this temple can be drawn (crossingBack below); a handover
@@ -184,7 +189,7 @@ const walker = await (async () => {
     let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, () => "floors"); body = /** @type {any} */ (null);
     const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids, { doors: site.halls });
     walkBaked = { bake: d.header.bake || null, outline: d.header.outline || null };
-    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
+    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length, ...(WALKER_ASKED ? { asked: WALKER_ASKED } : {}) } });
   } catch (e) {
     console.warn("[walk] the baked floor could not be read; walking on the written plan:", e);
     return Object.assign(old, { stats: { mode: "old", failed: String(e) } });
@@ -500,7 +505,7 @@ canvas.addEventListener("pointerup", (e) => {
     }
     down = null; return;
   }
-  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on) {
+  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on && walkOpenNow()) {   // (a tap that reaches the picture under the title walks nobody: #462)
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
     // The bell and the drum answer a tap from anywhere in their court.
@@ -591,6 +596,7 @@ addEventListener("keydown", (e) => {
   if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
+  else if ((k === "v" || k === "r") && !viewKeyHeard(walkOpenNow(), k)) return;   // (the view is not turned or changed under the title either, #462)
   else if (k === "v") { const to = view === "third" ? "first" : "third"; setView(to); if (view === to) track("demo.view", { to }); }
   else if (k === "r") { if (recenter()) e.preventDefault(); } else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
@@ -632,8 +638,12 @@ function resize() {
 // `?devpose` (the dev server only) writes `cam` into the address as he walks; the view he comes back to is still the walk's.
 const DEVPOSE = import.meta.env.DEV && Q.has("devpose");
 const FIXED_VIEW = (Q.has("shot") || Q.has("show") || Q.has("cam")) && !DEVPOSE;
+// A level may give a named view a lens of its own (`site.lens[name] = { first, third }`, in degrees: T05's cam06 is seen at 65° from his eyes, docs/t05/PRD.md §3):
+// `?show=<name>` then takes it where the fixed views take 52° and 44°, and a picture held upright is that much wider again as the fixed views' is. A view with no entry, and a page with no table, are as before.
+const viewLens = Q.has("show") && !Q.has("cam") ? site.lens?.[Q.get("show")] : null;
 const baseFov = () => {
-  const w = viewW(), h = viewH(), tall = w < h;
+  const w = viewW(), h = viewH(), tall = w < h, own = FIXED_VIEW && viewLens ? viewLens[view === "third" ? "third" : "first"] : null;
+  if (own) return own + (tall ? (view === "third" ? 14 : 16) : 0);
   return FIXED_VIEW ? (view === "third" ? (tall ? 58 : 44) : tall ? 68 : 52) : (view === "third" ? (tall ? 62 : 50) : tall ? 75 : 65) + settings.get().fov;
 };
 // With the camera raised, the angle drawn in or let out by the zoom (from the walk's angle, or from a shot's).
@@ -696,7 +706,8 @@ function frame(now) {
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
-  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
+  // Under the title, the opening, the line a change of language puts up and a crossing's ink the keys and the stick do nothing (#462, walkgate.js).
+  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : heldUnder(walkOpenNow(), axes()), f = held.f, s = held.s;
   // A and D turn him and the view with him (#295, keyturn.js; the side arrows step sideways), unless the visitor has asked
   // for the old way; a turn by the keys is a hand on the view: it sends the eye home from a shot and stops the drift.
   if (!cine && !stage && (held.turn || keyTurn.rate)) {

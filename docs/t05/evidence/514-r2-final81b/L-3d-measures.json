@@ -1,0 +1,30 @@
+{
+ "build": 81,
+ "sha256": "36d4abc2e42d148b7d56764b8d0493c2b1e61ab1e73c53e6bdbc1b5d41e33afb",
+ "measured_on": "build 81's own file (not copied from build 69)",
+ "1_armpit": {
+  "how": "true open edges (no twin lying on them) with their middles in x -2.30..-0.90, y 4.40..6.00, z -1.50..1.00 (the right armpit, the shoulder and the robe's edge under it), result and original",
+  "open_edges_build81": 10,
+  "open_edges_original_f1": 10,
+  "new": "none: the 4 edges not within 1 mm of an original opening are two of the original's own openings on the carried arm, moved with it",
+  "robe_hem_tears": 0
+ },
+ "2_robe_shell": {
+  "points": 6955,
+  "largest_move_mm": 0.0,
+  "limit_mm": 1,
+  "how": "the points not carried by the arm within 0.15 m of it, each against the nearest point of the result (varada-check3.py)"
+ },
+ "3_shoulder_top": {
+  "largest_change_mm": 3.8,
+  "at_x": -1.78,
+  "limit_mm": 10
+ },
+ "4_replay": {
+  "command": "python3 tools/blender/varada.py tools/t05-statue/sakyamuni/varada.json OUT && python3 tools/blender/varada-tidy.py tools/t05-statue/sakyamuni/varada.json OUT && sha256sum OUT/sakyamuni-varada.glb",
+  "result": "2be8f100b2e0a0dc… and 702631a562efa6e0… on two runs, not build 81's 36d4abc2e42d148b…",
+  "same_hash": false,
+  "geometry": "the same 891,371 points and 1,469,138 faces in the same order, within 0.7 micrometres of build 81 (514-r2-final81/determinism.json: single-precision BVH in the wrist wrap, Blender's vertex normals in the lining)"
+ },
+ "turn_deg": 9.89
+}
