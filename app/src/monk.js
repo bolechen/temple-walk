@@ -13,6 +13,7 @@
 // off him swings on small springs driven by his speed and his turning.
 import * as THREE from "three";
 import { STAIR } from "./geo.js";
+import { createBlink } from "./blink.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -457,6 +458,7 @@ export function createMonk() {
   // ---- What the pose is computed from ----
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
+  const blink = createBlink(), lid = { value: 0 }; let eyed = false, blinking = true;
   let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
   const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
@@ -637,6 +639,10 @@ export function createMonk() {
     // draws the skin with a material of its own.
     get helpers() { return helpers.map((h) => h.name); },
     /** How long each skirt bone hangs this frame (front, left, back, right; 1 is its full length): the hem's lift shortens them. */
+    /** The eyelid uniform the skin's material reads (0 open, 1 shut), shared by reference; always 0 unless the body has eyes to close (`dress` with `o.eyes`). */
+    get lid() { return lid; },
+    /** Whether he blinks: off for a held picture (`?shot`); sitting on a cushion still shuts his eyes. */
+    get blinking() { return blinking; }, set blinking(v) { blinking = !!v; },
     get skirt() { return SKIRT.map((n) => +B[n].scale.y.toFixed(3)); },
     get helperRig() { return helpers; },   // each helper's bone, the bone carrying it, the arm it follows, its share and the way the arm hung (for the tests)
     dress(geometries, material, robeColor, o = {}) {
@@ -654,7 +660,7 @@ export function createMonk() {
       for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = name === "skin" && o.skinMaterial ? o.skinMaterial : material; }
       setupHem(robe.geometry.attributes.position.count);
       straps.visible = true;
-      dressed = true;
+      dressed = true; eyed = !!o.eyes;
       const laid = o.beads === false ? { beads: beadAt.length, moved: 0, most: 0 } : layBeads();
       laid.straps = o.straps === false ? 0 : layStraps(); return laid;
     },
@@ -676,6 +682,7 @@ export function createMonk() {
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       // `seat`: cross-legged on a cushion; `perch`: on a stool, as on a chair.
       seat += ((sit ? 1 : 0) - seat) * ease(3.5); perch += ((chair ? 1 : 0) - perch) * ease(3.5);
+      lid.value = eyed ? blink.step(dt, sit && seat > 0.4, blinking) : 0;   // the Tripo body's eyelids (#607): shut once he is mostly down on the cushion, open as he rises
       // His legs fold into the seat as slowly as he sits down, but come out of it at once when he gets up: off a stool
       // a child slips down onto his feet, and the body (`seat`, `perch`) rises from that crouch over the next second.
       // Sent from one kind of seat to the other, he gets up from the first as above and folds into the second.
