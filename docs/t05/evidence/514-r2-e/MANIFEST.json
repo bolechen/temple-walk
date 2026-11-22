@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "J-knee34-close.png",
+   "bytes": 561038,
+   "sha256": "9913ce807f9c69a9348bc10265f1bb1fd6b96b01f0a93c24418444c32d190489",
+   "rev": "489d330204a4208e641ec8a6a52c64eeb1ef5c38"
+  },
+  {
+   "path": "J-side3-left.png",
+   "bytes": 610651,
+   "sha256": "9372b7e07476fe37b54a35b5610a97ef2e0ddac1e9b2b9ad1948d123dbdad97c",
+   "rev": "489d330204a4208e641ec8a6a52c64eeb1ef5c38"
+  },
+  {
+   "path": "J-visitor-aisle.png",
+   "bytes": 475740,
+   "sha256": "a9a160b65bac67ece22da2b16920c10a0de2c96d93cbc1fb11eb11f9c33e7125",
+   "rev": "489d330204a4208e641ec8a6a52c64eeb1ef5c38"
+  },
+  {
+   "path": "J-visitor-aisle42.png",
+   "bytes": 645823,
+   "sha256": "3d752fbd5b04682615c9913a956b8cb27e9f174ecc318b25a2f7c43407e2b335",
+   "rev": "489d330204a4208e641ec8a6a52c64eeb1ef5c38"
+  },
+  {
+   "path": "J-visitor-sakya.png",
+   "bytes": 877559,
+   "sha256": "aee50b5eacb5cc65d8b5e765effb40e11a2954d7ed824301ff2821ce94c70e82",
+   "rev": "489d330204a4208e641ec8a6a52c64eeb1ef5c38"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 62634,
+   "sha256": "64d4ecffd71b890fc8b418ae3b6358c618b64e4b32a308e42ef903167020ca2c",
+   "rev": "489d330204a4208e641ec8a6a52c64eeb1ef5c38"
+  }
+ ]
+}

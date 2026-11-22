@@ -1,0 +1,318 @@
+{
+ "out": "tools/out/t05/varada-r2f",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/kasyapa-r3.60000.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/sikhin-r3.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/vipasyin-r7b.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/visvabhu-r3.60000.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/kanakamuni-r3.60000.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-v2b.60000.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-v2"
+  }
+ ],
+ "shots": [
+  {
+   "name": "hand10",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -17.6,
+      3.2,
+      -7.0
+     ],
+     "look": [
+      -18.1,
+      7.6,
+      -16.0
+     ],
+     "fov": 14,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hand10-diffuse",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -17.6,
+      3.2,
+      -7.0
+     ],
+     "look": [
+      -18.1,
+      7.6,
+      -16.0
+     ],
+     "fov": 14,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   }
+  },
+  {
+   "name": "hand34",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.5,
+      4.0,
+      -9.5
+     ],
+     "look": [
+      -18.1,
+      7.6,
+      -16.0
+     ],
+     "fov": 16,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hand-level",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -17.9,
+      7.8,
+      -6.0
+     ],
+     "look": [
+      -18.1,
+      7.6,
+      -16.0
+     ],
+     "fov": 12,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "figure10",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.4,
+      3.2,
+      -6.0
+     ],
+     "look": [
+      -16.4,
+      9.0,
+      -17.0
+     ],
+     "fov": 38,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "cam03",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   }
+  },
+  {
+   "name": "cam04",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam04"
+   }
+  },
+  {
+   "name": "side",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -21.6,
+      7.8,
+      -13.8
+     ],
+     "look": [
+      -16.6,
+      8.6,
+      -16.6
+     ],
+     "fov": 64,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "side-diffuse",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -21.6,
+      7.8,
+      -13.8
+     ],
+     "look": [
+      -16.6,
+      8.6,
+      -16.6
+     ],
+     "fov": 64,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   }
+  },
+  {
+   "name": "knee34-close",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -13.0,
+      6.0,
+      -10.0
+     ],
+     "look": [
+      -18.1,
+      7.2,
+      -15.8
+     ],
+     "fov": 16,
+     "exp": 4.5
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,51 @@
+{
+ "voxel_m": 0.0015,
+ "shell_m": 0.003,
+ "close_m": 0.012,
+ "box": [
+  [
+   -2.12,
+   3.45,
+   1.15
+  ],
+  [
+   -1.36,
+   3.72,
+   1.75
+  ]
+ ],
+ "faces_in_box_taken_out": 4930,
+ "voxels": [
+  528,
+  202,
+  421
+ ],
+ "exterior_share_of_front_face": 0.533,
+ "marching_cubes_faces": 3010704,
+ "voxel_remesh_faces": 2936988,
+ "outer_faces": 761354,
+ "laid_points": 125039,
+ "points_over_filled_gaps": 257919,
+ "distance_to_surface_mm": {
+  "median": 0.0,
+  "max": 3.34,
+  "points": 106625
+ },
+ "border": {
+  "new_border_points": 22173,
+  "put_on_hole_border": 1425,
+  "left_off_mm_max": 6.1
+ },
+ "new_surface": {
+  "faces": 614081,
+  "thin_triangles_aspect_over_8": 19214,
+  "edges_shared_by_3_or_more": 0,
+  "pieces_under_50_faces": 2,
+  "pieces": 3
+ },
+ "faces_total": {
+  "before": 1440085,
+  "after": 2049236,
+  "original_f1": null
+ }
+}
