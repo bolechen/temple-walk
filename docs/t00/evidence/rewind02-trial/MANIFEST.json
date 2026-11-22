@@ -1,0 +1,132 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "probe/cam03-summer-day-before-after.jpg",
+   "bytes": 359670,
+   "sha256": "2a1e6ac8ed34a14d0235508826669b89363750f9ac577823ffdae6c9675c1407",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "probe/cam05-summer-day-before-after.jpg",
+   "bytes": 278774,
+   "sha256": "556df675cdf2a6d9ea7726f8b091b8f0153a077abe0242373b2169a7f62f9fc9",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "probe/cam06-summer-day-before-after.jpg",
+   "bytes": 386096,
+   "sha256": "1b7886dab8945a4aac6ac9271d95853d5e0f7cd283eb8ec6e84a6e5cfe1233c1",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "probe/main-altar-before-after.jpg",
+   "bytes": 152188,
+   "sha256": "1e14e951cf34dd59e6abf0a9261df2e8849470707aa520520fb84ec2afd5d9aa",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "probe/main-roof-before-after.jpg",
+   "bytes": 126977,
+   "sha256": "4c6dfbfa5aa436c14fe0211fcb747c3d545d371ed65f9c9700245f47a0ec7d30",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/autumn-dawn.jpg",
+   "bytes": 172249,
+   "sha256": "654109ed1eb6cf33eb6908c54520e1b5d518bee502014c60c2e5d1f70835d3cc",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/autumn-day.jpg",
+   "bytes": 200367,
+   "sha256": "d13ad3d5d3c51560545cee689a5c9b6ac41b803a5b11f1dc40aad209235609ab",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/autumn-dusk.jpg",
+   "bytes": 175301,
+   "sha256": "f828fe18446b31bbc73a8336b40ec529806a0e259c613941f1c524f6c775c95a",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/autumn-night.jpg",
+   "bytes": 136778,
+   "sha256": "450fb65ce5a62041f3ec48cb8c186460a6af99ec946756b2397ee214e9e66362",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/spring-dawn.jpg",
+   "bytes": 171640,
+   "sha256": "f07dbf4cb76c5d4cfcc9c4eebd97c9965a80b711e16b3d10fbcf51455f5c2b59",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/spring-day.jpg",
+   "bytes": 194615,
+   "sha256": "64b589773333196944ce73a3ed94e58d4009b075a9a9290b1ed41e6df60c2900",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/spring-dusk.jpg",
+   "bytes": 180772,
+   "sha256": "73372b7a26b1dbe3c71278bb7036c5a51c731742f845a9a46c76c37aa3485369",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/spring-night.jpg",
+   "bytes": 140301,
+   "sha256": "49a985961ae516ee9a6c0525080387f971f72535d60585e07d9a3298547126c4",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/summer-dawn.jpg",
+   "bytes": 181579,
+   "sha256": "aa05904e3d8f8872316ef19d2175b8b994a8725f8a801f5d9d7b2cdba165b7c8",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/summer-day.jpg",
+   "bytes": 166964,
+   "sha256": "f2ab075228a5042b32888f06eca26ce08d108cbb36a93ed46c661777d50359d1",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/summer-dusk.jpg",
+   "bytes": 161593,
+   "sha256": "6bafdff4b17e27c4d7dc674bfbe1324e0a286fc79b10fb26a80bd7810b98a5fa",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/summer-night.jpg",
+   "bytes": 137536,
+   "sha256": "a4a12194c8f1733a34223c751aa459541cad5030f5429834d5d3f1efcde51b1d",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/winter-dawn.jpg",
+   "bytes": 202175,
+   "sha256": "189b59092bc1a75f4250aa3d11a6b6d02f2fe016d97db32e6ef016ba296430f6",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/winter-day.jpg",
+   "bytes": 205155,
+   "sha256": "5f89179790e2c42ba6c334da108ffd6deba90581fab8c296db03ca13a0aad101",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/winter-dusk.jpg",
+   "bytes": 213526,
+   "sha256": "1c15f578244f6dd6c7ff1d727b63b7c644d8d88f720c7a18b006f9b17d9fb5f8",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  },
+  {
+   "path": "sky/winter-night.jpg",
+   "bytes": 197413,
+   "sha256": "5781704a675fd0daeb8989eba0a80f539e6b177df312144270fd2983927aebe2",
+   "rev": "514179f3f1679bdbc2bcbb3093a3a0d8e620825e"
+  }
+ ]
+}

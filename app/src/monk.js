@@ -13,6 +13,7 @@
 // off him swings on small springs driven by his speed and his turning.
 import * as THREE from "three";
 import { STAIR } from "./geo.js";
+import { createBlink } from "./blink.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -52,6 +53,11 @@ const SKIRT_FREE = 0.5, SKIRT_REACH = 0.7, SKIRT_SIDE = 0.8;
 // The back of the skirt swings lightly: what walking turns it by (the trail and the trailing knee together) is free up to
 // the first and eased to the second, whatever the stride. Level walking turns it by no more than 0.14.
 const SKIRT_BACK_FREE = 0.25, SKIRT_BACK_REACH = 0.4;
+// The turn at the start of a walk (#284): the page turns him about at once and his speed rises, which would swing the whole
+// skirt sideways by 0.2 rad and push the trail back by 0.25, opening the cloth over a thigh (the trousers came out of the robe's
+// side for the first half second). The sideways swing is cut to SKIRT_SWING and the side panels, which lie over the thighs,
+// take only SKIRT_SIDE_SWING of it; the trail's acceleration part is held to SKIRT_TRAIL.
+const SKIRT_SWING = 0.05, SKIRT_SIDE_SWING = 0.25, SKIRT_TRAIL = 0.15;
 const SKIRT = ["robeFront", "robeLeft", "robeBack", "robeRight"];
 // Under each sole, the points that must clear the ground (in the foot's own frame, on the floor).
 const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.114], [0, 0.117], [0, -0.056]].map(([x, z]) => V3(x, 0, z));
@@ -452,6 +458,7 @@ export function createMonk() {
   // ---- What the pose is computed from ----
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
+  const blink = createBlink(), lid = { value: 0 }; let eyed = false, blinking = true;
   let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
   const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
@@ -632,6 +639,10 @@ export function createMonk() {
     // draws the skin with a material of its own.
     get helpers() { return helpers.map((h) => h.name); },
     /** How long each skirt bone hangs this frame (front, left, back, right; 1 is its full length): the hem's lift shortens them. */
+    /** The eyelid uniform the skin's material reads (0 open, 1 shut), shared by reference; always 0 unless the body has eyes to close (`dress` with `o.eyes`). */
+    get lid() { return lid; },
+    /** Whether he blinks: off for a held picture (`?shot`); sitting on a cushion still shuts his eyes. */
+    get blinking() { return blinking; }, set blinking(v) { blinking = !!v; },
     get skirt() { return SKIRT.map((n) => +B[n].scale.y.toFixed(3)); },
     get helperRig() { return helpers; },   // each helper's bone, the bone carrying it, the arm it follows, its share and the way the arm hung (for the tests)
     dress(geometries, material, robeColor, o = {}) {
@@ -649,7 +660,7 @@ export function createMonk() {
       for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = name === "skin" && o.skinMaterial ? o.skinMaterial : material; }
       setupHem(robe.geometry.attributes.position.count);
       straps.visible = true;
-      dressed = true;
+      dressed = true; eyed = !!o.eyes;
       const laid = o.beads === false ? { beads: beadAt.length, moved: 0, most: 0 } : layBeads();
       laid.straps = o.straps === false ? 0 : layStraps(); return laid;
     },
@@ -671,6 +682,7 @@ export function createMonk() {
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       // `seat`: cross-legged on a cushion; `perch`: on a stool, as on a chair.
       seat += ((sit ? 1 : 0) - seat) * ease(3.5); perch += ((chair ? 1 : 0) - perch) * ease(3.5);
+      lid.value = eyed ? blink.step(dt, sit && seat > 0.4, blinking) : 0;   // the Tripo body's eyelids (#607): shut once he is mostly down on the cushion, open as he rises
       // His legs fold into the seat as slowly as he sits down, but come out of it at once when he gets up: off a stool
       // a child slips down onto his feet, and the body (`seat`, `perch`) rises from that crouch over the next second.
       // Sent from one kind of seat to the other, he gets up from the first as above and folds into the second.
@@ -861,8 +873,8 @@ export function createMonk() {
 
       // What hangs off him swings: the skirt trails his walk and is pushed by his knees, flares as he turns; the sash's
       // ends and the hat lag on their springs.
-      const tr = springs.trail.step(clamp(0.05 * speed + 0.03 * accel, -0.15, 0.25) * (1 - seat), dt);
-      const sd = springs.side.step(clamp(-0.07 * turn * Math.min(1, speed + 0.3), -0.2, 0.2) + 0.02 * Math.sin(phase) * gait, dt);
+      const tr = springs.trail.step(clamp(0.05 * speed + 0.03 * accel, -0.15, SKIRT_TRAIL) * (1 - seat), dt);
+      const sd = springs.side.step(clamp(-0.07 * turn * Math.min(1, speed + 0.3), -SKIRT_SWING, SKIRT_SWING) + 0.02 * Math.sin(phase) * gait, dt);
       // A thigh comes up a long way on a stair; cloth does not follow it into a board. The skirt follows the knee as it
       // always did up to SKIRT_FREE and eases to SKIRT_REACH, past which no bone turns on the knee's account.
       const reachOf = (x, to = SKIRT_REACH, free = SKIRT_FREE) => x <= free ? x : free + (to - free) * Math.tanh((x - free) / (to - free));
@@ -872,8 +884,8 @@ export function createMonk() {
       B.robeFront.rotation.set(tr - 0.9 * fwd - 0.85 * seat - 1.22 * perch, 0, sd);
       B.robeBack.rotation.set(back + 0.35 * seat + 0.9 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
-      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd + 0.015 + 0.2 * lf + 0.5 * seat + 0.16 * perch);
-      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd - 0.015 - 0.2 * rt - 0.5 * seat - 0.16 * perch);
+      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.5 * seat + 0.16 * perch);
+      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.5 * seat - 0.16 * perch);
       B.robeFront.scale.y = 1 - 0.25 * seat - 0.38 * perch; B.robeBack.scale.y = 1 - 0.35 * seat - 0.7 * perch;   // on a stool the back of the skirt is gathered on the seat
       B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.2 * seat - 0.15 * perch;
       // Seated, the sash's ends fall into his lap rather than ride out on the skirt.

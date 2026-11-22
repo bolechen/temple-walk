@@ -205,6 +205,16 @@ body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
   width: max-content; max-width: calc(100vw - 24px);   /* centred by left 50% it was given half the screen, and a label wider than 113 px on a phone wrapped */
   font: 400 var(--t-xl)/1 var(--kai); letter-spacing: var(--track-wide); color: #f2ede2; text-shadow: var(--lift);
 }
+/* On a phone held upright the thumb-stick stands lower left and the jump ring and the ring that turns the view back lower right, and the button, centred on the
+   screen, lay on them (the English 「Stand up」 on a 360 px screen over the jump ring by 11 × 18 px, the lamp's 「为人点灯」 by 33 × 18; and moved aside, over the stick
+   instead, #619). Between them there is a strip, 8 px clear of either: the button is a column there, the ring over its word, the word wrapping within the strip,
+   lower than before so that it clears the figure too. tests/e2e `stand-up` lays every word of it in four languages on four screens and measures the gaps. */
+@media (max-width: 480px) and (pointer: coarse) {
+  #act { left: calc((100vw + 36px) / 2); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); flex-direction: column; gap: 4px; padding: 4px; max-width: calc(100vw - 260px); text-align: center; }
+  #act span { margin-right: 0; font-size: var(--t-m); letter-spacing: .02em; text-wrap: balance; }   /* (a five-character word in the strip's 92 px on one line, not three; a wrapped English word in two even lines) */
+}
+/* Sideways on a phone the screen is 390 px or less tall and the figure fills the middle of it; the button is lowered to the foot, below him (the stick and the rings are far to either side). */
+@media (max-height: 560px) and (pointer: coarse) { #act { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } }
 #act .enso { position: relative; display: grid; place-items: center; width: 52px; height: 52px; flex: none; background: var(--enso-light, radial-gradient(closest-side, transparent 86%, var(--on) 88%, transparent 95%)) center / 100% 100% no-repeat; transition: transform .6s var(--ease); }
 #act:hover .enso { transform: rotate(-8deg) scale(1.04); }
 #act .enso kbd { margin: 0; border: 0; padding: 0; font-size: 14px; color: var(--on-2); }

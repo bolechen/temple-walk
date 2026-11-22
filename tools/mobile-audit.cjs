@@ -3,46 +3,64 @@
 // text under 12 px, anything that runs off the screen, and whether the page scrolls or zooms when it should not.
 // It also lists a label broken onto a second line inside itself (a button's word, or a phrase of the line at the foot of
 // the view that would have fitted whole on one line).
-//   node tools/mobile-audit.cjs [out dir] [--lang=ja|en]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
+//   node tools/mobile-audit.cjs [out dir] [--lang=ja|en] [--shapes=upright,small] [--drawn]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
+//   (#614: the page is opened built but not drawn, since what is measured is the interface's DOM, and every wait is for a condition, not for seconds;
+//   a surface that lists anything is then opened again with the scene drawn and photographed as `<shape>-<surface>-drawn.png`, the evidence a person looks at.
+//   --shapes names the screens to measure, so that several machines can share them (upright, side, small, large); with none, all four, on one machine.
+//   --drawn opens every page with the scene drawn, as it was before.)
 //   (--only=title,menu audits only those surfaces, the others being opened on the way but not measured;
 //   --lang audits the page in Japanese or English, into tools/out/mobile-ja/ or mobile-en/ unless an out dir is named)
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--lang=")) || "").slice(7) || "zh");
 const ONLY = (ARGS.find((a) => a.startsWith("--only=")) || "").slice(7).split(",").filter(Boolean).length ? (ARGS.find((a) => a.startsWith("--only="))).slice(7).split(",") : null;
+const SHAPE_ARG = (ARGS.find((a) => a.startsWith("--shapes=")) || "").slice(9).split(",").filter(Boolean), DRAWN = ARGS.includes("--drawn");
 const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", LANG === "zh" ? "mobile" : `mobile-${LANG}`);
 const { serve } = require("./site.cjs");
 let srv;
+// The place built but not drawn (tests/e2e/run.cjs, BARE): `?off=` hides parts and unbuilds none, so everything the interface asks of the walk is there.
+const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// What the opening scripts below wait with, in the page: frames drawn, or a condition (installed in every page before its own scripts run).
+const HELPERS = () => {
+  window.__auditFrames = (n) => new Promise((r) => { let i = 0; const f = () => (++i >= n ? r() : requestAnimationFrame(f)); f(); });
+  window.__auditUntil = async (cond, ms = 90000) => { const t0 = performance.now(); while (!cond()) { if (performance.now() - t0 > ms) throw new Error(`audit: waited ${ms} ms for ${cond}`); await new Promise((r) => requestAnimationFrame(r)); } };
+};
+// A surface that is only reached from another one's state.
+const NEEDS = { sitsay: "sit", clip: "clipping" };
+// A surface whose putting away is the way into the next one: the film being made is stopped, and its sheet is what comes up (the sheet is the next surface, `clip`).
+const LEADS_TO = { clipping: "clip" };
 // Each surface: how to bring it up, and how to put it away again.
 const SURFACES = [
   ["title", null, null],
   // (a first visit is shown the mountain first, src/opening.js: passed over with Esc as a visitor may, as the eye comes down to him)
-  ["walk", "document.getElementById('enterBtn').click(); setTimeout(() => window.__opening().active && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })), 300)", null],
+  ["walk", "document.getElementById('enterBtn').click(); __auditFrames(10).then(() => window.__opening().active && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))", null],
   // The year-end bell's night (#341): its one line at the top of the picture, then its card's sheet (laid out by
   // __joyaPreview, since the night is open only on the visitor's clock or the workbench, and this server is neither).
   ["joya", "window.__joyaPreview(true)", "window.__joyaPreview(false)"],
-  ["joyaCard", "(async () => { window.__joyaPreview(true); await new Promise((r) => setTimeout(r, 200)); document.getElementById('joyaTake').click(); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
+  ["joyaCard", "(async () => { window.__joyaPreview(true); await __auditUntil(() => { const b = document.getElementById('joyaTake'); return b && !b.hidden; }); document.getElementById('joyaTake').click(); await __auditUntil(() => window.__ui().stack.includes('joyaCard')); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
   ["prologue", "(() => { window.__pose(6.6, 53.4, Math.atan2(-6.6, 13.4), 0.05); window.__prologue(true); })()", null],
   // (with a temple closed, so that the map's row is there too, #449: the book's 更多 paper and the map's own sheet below keep it)
   ["menu", "document.body.classList.add('seasons'); window.__pilgrimage({ mark: 't00', season: 'autumn' }); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
   // The map of temples walked (#449, phase one): one temple closed and another still a fog, then both closed (a place to go, and the one he is in marked); and the ring of ink that a held Q fills.
   ["pilgrim", "(async () => { window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList li'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
   ["pilgrimGo", "(async () => { window.__pilgrimage({ mark: 't05', season: 'winter' }); window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList .go'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
-  ["pilgrimHold", "(async () => { window.__pilgrimage({ clock: 0 }); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true })); await new Promise((r) => setTimeout(r, 200)); window.__pilgrimage({ clock: 600 }); await new Promise((r) => setTimeout(r, 300)); })()", "window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true })); window.__pilgrimage({ clock: null })"],
+  ["pilgrimHold", "(async () => { window.__pilgrimage({ clock: 0 }); document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true })); await __auditFrames(8); window.__pilgrimage({ clock: 600 }); await __auditFrames(8); })()", "document.body.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true })); window.__pilgrimage({ clock: null })"],
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.
   // The close of the chapter (#473): the ring at its foot and the word beside it, held at a moment where the words are on; then the full book's page with its 更多 paper laid out as if 山顶再坐一回 were offered.
-  ["ending", "(() => { window.__riteClock(null); void window.__ending(); setTimeout(() => window.__riteClock(8000), 800); })()", "(async () => { const e = document.getElementById('ending'); for (let i = 0; i < 3 && !e.hidden; i++) { e.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 9 + i, bubbles: true })); await new Promise((r) => setTimeout(r, 1800)); } window.__riteClock(null); })()"],
-  ["bookMore", "(async () => { window.__book(); await new Promise((r) => setTimeout(r, 600)); document.getElementById('bookReplay').hidden = false; window.__pilgrimage({ mark: 't00' }); document.getElementById('bookMoreBtn').hidden = false; document.getElementById('bookMoreBtn').click(); })()", "document.getElementById('bookMoreClose').click(); document.getElementById('bookClose').click()"],
+  // (the one fixed wait left, 1800 ms in this surface's put-away: a first watch is passed over by holding a press for 1.5 s of the page's own real clock, the ring
+  // filling meanwhile (holdring.js), and no frame count or state stands for that time; the page keeps no way to fake that clock as the map's hold has, so the audit holds as a visitor does)
+  ["ending", "(() => { window.__riteClock(null); void window.__ending(); __auditFrames(10).then(() => window.__riteClock(8000)); })()", "(async () => { const e = document.getElementById('ending'); for (let i = 0; i < 3 && !e.hidden; i++) { e.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 9 + i, bubbles: true })); await new Promise((r) => setTimeout(r, 1800)); } window.__riteClock(null); })()"],
+  ["bookMore", "(async () => { window.__book(); await __auditFrames(8); document.getElementById('bookReplay').hidden = false; window.__pilgrimage({ mark: 't00' }); document.getElementById('bookMoreBtn').hidden = false; document.getElementById('bookMoreBtn').click(); })()", "document.getElementById('bookMoreClose').click(); document.getElementById('bookClose').click()"],
   ["saveSheet", "(async () => { window.__book(); for (let i = 0; i < 100 && !document.getElementById('bookImg').src; i++) await new Promise((r) => setTimeout(r, 100)); document.getElementById('bookShare').click(); })()", "document.getElementById('saveClose').click(); document.getElementById('bookClose').click()"],
   // 带走朱印帐 (#338): the link made in the book, and the sheet such a link brings (raised from this page's own save).
-  ["carryOut", "(async () => { window.__book(); await new Promise((r) => setTimeout(r, 800)); document.getElementById('bookMoreBtn').click(); await new Promise((r) => setTimeout(r, 300)); document.getElementById('bookCarry').click(); })()", "document.getElementById('carryClose').click(); document.getElementById('bookClose').click()"],
+  ["carryOut", "(async () => { window.__book(); await __auditUntil(() => { const i = document.getElementById('bookImg'); return i.complete && i.naturalWidth > 0; }); document.getElementById('bookMoreBtn').click(); await __auditFrames(8); document.getElementById('bookCarry').click(); })()", "document.getElementById('carryClose').click(); document.getElementById('bookClose').click()"],
   ["carryIn", "void window.__carryAsk()", "document.getElementById('carryInNo').click()"],
   ["photo", "window.__photo(true)", "window.__photo(false)"],
   // The photograph's settings with the short film's row, then a film being made (only the way to stop and a hair of progress), then its sheet (#342).
-  ["photoSettings", "window.__photo(true); setTimeout(() => document.getElementById('photoSettingsToggle').click(), 300)", "window.__photo(false)"],
-  ["clipping", "window.__photo(true); setTimeout(() => window.__clip({ start: true, secs: 40 }), 400)", "window.__clip({ stop: true })"],
+  ["photoSettings", "window.__photo(true); __auditFrames(10).then(() => document.getElementById('photoSettingsToggle').click())", "window.__photo(false)"],
+  ["clipping", "window.__photo(true); __auditFrames(12).then(() => window.__clip({ start: true, secs: 40 }))", "window.__clip({ stop: true })"],
   ["clip", null, "document.getElementById('clipBack')?.click(); window.__photo(false)"],
   ["piece", "window.__work(Object.keys(window.__gallery).map((k) => window.__gallery[k].item.work).find(Boolean))", "document.getElementById('pieceClose').click()"],
   // (the longest of the library's lines, fixed: which one a visitor is given depends on the day, and the audit must not depend on luck; tests/e2e `slipfit` lays every line, in every language, on both screens)
@@ -130,26 +148,68 @@ const measure = () => {
   if (card) { const r = card.getBoundingClientRect(); if (r.left < 15.5 || W - r.right < 15.5) placed.push(`paper has ${Math.round(r.left)} px to its left and ${Math.round(W - r.right)} to its right`); if (Math.abs((r.left + r.right) / 2 - W / 2) > 2) placed.push("paper is not in the middle"); if (r.top < -0.5 || r.bottom > H + 0.5) placed.push(`paper runs off the top or foot [${Math.round(r.top)}, ${Math.round(r.bottom)}] of ${H}`); }
   return { small, tiny, off, bare, broken, tight, wrapped, overlap, placed, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
 };
+// Waiting is for a condition, never for seconds (CLAUDE.md: wait on frames). A surface is settled when the page has drawn a few frames
+// and nothing finite is still moving (a fade, a slide: the Web Animations list holds CSS transitions too); a ring that pulses for ever never ends
+// and is left out. What a surface needs beyond that is named here: the page's own state that says it is whole.
+const READY = {
+  sit: () => { const b = document.getElementById("breathWord"); return b && !b.hidden && !!b.textContent.trim(); },
+  slip: () => { const d = document.getElementById("slip"); return d && d.open && !!document.getElementById("slipText").textContent.trim(); },
+  book: () => { const i = document.getElementById("bookImg"); return i && i.complete && i.naturalWidth > 0; },
+};
+// (`closing`: the surface has just been put away; the next one must not open under a sheet still on its way out, which would hear its keys, ui.js `key`)
+const CLOSED = () => !window.__ui().modal;
+const settle = (p, name, closing) => p.evaluate(async ([name, ready, cap]) => {
+  const frames = () => (window.__yard ? window.__yard().frames : 0), step = () => new Promise((r) => requestAnimationFrame(() => r()));
+  const f0 = frames(), t0 = performance.now();
+  const moving = () => document.getAnimations().some((a) => a.playState === "running" && a.effect && a.effect.getComputedTiming().iterations !== Infinity);
+  const need = ready ? (0, eval)(`(${ready})`) : () => true;
+  // (a hard stop, so that a surface that never settles is measured as it stands rather than hanging the audit: a minute of the page's own time, eight seconds for a sheet being put away)
+  while (performance.now() - t0 < cap && (frames() - f0 < 4 || moving() || !need())) await step();
+}, [name, closing ? CLOSED.toString() : READY[name] ? READY[name].toString() : null, closing ? 8000 : 60000]);
+const LINES = (m) => [m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.placed.length ? `\n   placed badly: ${m.placed.join(" | ")}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : ""];
+const SHAPES = [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640], ["large", 430, 932]].filter(([n]) => !SHAPE_ARG.length || SHAPE_ARG.includes(n));
+const badOf = (m, vw) => m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + m.placed.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0);
+
+// One screen size, each of the surfaces named, in one page: measured, photographed, and put away again.
+async function pass(b, [shape, vw, vh], names, bare, tag, report) {
+  const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
+  const p = await ctx.newPage(), errs = []; await p.addInitScript(HELPERS); p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
+  await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
+  let bad = 0, seen = 0;
+  for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n))) {
+    if (process.env.AUDIT_DEBUG) console.log("   [debug] before", name, JSON.stringify(await p.evaluate(() => window.__ui())));
+    if (open) await p.evaluate(async (c) => { await (0, eval)(c); }, open);   // (awaited: an opening script that waits for a state holds the audit with it)
+    await settle(p, name);
+    // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
+    if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => settle(p, name)).catch(() => {});
+    if (errs.length > seen) { console.log(`   page error while "${name}" was up:`, errs.slice(seen)); seen = errs.length; }
+    const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}${tag}.png`) });
+    const n = badOf(m, vw); bad += n;
+    if (!tag) report[`${shape}/${name}`] = m;
+    console.log(`${shape}/${name}${tag}`.padEnd(22), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", ...LINES(m));
+    if (close) { await p.evaluate(async (c) => { await (0, eval)(c); }, close); if (name in LEADS_TO) { await settle(p, name); continue; } await settle(p, name, true); { const u = await p.evaluate(() => window.__ui()); if (u.modal) console.log(`   (a sheet is still open after "${name}" was put away: the surfaces after it are measured under it) ${JSON.stringify(u)}`); } }
+  }
+  if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
+  await ctx.close();
+  return bad;
+}
 (async () => {
   srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] }), report = {}; let bad = 0;
-  for (const [shape, vw, vh] of [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640], ["large", 430, 932]]) {
-    const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
-    const p = await ctx.newPage(), errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
-    await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}`, { waitUntil: "commit", timeout: 180000 });
-    await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
-    for (const [name, open, close] of SURFACES.filter(([n]) => !ONLY || ONLY.includes(n))) {
-      if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
-      await p.waitForTimeout(name === "sit" ? 12000 : name === "slip" ? 9000 : name === "book" ? 7000 : name === "walk" ? 4000 : 2500);
-      // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
-      if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => p.waitForTimeout(1200)).catch(() => {});
-      const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
-      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + m.placed.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
-      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.placed.length ? `\n   placed badly: ${m.placed.join(' | ')}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
-      if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await p.waitForTimeout(800); }
+  const wanted = SURFACES.map(([n]) => n).filter((n) => !ONLY || ONLY.includes(n));
+  for (const shape of SHAPES) {
+    const t0 = Date.now(), before = Object.keys(report).length;
+    bad += await pass(b, shape, wanted, !DRAWN, "", report);
+    console.log(`${shape[0]}: ${Math.round((Date.now() - t0) / 1000)} s`);
+    // What a phone would mind is then looked at in the whole picture: each surface that listed anything, with what it needs, drawn.
+    const failing = Object.keys(report).filter((k) => k.startsWith(shape[0] + "/")).filter((k) => badOf(report[k], shape[1]) > 0).map((k) => k.split("/")[1]);
+    if (!DRAWN && failing.length) {
+      // ('walk' goes first for all but the title: a page that has not been entered still has its title over it)
+      const again = SURFACES.map(([n]) => n).filter((n) => failing.includes(n) || failing.some((f) => NEEDS[f] === n) || (n === "walk" && failing.some((f) => f !== "title")));
+      console.log(`${shape[0]}: ${failing.join(", ")} listed something; opened again with the scene drawn`);
+      await pass(b, shape, again, false, "-drawn", {});
     }
-    if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
-    await ctx.close();
   }
   fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1)); await b.close(); srv.close();
   console.log(bad ? `${bad} things a phone would mind` : "nothing a phone would mind"); process.exit(bad ? 1 : 0);
