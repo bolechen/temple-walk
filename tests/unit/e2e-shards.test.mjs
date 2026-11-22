@@ -122,3 +122,15 @@ test("e2e.yml hands the names to the plan through the environment and gives ever
   assert.match(full, /node tests\/e2e\/run\.cjs \$SCENARIOS --shard=\$\{\{ matrix\.shard \}\}\/\$\{\{ needs\.shards\.outputs\.count \}\}/, "each machine walks its own share of what was named");
   assert.doesNotMatch(full, /matrix\.shard == 1\) && 'true'/, "no machine but the first is sent away when scenarios are named");
 });
+test("a run on a graphics card is shared by the times measured on the card, in ten shares within a minute of each other", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const out = (env) => execFileSync(process.execPath, [ROOT + "tests/e2e/shards.cjs", "plan", "10"], { encoding: "utf8", env: { ...process.env, ...env } }).trim().split("\n");
+  delete process.env.E2E_GPU;
+  const mins = (lines) => lines.map((l) => Number(/:\s+([\d.]+) min/.exec(l)[1]));
+  const gpu = mins(out({ E2E_GPU: "1" })), soft = mins(out({ E2E_GPU: "" }));
+  assert.equal(gpu.length, 10);
+  assert.ok(Math.max(...gpu) - Math.min(...gpu) <= 1, `the card's shares are ${gpu.join(", ")} minutes`);
+  assert.ok(Math.max(...gpu) < Math.max(...soft), "the card's times are not the free machines'");
+  const t4 = JSON.parse(fs.readFileSync(ROOT + "tests/e2e/durations-t4.json", "utf8"));
+  for (const name of Object.keys(t4.scenarios)) assert.ok(all.includes(name), `${name} is timed on the card but is not a scenario of run.cjs`);
+});
