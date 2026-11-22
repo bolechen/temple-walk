@@ -300,8 +300,8 @@ test("every near ginkgo stands in a stone pit centred on its trunk, wide enough 
     if (inside < 2 * spread || inside < PIT.min - 1e-6 || Math.abs(inside / PIT.block - Math.round(inside / PIT.block)) > 1e-6) wrong.push(`the pit at ${t[0]}, ${t[2]} is ${inside.toFixed(2)} m inside, its roots spread ${spread.toFixed(2)} m`);
     const up = box.max.y - t[1]; if (up < 0.05 || up > 0.08) wrong.push(`the pit's edge stones stand ${(up * 100).toFixed(1)} cm over the paving`);
     const soil = new THREE.Box3().setFromBufferAttribute(T.pitSoil.geometry.attributes.position), drop = box.max.y - soil.max.y; if (drop < 0.03 || drop > 0.06) wrong.push(`the soil lies ${(drop * 100).toFixed(1)} cm under the edge stones`);
-    T.setMood({ season: "winter", snow: 1 }); if (T.pitSoil.visible || T.moss.visible) wrong.push("the pit's soil and moss are still drawn under snow");
-    T.setMood({ season: "autumn", snow: 0 }); if (!T.pitSoil.visible || !T.moss.visible) wrong.push("the pit's soil and moss are not back after the thaw");
+    T.setMood({ season: "winter", snow: 1 }); if (T.pitSoil.visible || T.moss.visible) wrong.push("the pit's soil and moss are still drawn under snow"); if (!T.pitSnow.visible) wrong.push("the pit's edge stones carry no snow in winter");
+    T.setMood({ season: "autumn", snow: 0 }); if (!T.pitSoil.visible || !T.moss.visible || T.pitSnow.visible) wrong.push("the pit's soil and moss are not back, or its snow stays, after the thaw");
   }
   assert.deepEqual(wrong, []);
 });
