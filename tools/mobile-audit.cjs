@@ -42,7 +42,7 @@ const SURFACES = [
   // The map of temples walked (#449, phase one): one temple closed and another still a fog, then both closed (a place to go, and the one he is in marked); and the ring of ink that a held Q fills.
   ["pilgrim", "(async () => { window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList li'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
   ["pilgrimGo", "(async () => { window.__pilgrimage({ mark: 't05', season: 'winter' }); window.__pilgrimage({ open: true }); for (let i = 0; i < 100 && !document.querySelector('#pilgrimList .go'); i++) await new Promise((r) => setTimeout(r, 100)); })()", "document.getElementById('pilgrimClose').click()"],
-  ["pilgrimHold", "(async () => { window.__pilgrimage({ clock: 0 }); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true })); await __auditFrames(8); window.__pilgrimage({ clock: 600 }); await __auditFrames(8); })()", "window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true })); window.__pilgrimage({ clock: null })"],
+  ["pilgrimHold", "(async () => { window.__pilgrimage({ clock: 0 }); document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true })); await __auditFrames(8); window.__pilgrimage({ clock: 600 }); await __auditFrames(8); })()", "document.body.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true })); window.__pilgrimage({ clock: null })"],
   ["credits", "document.getElementById('menuCredits').click()", "document.getElementById('creditsClose').click()"],
   ["book", "window.__book()", "document.getElementById('bookClose').click()"],
   // Where a picture cannot be handed to the system's share sheet (#344: an app's own browser, and this headless one): the page to press and hold.
@@ -186,7 +186,7 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
     const n = badOf(m, vw); bad += n;
     if (!tag) report[`${shape}/${name}`] = m;
     console.log(`${shape}/${name}${tag}`.padEnd(22), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", ...LINES(m));
-    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name, true); if (await p.evaluate(() => window.__ui().modal)) console.log(`   (a sheet is still open after "${name}" was put away: the surfaces after it are measured under it)`); }
+    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name, true); { const u = await p.evaluate(() => window.__ui()); if (u.modal) console.log(`   (a sheet is still open after "${name}" was put away: the surfaces after it are measured under it) ${JSON.stringify(u)}`); } }
   }
   if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
   await ctx.close();
