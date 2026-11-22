@@ -13,7 +13,9 @@
 //   node tests/e2e/shards.cjs plan [N]                     who would run what, and for how long (N: the machines needed)
 //   node tests/e2e/shards.cjs update <e2e-report.json>...  put the times of these runs into durations.json (a report is what a shard leaves in tools/out/)
 const fs = require("fs"), path = require("path");
-const FILE = path.join(__dirname, "durations.json");
+// A run on a graphics card (E2E_GPU, the T4 run) is shared by what each scenario takes there: the card draws the heavy ones three to twenty times
+// faster than software does, so the free machines' seconds left some shards at 15 minutes and others at 6 (run 44967166241).
+const FILE = path.join(__dirname, process.env.E2E_GPU ? "durations-t4.json" : "durations.json");
 const read = () => JSON.parse(fs.readFileSync(FILE, "utf8"));
 
 /** The seconds a scenario is counted at. @param {Record<string, number>} d */
