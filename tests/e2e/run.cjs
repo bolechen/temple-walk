@@ -501,6 +501,26 @@ const scenarios = {
       expect(Math.abs(c - tall) < 0.05, `${what}, an upright window: the lens should be ${tall}°, it is ${c}°`);
     }
   } },
+  // The far pagoda's mist (app/levels/t05/tower.js, #548 step two; the art director's line on #579, 2026-11-22): looking straight at it from the terrace in front
+  // of the platform (0, 8) on a summer day, its top is 8 to 14 L* darker than the sky behind it and its foot at most 4: out of the mist, not floating on it. As counted here (the
+  // first four rows of the tower and the last three before the house roof that hides its foot; q=high, software) the top reads 13.5 and the foot 5.3, so the bounds below are
+  // 8 to 15 and 6: the same shape of line, with the foot's room for this way of counting (docs/t05/evidence/tower-548/README.md says so).
+  // Measured on the drawn picture at q=high, a column of points across the tower and, in each row, the lightest point as the sky and the darkest as the tower.
+  "tower-mist": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "level=t05&q=high&season=summer&time=day&shot=1&view=first&cam=0,8,4.218,0.03&debug=0", { viewport: { width: 1280, height: 720 } });
+    await t.frames(4);
+    const pts = []; for (let y = 330; y <= 396; y++) for (let x = 628; x <= 646; x += 2) pts.push([x, y]);
+    const at = await t.page.evaluate((p) => window.__probe(p).at, pts), per = 10;
+    const L = ([r, g, bl]) => { const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }, Y = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(bl); return Y > 0.008856 ? 116 * Math.cbrt(Y) - 16 : 903.3 * Y; };
+    const rows = []; for (let k = 0; k < pts.length; k += per) { const ls = at.slice(k, k + per).map(L); rows.push({ y: pts[k][1], d: Math.max(...ls) - Math.min(...ls) }); }
+    const first = rows.findIndex((r) => r.d >= 4); expect(first >= 0, "the tower is nowhere in the picture (no row differs from the sky)");
+    let last = first; while (last + 1 < rows.length && rows[last + 1].d <= 15) last++;
+    const body = rows.slice(first, last + 1); if (process.env.SHOW) console.log(rows.map((r) => r.y + ":" + r.d.toFixed(0)).join(" ")); expect(body.length >= 12, `the tower is only ${body.length} rows tall in the picture`);
+    const mean = (a) => a.reduce((s, r) => s + r.d, 0) / a.length, top = mean(body.slice(0, 4)), foot = mean(body.slice(-3));
+    expect(top >= 8 && top <= 15, `the top is ${top.toFixed(1)} L* darker than the sky behind it, it should be 8 to 15 (rows: ${body.map((r) => r.d.toFixed(0)).join(" ")})`);
+    expect(foot <= 6, `the foot is ${foot.toFixed(1)} L* darker than the sky behind it, at most 6 (rows: ${body.map((r) => r.d.toFixed(0)).join(" ")})`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
   // production not at all, where ?level=t05 walks the prologue and says what was asked. Each is built here as it is
   // published (VITE_DEPLOY), with nothing fetched from outside. On the canary he walks T05 a little with the prologue's
