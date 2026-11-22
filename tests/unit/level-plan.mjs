@@ -23,6 +23,17 @@ export function need(key) {
 }
 
 /**
+ * A check that stands him on the walker it is given refuses, by name, a level whose written plan is not kept up to what
+ * is drawn (`writtenPlan: false`, T05) unless it is run over the baked floor (`:grid`), as a level with no table is refused.
+ * @param {string} name what the check is called, for the refusal @param {string} grid the command that runs it over the baked floor
+ */
+export async function needWalkedPlan(name, grid) {
+  if (L.writtenPlan !== false) return;
+  if (process.env.WALKER !== "old" && (await import("../../app/src/site.js")).SWAPPED) return;
+  throw new Error(`${name}: ${LEVEL_ID} keeps no written plan to walk on (app/levels/${LEVEL_ID}/level.js, writtenPlan: false); run \`${grid}\` instead`);
+}
+
+/**
  * The level's plan and the walker over it, for `M` (any materials). With `real`, the written plan's own module (what
  * the swap would otherwise replace) is asked; the grid's walker is handed over by the swap for the prologue, and made here for another level.
  * @param {any} M @param {{ real?: boolean }} [o]

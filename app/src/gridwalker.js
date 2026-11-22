@@ -11,11 +11,15 @@
 import { NO_FLOOR, cellOf } from "./walkgrid.js";
 import { MAX_DROP, LAND_OUT } from "./drop.js";
 
-/** The modes a page may be opened in: "mesh" (the default: the baked floor everywhere), "old" (the written plan). @param {string | null | undefined} q */
 /** How far round him the floor is averaged for the eye on a stair: half a tread (geo.js STAIR.tread is 0.34 m). */
 const EYE_RUN = 0.17;
 
-export const walkerMode = (q) => (q === "old" ? "old" : "mesh");
+/**
+ * The modes a page may be opened in: "mesh" (the default: the baked floor everywhere), "old" (the written plan). A level
+ * whose written plan is not kept up to what is drawn (`writtenPlan: false`, T05) is always walked on the baked floor.
+ * @param {string | null | undefined} q @param {{ writtenPlan?: boolean }} [level]
+ */
+export const walkerMode = (q, level) => (q === "old" && level?.writtenPlan !== false ? "old" : "mesh");
 
 /**
  * The porch edges he may hop down from, and jump up onto, found in the grid: a run of open cells along a line whose

@@ -86,7 +86,8 @@ function doorMaterial(U, steps) {
           c=mix(c,room,uHas);
         }
         // At dusk and dawn a hall whose middle bay the plan leaves unlit is a dark door, as its windows are (windows.js, #459); at night every room shows.
-        c*=mix(1.,mix(uDusk,1.,uWinNight),smoothstep(0.,.5,uLamp));
+        // The lamp's strength only says whether it is after dark (a clear autumn dusk holds 0.23), so any lamp at all takes it fully (#555).
+        c*=mix(1.,mix(uDusk,1.,uWinNight),smoothstep(0.,.08,uLamp));
         gl_FragColor=vec4(c,1.);
         #include <fog_fragment>
         // The room drawn live has had the air between the eye and every point of it already (doorway-live.js).
@@ -153,7 +154,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     u.uDoor.value.set(xs[mid] + 1.3 - 0.02, xs[mid + 1] - 1.3 + 0.02, 0.1, 3.1);
     // How much of its room shows through the door at dusk: the plan's level for the middle bay, never quite none.
     const lv = Math.max(0, ...(site.litWindows || []).filter((w) => w.building === h.id && w.face === "front" && w.bay === mid).map((w) => w.dusk));
-    u.uDusk.value = 0.12 + 0.88 * (lv / 7);
+    u.uDusk.value = 0.05 + 0.95 * (lv / 7);
     d.mesh.material = mat;
     const o = { hall: h, d, r, mat, zs, door: new THREE.Vector3(), want: false, taken: 0, fade: 0, tex: null, pending: null, source: null };
     place(o); d.mesh.geometry.computeBoundingSphere();

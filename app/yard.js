@@ -72,6 +72,9 @@ import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
+import { walkIsHis, heldUnder, viewKeyHeard } from "./src/walkgate.js";
+/** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
+const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
 import { stride, JUMP, leapStep } from "./src/stride.js";
 import { t as tr, FACE, lang, langSource, takeSwitch, glyphs } from "./src/i18n.js";
 // The season and the hour as the visitor reads them: 夏 · 昼, Summer · Day.
@@ -87,10 +90,12 @@ if (!relang) document.documentElement.classList.remove("relang");
 // The floor baked from the drawn meshes (#265, #274): fetched while the place is built, and walked on everywhere (the
 // courts and the path, the summit pavilion's balcony, every room) unless `?walker=old` asks for the written plan.
 // Only the bytes are fetched here; they are opened once the plan is built, and let go.
-const WALKER = walkerMode(Q.get("walker"));
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
+// A level that does not keep its written plan up to what is drawn (T05) refuses `?walker=old`, and says so once.
+const WALKER = walkerMode(Q.get("walker"), L), WALKER_ASKED = Q.get("walker") === "old" && WALKER !== "old" ? "old" : undefined;
+if (WALKER_ASKED) console.info(`?walker=old: ${L.id} keeps no written plan to walk on; walking on the baked floor`);
 // Opened by a crossing from another temple (行脚图, #449, src/pilgrimage.js): the visit handed across, taken once, for this
 // level only; an address that names its own place drops it, as a change of language's is. The ink curtain index.html's
 // first script kept shut (`html.crossing`) is drawn back once this temple can be drawn (crossingBack below); a handover
@@ -184,7 +189,7 @@ const walker = await (async () => {
     let body = await inflateRawAsync(f.bytes); const inflated = body.length, d = decodeWalk(f.bytes, () => body, () => "floors"); body = /** @type {any} */ (null);
     const t1 = performance.now(), grids = gridsByPlace(d), w = createGridWalker(old, grids, { doors: site.halls });
     walkBaked = { bake: d.header.bake || null, outline: d.header.outline || null };
-    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length } });
+    return Object.assign(w, { stats: { mode, bytes: f.bytes.length, inflated, fetchMs: f.fetchMs, decodeMs: Math.round(t1 - t0), prepareMs: Math.round(performance.now() - t1), memory: gridBytes(grids), ledges: w.drops.length, ...(WALKER_ASKED ? { asked: WALKER_ASKED } : {}) } });
   } catch (e) {
     console.warn("[walk] the baked floor could not be read; walking on the written plan:", e);
     return Object.assign(old, { stats: { mode: "old", failed: String(e) } });
@@ -215,7 +220,7 @@ const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
-const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
+const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow"), clearUnder: L.grove.clearUnder }));
 await loading.step(tr("竹林"));
 const props = site.censer ? part("props", () => createProps(scene, M, site.censer, L.propsAt)) : { ...NONE, censer: () => ({ none: true }), setTraces: () => 0 };
 const post = createPost(renderer, scene, camera, quality, OFF);
@@ -297,7 +302,7 @@ let afterMood = null;   // set further down, once there are rooms: what a change
 // takes them away again).
 const layers = () => { const L = mood.fogLayer; U.uFogLayer.value.set(OFF.has("layers") ? 0 : L[0], L[1], 1 / L[2], L[3]); if (document.body.classList.contains("indoors")) U.uFogLayer.value.x = 0; };
 function setMood(season, time) {
-  state.season = season; state.time = time; mood = moodOf(season, time);
+  state.season = season; state.time = time; mood = moodOf(season, time, L.moodFor);
   sky.setMood(mood);
   U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uWinNight.value = mood.winNight; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
   layers();
@@ -371,7 +376,8 @@ const inkVeil = (k) => { const c = document.getElementById("curtain"); if (!c) r
 // What the director's swings and shots are kept out of (#295): once the eye's hierarchy is built, what is drawn, with the
 // sphere of this frame's lens (a railing is drawn, so `railNear` has nothing more to add); until then the written plan.
 const eyeWalker = Object.assign(Object.create(walker), {
-  eyeShut: (x, y, z, foot) => (eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
+  // (where the level keeps the eye out, the bamboo, it is shut whether or not the eye's space has been built yet: #515)
+  eyeShut: (x, y, z, foot) => (L.eyeKeepOut?.(x, y, z, eyeSpace ? eyeSpace.radius : 0.25) ? true : eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
   railNear: (x, y, z, m) => (eyeSpace ? false : walker.railNear(x, y, z, m)),
 });
 const director = createDirector({ walker: eyeWalker,
@@ -503,7 +509,7 @@ canvas.addEventListener("pointerup", (e) => {
     }
     down = null; return;
   }
-  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on) {
+  if (down && !down.moved && performance.now() - down.t < 600 && !photo.on && walkOpenNow()) {   // (a tap that reaches the picture under the title walks nobody: #462)
     const r = canvas.getBoundingClientRect();
     ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
     // The bell and the drum answer a tap from anywhere in their court.
@@ -594,6 +600,7 @@ addEventListener("keydown", (e) => {
   if (k === " " && /** @type {Element} */ (e.target)?.tagName !== "BUTTON" && startDrop()) { e.preventDefault(); return; }
   if (k === " ") { if (press("enterBtn") || startJump()) e.preventDefault(); }   // Space steps in from the title, and otherwise jumps
   else if (k === "e" || k === "enter") { if (press("act") || press("enterBtn")) e.preventDefault(); }
+  else if ((k === "v" || k === "r") && !viewKeyHeard(walkOpenNow(), k)) return;   // (the view is not turned or changed under the title either, #462)
   else if (k === "v") { const to = view === "third" ? "first" : "third"; setView(to); if (view === to) track("demo.view", { to }); }
   else if (k === "r") { if (recenter()) e.preventDefault(); } else if (k === "b" || k === "tab") { press("bookBtn"); e.preventDefault(); }
   else if (k === "p") { if (!press("photoClose")) press("photoBtn"); } else if (k === "t") { if (document.body.classList.contains("seasons")) ui.toggle("moodPanel"); }   // the seasons are the visitor's once the book has been filled once (game.js)
@@ -635,8 +642,12 @@ function resize() {
 // `?devpose` (the dev server only) writes `cam` into the address as he walks; the view he comes back to is still the walk's.
 const DEVPOSE = import.meta.env.DEV && Q.has("devpose");
 const FIXED_VIEW = (Q.has("shot") || Q.has("show") || Q.has("cam")) && !DEVPOSE;
+// A level may give a named view a lens of its own (`site.lens[name] = { first, third }`, in degrees: T05's cam06 is seen at 65° from his eyes, docs/t05/PRD.md §3):
+// `?show=<name>` then takes it where the fixed views take 52° and 44°, and a picture held upright is that much wider again as the fixed views' is. A view with no entry, and a page with no table, are as before.
+const viewLens = Q.has("show") && !Q.has("cam") ? site.lens?.[Q.get("show")] : null;
 const baseFov = () => {
-  const w = viewW(), h = viewH(), tall = w < h;
+  const w = viewW(), h = viewH(), tall = w < h, own = FIXED_VIEW && viewLens ? viewLens[view === "third" ? "third" : "first"] : null;
+  if (own) return own + (tall ? (view === "third" ? 14 : 16) : 0);
   return FIXED_VIEW ? (view === "third" ? (tall ? 58 : 44) : tall ? 68 : 52) : (view === "third" ? (tall ? 62 : 50) : tall ? 75 : 65) + settings.get().fov;
 };
 // With the camera raised, the angle drawn in or let out by the zoom (from the walk's angle, or from a shot's).
@@ -682,7 +693,7 @@ function growEyeSpace() {
   const w = new EyeWorker();
   w.onmessage = (e) => {
     const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(e.data.positions, 3));
-    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true })); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
+    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true }), L.eyeKeepOut || null); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
   };
   w.onerror = () => { eyeInfo.state = "failed"; w.terminate(); console.warn("the eye's hierarchy could not be built: it asks the written plan"); };
   w.postMessage({ positions }, [positions.buffer]);
@@ -699,7 +710,8 @@ function frame(now) {
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
-  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : axes(), f = held.f, s = held.s;
+  // Under the title, the opening, the line a change of language puts up and a crossing's ink the keys and the stick do nothing (#462, walkgate.js).
+  const held = photo.on || menuUp ? { f: 0, s: 0, turn: 0 } : heldUnder(walkOpenNow(), axes()), f = held.f, s = held.s;
   // A and D turn him and the view with him (#295, keyturn.js; the side arrows step sideways), unless the visitor has asked
   // for the old way; a turn by the keys is a hand on the view: it sends the eye home from a shot and stops the drift.
   if (!cine && !stage && (held.turn || keyTurn.rate)) {
@@ -826,6 +838,10 @@ function frame(now) {
   }
   if (push) {
     if (cine || photo.on || director.active() || opening.active() || push.to !== view) { push = null; fade(1); }
+    // Moved somewhere else while the view changed (up the stair to the balcony, down it, through a door: #587), the eye
+    // would set out from where it stood, hundreds of metres off, and creep there at PUSH.move a frame, the visitor seeing
+    // only the mist: a change of place behind the veil is a cut, and only what stays within PUSH.far is pushed.
+    else if (camera.position.distanceTo(push.p) > PUSH.far) { push = null; fade(1); monk.group.visible = view === "third" && !monkHidden; lens(); }
     else {
       // how far along: by time, and by no more than the frame's own bounds on moving and widening allow (smootherstep's
       // steepest is 1.875 times its mean)
@@ -908,7 +924,7 @@ if (Q.has("shot")) document.body.classList.add("bare");
 // Into his own eyes and out of them again, the eye is moved, not cut (#102, folded into #295: a phone measured the angle of
 // view jumping 13° in a frame): from where it stood, with the angle it had, it goes over to the new view's eye on a
 // smootherstep, never more than PUSH.move metres or PUSH.fov degrees in a frame, and he fades out (or in) as it comes.
-const PUSH = { time: 0.6, move: 0.12, fov: 1.5 };
+const PUSH = { time: 0.6, move: 0.12, fov: 1.5, far: 15 };   // (far: further than the follow arm ever reaches, 11 m, is not a push but a change of place)
 let push = null;
 const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return; }   // up on a balcony he sees with his own eyes only (#101)
   const from = frames > 3 && v !== view && !FIXED_VIEW && !cine && !photo.on && !reducedMotion.matches ? { p: camera.position.clone(), q: camera.quaternion.clone(), fov: camera.fov, to: v } : null;
@@ -1358,6 +1374,7 @@ window.__fall = (k) => drift.fall?.(k);
 window.__litterDraw = (m) => { if (m !== undefined) U.uLitMode.value = m; return U.uLitMode.value; };   // which of the ground's kept things the paving draws (1 heaps, 2 kept leaves, 3 both), to measure each   // how readily the trees let go: 1 as built, 0.5 half, -1 the old steady fall (#267)
 window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.position, (t) => { const w = windAt(mood?.wind ?? 0, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; }); return drift.litter?.(at) ?? null; };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
+window.__sun = (k) => { sky.scaleSun(k); return k; };   // the sun's light times k (tools/sun-lit.cjs: with it and without it, to see which paving is in direct sun, #488)
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
 window.__flock = (go) => { if (go && flock.flush()) flutter(1); return flock.state(); };   // the birds going up now, if asked, and where they are

@@ -2,7 +2,7 @@
 // software rendering on GitHub's free machines), the biggest go first, and each goes to the machine with the least so far
 // (longest-processing-time first): the same answer on every machine, with no talk between them. Taken in turn, as it was
 // before, four machines ran 25, 38, 43 and 47 minutes of the same list. A scenario nobody has timed yet counts as the
-// median one; machine 1 also runs the quick checks and, when asked, the evidence reads, which `extra` says (seconds).
+// median one; no machine carries more than its share: the checks and the evidence reads are jobs of their own in e2e.yml (`extra`, seconds a machine has to do besides, is kept for a machine that is given one again).
 //
 // How many machines is not written down: it is the fewest, twelve at least, that keep the longest of them within BUDGET, worked out by the
 // same plan from the same times on the workflow's first job (`matrix`), so a scenario added to run.cjs that no longer fits adds a machine by
@@ -13,7 +13,9 @@
 //   node tests/e2e/shards.cjs plan [N]                     who would run what, and for how long (N: the machines needed)
 //   node tests/e2e/shards.cjs update <e2e-report.json>...  put the times of these runs into durations.json (a report is what a shard leaves in tools/out/)
 const fs = require("fs"), path = require("path");
-const FILE = path.join(__dirname, "durations.json");
+// A run on a graphics card (E2E_GPU, the T4 run) is shared by what each scenario takes there: the card draws the heavy ones three to twenty times
+// faster than software does, so the free machines' seconds left some shards at 15 minutes and others at 6 (run 44967166241).
+const FILE = path.join(__dirname, process.env.E2E_GPU ? "durations-t4.json" : "durations.json");
 const read = () => JSON.parse(fs.readFileSync(FILE, "utf8"));
 
 /** The seconds a scenario is counted at. @param {Record<string, number>} d */
@@ -35,7 +37,7 @@ function plan(names, n, data = read()) {
 }
 
 /** The longest a machine's share may be counted at, seconds: 25 minutes is the target from start to end, setup is about two, and a scenario varies 10 to 60 % between runs (run 44675254911). */
-const BUDGET = 16 * 60, FEWEST = 12, MOST = 40;
+const BUDGET = 20 * 60, FEWEST = 12, MOST = 40;
 
 /**
  * The fewest machines, `fewest` (FEWEST for the whole suite) at least, that keep the longest share within BUDGET.
