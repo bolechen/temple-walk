@@ -1,6 +1,7 @@
 // The sky at any hour, and the light that comes from it.
 import * as THREE from "three";
 import { NOISE, U } from "./glsl.js";
+import { SKY_TRIAL } from "./atmosphere.js";
 
 // Shared by reference with every shader that fogs or lights by hand; `setMood` changes them in place.
 export const FOG = new THREE.Color(0.70, 0.745, 0.74);
@@ -15,16 +16,24 @@ export function createSky(renderer, scene, quality, focus) {
     uSun: { value: SUN_DIR }, uT: { value: 0 }, uFog: { value: FOG },
     uZen: { value: new THREE.Color(0.36, 0.52, 0.74) }, uHor: { value: new THREE.Color(0.8, 0.86, 0.9) }, uSunCol: { value: new THREE.Color(1, 0.95, 0.86) },
     uCloud: { value: 0.9 }, uStars: { value: 0 }, uGlow: { value: 0.6 }, uDisk: { value: 1 },
+    // Trial B (#592, atmosphere.js): the sky's colour over the sphere from where the sun stands; `uSkyK` sets its lightness to the table's, `uSkyOver` is how much of the sky is still the table's own (cloud), `uSkyOn` 0 for the sky as it was.
+    tSky: { value: new THREE.DataTexture(new Uint16Array(4), 1, 1, THREE.RGBAFormat, THREE.HalfFloatType) }, uSkyK: { value: 1 }, uSkyOver: { value: 1 }, uSkyOn: { value: 0 },
   };
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false, uniforms: u,
     vertexShader: "varying vec3 vD; void main(){ vD=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
     fragmentShader: NOISE + /* glsl */`
-      varying vec3 vD; uniform vec3 uSun, uFog, uZen, uHor, uSunCol; uniform float uT, uCloud, uStars, uGlow, uDisk;
+      varying vec3 vD; uniform vec3 uSun, uFog, uZen, uHor, uSunCol; uniform float uT, uCloud, uStars, uGlow, uDisk, uSkyK, uSkyOver, uSkyOn; uniform sampler2D tSky;
       void main(){
         vec3 d=normalize(vD); float up=max(d.y,0.), s=max(dot(d,uSun),0.);
         vec3 c=mix(uHor,uZen,pow(max(smoothstep(0.,.85,up),0.),.55));
         c+=uSunCol*(pow(max(s,0.),5.)*.22+pow(max(s,0.),40.)*.5)*uGlow;                      // the glow round the sun, or the moon
+        if(uSkyOn>.5){   // trial B: the colour the air gives (atmosphere.js), over the table's own as far as there is no cloud
+          float el_=asin(clamp(d.y,-1.,1.)); vec2 hs_=normalize(d.xz+1e-5), sh_=normalize(uSun.xz+1e-5);
+          vec2 tuv=vec2(acos(clamp(dot(hs_,sh_),-1.,1.))/3.14159265, sqrt(clamp((el_+.1)/(1.5707963+.1),0.,1.)));
+          vec3 L=texture2D(tSky,tuv).rgb*uSkyK; L=mix(L,1.+log(max(L,vec3(1.))),step(vec3(1.),L));   // above 1 the aureole is let in softly
+          c=mix(L,c,uSkyOver);
+        }
         // Stars: one to a cell of the sphere, each with its own slow shimmer.
         vec3 q=d*190.; float h=h31(floor(q));
         c+=step(.9968,h)*smoothstep(.5,.05,length(fract(q)-.5))*uStars*(.55+.45*sin(uT*1.7+h*90.))*smoothstep(.03,.3,d.y)*vec3(.9,.95,1.)*1.6;
@@ -41,6 +50,7 @@ export function createSky(renderer, scene, quality, focus) {
         #include <colorspace_fragment>
       }`,
   });
+  u.tSky.value.needsUpdate = true;
   const dome = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), mat);
   scene.add(dome);
   const env = new THREE.Scene(); env.add(new THREE.Mesh(dome.geometry, mat));
@@ -57,7 +67,7 @@ export function createSky(renderer, scene, quality, focus) {
   const hemi = new THREE.HemisphereLight(new THREE.Color(0.86, 0.91, 0.93), new THREE.Color(0.3, 0.31, 0.28), 1.15);
   sun.position.copy(SUN_DIR).multiplyScalar(170).add(at);
   scene.add(sun, sun.target, hemi);
-  let sunI = sun.intensity, sunK = 1, last = null;   // the hour's strength, and a tool's multiplier on it (`scaleSun`)
+  let sunI = sun.intensity, sunK = 1, last = null, skyTex = null;   // the hour's strength, and a tool's multiplier on it (`scaleSun`)
   // What the sun gives the surfaces that are lit by hand (the paving, the trees' leaves, the novice) and the light of the
   // air they all read, from the hour's table; `sunK` is 1 but for a measuring tool.
   const lit = (m) => {
@@ -84,6 +94,11 @@ export function createSky(renderer, scene, quality, focus) {
       SUN_DIR.fromArray(m.sun).normalize(); FOG.fromArray(m.fog);
       u.uZen.value.fromArray(m.zen); u.uHor.value.fromArray(m.hor); u.uSunCol.value.fromArray(m.sunCol);
       u.uCloud.value = m.cloud; u.uStars.value = m.stars; u.uGlow.value = m.glow; u.uDisk.value = m.disk;
+      if (SKY_TRIAL.on && m.sky) {   // trial B: this hour's table of the sky's colour, as half floats
+        const a = m.sky.table, h = new Uint16Array(a.data.length); for (let i = 0; i < h.length; i++) h[i] = THREE.DataUtils.toHalfFloat(Math.min(a.data[i], 6e4));
+        if (skyTex) skyTex.dispose(); skyTex = new THREE.DataTexture(h, a.W, a.H, THREE.RGBAFormat, THREE.HalfFloatType); skyTex.minFilter = skyTex.magFilter = THREE.LinearFilter; skyTex.wrapS = skyTex.wrapT = THREE.ClampToEdgeWrapping; skyTex.needsUpdate = true;
+        u.tSky.value = skyTex; u.uSkyK.value = m.sky.k; u.uSkyOver.value = m.sky.over; u.uSkyOn.value = 1;
+      } else u.uSkyOn.value = 0;
       sun.position.copy(SUN_DIR).multiplyScalar(190).add(at); sun.color.fromArray(m.sunCol); sunI = m.sunI; sun.intensity = sunI * sunK;
       hemi.color.fromArray(m.hemiS); hemi.groundColor.fromArray(m.hemiG); hemi.intensity = m.hemiI;
       U.uAmb.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.82); last = m; lit(m);
