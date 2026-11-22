@@ -1,0 +1,130 @@
+{
+ "issue": 514,
+ "build": 81,
+ "blender": "bpy 5.3.0 (module, headless)",
+ "input": {
+  "file": "sakyamuni-f1.glb",
+  "sha256": "61f5a180…16f8 (asset-register STATUE-t05-sakyamuni-sample-370)"
+ },
+ "output": {
+  "full": "36d4abc2e42d148b7d56764b8d0493c2b1e61ab1e73c53e6bdbc1b5d41e33afb",
+  "60k": "30dd4de2095f1b5a67c6a975fd28b827cad1d8cc74f429eaf342e9d1a1df09af",
+  "60k_baked": "1ff630c646e2b554…"
+ },
+ "shoulder": {
+  "turn_deg": 9.89,
+  "pivot": [
+   -1.5,
+   5.95,
+   -0.85
+  ],
+  "elbow_moves_m": [
+   0.0,
+   0.095,
+   0.303
+  ],
+  "wrist_forward_m": 0.3032,
+  "soft_band": {
+   "shoulder_band_y": [
+    5.7,
+    5.2
+   ],
+   "inner_band_m": 0.08,
+   "inner_x": -1.27,
+   "points": 4235,
+   "largest_move_m": 0.313
+  },
+  "intended_area": {
+   "points": 24503,
+   "min": [
+    -2.087,
+    3.543,
+    -1.308
+   ],
+   "max": [
+    -1.27,
+    5.7,
+    1.568
+   ],
+   "largest_move_m": 0.356
+  },
+  "shoulder_top_mm": 3.8,
+  "robe_largest_move_mm": 0.0,
+  "elbow_to_body_m": {
+   "before_m": 0.008,
+   "after_m": 0.005,
+   "note": "least distance from the elbow's outside (y 3.9-4.5, z < 0.2) to the body's side (x -1.3 to -1.0)"
+  }
+ },
+ "outside_intended_areas": {
+  "points_checked": 665390,
+  "largest_move_mm": 0.0,
+  "over_1mm": 0,
+  "limit_mm": 1
+ },
+ "hand": {
+  "palm_pitch_deg": -3.2,
+  "fingers_from_vertical_deg": 10.6,
+  "palm_to_knee_m": 0.0019,
+  "tip_to_knee_m": 0.0128,
+  "knuckle_bend_deg": -12.0,
+  "sections": {
+   "forearm_long_short": 1.478,
+   "hand_wrist_long_short": 1.554,
+   "where": "forearm 0.3 m back from the wrist; hand 0.25-0.30 m down from it (below the part drawn onto the forearm)",
+   "forearm_long_dir": [
+    0.996,
+    0.093,
+    0.0
+   ],
+   "hand_long_dir": [
+    0.995,
+    -0.014,
+    0.098
+   ],
+   "flats_angle_deg": 8.3,
+   "limit": 1.25
+  }
+ },
+ "knee": {
+  "replaced_area_m2": 1.038,
+  "sheet_area_m2": 1.285
+ },
+ "seal_of_round_2": {
+  "note": "build 81's patches: the forearm lined 5 mm inside, a lining in the corner box, two-sided fans under the forearm, four closed fills behind the wrist",
+  "arm_cap": 12919,
+  "cleanup": {
+   "tidy_faces_taken_out": 233,
+   "lining_faces": 10975,
+   "fill_blob_faces": 5120
+  }
+ },
+ "measures_the_patches_disturb": {
+  "contact_open_edge_points": {
+   "open_edge_points": 18,
+   "gap_mm_p50": 38.95,
+   "gap_mm_p95": 47.9,
+   "gap_mm_max": 47.91,
+   "over_2mm": 18,
+   "limit_gap_mm": 2
+  },
+  "wrist_edge": {
+   "open_edge_points": 17,
+   "deepest_under_mm": 11.1,
+   "shallowest_under_mm": -5.5,
+   "median_under_mm": -1.3,
+   "nearest_surface_mm_max": 37.2,
+   "points_less_than_5mm_under": 10,
+   "limit_mm": 5
+  },
+  "small_pieces_in_seam_band": 59,
+  "why": "the linings' and fans' own borders are open edges near the arm and the wrist, and the corner lining copies the figure's tiny pieces; build 69, before them, had 0 open seam points, the wrist edge 7.9-11.1 mm under, and 0 small pieces"
+ },
+ "faces": {
+  "output": 1469138,
+  "original_f1": 1437476,
+  "ratio": 1.022,
+  "limit": 1.1
+ },
+ "known_issues": "the opening behind the wrist seen from the west aisle, the steps on the knee's inner edge, the fills' knobs: the owner chose C on 2026-11-22 (accept build 81), see #578"
+}
