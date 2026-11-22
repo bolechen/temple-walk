@@ -127,6 +127,70 @@ const scenarios = {
   } },
   // The cedars' wood is grown from a seed by three's TreeGenerator (#162): the page and Node must grow the same trees,
   // to the tenth of a millimetre, or a picture taken in one could not be measured in the other (#161).
+  // The walk is not his while the title is up (#462): the keys, the arrows and the stick do nothing under it, whether the page
+  // opened on the path or (`?in=`) in a hall. Held for some frames, S leaves him where he stands; stepping in, it walks him.
+  "title-holds": { tier: 2, async run(b, base) {
+    for (const [name, query] of [["on the path", "q=low&debug=0"], ["in the great hall (?in=main)", "q=low&debug=0&in=main"]]) {
+      const t = await open(b, base, query + BARE, { enter: false });
+      expect(await t.page.isVisible("#title"), `${name}: the title should be up`);
+      const at = () => t.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, frames: y.frames, room: y.room }; });
+      const before = await at();
+      await t.page.keyboard.down("s"); await t.frames(40);
+      const during = await at();
+      await t.page.keyboard.up("s");
+      expect(during.frames > before.frames + 20, `${name}: the page should have drawn frames while S was held: ` + JSON.stringify([before, during]));
+      expect(Math.hypot(during.x - before.x, during.z - before.z) < 0.001 && during.room === before.room, `${name}: he walked under the title: ` + JSON.stringify([before, during]));
+      await t.page.keyboard.down("ArrowDown"); await t.frames(30); await t.page.keyboard.up("ArrowDown");
+      const arrows = await at(); expect(Math.hypot(arrows.x - before.x, arrows.z - before.z) < 0.001, `${name}: he walked on the arrow under the title: ` + JSON.stringify([before, arrows]));
+      // Nor does he turn: A and D turn him and the view with him, R turns the view back behind him (#462); under the title the view stays as it is.
+      const yawBefore = await t.page.evaluate(() => window.__yard().yaw);
+      await t.page.keyboard.down("a"); await t.frames(30); await t.page.keyboard.up("a");
+      await t.page.keyboard.down("d"); await t.frames(30); await t.page.keyboard.up("d"); await t.page.keyboard.press("r"); await t.frames(10);
+      const yawAfter = await t.page.evaluate(() => window.__yard().yaw);
+      expect(Math.abs(yawAfter - yawBefore) < 1e-6, `${name}: the view turned under the title (A, D or R): ` + JSON.stringify([yawBefore, yawAfter]));
+      // A tap on the ground: the title covers the picture, so a real click lands on it; and one made to reach the picture all the same sets no way and walks nobody.
+      const w = await t.page.evaluate(() => innerWidth), h = await t.page.evaluate(() => innerHeight);
+      await t.page.mouse.click(w / 2, h * 0.8);
+      await t.page.evaluate(() => { document.getElementById("title").style.pointerEvents = "none"; });   // (now a real click reaches the picture under the title)
+      await t.page.mouse.click(w / 2, h * 0.85);
+      await t.page.evaluate(() => { document.getElementById("title").style.pointerEvents = ""; });
+      await t.frames(30);
+      const tapped = await t.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, target: y.target, route: y.route }; });
+      expect(Math.hypot(tapped.x - before.x, tapped.z - before.z) < 0.001 && !tapped.target && !tapped.route, `${name}: a tap on the ground walked him under the title: ` + JSON.stringify([before, tapped]));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    // Under the opening after 入山 a key held does not walk him either: while it is still playing (read before and after) he has not moved.
+    { const o = await open(b, base, "q=low&debug=0" + BARE, { enter: false });
+      await o.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await o.page.click("#enterBtn");
+      await o.page.waitForFunction(() => window.__opening().active, null, { timeout: 60000 });
+      const where = () => o.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, on: window.__opening().active }; });
+      const start = await where(); await o.page.keyboard.down("s");
+      for (let i = 0; i < 6; i++) { await o.frames(2); const p1 = await where(); if (!p1.on) break; const p2 = await where(); if (p2.on) expect(Math.hypot(p2.x - start.x, p2.z - start.z) < 0.001, "he walked while the opening was playing: " + JSON.stringify([start, p2])); }
+      await o.page.keyboard.up("s"); await o.close(); }
+    // T05 has no title of its own and no opening: the gate must be open from the first frame, and every way of walking works there (#462).
+    { const f = await open(b, base, "q=low&debug=0&level=t05&fast=1" + BARE);
+      expect(await f.page.evaluate(() => window.__level().id === "t05" && document.body.classList.contains("entered") && !window.__opening().active), "T05 should be walkable from the start (no title, no opening held)");
+      const pose = () => f.page.evaluate(() => { const y = window.__yard(); return { x: y.x, z: y.z, yaw: y.yaw, target: y.target }; });
+      const p0 = await pose(); await f.page.keyboard.down("w"); await f.frames(30); await f.page.keyboard.up("w");
+      const p1 = await pose(); expect(Math.hypot(p1.x - p0.x, p1.z - p0.z) > 0.2, "T05: W should walk him: " + JSON.stringify([p0, p1]));
+      await f.page.keyboard.down("a"); await f.frames(30); await f.page.keyboard.up("a");
+      const p2 = await pose(); expect(Math.abs(p2.yaw - p1.yaw) > 0.01, "T05: A should turn him: " + JSON.stringify([p1, p2]));
+      await f.page.keyboard.press("r"); await f.frames(10);
+      const vw = await f.page.evaluate(() => innerWidth), vh = await f.page.evaluate(() => innerHeight);
+      await f.page.mouse.click(vw / 2, vh * 0.72); await f.frames(20);
+      const p3 = await pose(); expect(p3.target !== null || Math.hypot(p3.x - p2.x, p3.z - p2.z) > 0.05, "T05: a tap on the ground should walk him: " + JSON.stringify([p2, p3]));
+      expect(f.errors.length === 0, f.errors.join("\n")); await f.close(); }
+    // Stepped in, the same key walks him.
+    const t = await open(b, base, "q=low&debug=0&fast=1" + BARE, { enter: false });
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
+    await t.page.waitForFunction(() => document.body.classList.contains("entered")); await t.page.keyboard.press("Escape");
+    await t.page.waitForFunction(() => !window.__opening().active, null, { timeout: 120000 });
+    const a = await t.page.evaluate(() => { const y = window.__yard(); return [y.x, y.z]; });
+    await t.page.keyboard.down("w"); await t.frames(30); await t.page.keyboard.up("w");
+    const c = await t.page.evaluate(() => { const y = window.__yard(); return [y.x, y.z]; });
+    expect(Math.hypot(c[0] - a[0], c[1] - a[1]) > 0.2, "stepped in, W should walk him: " + JSON.stringify([a, c]));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The title stands clear of the novice (#461). The walk's own picture is the title's backdrop and he stands in the middle of it,
   // a little low; the name, the line about the visit and the seal are above his head, going in below his feet. At the four shapes
   // of a screen (16:9, 4:3, 9:16, 19.5:9) and a small phone on its side, for a first visitor, one coming back (with seals and a
@@ -363,6 +427,61 @@ const scenarios = {
     let veil = false;
     await t.until(async () => { s = await t.state(); veil ||= !!s.inside || s.room !== null; return Math.hypot(s.x, s.z + 12) < 0.6; }, 300000, "he never reached station E inside the hall");
     expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // T05 walked as a visitor walks it (PLAN.md item 12, PRD.md §9 item 3): ?level=t05 straight in on the workbench, at the
+  // walking pace (no ?fast), from the outer gate's place to station F. The long way up the axis is walked by __walk; the two
+  // stretches where the prologue once only let a hurried test through (docs/t00/PITFALLS.md A3) are walked on the keys:
+  // the flight up onto the terrace with W, back down it with S and up again, and the hall's sill with W; then a tap on
+  // the hall's floor carries him on in. The prologue's book and kept place lie in the browser all the while, untouched.
+  "t05-walk": { tier: 3, async run(b, base) {
+    const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" }) };
+    const t = await open(b, base, "level=t05&q=low" + BARE, { init: `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) if (localStorage.getItem(k) === null) localStorage.setItem(k, p[k]); })()` });
+    const lv = await t.page.evaluate(() => window.__level());
+    expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05 straight in: " + JSON.stringify(lv));
+    const fast = await t.page.evaluate(() => new URLSearchParams(location.search).has("fast")); expect(!fast, "this walk is at the walking pace");
+    let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
+    const near = (x, z, r = 0.6) => async () => { s = await t.state(); return Math.hypot(s.x - x, s.z - z) < r; };
+    // Up the axis to a few steps short of the flight's foot (z 21), walked, not jumped: through both gates, the archway and the Wuliang hall.
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 44], [0, 24]]));
+    await t.until(near(0, 24), 900000, "he never came up the axis to the foot of the flight");
+    // Face up the flight on the keys (A and D turn him, #295), then hold W: up the treads to the terrace at +3.
+    const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+    const face = async (to) => {
+      for (let i = 0; i < 60; i++) {
+        s = await t.state(); const d = wrap(to - s.yaw); if (Math.abs(d) < 0.05) return;
+        const key = d > 0 ? "a" : "d"; await t.page.keyboard.down(key); await t.frames(1); await t.page.keyboard.up(key); await t.frames(1);
+      }
+      throw new Error("he could not be turned to face " + to + ": " + JSON.stringify(await t.state()));
+    };
+    await face(0);
+    const hold = async (key, done, what, ms = 600000) => { await t.page.keyboard.down(key); try { await t.until(done, ms, what); } finally { await t.page.keyboard.up(key); } };
+    let lo = 9, hi = -9; const track = async () => { s = await t.state(); lo = Math.min(lo, s.h); hi = Math.max(hi, s.h); };
+    await hold("w", async () => { await track(); return s.h > 2.95 && s.z < 14.5; }, "W did not take him up the flight onto the terrace");
+    expect(Math.abs(lo) < 0.1, `he started the flight from the court's paving: ${lo}`);
+    // Back down it with S, walking backwards, to the court again, and up once more.
+    await hold("s", async () => { await track(); return s.h < 0.05 && s.z > 21.2; }, "S did not take him back down the flight");
+    await hold("w", async () => { await track(); return s.h > 2.95 && s.z < 6; }, "W did not take him up the flight a second time");
+    // Over the hall's middle door sill (0.24 m, the door's line at z -0.05) and in, on W alone: the doorway that only a hurried test once crossed.
+    await hold("w", async () => { s = await t.state(); return s.z < -1.2; }, "W did not take him over the sill into the hall");
+    expect(Math.abs(s.h - 3) < 0.1 && !s.inside && s.room == null, `over the sill and onto the hall's floor, with no veil: ${JSON.stringify({ h: s.h, inside: s.inside, room: s.room })}`);
+    // A tap on the hall's floor ahead of him (pickFloor) walks him on in. Where the floor lies on the screen depends on the eye, so the
+    // tap is tried a little lower each time until one lands on the floor ahead (higher up the picture are the altar and the figures, no floor).
+    const box = await t.page.$("canvas").then((c) => c.boundingBox()), z0 = s.z;
+    let tapped = null;
+    for (const fy of [0.55, 0.6, 0.65, 0.7, 0.75]) {
+      await t.page.mouse.click(box.x + box.width / 2, box.y + box.height * fy); await t.frames(3);
+      s = await t.state(); if (s.target && s.target[1] < z0 - 1) { tapped = { fy, target: s.target }; break; }
+    }
+    expect(tapped, "a tap on the hall's floor ahead of him set no way to walk: " + JSON.stringify(s));
+    await t.until(async () => { s = await t.state(); return s.z < z0 - 1; }, 300000, "a tap on the hall's floor did not walk him on");
+    // To station F, walked.
+    await t.page.evaluate(() => window.__walk([[0, -2]]));
+    await t.until(near(0, -2), 300000, "he never reached station F");
+    expect(Math.abs(s.h - 3) < 0.1, "station F is on the hall's floor: " + s.h);
+    await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
+    const kept = await t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
+    for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} byte for byte: ${kept[k]}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
@@ -1683,7 +1802,7 @@ const scenarios = {
   // Which floor he walks on (#265, #274): the grid baked from the drawn meshes everywhere by default (a spot on every level
   // out of doors, inside a hall, up on the balcony), the written plan with ?walker=old; and a ?cam address that falls
   // where the grid shuts him out is moved to the nearest open spot within half a metre, or back to the start of the path
-  // (in a room: left at its door; on the balcony: at its door).
+  // (in a room: left at its door; on the balcony: at its door). A level that keeps no written plan (T05) is walked on the grid whatever the address asks.
   walkgrid: { tier: 2, async run(b, base) {
     let t = await open(b, base, "q=low&view=first&cam=0,20,0,0" + BARE);
     const w = await t.page.evaluate(() => window.__walker());
@@ -1736,6 +1855,11 @@ const scenarios = {
     expect(o.mode === "old" && o.grid === null && !o.bytes, "?walker=old should walk the written plan, and fetch no grid: " + JSON.stringify(o));
     await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main", 60000, "could not go into the great hall on the written plan");
     expect((await t.page.evaluate(() => window.__walker())).grid === null, "?walker=old is the written plan indoors too");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A level that keeps no written plan to walk on (T05, writtenPlan: false) refuses ?walker=old: the baked floor, and the refusal reported.
+    t = await open(b, base, "level=t05&q=low&view=first&walker=old" + BARE);
+    const n = await t.page.evaluate(() => window.__walker());
+    expect(n.mode === "mesh" && n.asked === "old" && n.bytes > 0 && n.grid === "outdoors", "?level=t05&walker=old should walk T05's baked floor and say what was asked: " + JSON.stringify(n));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // Round the platforms the baked floor opened (#265: the owner saw the floor's underside from his own eyes at the great
@@ -2195,7 +2319,7 @@ const scenarios = {
     expect(new Set(foot.map((f) => f.top)).size === 1 && foot.every((f) => f.h >= 44 && f.w >= 44) && foot.filter((f) => f.stamp).map((f) => f.id).join() === "bookClose" && foot[foot.length - 1].right <= (await t.page.evaluate(() => innerWidth)) - 16, "the foot of the book is not one line of four, the seal alone: " + JSON.stringify(foot));
     await t.page.click("#bookMoreBtn"); await t.until(async () => t.page.isVisible("#bookMore"), 10000, "更多 did not open");
     const more = await t.page.evaluate(() => [...document.querySelectorAll("#bookMore .chip, #bookMore .stamp")].filter((e) => e.offsetParent !== null).map((e) => { const r = e.getBoundingClientRect(); return { id: e.id, top: Math.round(r.top), h: Math.round(r.height), stamp: e.classList.contains("stamp") }; }));
-    expect(more.map((m) => m.id).join() === "bookReplay,bookMap,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper (with the map's line, #449, since this close was played) is not one thing to a line, none a seal: " + JSON.stringify(more));
+    expect(more.map((m) => m.id).join() === "bookReplay,bookMap,bookCarry,bookReset,bookMoreClose" && more.every((m) => m.h >= 44 && !m.stamp) && new Set(more.map((m) => m.top)).size === more.length, "the small paper (with the map's line, #449, since this close was played) is not one thing to a line, none a seal: " + JSON.stringify(more));
     await t.page.click("#bookReplay");
     await t.until(async () => !(await t.page.isVisible("#bookMore")) && !(await t.page.isVisible("#book")), 20000, "the book and its paper did not go before the close");
     await t.until(async () => (await R()).closing === true, 120000, "山顶再坐一回 did not play the close");
@@ -3150,6 +3274,71 @@ const scenarios = {
     const v = await open(b, base, "q=low&from=../../evil" + BARE, { enter: false });
     await v.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 });
     expect((await v.page.evaluate(() => window.__eventLog().find((e) => e.name === "demo.ready").data.from)) === "", "an unknown scene is not named");
+    expect(v.errors.length === 0, v.errors.join("\n")); await v.close();
+  } },
+  // Taking the save to another place (#338, src/carry.js): two seals earned and a walk into the great hall, a link made
+  // in the book, and the link opened in a clean browser, which asks, writes and begins again from it; the save is gone
+  // from the address. A damaged link is refused and writes nothing.
+  carry: { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low" + BARE, { enter: false });
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 120000 }); await t.page.click("#enterBtn");
+    if (await t.page.evaluate(() => window.__opening().active)) { await t.page.keyboard.press("Escape"); await t.until(() => t.page.evaluate(() => !window.__opening().active), 60000, "Esc did not pass over the opening"); }
+    for (const id of ["well", "tea"]) {
+      await t.page.evaluate((id) => { const p = window.__places[id]; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); window.__rite(id); }, id);
+      await t.until(async () => (await t.journey()).seals[id] > 0, 180000, `the ${id}'s seal was not earned`);
+      await t.until(async () => !(await t.page.isVisible("#toast")), 30000, "the seal never left the picture");
+    }
+    // Inside the great hall, a little way in from its door (#375: a place kept in a hall carries the hall, and is carried with it).
+    await t.page.evaluate(() => window.__inside("main")); await t.until(() => t.inHall(), 60000, "never got into the great hall");
+    { const s0 = await t.state(); await t.page.evaluate((s) => window.__pose(s.x + 0.8, s.z - 2.5, 0.3, 0), s0); await t.frames(3); }
+    const stood = await t.state();
+    await t.until(async () => { const p = (await t.page.evaluate(() => window.__left())).place; return p && p.hall === "main" && Math.hypot(p.x - stood.x, p.z - stood.z) < 0.2; }, 60000, "where he stood in the hall was never kept");
+    const label = (await t.page.evaluate(() => window.__left())).place.label;
+    // Made in the book, from the small sheet behind 更多 (#473).
+    await t.page.evaluate(() => window.__book()); await t.until(() => t.page.isVisible("#book"), 30000, "the book did not open");
+    await t.page.click("#bookMoreBtn"); await t.until(() => t.page.isVisible("#bookCarry"), 20000, "the book's 更多 sheet did not open");
+    await t.page.click("#bookCarry"); await t.until(() => t.page.evaluate(() => window.__carry().open && window.__carry().link.includes("#save=")), 30000, "no link was made");
+    const made = await t.page.evaluate(() => window.__carry());
+    expect(made.places.join() === "here" && made.link.startsWith(base.replace(/\/$/, "") + "/#save="), "a preview offers only this site, and the link is its address with the save after the hash: " + made.link);
+    expect(new URL(made.link).search === "" && made.link.length < 2000, "nothing of the save in the query, and short: " + made.link.length);
+    // The sheet as the art review asked (#476): its one stamp is 复制链接, the link one faint line, and copied, nothing is left selected.
+    const look = await t.page.evaluate(() => { const shown = document.getElementById("carryLinkShown"), cs = getComputedStyle(shown); return { stamps: [...document.querySelectorAll("#carryOut .stamp")].map((e) => e.id), lines: Math.round(shown.getBoundingClientRect().height / parseFloat(cs.lineHeight)), border: cs.borderTopWidth, bufferShown: document.getElementById("carryLink").getBoundingClientRect().left > -1000 }; });
+    expect(look.stamps.join() === "carryCopy" && look.lines === 1 && look.border === "0px" && !look.bufferShown, "the carry sheet's stamp, link and buffer: " + JSON.stringify(look));
+    await t.page.click("#carryCopy");   // counted, nothing else
+    expect(await t.page.evaluate(() => String(getSelection()) === "" && document.getElementById("carryCopy").textContent === "已复制"), "after copying nothing should be selected, and the button says 已复制");
+    expect((await t.page.evaluate(() => window.__eventLog().filter((e) => e.name === "save.export").map((e) => Object.keys(e.data).sort().join())))[0] === "lang,to", "the count carries no part of the save");
+    const hash = made.link.slice(made.link.indexOf("#"));
+    // The book's row is the four #473 fixes, 合上 among them on one line on a phone held upright; 带走朱印帐 is not on it.
+    await t.page.click("#carryClose");
+    expect(await t.page.evaluate(() => !!document.getElementById("bookCarry").closest("#bookMore") && !document.querySelector("#book .row #bookCarry")), "带走朱印帐 should be on the 更多 sheet, not the book's row");
+    for (const [w, h] of [[360, 640], [390, 844]]) {
+      await t.page.setViewportSize({ width: w, height: h }); await t.frames(3);
+      const row = await t.page.evaluate(() => ["bookShare", "bookClose"].map((id) => Math.round(document.getElementById(id).getBoundingClientRect().top)));
+      expect(row[0] === row[1], `${w}×${h}: 合上 should be on the first row with 分享: ` + JSON.stringify(row));
+    }
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // A clean browser: no book, no place. It asks first, saying how many seals and where.
+    const u = await open(b, base, "q=low" + BARE + hash, { enter: false });
+    await u.until(() => u.page.isVisible("#carryIn"), 60000, "the link was not asked about");
+    expect(await u.page.evaluate(() => location.hash === ""), "the save should be out of the address at once");
+    const said = await u.page.textContent("#carryInText");
+    // (a clean browser has nothing to lose: the line about replacing what is kept is not shown; the count is written 两, as one counts seals in Chinese)
+    const asked = await u.page.evaluate(() => ({ focus: document.activeElement?.id, title: document.getElementById("carryInTitle").textContent, out: document.getElementById("carryOutTitle").textContent }));
+    expect(asked.focus === "carryIn" && asked.title !== asked.out, "the asking sheet opens with the focus on itself and a title of its own: " + JSON.stringify(asked));
+    expect(said.includes("两枚印") && said.includes(label) && !(await u.page.isVisible("#carryInWarn")), "the sheet should say two seals and where he was, and nothing about replacing in a clean browser: " + JSON.stringify([said, label]));
+    expect(await u.page.evaluate(() => localStorage.getItem("yunjing.journey.v1")) === null, "nothing is written before it is confirmed");
+    await Promise.all([u.page.waitForNavigation({ waitUntil: "commit", timeout: 120000 }), u.page.click("#carryInYes")]);
+    await u.page.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 240000 });
+    const back = await u.page.evaluate(() => ({ hash: location.hash, seals: window.__journey().count, line: document.getElementById("titleSeals").textContent, enter: document.getElementById("enterBtn").textContent, asked: !document.getElementById("carryIn").hidden }));
+    expect(back.hash === "" && back.seals === 2 && back.line.includes("二印") && back.line.includes(label) && back.enter === "接着走" && !back.asked, "the seals and the place should be here, the address clean, and nothing asked again: " + JSON.stringify(back));
+    await u.page.click("#enterBtn"); await u.frames(3);
+    { const st = await u.state(); expect(st.room === "main" && Math.hypot(st.x - stood.x, st.z - stood.z) < 0.5, "接着走 should stand him in the great hall where he stood on the other browser: " + JSON.stringify({ was: [stood.x, stood.z, stood.room], now: [st.x, st.z, st.room] })); }
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    // A link cut short: refused, and nothing written.
+    const v = await open(b, base, "q=low" + BARE + hash.slice(0, Math.floor(hash.length / 2)), { enter: false });
+    await v.until(() => v.page.isVisible("#carryIn"), 60000, "a cut link was not answered");
+    expect((await v.page.textContent("#carryInText")).includes("损坏") && !(await v.page.isVisible("#carryInYes")) && (await v.page.evaluate(() => localStorage.getItem("yunjing.journey.v1"))) === null, "a cut link should be refused, with nothing written");
+    await v.page.click("#carryInNo"); expect(!(await v.page.isVisible("#carryIn")), "the refusal is put away");
     expect(v.errors.length === 0, v.errors.join("\n")); await v.close();
   } },
   // The raised camera's three controls lie together (#297): settings, shutter and close a small move apart, none on the

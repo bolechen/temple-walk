@@ -4,6 +4,7 @@
 import test from "node:test"; import assert from "node:assert/strict"; import fs from "node:fs"; import os from "node:os"; import path from "node:path";
 import { execFileSync } from "node:child_process"; import { fileURLToPath } from "node:url";
 import { deployOf, DEPLOYS, DEPLOY } from "../../app/src/deploy.js";
+import { SITES } from "../../app/src/carry.js";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const COUNTER = "u.rushiwowen.co", TEXT = /\.(js|mjs|css|html|json|txt|svg|map)$/;
@@ -68,7 +69,8 @@ test("the canary build opens no debug panel and no workbench address that produc
     const p = scripts(prod), c = scripts(canary), v = scripts(preview);
     assert.ok(count(p) > 0, "the preview gate is not in the production bundle: the test looks in the wrong place");
     assert.equal(count(c), count(p), "the canary's bundle has a different number of preview gates than production's");
-    for (const [name, s] of c) assert.ok(!s.includes("temple-walk-canary"), `${name} names the canary's own address: a gate that opens something there`);
+    // (The one place the canary's address may stand is where a save is taken to it from the public page, #338: carry.js's SITES.)
+    for (const [name, s] of c) assert.ok(!s.replaceAll(SITES.canary, "").includes("temple-walk-canary"), `${name} names the canary's own address: a gate that opens something there`);
     // The same code: the same scripts, byte for byte, once the build's own name for its target is set aside. That one
     // word is folded in on purpose (#310: the pause menu says which build it is), and it changes the content hashes the
     // bundler names the files by and by which they import each other, so those are set aside too.

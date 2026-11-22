@@ -47,7 +47,7 @@ export function eyeR(near = 0.1, extra = 16) {
 }
 export const OUTLINE = JSON.parse(readFileSync(new URL("./outline.json", import.meta.url), "utf8"));
 export const BAKE = Object.freeze({
-  version: 27,     // raise when the method changes (27: a floor the flood did not reach still counts as floor beside it, #477), so that every grid baked by the old one is stale
+  version: 29,     // raise when the method changes (27: a floor the flood did not reach still counts as floor beside it; 28: faces at one distance are all the first, #477; 29: and the downward ray takes faces at one height in a fixed order), so that every grid baked by the old one is stale
   step: 0.05,      // metres a cell
   CLIMB: 0.25,     // the highest rise he steps up without a jump (a tread is 0.10-0.17; a low platform 0.30-0.45)
   CLEAR: 1.45,     // the air he needs over a floor: a child, his eye at 1.3
@@ -177,14 +177,34 @@ const LOWMAX = lowReach(0, BAKE.CLIMB);
 const N8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 
 // Is (x, y, z) inside a closed solid: the first face met going east, west, north and south is in each case seen from behind.
-const side = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3());
-function inside(S, x, y, z) {
+// Faces that lie at the same distance are all "the first": a solid stood against another has its own face and the other's meeting
+// at one place (a platform's stone and the flight of steps against it), and which of the two a ray reports first was the hierarchy's
+// to say, its splits following every triangle of the place, so a tree a hundred metres off could turn the answer (#477). A ray that
+// meets a face seen from behind, whatever else lies there, is leaving a solid; only when every face there is seen from the front
+// does it come out of the open into one.
+// TIE, 1 mm: faces that are meant to meet are drawn from the same numbers, so they differ by float32 rounding only, a few micrometres
+// at a hundred metres from the origin (one unit in the last place there is about 8 micrometres); the smallest deliberate offset found in the generator's boxes
+// is 4 mm (the cap on a platform's edge, building.js), and a cell is 50 mm. 1 mm is over a hundred units of rounding and under every
+// offset that was drawn on purpose, so it joins what is one face and nothing that is two. (The height test below uses 2 mm, the same sort of number.)
+const side = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3()), tie = new THREE.Ray(new THREE.Vector3(), new THREE.Vector3()), TIE = 0.001;
+export function inside(S, x, y, z) {
   for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
     side.origin.set(x, y, z); side.direction.set(dx, 0, dz); const h = S.bvh.raycastFirst(side, THREE.DoubleSide);
-    if (!h || h.face.normal.x * dx + h.face.normal.z * dz < 0.2) return false;
+    if (!h) return false;
+    const back = (f) => f.normal.x * dx + f.normal.z * dz >= 0.2;
+    if (back(h.face)) continue;
+    // the first face is seen from the front: is there another at the same distance seen from behind?
+    const d = Math.max(0, h.distance - TIE); tie.origin.set(x + dx * d, y, z + dz * d); tie.direction.set(dx, 0, dz);
+    if (!S.bvh.raycast(tie, THREE.DoubleSide, 0, 2 * TIE).some((k) => back(k.face))) return false;
   }
   return true;
 }
+
+// The order of the faces a ray down a cell meets. Faces at one height (a column's foot on its base, a wall on a platform: the solid's
+// underside and the floor's top are the same plane) come back from the hierarchy in whatever order its splits give, which follow every
+// triangle of the place (#477). Taken in that order the floor under a solid that rests on it was a span or not by the luck of a tree
+// elsewhere. A fixed order, the downward faces first and then by material: the air over such a floor is the solid's, none, so it is no floor.
+export const hitOrder = (S) => (a, b) => a.distance - b.distance || a.face.normal.y - b.face.normal.y || S.mat[(a.face.a / 3) | 0] - S.mat[(b.face.a / 3) | 0];
 
 /**
  * One grid: `box` {x0, x1, z0, z1, top, bottom}, `seeds` [[x, z, y]] (each starts on the floor nearest its y).
@@ -204,7 +224,7 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
     if (!S.bvh) continue;
     ray.origin.set(cx(i), box.top, cz(j));
     const hits = S.bvh.raycast(ray, THREE.DoubleSide, 0, far);
-    if (hits.length > 1) hits.sort((a, b) => a.distance - b.distance);
+    if (hits.length > 1) hits.sort(hitOrder(S));
     let above = box.top, aboveUp = false, land = -Infinity;
     for (const h of hits) {
       const id = S.mat[(h.face.a / 3) | 0];
@@ -369,7 +389,8 @@ export function bakeGrid(S, box, seeds, step = BAKE.step, closed = []) {
   // What the plan closes though it is drawn as floor: a doorway he is taken in at, beyond that line (`hall.stop`: the door is
   // drawn open), and `site.closed` (the gate's shut side bays, the bamboo either side of the forecourt).
   for (const c of closed) for (let j = Math.max(0, Math.floor((c.z0 - box.z0) / step)); j < Math.min(nz, Math.ceil((c.z1 - box.z0) / step)); j++) for (let i = Math.max(0, Math.floor((c.x0 - box.x0) / step)); i < Math.min(nx, Math.ceil((c.x1 - box.x0) / step)); i++) {
-    const x = cx(i), z = cz(j), k = j * nx + i; if (x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1 && !state[k]) state[k] = 1 + DOOR;
+    const x = cx(i), z = cz(j), k = j * nx + i;   // (a round one says `x, z, r` as well as the box that holds it, #531)
+    if (c.r !== undefined ? Math.hypot(x - c.x, z - c.z) < c.r : x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1) { if (!state[k]) state[k] = 1 + DOOR; }
   }
   // 5. What cannot be walked to from the seeds.
   const seen = new Uint8Array(N); qh = qt = 0;
