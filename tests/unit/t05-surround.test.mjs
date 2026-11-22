@@ -126,7 +126,7 @@ test("from A and B, east and west, four or more roof slopes show a degree or mor
   }
 });
 
-test("trees are broken up: neighbours on a row differ in height by 20% or more, no more than three of a kind in a row, 4 to 14 m apart (the rows behind the first houses); pines, cypresses and broadleaves all stand", () => {
+test("trees are broken up: neighbours on a row differ in height by 20% or more, no more than three of a kind in a row, 4 to 14 m apart (the rows behind the first houses east and west), the south side's trees in groves with 15 to 25 m of roofs between; pines, cypresses and broadleaves all stand", () => {
   const byStrip = new Map(); for (const t of plan.trees) (byStrip.get(t.strip) || byStrip.set(t.strip, []).get(t.strip)).push(t);
   assert.ok(byStrip.size >= 10, `${byStrip.size} rows of trees`);
   for (const [strip, row] of byStrip) {
@@ -135,10 +135,20 @@ test("trees are broken up: neighbours on a row differ in height by 20% or more, 
       const a = row[k - 1], b = row[k];
       assert.ok(Math.abs(a.h - b.h) / Math.max(a.h, b.h) >= 0.2 - 1e-6, `${strip}: neighbours at ${a.along} and ${b.along} are ${a.h} and ${b.h} m high`);
       run = a.kind === b.kind ? run + 1 : 1; assert.ok(run <= 3, `${strip}: a fourth ${b.kind} in a row at ${b.along}`);
-      if (/-behind/.test(strip)) { const gap = Math.hypot(a.x - b.x, a.z - b.z); assert.ok(gap >= 3.9 && gap <= 14.5, `${strip}: neighbours ${gap.toFixed(1)} m apart`); }
+      if (/^ew.*-behind/.test(strip)) { const gap = Math.hypot(a.x - b.x, a.z - b.z); assert.ok(gap >= 3.9 && gap <= 14.5, `${strip}: neighbours ${gap.toFixed(1)} m apart`); }
     }
   }
-  for (const k of ["pine", "cypress", "bare"]) assert.ok(plan.trees.filter((t) => t.kind === k).length >= 15, `enough ${k}s`);
+  // The south side stands in groves (the art director, step two): two to four trees of a grove 3 to 6 m apart, and 15 to 25 m of roofs with no tree between one grove and the next.
+  let groves = 0;
+  for (const [strip, row] of byStrip) {
+    if (!/^s.*-behind/.test(strip)) continue;
+    const by = new Map(); for (const t of row) (by.get(t.clump) || by.set(t.clump, []).get(t.clump)).push(t);
+    const list = [...by.values()].map((g) => g.sort((a, b) => a.along - b.along)).sort((a, b) => a[0].along - b[0].along);
+    for (const g of list) { groves++; assert.ok(g.length >= 2 && g.length <= 4, `${strip}: a grove of ${g.length} at ${g[0].along}`); for (let k = 1; k < g.length; k++) assert.ok(g[k].along - g[k - 1].along >= 3.1 && g[k].along - g[k - 1].along <= 6.5, `${strip}: grove trees ${(g[k].along - g[k - 1].along).toFixed(1)} m apart`); }
+    for (let k = 1; k < list.length; k++) { const gap = list[k][0].along - list[k - 1].at(-1).along; assert.ok(gap >= 14.9 && gap <= 25.1, `${strip}: ${gap.toFixed(1)} m of roofs between the groves at ${list[k - 1].at(-1).along} and ${list[k][0].along}`); }
+  }
+  assert.ok(groves >= 8, `${groves} groves along the south side`);
+  for (const k of ["pine", "cypress", "bare"]) assert.ok(plan.trees.filter((t) => t.kind === k).length >= 12, `enough ${k}s`);
   const south = plan.trees.filter((t) => t.strip.startsWith("s") && /-behind/.test(t.strip)); assert.ok(["pine", "cypress", "bare"].every((k) => south.some((t) => t.kind === k)), "the south rows mix pines, cypresses and broadleaves");
 });
 
