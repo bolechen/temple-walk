@@ -1866,21 +1866,22 @@ const scenarios = {
         // a tap there rightly walks there. What the rule is for is the court, so the first tap is on the court's ground out from the door, projected onto the picture:
         // the nearest of a few distances that is in the picture and that nothing of the floor hides from the eye (the porch's edge hides the near ground: 3 m out from the tea
         // house the ray met the porch 1.4 m short, and the terraces of the others hide more).
-        const fo = [Math.sin(h.outYaw), -Math.cos(h.outYaw)]; let court = null, cp = null;
-        for (const d of [3, 4.5, 6, 8, 10, 13]) { const c = [h.door[0] + fo[0] * d, h.door[1] + fo[1] * d], q = await t.page.evaluate(([x, z]) => window.__project(x, z), c); if (q.on && q.clear) { court = c; cp = q; break; } }
-        for (const [fx, fy] of [[0.5, 0.95], [0.5, 0.75], [0.5, 0.65], [0.3, 0.64], [0.7, 0.58], [0.5, 0.55]]) {
-          const onCourt = fx === 0.5 && fy === 0.95;
-          if (onCourt && !cp) continue;   // (not in this picture from the doorway: the other taps stand for it)
-          await tap(onCourt ? cp.x : vp.width * fx, onCourt ? cp.y : vp.height * fy); await t.frames(1);
+        const fo = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], lt = [-fo[1], fo[0]];
+        // (the taps are on the court's ground straight out from the door and a few metres to either side, not at fixed fractions of the picture: since #411 the foot of the picture is his feet on the porch)
+        for (const side of [0, -2.5, 2.5]) {
+          let court = null, cp = null;
+          for (const d of [3, 4.5, 6, 8, 10, 13]) { const c = [h.door[0] + fo[0] * d + lt[0] * side, h.door[1] + fo[1] * d + lt[1] * side], q = await t.page.evaluate(([x, z]) => window.__project(x, z), c); if (q.on && q.clear) { court = c; cp = q; break; } }
+          if (!cp) continue;   // (none of this court is in sight from the doorway at that side)
+          await tap(cp.x, cp.y); await t.frames(1);
           let s1 = await t.state();
           for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
-          const dbg = onCourt ? await t.page.evaluate(([x, y]) => ({ eye: window.__frame().eye, pick: window.__pick(x, y, 5).map((q) => [q.part, q.distance, q.at]) }), [cp.x, cp.y]) : null;
-          if (onCourt) expect(s1.goal && Math.hypot(s1.goal[0] - court[0], s1.goal[1] - court[1]) <= 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court out from the door (${court.map((v) => v.toFixed(2))}) was bound for ${s1.goal} (first leg ${s1.target}); pixel ${cp.x.toFixed(0)},${cp.y.toFixed(0)}, project ${JSON.stringify(cp)}, eye ${JSON.stringify(dbg.eye)}, pick ${JSON.stringify(dbg.pick)}`);
-          expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
+          const dbg = await t.page.evaluate(([x, y]) => ({ eye: window.__frame().eye, pick: window.__pick(x, y, 5).map((q) => [q.part, q.distance, q.at]) }), [cp.x, cp.y]);
+          expect(s1.goal && Math.hypot(s1.goal[0] - court[0], s1.goal[1] - court[1]) <= 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court out from the door, ${side} m aside (${court.map((v) => v.toFixed(2))}) was bound for ${s1.goal} (first leg ${s1.target}); pixel ${cp.x.toFixed(0)},${cp.y.toFixed(0)}, project ${JSON.stringify(cp)}, eye ${JSON.stringify(dbg.eye)}, pick ${JSON.stringify(dbg.pick)}`);
+          expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at ${side} m aside went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
           // (what the nightly run needs to tell a tap that went to the door from a step the funnel drew in: where he stood, what the tap set, where he is now and which grid answers, #349)
-          if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap (${fx}, ${fy}) from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
+          if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap ${side} m aside from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
           await t.page.evaluate(() => window.__walk([]));
         }
         expect(set >= 1, `${view}${touch ? " touch" : ""} ${h.name}: only ${set} taps on the court set a destination`);
