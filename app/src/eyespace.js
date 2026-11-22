@@ -79,6 +79,14 @@ export function createEyeSpace(bvh, keepOut = null, { thickWalls = false } = {})
       }
       return false;
     },
+    /**
+     * Is the line from a to b ([x, y, z] each) clear of everything drawn? (#396: an eye risen over a platform's balustrade
+     * stood clear of it and could not see him past it.)
+     */
+    sees(a, b) {
+      ray.origin.set(a[0], a[1], a[2]); ray.direction.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const len = ray.direction.length(); if (len < 1e-6) return true;
+      ray.direction.divideScalar(len); const h = bvh.raycastFirst(ray, THREE.DoubleSide); return !h || h.distance >= len - 0.05;
+    },
     /** Does the sphere at (x, y, z) touch anything drawn? Near the segment last gathered, only those triangles are asked. */
     shut(x, y, z) {
       if (keepOut && keepOut(x, y, z, r)) return true;

@@ -3,7 +3,7 @@
 // the published site, so a view seen there can be opened again here.
 import test from "node:test"; import assert from "node:assert/strict";
 import fs from "node:fs";
-import { poseQuery } from "../../app/src/link.js";
+import { poseQuery, readEye } from "../../app/src/link.js";
 
 const read = (s) => Object.fromEntries(new URLSearchParams(s));
 const court = { x: 1.23456, z: 29.004, yaw: 0.12345, pitch: -0.0504, view: "third", season: "autumn", time: "dusk", room: null };
@@ -55,7 +55,26 @@ test("the place written down is one he can stand on, at the height he stood, how
 // leaves out, nor write anything into the address.
 test("the console's link is built without the dev server's module", () => {
   const yard = fs.readFileSync(new URL("../../app/yard.js", import.meta.url), "utf8");
-  assert.match(yard, /import \{ poseQuery \} from "\.\/src\/link\.js"/, "the address is built by link.js, which ships");
+  assert.match(yard, /import \{ poseQuery, readEye \} from "\.\/src\/link\.js"/, "the address is built by link.js, which ships");
   assert.match(yard, /window\.__debugURL = \(\) =>/, "the console hook is on the published page");
   assert.ok(!/^import .*devpose/m.test(yard), "a static import would put the dev module in the published build");
+});
+
+test("the address names the eye as one parameter, to the centimetre, and reads it back (#623)", () => {
+  const s = poseQuery("?devpose", { ...court, eye: [-5.6812, 3.4549, 55.1, 4.2049] });
+  assert.equal(read(s).eye, "-5.68,3.45,55.1,4.2");
+  assert.deepEqual(readEye(s), { at: [-5.68, 3.45, 55.1], dist: 4.2 });
+  assert.equal(read(poseQuery(s, court)).eye, undefined, "an address without an eye drops the old one");
+  assert.equal(read(poseQuery("?q=low", court)).eye, undefined, "no eye, no parameter");
+  assert.equal(read(poseQuery("?q=low", { ...court, eye: [1, 2, NaN, 3] })).eye, undefined);
+});
+
+test("an eye that is not four sane numbers is not read", () => {
+  for (const bad of ["", "?eye=", "?eye=1,2,3", "?eye=1,2,3,x", "?eye=1,,3,4", "?eye=1,2,3,4,5", "?eye=1,2,99999,4", "?eye=1,2,3,-1", "?eye=1,2,3,21"]) assert.equal(readEye(bad), null, bad);
+  assert.deepEqual(readEye("?cam=0,0,0,0&eye=0,1.5,2,0"), { at: [0, 1.5, 2], dist: 0 });
+});
+
+test("production does not read the eye", () => {
+  const yard = fs.readFileSync(new URL("../../app/yard.js", import.meta.url), "utf8");
+  assert.match(yard, /if \(!PRODUCTION && [^\n]*readEye\(location\.search\)/);
 });
