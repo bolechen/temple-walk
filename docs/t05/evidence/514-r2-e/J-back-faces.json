@@ -1,0 +1,9 @@
+{"how": "rays of the hall's cameras round the wrist (31 x 31 for the five acceptance views, 41 x 41 for the visitor positions), first hit a back face; each model stood at 8.2 m by its own bounding box (the hall's frame)",
+ "views": {"knee34-close": {"build81": 0, "fold_skirt_f3": 73, "fold_bridge_f5": 27, "fold_bridge_f6": 34},
+           "side3-left": {"build81": 0, "fold_skirt_f3": 83, "fold_bridge_f5": 37, "fold_bridge_f6": 46},
+           "hand10": {"build81": 0, "fold_skirt_f3": 48, "fold_bridge_f5": 4, "fold_bridge_f6": 5},
+           "side3-right": {"build81": 0, "fold_bridge_f6": 0}, "hand-level": {"build81": 0, "fold_bridge_f6": 0},
+           "visitor-aisle42 (-20.85, 4.6, -15.0), 4.2 m": {"original_f1": 0, "build81": 34, "fold_bridge_f5": 35, "fold_bridge_f6": 32},
+           "visitor-aisle (-19.12, 4.6, -15.79), the nearest standable point, 3.2 m": {"original_f1": 147, "build81": 199, "fold_bridge_f5": 189},
+           "visitor-sakya (-13.31, 4.6, -8.01), 10.1 m": {"original_f1": 0, "build81": 0, "fold_bridge_f6": 1}},
+ "rays": {"acceptance": 961, "visitor": 1681}}

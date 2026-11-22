@@ -679,6 +679,128 @@ if AR:
           except ValueError: pass
       log.setdefault("arm_cap", {})["under_edges"] = len(edge_u); log["arm_cap"]["under_runs"] = sum(len(es) >= 3 for es in runs.values()); log["arm_cap"]["under_faces"] = int(capped_u)
     gone_n = n_dead; bmesh.ops.delete(bm, geom=dead, context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+    if AR.get("skirt"):
+      # (the fold the T05 lead and the overall lead chose, #514's planned next step: the forearm was an open shell merged
+      # into the robe under it, so carried forward its underside is open along both sides where it rests on the thigh. From
+      # each point of that open edge a column of robe hangs to the thigh below: it leaves the forearm along its own surface,
+      # bows a little, and goes `tuck` metres under the thigh's surface, so it is welded at the top and tucked at the foot,
+      # and is wound as the forearm is. A new shape, not the original's: its runs follow the forearm's edge, as the robe's
+      # own folds round the forearm do)
+      from mathutils.bvhtree import BVHTree
+      SK = AR["skirt"]; bm.verts.ensure_lookup_table(); bm.faces.ensure_lookup_table(); bm.normal_update()
+      cy = AR.get("cut_below_y", -9); sx = SK.get("x", [-9, 9])
+      okv = lambda v: v[oi] < len(moved) and moved[v[oi]]
+      ekey = lambda e: tuple(sorted(tuple(round(c, 5) for c in v.co) for v in e.verts))
+      from collections import Counter
+      seen_k = Counter(ekey(e) for e in bm.edges if e.is_boundary)
+      stg = lambda co: np.array([co.x, co.z, -co.y])
+      edges_s = [e for e in bm.edges if e.is_boundary and seen_k[ekey(e)] == 1 and all(okv(v) for v in e.verts)
+                 and all(stg(v.co)[1] < cy + SK.get("band", 0.15) and stg(v.co)[2] < tw[2] and sx[0] < stg(v.co)[0] < sx[1] for v in e.verts)]
+      # the robe and the knee under it (what was not carried), to drop each column onto
+      still = [f for f in bm.faces if not all(okv(v) for v in f.verts)]
+      tree = BVHTree.FromPolygons([tuple(v.co) for v in bm.verts], [tuple(v.index for v in f.verts) for f in still])
+      # the open edge's runs, each in order
+      adj = {}
+      for e in edges_s: a, b = e.verts; adj.setdefault(a, []).append((b, e)); adj.setdefault(b, []).append((a, e))
+      done_e, chains = set(), []
+      for e0 in edges_s:
+        if e0 in done_e: continue
+        chain = [e0.verts[0], e0.verts[1]]; done_e.add(e0)
+        for end in (1, 0):
+          while True:
+            tip = chain[-1] if end == 1 else chain[0]; nxt = [(w, e) for w, e in adj.get(tip, []) if e not in done_e]
+            if not nxt: break
+            w, e = nxt[0]; done_e.add(e)
+            if end == 1: chain.append(w)
+            else: chain.insert(0, w)
+            if w == (chain[0] if end == 1 else chain[-1]): break
+        chains.append(chain)
+      K = SK.get("rows", 12); down = np.array([0.0, -1.0, 0.0]); made = 0; cols = 0; drops = []
+      A_ = Ev + Edisp; ab_ = (np.array(tw, float) - A_) / np.linalg.norm(np.array(tw, float) - A_)
+      for chain in chains:
+        if len(chain) < SK.get("min_run", 6): continue
+        col = []
+        for b in chain:
+          P0 = stg(b.co); a_ = A_ + ((P0 - A_) @ ab_) * ab_; rad = P0 - a_; rad[2] = 0; rad /= max(np.linalg.norm(rad), 1e-9)
+          o = P0 + rad * SK.get("out", 0.01); hit = tree.ray_cast(Vector((o[0], -o[2], o[1])), Vector((0.0, 0.0, -1.0)), SK.get("max_drop", 0.5))
+          if hit[0] is None: col.append(None); continue
+          g = stg(hit[0]); ng = stg(hit[1]);
+          if ng[1] < 0: ng = -ng
+          P3 = g - ng * SK.get("tuck", 0.004)
+          # along the forearm's surface over its edge: from the faces at this point out across the edge, and down
+          cs = [stg(f.calc_center_median()) for f in b.link_faces]
+          t0 = P0 - np.mean(cs, axis=0) if cs else down.copy(); t0 = t0 / max(np.linalg.norm(t0), 1e-9) + down * SK.get("down", 0.6); t0 /= np.linalg.norm(t0)
+          t3 = (P0 - P3) - ((P0 - P3) @ ng) * ng; t3 /= max(np.linalg.norm(t3), 1e-9)
+          L = np.linalg.norm(P3 - P0); bl = SK.get("bulge", 0.4)
+          P1 = P0 + t0 * L * bl; P2 = P3 + t3 * L * bl
+          pts = [b]
+          for r in range(1, K + 1):
+            u = r / K; q = (1 - u) ** 3 * P0 + 3 * (1 - u) ** 2 * u * P1 + 3 * (1 - u) * u ** 2 * P2 + u ** 3 * P3
+            pts.append(bm.verts.new(Vector((q[0], -q[2], q[1]))))
+          col.append(pts); cols += 1; drops.append(float(L))
+        cp_ = np.array([stg(b.co) for b in chain]); okc = [c is not None for c in col]
+        log.setdefault("arm_cap", {}).setdefault("skirt_runs", []).append({"points": len(chain), "dropped": int(sum(okc)), "min": cp_.min(0).round(3).tolist(), "max": cp_.max(0).round(3).tolist()})
+        for i in range(len(chain) - 1):
+          c0, c1 = col[i], col[i + 1]
+          if c0 is None or c1 is None: continue
+          e = bm.edges.get([chain[i], chain[i + 1]])
+          f = e.link_faces[0] if e and e.link_faces else None
+          fwd_ = False
+          if f is not None:
+            lv = [l.vert for l in f.loops]; j = lv.index(chain[i]); fwd_ = lv[(j + 1) % len(lv)] == chain[i + 1]
+          # (each face turned away from the forearm's axis, across it: the forearm's own faces at its open edge are wound
+          # either way, as the figure's shells are, so their winding cannot say which side is out)
+          for r in range(K):
+            A, B, C, D = c0[r], c1[r], c1[r + 1], c0[r + 1]
+            for tri_ in ([A, B, C], [A, C, D]):
+              ps = np.array([stg(q.co) for q in tri_]); nn = np.cross(ps[1] - ps[0], ps[2] - ps[0]); mid = ps.mean(0)
+              rad = (mid - A_) - ((mid - A_) @ ab_) * ab_; rad[2] = 0
+              try: bm.faces.new(tri_ if nn @ rad > 0 else tri_[::-1]); made += 1
+              except ValueError: pass
+      log.setdefault("arm_cap", {})["skirt"] = {"runs": len([c for c in chains if len(c) >= SK.get("min_run", 6)]), "columns": cols, "faces": made,
+                                                 "drop_m": [round(min(drops), 3), round(float(np.median(drops)), 3), round(max(drops), 3)] if drops else None}
+    if AR.get("bridge"):
+      # (the fold, as the open edge was found to lie: in front of the knee the carried forearm hangs over air, so a skirt
+      # dropped to the thigh had nothing to fall onto. Its open underside is closed instead by one piece hung between the
+      # edge's two sides, outer and inner, at stations along the forearm: each cross-piece sags a little below the edges
+      # and both its ends go `tuck` metres up inside the forearm, so the edges lie over it and no gap opens. A new shape,
+      # not the original's; turned outward, down)
+      BR = AR["bridge"]; bm.verts.ensure_lookup_table(); bm.normal_update()
+      cy = AR.get("cut_below_y", -9)
+      okv = lambda v: v[oi] < len(moved) and moved[v[oi]]
+      ekey = lambda e: tuple(sorted(tuple(round(c, 5) for c in v.co) for v in e.verts))
+      from collections import Counter
+      seen_k = Counter(ekey(e) for e in bm.edges if e.is_boundary)
+      stg = lambda co: np.array([co.x, co.z, -co.y])
+      A_ = Ev + Edisp; ab_ = (np.array(tw, float) - A_) / np.linalg.norm(np.array(tw, float) - A_)
+      z0b, z1b = BR["z"][0], BR["z"][1] if BR["z"][1] is not None else float(tw[2])
+      bp = np.array([stg(v.co) for e in bm.edges if e.is_boundary and seen_k[ekey(e)] == 1 and all(okv(v) for v in e.verts) for v in e.verts
+                     if stg(v.co)[1] < cy + BR.get("band", 0.15)])
+      stations = []; stp = BR.get("step", 0.015)
+      for zs in np.arange(z0b, z1b + 1e-9, stp):
+        a_ = A_ + ab_ * ((zs - A_[2]) / ab_[2]); near = bp[np.abs(bp[:, 2] - zs) < stp * 0.75]
+        lat, med = near[near[:, 0] < a_[0]], near[near[:, 0] >= a_[0]]
+        if not len(lat) or not len(med): stations.append(None); continue
+        # (each side's highest point of the open edge at the station: the edge runs up the forearm's side as a slit near
+        # the wrist, and hung from its lowest point the piece left the slit open above it)
+        pick_ = np.argmax if BR.get("hang", "top") == "top" else np.argmin
+        L = lat[pick_(lat[:, 1])]; M = med[pick_(med[:, 1])]
+        def tuck(P):
+          d_ = a_ - P; d_[2] = 0; return P + d_ / max(np.linalg.norm(d_), 1e-9) * BR.get("tuck", 0.005)
+        L, M = tuck(L), tuck(M); w_ = np.linalg.norm(M - L); ctrl = (L + M) / 2 + np.array([0, -1.0, 0]) * BR.get("sag", 0.25) * w_
+        n_ = BR.get("segs", 12); row = []
+        for k in range(n_ + 1):
+          u = k / n_; q = (1 - u) ** 2 * L + 2 * (1 - u) * u * ctrl + u ** 2 * M; row.append(bm.verts.new(Vector((q[0], -q[2], q[1]))))
+        stations.append(row)
+      madeb = 0
+      for r0, r1 in zip(stations[:-1], stations[1:]):
+        if r0 is None or r1 is None: continue
+        for k in range(len(r0) - 1):
+          for tri_ in ([r0[k], r0[k + 1], r1[k + 1]], [r0[k], r1[k + 1], r1[k]]):
+            ps = np.array([stg(q.co) for q in tri_]); nn = np.cross(ps[1] - ps[0], ps[2] - ps[0])
+            try: bm.faces.new(tri_ if nn[1] < 0 else tri_[::-1]); madeb += 1
+            except ValueError: pass
+      log.setdefault("arm_cap", {})["bridge"] = {"stations": len(stations), "made": int(sum(r is not None for r in stations)), "faces": madeb, "z": [round(z0b, 3), round(z1b, 3)]}
     if AR.get("lining"):
       # (a backing behind the opening, the 3D review's other way and the T05 lead's ruling: the carried forearm is lined
       # with its own surface `lining.depth` metres inside, wound the other way, so that a line of sight through any gap
