@@ -20,8 +20,8 @@ test('the measures are the book\'s: 2.98 m in all, the body 2.48 m, the base a f
 });
 
 test('the body is 0.99 by 0.37 m, the base wider and deeper, each tier drawn in from the one under it', () => {
-  const { parts } = buildStele(M);
-  const body = new THREE.Box3().setFromObject(parts.body), base = new THREE.Box3().setFromObject(parts.base);
+  const { geoms } = buildStele(M);
+  const box3 = (g) => { g.computeBoundingBox(); return g.boundingBox; }, body = box3(geoms.body), base = box3(geoms.base);
   near(body.max.x - body.min.x, 0.99, 0.01, 'body width'); near(body.max.z - body.min.z, 0.37, 0.01, 'body thickness');
   near(base.max.x - base.min.x, 1.24, 0.01, 'base length across the face'); near(base.max.z - base.min.z, 0.77, 0.01, 'base depth');
   assert.ok(base.max.x - base.min.x > body.max.x - body.min.x + 0.2 && base.max.z - base.min.z > body.max.z - body.min.z + 0.3, 'the base carries the body with room to spare');
@@ -34,7 +34,7 @@ test('the head is a low arc: it rises over the shoulders by a tenth of a metre, 
   assert.ok(STELE.rise >= 0.08 && STELE.rise <= 0.16, `rise ${STELE.rise}`);
   assert.ok(STELE.round >= 0.05 && STELE.round <= 0.12, `corner radius ${STELE.round}`);
   // the highest point of the body is on its middle, and the shoulders are lower by about the rise
-  const { parts } = buildStele(M), p = parts.body.geometry.attributes.position, top = (lo, hi) => { let m = -1; for (let i = 0; i < p.count; i++) { const x = p.getX(i); if (x >= lo && x <= hi) m = Math.max(m, p.getY(i)); } return m; };
+  const { geoms } = buildStele(M), p = geoms.body.attributes.position, top = (lo, hi) => { let m = -1; for (let i = 0; i < p.count; i++) { const x = p.getX(i); if (x >= lo && x <= hi) m = Math.max(m, p.getY(i)); } return m; };
   near(top(-0.02, 0.02), 2.98, 0.01, 'the crown');
   const sh = top(0.44, 0.5);
   assert.ok(2.98 - sh >= 0.1 && 2.98 - sh <= 0.25, `the shoulder is ${(2.98 - sh).toFixed(3)} m under the crown (the rise, and the round of the corner)`);
@@ -45,12 +45,18 @@ test('a border stands round the face and a title\'s frame is sunk in its top, bo
   assert.ok(STELE.recess > 0.005 && STELE.recess <= 0.03, 'the field lies a little behind the border');
   assert.ok(STELE.title.recess > 0.005 && STELE.title.recess <= 0.03, 'the title\'s frame is shallow');
   assert.ok(STELE.title.w < STELE.bodyW - 2 * STELE.border - 0.1, 'the title\'s frame is narrower than the field');
-  assert.ok(STELE.chamfer >= 0.01 && STELE.chamfer <= 0.02, 'a chamfer of 1 to 2 cm');
+  assert.ok(STELE.chamfer >= 0.01 && STELE.chamfer <= 0.02, 'a chamfer of 1 to 2 cm on the base');
+  assert.ok(STELE.petal >= 0.01 && STELE.petal <= 0.03, 'the body\'s arrises are cut with petals 1 to 3 cm wide');
+  // two facets on each arris: between the front face and the side the normals take two steps, not one
+  const { geoms } = buildStele(M), n = geoms.body.attributes.normal, seen = new Set();
+  for (let i = 0; i < n.count; i++) { const x = n.getX(i), z = n.getZ(i); if (x > 0.2 && z > 0.2) seen.add(`${Math.round(x * 10)},${Math.round(z * 10)}`); }
+  assert.ok(seen.size >= 2, `the front right arris has ${seen.size} facets, at least two`);
 });
 
 test('it costs under 400 faces, the base and the body split as drawn', () => {
-  const { parts } = buildStele(M), n = Object.fromEntries(Object.entries(parts).map(([k, m]) => [k, tris(m.geometry)]));
+  const { geoms, parts } = buildStele(M), n = Object.fromEntries(Object.entries(geoms).map(([k, g]) => [k, tris(g)]));
   assert.ok(n.base + n.body <= 400, `base ${n.base} and body ${n.body}`);
+  assert.equal(Object.keys(parts).length, 1, 'one mesh, one draw');
 });
 
 test('the parts are kept apart by merging, and each carries what the shader needs', () => {

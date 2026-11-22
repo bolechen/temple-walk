@@ -12,7 +12,6 @@ import { makePlaque, makeWallPanel } from "../../src/plaque.js";
 import { CENSER } from "../../src/censer.js";
 import { LIT } from "./windows.js";
 import { buildStele } from "./stele.js";
-import { buildSteleTurtle } from "./stele-turtle.js";
 
 export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0, GROVE_IN: 20.5 };   // GROVE_IN: where the bamboo closes in on the forecourt
 export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
@@ -298,9 +297,8 @@ export function buildSite(M) {
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true },   // (three treads up from the path, #478: it had none, and 0.45 m is more than he steps; open floor like the path's other pavilions, #274)
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
   ], [-12.5, 50.5], 1);
-  // The stele itself: a Song imperial stele with a notched head on a stepped base (stele.js, #520). `?stele=turtle` draws the spare instead, the dragon-headed one on a tortoise (stele-turtle.js).
-  const turtleAsked = typeof location === "object" && new URLSearchParams(location.search).get("stele") === "turtle";
-  const stele = turtleAsked ? buildSteleTurtle(M) : buildStele(M);
+  // The stele itself: a Song imperial stele with a notched head on a stepped base (stele.js, #520).
+  const stele = buildStele(M);
   stele.group.position.y = 0.45;   // (the platform's floor)
   sp.group.add(stele.group);
   if (typeof window === "object") window.__stele = (on) => { for (const m of Object.values(stele.parts)) { m.userData.paint ??= m.material; m.material = on === "black" ? (m.userData.black ??= new THREE.MeshBasicMaterial({ color: 0x000000 })) : m.userData.paint; } return { height: stele.height }; };   // (a view of its shape alone, black: tools/stele-views.cjs)
