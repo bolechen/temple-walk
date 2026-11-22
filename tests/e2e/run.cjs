@@ -1869,6 +1869,8 @@ const scenarios = {
         const fo = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], lt = [-fo[1], fo[0]];
         // (the taps are on the court's ground straight out from the door and a few metres to either side, not at fixed fractions of the picture: since #411 the foot of the picture is his feet on the porch)
         for (const side of [0, -2.5, 2.5]) {
+          // (each tap from where he came out, as the main hall's are: the tap before has walked him and turned the eye, and the point is projected from the eye as it stands now)
+          await t.page.evaluate(([x, z, yaw]) => { window.__walk([]); window.__pose(x, z, yaw, 0.04); }, [h.out[0], h.out[1], h.outYaw]); await t.frames(30);
           let court = null, cp = null;
           for (const d of [3, 4.5, 6, 8, 10, 13]) { const c = [h.door[0] + fo[0] * d + lt[0] * side, h.door[1] + fo[1] * d + lt[1] * side], q = await t.page.evaluate(([x, z]) => window.__project(x, z), c); if (q.on && q.clear) { court = c; cp = q; break; } }
           if (!cp) continue;   // (none of this court is in sight from the doorway at that side)
