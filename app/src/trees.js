@@ -254,9 +254,51 @@ function mossPatch(x, y, z, r, hold, seed, rgb, a0 = 0.85, lift = 0.016) {
 }
 /** How far past its earth a cedar's moss fades out to the paving, in metres (#611: at least 0.3). */
 export const MOSS_FADE = 0.45;
-const MOSS = [0.075, 0.115, 0.05];
+const MOSS = [0.08, 0.105, 0.062];
 // The ring of moss between a cedar's earth and the paving: it covers the earth's own edge and fades out over MOSS_FADE.
 const edgeMoss = (x, y, z, r, seed) => mossPatch(x, y, z, r + MOSS_FADE, (r * 0.8) / (r + MOSS_FADE), seed, MOSS, 0.8, 0.019);
+
+// What lies in a pit besides soil (#611, the 3D review): gravel (small flat stones of the court's own stone, laid with the
+// edge stones in the static stone batch), moss in patches and a dark line where the soil meets the edge stones. All of it
+// is drawn from a hash of the tree's number, never from the wood's stream of chance, so that no tree's shape depends on it.
+const hash1 = (n, k) => { const v = Math.sin(n * 127.1 + k * 311.7) * 43758.5453; return v - Math.floor(v); };
+function pitGravel(x, y, z, side, flare, seed, count = 90) {
+  const out = [], inner = side / 2 - 0.05, base = y + PIT.up - PIT.drop;
+  for (let i = 0, k = 0; i < count && k < count * 6; k++) {
+    const px = (hash1(seed, k * 3) * 2 - 1) * inner, pz = (hash1(seed, k * 3 + 1) * 2 - 1) * inner;
+    if (Math.hypot(px, pz) < flare * 1.15 + 0.05) continue;
+    const r = 0.014 + 0.022 * hash1(seed, k * 3 + 2), g = new THREE.IcosahedronGeometry(1, 0).scale(r, r * 0.5, r * (0.8 + 0.5 * hash1(seed, k * 7))).rotateY(hash1(seed, k * 5) * 6.283).translate(x + px, base + r * 0.2, z + pz);
+    out.push(g); i++;
+  }
+  return out;
+}
+function pitMossPatches(x, y, z, side, flare, seed, count = 7) {
+  const out = [], inner = side / 2 - 0.2, lift = PIT.up - PIT.drop + 0.014;
+  for (let k = 0; k < count; k++) {
+    const px = (hash1(seed, 100 + k * 3) * 2 - 1) * inner, pz = (hash1(seed, 101 + k * 3) * 2 - 1) * inner, r = 0.14 + 0.16 * hash1(seed, 102 + k * 3);
+    if (Math.hypot(px, pz) < flare * 1.2) continue;
+    const t = hash1(seed, 200 + k); out.push(mossPatch(x + px, y, z + pz, r, 0.4, seed + k, [MOSS[0] * (0.85 + 0.4 * t), MOSS[1] * (0.9 + 0.3 * t), MOSS[2] * (0.9 + 0.2 * t)], 0.7, lift + 0.0005 * k));
+  }
+  return out;
+}
+// A neutral dust over the pit's soil, thinning towards the edges: the litter's own green and the moss together read more
+// saturated than the court's stone by far (#611: 0.33 against 0.1), and a pit of old soil is grey-brown.
+function pitDust(x, y, z, side) {
+  const h = side / 2 - 0.02, yy = y + PIT.up - PIT.drop + 0.009, pos = [x - h, yy, z - h, x + h, yy, z - h, x + h, yy, z + h, x - h, yy, z + h], col = [];
+  for (let i = 0; i < 4; i++) col.push(0.11, 0.1, 0.09, 0.6);
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 4)); g.setIndex([0, 2, 1, 0, 3, 2]); g.computeVertexNormals();
+  const N = g.attributes.normal; for (let i = 0; i < N.count; i++) N.setXYZ(i, 0, 1, 0);
+  return g;
+}
+// A dark line, two centimetres wide, along the inside of the four edge stones: where soil meets stone the ground is shaded.
+function pitContact(x, y, z, side) {
+  const w = 0.025, h = side / 2, yy = y + PIT.up - PIT.drop + 0.003, pos = [], col = [], idx = [];
+  const quad = (x0, z0, x1, z1) => { const b = pos.length / 3; pos.push(x0, yy, z0, x1, yy, z0, x1, yy, z1, x0, yy, z1); for (let i = 0; i < 4; i++) col.push(0.025, 0.02, 0.015, 0.8); idx.push(b, b + 2, b + 1, b, b + 3, b + 2); };
+  quad(x - h, z - h, x + h, z - h + w); quad(x - h, z + h - w, x + h, z + h); quad(x - h, z - h + w, x - h + w, z + h - w); quad(x + h - w, z - h + w, x + h, z + h - w);
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 4)); g.setIndex(idx); g.computeVertexNormals();
+  const N = g.attributes.normal; for (let i = 0; i < N.count; i++) N.setXYZ(i, 0, 1, 0);
+  return g;
+}
 
 // `spots`: [x, y, z, kind, height]. `opts.a2c`: the frame is multisampled, so leaf edges can be soft.
 // A short fingerprint of some geometry, every coordinate rounded to a tenth of a millimetre: the same plan grown in Node
@@ -474,7 +516,8 @@ export function createTrees(scene, M, spots, opts = {}) {
         const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
         nth++; ginkgoBeds.push(softBed(x, y, z, flare * 3 + 0.9, nth));
         const side = pitSide(flare); pitStone.push(...pitStones(x, y, z, side)); beds.push(pitSoil(x, y, z, side)); pitCap.push(...pitSnow(x, y, z, side)); pits.push({ at: [x, z], side, flare });
-        moss.push(mossPatch(x, y, z, flare * 1.7 + 0.2, 0.45, nth + 5, MOSS, 0.9, PIT.up - PIT.drop + 0.012));   // moss at the roots, inside the pit
+        moss.push(mossPatch(x, y, z, flare * 1.7 + 0.2, 0.45, nth + 5, MOSS, 0.75, PIT.up - PIT.drop + 0.012), pitContact(x, y, z, side), pitDust(x, y, z, side), ...pitMossPatches(x, y, z, side, flare, nth));   // moss at the roots and in patches, the dark contact line
+        pitStone.push(...pitGravel(x, y, z, side, flare, nth));   // gravel on the soil, drawn with the stones
       }
       clump(kind, V(x, top - 0.2, z), centre, 1.1, 5);
       ginkgoSkeletons.push(sk);
