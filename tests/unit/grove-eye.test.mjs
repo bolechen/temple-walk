@@ -130,17 +130,46 @@ function walk(path, aspect) {
       const want = Math.atan2(vx, -vz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * (1 - Math.exp(-3 * dt));
       const foot = walker.heightAt(x, z); eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
       const c = follow.step(dt, followEye(walker, { x, z, foot, eyeY, yaw, pitch: 0.04, side: 1, reach: 6.2, arm, space }));
-      out.push({ at: [x, z], c, in: L.eyeKeepOut(c[0], c[1], c[2]) });
+      out.push({ at: [x, z], foot, yaw, c, in: L.eyeKeepOut(c[0], c[1], c[2]) });
     }
   }
   return out;
 }
 const groveRoutes = isPrologue ? need("grove").routes(site, walker) : {};
+// Each culm as the line of its axis, from the culms as grown (each an open cylinder of 18 points: its top ring, then its foot).
+const culmLines = (() => { const P = culms.geometry.attributes.position, out = []; for (let i = 0; i + 18 <= P.count; i += 18) { const t = [0, 0, 0], b = [0, 0, 0]; for (let k = 0; k < 9; k++) for (let d = 0; d < 3; d++) { t[d] += P.getComponent(i + k, d) / 9; b[d] += P.getComponent(i + 9 + k, d) / 9; } out.push({ b, t }); } return out; })();
+/** Is a culm within 1 m of the eye standing in his strip of the picture, his box's width and 5% more each side, across
+ *  its whole height (the art review of #518: a culm close before the lens beside him is let be, one over him is not)? */
+function culmBeforeHim(r, aspect, wide = false) {
+  const aim = aimAt(r.c, [r.at[0], r.foot, r.at[1]], r.yaw, FRAMES.b, FOV); if (!aim) return false;
+  const cam = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 500); cam.position.set(...r.c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+  const xs = []; for (const dx of [-0.3, 0.3]) for (const dz of [-0.3, 0.3]) for (const y of [r.foot, r.foot + 1.22]) xs.push(new THREE.Vector3(r.at[0] + dx, y, r.at[1] + dz).project(cam).x);
+  const lo = wide ? -1 : Math.min(...xs), hi = wide ? 1 : Math.max(...xs), pad = wide ? 0 : (hi - lo) * 0.05, v = new THREE.Vector3();
+  for (const { b, t } of culmLines) {
+    const k = (r.c[1] - b[1]) / (t[1] - b[1]); if (k < -0.1 || k > 1.1) continue;
+    if (Math.hypot(b[0] + (t[0] - b[0]) * k - r.c[0], b[2] + (t[2] - b[2]) * k - r.c[2]) > 1) continue;
+    for (let s = 0; s <= 1; s += 0.01) {
+      v.set(b[0] + (t[0] - b[0]) * s, b[1] + (t[1] - b[1]) * s, b[2] + (t[2] - b[2]) * s); if (v.distanceTo(cam.position) > 1.6) continue;
+      const q = v.clone().applyMatrix4(cam.matrixWorldInverse); if (q.z > -0.05) continue;
+      v.project(cam); if (Math.abs(v.y) <= 1 && v.x > lo - pad && v.x < hi + pad) return true;
+    }
+  }
+  return false;
+}
+// and the count can see one: along these routes a culm does come within 1 m of the eye somewhere in the picture (the art
+// review saw one before the lens by the pool, beside him), so a strip clear of them is a finding, not a blind test.
+test("a culm close before the lens is seen where there is one: the strip's count is not blind (#518)", { skip: !isPrologue && "the grove is the prologue's" }, () => {
+  let seen = 0; for (const path of Object.values(groveRoutes)) for (const [, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]]) seen += walk(path, aspect).filter((r, i) => i % 3 === 0 && culmBeforeHim(r, aspect, true)).length;
+  assert.ok(seen > 0, "no culm came within 1 m of the eye anywhere in the picture on any route: the count would see nothing");
+});
 for (const [name, path] of Object.entries(groveRoutes)) {
-  test(`${name}, there and back: the eye keeps out of the grove but for its edge (#515)`, () => {
+  test(`${name}, there and back: the eye keeps out of the grove but for its edge, and a culm close before the lens stands over him in no more than 2% of frames (#515, #518)`, () => {
     for (const [screen, aspect] of [["16:9", 16 / 9], ["9:19.5", 9 / 19.5]]) for (const way of [path, [...path].reverse()]) {
       const f = walk(way, aspect), inside = f.filter((r) => r.in);
       assert.equal(inside.length, 0, `${screen}: in ${inside.length} of ${f.length} frames the eye stood deeper than ${EYE_EDGE} m in the grove, first with him at (${inside[0]?.at.map((v) => v.toFixed(2))}) and it at (${inside[0]?.c.map((v) => v.toFixed(2))})`);
+      const over = f.filter((r, i) => i % 3 === 0 && culmBeforeHim(r, aspect)), n = Math.ceil(f.length / 3);
+      if (process.env.GROVE_REPORT) console.log(`# culm over him: ${name} ${screen} ${way === path ? "there" : "back"}: ${over.length} of ${n} frames (${((over.length / n) * 100).toFixed(1)}%)${over[0] ? `, first with him at (${over[0].at.map((v) => v.toFixed(2))})` : ""}`);
+      assert.ok(over.length <= 0.02 * n, `${screen}: a culm within 1 m of the eye stood over him in ${over.length} of ${n} frames, first with him at (${over[0]?.at.map((v) => v.toFixed(2))})`);
     }
   });
 }
