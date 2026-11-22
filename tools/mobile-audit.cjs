@@ -205,7 +205,8 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
     // What a phone would mind is then looked at in the whole picture: each surface that listed anything, with what it needs, drawn.
     const failing = Object.keys(report).filter((k) => k.startsWith(shape[0] + "/")).filter((k) => badOf(report[k], shape[1]) > 0).map((k) => k.split("/")[1]);
     if (!DRAWN && failing.length) {
-      const again = SURFACES.map(([n]) => n).filter((n) => failing.includes(n) || failing.some((f) => NEEDS[f] === n));
+      // ('walk' goes first for all but the title: a page that has not been entered still has its title over it)
+      const again = SURFACES.map(([n]) => n).filter((n) => failing.includes(n) || failing.some((f) => NEEDS[f] === n) || (n === "walk" && failing.some((f) => f !== "title")));
       console.log(`${shape[0]}: ${failing.join(", ")} listed something; opened again with the scene drawn`);
       await pass(b, shape, again, false, "-drawn", {});
     }
