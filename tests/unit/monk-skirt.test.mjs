@@ -11,6 +11,8 @@ const { dressed } = await import("./novice-glb.mjs");
 const BODIES = [["built in code", createMonk], ["Tripo's, worn by default", () => dressed(createMonk)]];
 const { flight } = await import("../../tools/gait-stairs.mjs");
 const { STAIR } = await import("../../app/src/geo.js");
+// #615: the thighs carry the skirt out of their way, as the robe's shader does it (the posed mesh the tests read is skinned on the CPU without it)
+const carried = (m, i, v) => (process.env.NOCARRY ? v : m.carry(i, v));
 const WALK = STAIR.tread * STAIR.steps, SKIRT = ["robeFront", "robeBack", "robeLeft", "robeRight"], deg = THREE.MathUtils.radToDeg;
 
 // A walk of `n` treads (0: level) at `speed`, frame by frame as yard.js moves him; `each(m, frame)` sees every frame after
@@ -90,7 +92,7 @@ function exposed(opts, every = 3, sample = 5) {
     if (frame % sample) return; frames++;
     m.skeleton.update();
     const robe = m.parts.robe, P = new Float32Array(rg.attributes.position.count * 3);
-    for (let i = 0; i < rg.attributes.position.count; i++) { robe.getVertexPosition(i, v).applyMatrix4(robe.matrixWorld); P.set([v.x, v.y, v.z], i * 3); }
+    for (let i = 0; i < rg.attributes.position.count; i++) { robe.getVertexPosition(i, v).applyMatrix4(robe.matrixWorld); carried(m, i, v); P.set([v.x, v.y, v.z], i * 3); }
     let out = 0;
     const lg = m.parts.legs;
     for (const i of covered) {
@@ -205,7 +207,7 @@ test("a step behind him draws the skirt up as one ring, never a flap to the wais
 function opening({ n = 10, dir = 1, make = createMonk, at = [0, 0], eye = [-0.9, 1.75, 1.7], every = 2, sample = 3 }) {
   const stand = make(); stand.group.updateMatrixWorld(true); stand.skeleton.update();
   const v = new THREE.Vector3(), hips0 = stand.bones.hips.getWorldPosition(new THREE.Vector3());
-  const lowest = (m, front) => { const rb = m.parts.robe, P = rb.geometry.attributes.position, inv = m.group.matrixWorld.clone().invert(); let y = 9; for (let i = 0; i < P.count; i += 2) { rb.getVertexPosition(i, v).applyMatrix4(rb.matrixWorld); const wy = v.y; v.applyMatrix4(inv); if (!front || v.z > 0.02) y = Math.min(y, wy); } return y; };
+  const lowest = (m, front) => { const rb = m.parts.robe, P = rb.geometry.attributes.position, inv = m.group.matrixWorld.clone().invert(); let y = 9; for (let i = 0; i < P.count; i += 2) { rb.getVertexPosition(i, v).applyMatrix4(rb.matrixWorld); carried(m, i, v); const wy = v.y; v.applyMatrix4(inv); if (!front || v.z > 0.02) y = Math.min(y, wy); } return y; };
   const length = hips0.y - lowest(stand, true);
   const ei = stand.parts.robe.geometry.index.array, A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), h = new THREE.Vector3(), s = new THREE.Vector3(), qv = new THREE.Vector3(), d = new THREE.Vector3(), cam = new THREE.Vector3(), lp = new THREE.Vector3();
   const blocked = (o, p, P) => {   // is any robe triangle between o and p (Möller–Trumbore on the segment)
@@ -220,7 +222,7 @@ function opening({ n = 10, dir = 1, make = createMonk, at = [0, 0], eye = [-0.9,
   walk({ n, dir, make, at }, (m, frame) => {
     if (frame % sample) return; frames++;
     m.skeleton.update(); const rb = m.parts.robe, P = new Float32Array(rb.geometry.attributes.position.count * 3);
-    for (let i = 0; i < rb.geometry.attributes.position.count; i++) { rb.getVertexPosition(i, v).applyMatrix4(rb.matrixWorld); P.set([v.x, v.y, v.z], i * 3); }
+    for (let i = 0; i < rb.geometry.attributes.position.count; i++) { rb.getVertexPosition(i, v).applyMatrix4(rb.matrixWorld); carried(m, i, v); P.set([v.x, v.y, v.z], i * 3); }
     const g = m.group.position, hy = m.bones.hips.getWorldPosition(new THREE.Vector3()).y; cam.set(g.x + eye[0], g.y + eye[1], g.z + eye[2]);
     const inv = m.group.matrixWorld.clone().invert(), floor = lowest(m, true), lg = m.parts.legs; let top = -9;
     for (let i = 0; i < lg.geometry.attributes.position.count; i += every) {
@@ -260,5 +262,30 @@ test("turning about to set off on the level, no trouser comes out through the sk
   for (const [name, make] of BODIES) {
     const x = exposed({ turnStart: true, make }, 3, 1);
     assert.equal(x.pierced, 0, `${name}: the leg came through the cloth in ${x.pierced} of ${x.frames} frames (at most ${x.mostThrough} points); before #284's fix 25 and 27 of 60`);
+  }
+});
+
+// #615: the thighs as colliders. Standing, nothing of the skirt is moved (a trouser leg wider than the tight robe over it is held
+// where it stands); on a flight no point of the skirt that the thighs carry lies inside a thigh; the belt and sleeves are not
+// carried at all.
+test("the thighs carry the skirt out of their way: nothing moves standing, nothing lies inside a thigh on a flight, nothing above the hip is carried", () => {
+  for (const [name, make] of BODIES) {
+    const m = make(), col = m.parts.robe.geometry.attributes.collide, v = new THREE.Vector3();
+    m.update(1 / 60, 0, false, 0, () => 0, {}); m.group.updateMatrixWorld(true); m.skeleton.update();
+    let most = 0; for (let i = 0; i < col.count; i++) { m.parts.robe.getVertexPosition(i, v).applyMatrix4(m.parts.robe.matrixWorld); const a = v.clone(); m.carry(i, v); most = Math.max(most, a.distanceTo(v)); }
+    assert.ok(most < 0.004, `${name}: standing, the skirt is carried ${(most * 1000).toFixed(1)} mm`);
+    { const bindHip = new THREE.Vector3().setFromMatrixPosition(new THREE.Matrix4().copy(m.skeleton.boneInverses[m.skeleton.bones.findIndex((b) => b.name === "leftUpperLeg")]).invert()), P = m.parts.robe.geometry.attributes.position; for (let i = 0; i < col.count; i++) if (col.getX(i) > 0) assert.ok(P.getY(i) <= bindHip.y - 0.029, `${name}: a point at ${P.getY(i).toFixed(2)} m in the bind pose, over ${(bindHip.y - 0.03).toFixed(2)} m, is carried`); }
+    let inside = 0, frames = 0;
+    walk({ n: 10, dir: 1, make: () => m }, (mm, frame) => {
+      if (frame % 6) return; frames++; mm.skeleton.update();
+      for (let i = 0; i < col.count; i += 3) {
+        if (!col.getX(i)) continue; mm.parts.robe.getVertexPosition(i, v).applyMatrix4(mm.parts.robe.matrixWorld); mm.carry(i, v);
+        // the point against both thighs, in the group's space, with the radius it is held at
+        const p = mm.group.worldToLocal(v.clone()), r = Math.min(mm.thighRadius, mm.parts.robe.geometry.attributes.cclear.getX(i)) * 0.97; let worst = 0;
+        for (const s of [0, 1]) { const a = mm.bones[s ? "rightUpperLeg" : "leftUpperLeg"].getWorldPosition(new THREE.Vector3()), b = mm.bones[s ? "rightLowerLeg" : "leftLowerLeg"].getWorldPosition(new THREE.Vector3()); mm.group.worldToLocal(a); mm.group.worldToLocal(b); const ab = b.clone().sub(a), t = Math.min(1, Math.max(0, p.clone().sub(a).dot(ab) / ab.lengthSq())), d = p.distanceTo(a.addScaledVector(ab, t)); if (d < r * (col.getX(i) > 0.99 ? 1 : 0)) worst = 1; }
+        inside += worst;
+      }
+    });
+    assert.equal(inside, 0, `${name}: ${inside} carried points of the skirt lay inside a thigh over ${frames} frames of a flight`);
   }
 });

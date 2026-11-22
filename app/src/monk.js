@@ -14,6 +14,7 @@
 import * as THREE from "three";
 import { STAIR } from "./geo.js";
 import { createBlink } from "./blink.js";
+import { pushOut, createCollider, markCollide, thighRadius, colliderShader } from "./robe-collider.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -419,6 +420,7 @@ export function createMonk() {
   const straps = skinned(strapParts, clothM); straps.visible = false;   // shown when the sculpted body replaces the robe that carried them
   const skeleton = new THREE.Skeleton(bones);
   for (const m of [skin, robe, legs, shoes, straps]) m.bind(skeleton);
+  const collider = createCollider(); robe.material = colliderShader(clothM.clone(), collider);   // the robe's own material: thighs carry its skirt (#615)
   const rigid = (geo, mat, parent) => { const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; parent.add(m); return m; };
 
   // The beads: thirty-two turned beads on a loop that lies over his shoulders and hangs to his chest.
@@ -510,6 +512,14 @@ export function createMonk() {
   // shortening the skirt's bones for it would only pull the whole skirt up to the waist without moving it.
   const HEM_SHARE = 0.3, HEM_FLOOR = 0.7, HEM_NEXT = 0.85, hemBones = [], mats = [];
   setupHem(torsoCount);
+  // The thighs as the skirt's colliders (#615): which of the robe's points they carry, and how wide they are in this body.
+  const thighBones = [IDX.leftUpperLeg, IDX.rightUpperLeg], bindAt = (n) => new THREE.Vector3().setFromMatrixPosition(new THREE.Matrix4().copy(skeleton.boneInverses[IDX[n]]).invert());
+  function setupCollider() {
+    const hip = [bindAt("leftUpperLeg"), bindAt("rightUpperLeg")], knee = [bindAt("leftLowerLeg"), bindAt("rightLowerLeg")];
+    markCollide(robe.geometry, new Set([...SK, ...thighBones]), hip, knee);
+    collider.r = thighRadius(legs.geometry, thighBones, hip, knee); collider.uniforms.uCapR.value = collider.r;
+  }
+  setupCollider();
   const skinPoint = (i, out) => {
     const x = rp[i * 3], y = rp[i * 3 + 1], z = rp[i * 3 + 2]; out.set(0, 0, 0);
     for (let k = 0; k < 4; k++) { const w = rsw[i * 4 + k]; if (!w) continue; const e = mats[rsi[i * 4 + k]].elements; out.x += w * (e[0] * x + e[4] * y + e[8] * z + e[12]); out.y += w * (e[1] * x + e[5] * y + e[9] * z + e[13]); out.z += w * (e[2] * x + e[6] * y + e[10] * z + e[14]); }
@@ -658,7 +668,8 @@ export function createMonk() {
         g.setAttribute(k, new THREE.BufferAttribute(flat, a.itemSize, a.normalized));
       }
       for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = name === "skin" && o.skinMaterial ? o.skinMaterial : material; }
-      setupHem(robe.geometry.attributes.position.count);
+      for (const [name, mesh] of Object.entries({ robe })) mesh.material = colliderShader(material.clone(), collider);
+      setupHem(robe.geometry.attributes.position.count); setupCollider();
       straps.visible = true;
       dressed = true; eyed = !!o.eyes;
       const laid = o.beads === false ? { beads: beadAt.length, moved: 0, most: 0 } : layBeads();
@@ -903,6 +914,15 @@ export function createMonk() {
       patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
       group.updateMatrixWorld(true);
       if (helpers.length) driveHelpers(false);
+      // the thighs, for the skirt to lie over (#615): hip joint and knee, in the group's own space, which is the robe's
+      for (let s = 0; s < 2; s++) { B[s ? "rightUpperLeg" : "leftUpperLeg"].getWorldPosition(collider.a[s]); group.worldToLocal(collider.a[s]); B[s ? "rightLowerLeg" : "leftLowerLeg"].getWorldPosition(collider.b[s]); group.worldToLocal(collider.b[s]); }
     },
+    /** What the skirt is carried by (for the tests): the robe's point `i`, posed and in the world, carried out of both thighs as the shader does it. */
+    carry(i, v) {
+      const w = robe.geometry.attributes.collide.getX(i); if (!w) return v;
+      const r = Math.min(collider.r, robe.geometry.attributes.cclear.getX(i));
+      group.worldToLocal(v); for (let s = 0; s < 2; s++) pushOut(v, collider.a[s], collider.b[s], r, w); return group.localToWorld(v);
+    },
+    get thighRadius() { return collider.r; },
   };
 }
