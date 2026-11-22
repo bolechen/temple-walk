@@ -82,6 +82,22 @@ export function breathRing(k, reduced = false) {
   const u = Math.min(1, Math.max(0, k));
   return { radius: reduced ? 0.9 : 0.55 + 0.4 * ease(u), opacity: u === 0 ? 0 : 0.78 * Math.min(1, 0.25 + 0.75 * ease(u)) };
 }
+// His tea bowl: black glaze over a turned body, standing on its foot (the origin), with the tea in it. One closed
+// surface turned about its axis: the hollow under the foot ring, the foot, the outer wall to the rim, the rim's top,
+// the inner wall and the well inside, so that seen from any side, from below as he tilts it at his lips too, it is
+// solid (#163: the stage's open cylinder, not this, was what showed an empty bottom). The tea is a disc just under the
+// inner wall at 4.7 cm, a little below the rim; it is carried with the bowl, so it never comes out over the rim
+// (tests/unit/tea-bowl.test.mjs).
+export const BOWL = [[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]];
+export const TEA = { r: 0.0575, y: 0.047 };
+/** @param {{ glaze: THREE.Material, tea: THREE.Material }} M */
+export function teaBowl(M) {
+  const cup = new THREE.Group();
+  cup.add(mesh(lathe(BOWL, 24), M.glaze), mesh(new THREE.CircleGeometry(TEA.r, 20).rotateX(-Math.PI / 2).translate(0, TEA.y, 0), M.tea));
+  cup.traverse((o) => { o.userData.keep = o.userData.soft = true; o.userData.part = "bowl"; });
+  return cup;
+}
+
 export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {number} */ at, /** @type {string} */ hall) => {}, enso = null } = {}) {
   const { monk, scene, site, M } = y, B = monk.bones, G = monk.group, places = site.places;
   const hand = () => ({ at: V(), fingers: V(0, 1, 0), palm: V(1, 0, 0), w: 0 });
@@ -175,9 +191,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // ================= Tea =================
   // His bowl stands before him on its lacquer stand. He leans to it, lifts it in both hands, drinks three times
   // and sets it back.
-  const T = places.tea, cup = new THREE.Group(), home = T && T.bowl ? V().fromArray(T.bowl) : null, tea = { held: 0, tilt: 0, sips: 0 };
-  cup.add(mesh(lathe([[0, 0.012], [0.03, 0], [0.036, 0.012], [0.07, 0.048], [0.078, 0.06], [0.072, 0.06], [0.028, 0.02], [0, 0.02]], 24), M.glaze), mesh(new THREE.CircleGeometry(0.058, 20).rotateX(-Math.PI / 2).translate(0, 0.047, 0), M.tea));
-  cup.traverse((o) => { o.userData.keep = o.userData.soft = true; o.userData.part = "bowl"; });
+  const T = places.tea, cup = teaBowl(M), home = T && T.bowl ? V().fromArray(T.bowl) : null, tea = { held: 0, tilt: 0, sips: 0 };
   const steam = wisp(5, { size: 0.09, rise: 0.34, spread: 0.07, life: 3.4, opacity: 0.2 }), ewer = wisp(5, { size: 0.1, rise: 0.4, spread: 0.08, life: 3.8, opacity: 0.2 });
   if (home) { cup.position.copy(home); cup.rotation.y = T.face; scene.add(cup); steam.src.copy(home).y += 0.06; steam.show(true); if (T.steam) { ewer.src.fromArray(T.steam); ewer.show(true); } }
   const rim = V(0, 0.06, -0.07), chestAt = (out) => B.chest.localToWorld(out.set(0, 0.0, 0.17)), mouthAt = (out) => B.head.localToWorld(out.set(0, 0.052, 0.128));

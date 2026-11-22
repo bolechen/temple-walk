@@ -1,0 +1,10 @@
+举香 正 novice-tripo-r6: outline 30454 px, sleeves 2409 px, robe median luminance 94.5; sleeve pixels > 1.25x: 292 = 0.96% of his outline; forearms and hands 110 px, of them brown or white smudges 0
+举香 正 novice-tripo: outline 30500 px, sleeves 2300 px, robe median luminance 94.3; sleeve pixels > 1.25x: 273 = 0.90% of his outline; forearms and hands 138 px, of them brown or white smudges 0
+坐着吃茶 正 novice-tripo-r6: outline 104920 px, sleeves 6429 px, robe median luminance 147.5; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 6986 px, of them brown or white smudges 0
+坐着吃茶 正 novice-tripo: outline 104602 px, sleeves 6129 px, robe median luminance 147.6; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 6859 px, of them brown or white smudges 0
+合掌 正 novice-tripo-r6: outline 157769 px, sleeves 18494 px, robe median luminance 146.2; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 21070 px, of them brown or white smudges 0
+合掌 正 novice-tripo: outline 156840 px, sleeves 18567 px, robe median luminance 146.4; sleeve pixels > 1.25x: 2 = 0.00% of his outline; forearms and hands 20421 px, of them brown or white smudges 0
+举香 正 novice-tripo-r6: outline 171576 px, sleeves 36734 px, robe median luminance 145.8; sleeve pixels > 1.25x: 19 = 0.01% of his outline; forearms and hands 18903 px, of them brown or white smudges 0
+举香 正 novice-tripo: outline 171053 px, sleeves 35486 px, robe median luminance 145.6; sleeve pixels > 1.25x: 20 = 0.01% of his outline; forearms and hands 19816 px, of them brown or white smudges 0
+坐着吃茶 正 novice-tripo-r6: outline 61146 px, sleeves 0 px, robe median luminance 0; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 5334 px, of them brown or white smudges 0
+坐着吃茶 正 novice-tripo: outline 60420 px, sleeves 0 px, robe median luminance 0; sleeve pixels > 1.25x: 0 = 0.00% of his outline; forearms and hands 3596 px, of them brown or white smudges 0

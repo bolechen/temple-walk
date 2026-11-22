@@ -1,5 +1,5 @@
 // Renders every named view of the site (see `views` in app/src/site.js) to tools/out/<name>.png.
-// usage: node tools/shots.js [--level=<id>] [--size=WxH] [--off=part,…] [--tag=-x] [--query=k=v&…] [name ...]     e.g. node tools/shots.js gate library; --size=1280x536 for the 2.39:1 art views
+// usage: node tools/shots.js [--level=<id>] [--size=WxH] [--off=part,…] [--body=code|sculpt] [--tag=-x] [--query=k=v&…] [name ...]     e.g. node tools/shots.js gate library; --size=1280x536 for the 2.39:1 art views
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const { doorwaysReady } = require("./doorway-ready.cjs");
@@ -17,11 +17,11 @@ let srv;
   p.on("pageerror", (e) => errs.push(e.stack ? e.stack.slice(0, 500) : e.message));
   p.on("console", (m) => (m.type() === "error" || m.type() === "warning") && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 400)));
   let names = process.argv.slice(2).filter((a) => !a.startsWith("--"));
-  const level = (process.argv.find((a) => a.startsWith("--level=")) || "").slice(8), off = (process.argv.find((a) => a.startsWith("--off=")) || "").slice(6), tag = (process.argv.find((a) => a.startsWith("--tag=")) || "").slice(6), extra = (process.argv.find((a) => a.startsWith("--query=")) || "").slice(8);   // --query=terrain=dem: more of the address, as given; --off=doorway: a part left out; --tag: added to the file's name
+  const level = (process.argv.find((a) => a.startsWith("--level=")) || "").slice(8), off = (process.argv.find((a) => a.startsWith("--off=")) || "").slice(6), tag = (process.argv.find((a) => a.startsWith("--tag=")) || "").slice(6), body = (process.argv.find((a) => a.startsWith("--body=")) || "").slice(7), extra = (process.argv.find((a) => a.startsWith("--query=")) || "").slice(8);   // --query=terrain=dem: more of the address, as given; --off=doorway: a part left out; --tag: added to the file's name
   for (let i = 0; i < Math.max(1, names.length); i++) {
     // A name may carry a season and hour and a view: "court@autumn-dusk@third".
     const [vname, when = "", vw = ""] = (names[i] || "arrive").split("@"), [season, time] = when.split("-");
-    await p.goto(`${/(^|&)terrain=/.test(extra) ? base.replace("127.0.0.1", "pr-0-temple-walk-preview.test") : base}?shot=1&q=high&show=${vname}` + (season ? `&season=${season}` : "") + (time ? `&time=${time}` : "") + (vw ? `&view=${vw}` : "") + (off ? `&off=${off}` : "") + (level ? `&level=${encodeURIComponent(level)}` : "") + (extra ? `&${extra}` + (/(^|&)terrain=/.test(extra) ? "&debug=0" : "") : ""), { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
+    await p.goto(`${/(^|&)terrain=/.test(extra) ? base.replace("127.0.0.1", "pr-0-temple-walk-preview.test") : base}?shot=1&q=high&show=${vname}` + (season ? `&season=${season}` : "") + (time ? `&time=${time}` : "") + (vw ? `&view=${vw}` : "") + (off ? `&off=${off}` : "") + (body ? `&body=${body}` : "") + (level ? `&level=${encodeURIComponent(level)}` : "") + (extra ? `&${extra}` + (/(^|&)terrain=/.test(extra) ? "&debug=0" : "") : ""), { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 }).catch((e) => errs.push(String(e).slice(0, 160)));
     if (!names.length) names = await p.evaluate(() => window.__views);
     // The rooms seen through the doors are taken a face a frame once the page is up (doorway.js): wait until they are in.
