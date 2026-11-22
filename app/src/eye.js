@@ -93,7 +93,9 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
         stop = h; thing = space && arm ? [s - 0.125, s].some((q) => solidAt(q, sd)) : pts.some((p) => drawn(p[0], p[1], p[2]));
         // Asked of what is drawn, a column or a trunk is not told from a wall by name but by its thickness: what the arm
         // is clear of again within half a metre beyond is let pass a moment, as a column was (`FOLLOW.postWait`).
-        if (space && arm && thing && s + 0.75 <= reach && !shutAt(s + 0.5, sd) && !shutAt(s + 0.75, sd)) stop = "post";
+        // (Not a wall, though, which is drawn as skins with the hollow between them: the arm clear again in a 1 m wall's hollow is not a
+        // column's far side, #562.)
+        if (space && arm && thing && s + 0.75 <= reach && !shutAt(s + 0.5, sd) && !shutAt(s + 0.75, sd) && !(space.thick && space.thick(base(0, sd), base(reach, sd)))) stop = "post";
         break;
       }
       d = s;
@@ -147,7 +149,9 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   const solid = space && arm ? solidAt : null;
   // (and whether what holds the arm in is only the lie of the ground: then it comes in as slowly as it rises, FOLLOW.liftSpeed)
   const ground = !!(space && arm && stop && !firstThing);
-  return { ox, oz, ty, lx, ly, lz, d, stop, ground, side: s0, base, open, solid, liftAt, floorAt, at, shut: space && arm ? drawn : shut, arm };
+  // Whether the arm to `dist` crosses a wall, not a column (what is drawn only; the written plan's eye has no such question).
+  const behindWall = space && arm && space.thick ? (dist, sd = s0) => space.thick(base(0, sd), base(dist, sd)) : null;
+  return { ox, oz, ty, lx, ly, lz, d, stop, ground, side: s0, base, open, solid, liftAt, floorAt, at, shut: space && arm ? drawn : shut, arm, behindWall };
 }
 
 // How the eye moves from one frame to the next, after the third-person camera of 《小王子》 (its
@@ -174,6 +178,8 @@ export const FOLLOW = {
   liftSpeed: 1.0,   // and, asked of what is drawn (#295), never faster than this, up or down, in metres a second: down a flight the rise comes on as he steps off its head and goes as he steps off its foot, and the view tipped half a degree a frame
   liftHold: 0.35,   // and staying up a while, so that walking along an edge does not make it bob
   liftDown: 0.5,    // coming down again
+  lagSpeed: 2,      // swinging round before a thick wall (#562), the arm's bearing may fall behind the view's this fast, in metres a second at the eye
+  turnWall: 9,      // and the arm comes in ahead of that wall no faster than this: with the lag, the tests' 0.15 m a frame less a margin
 };
 // Unity's SmoothDamp: a critically damped spring, so that the eye gathers speed and loses it again instead of
 // starting at full speed (an easing by a fixed fraction a frame starts fastest, and that start is the jolt).
@@ -187,16 +193,34 @@ export function damp(cur, target, vel, time, dt, maxSpeed = Infinity) {
 }
 
 export function createFollow(T = FOLLOW) {
-  let fresh = true, through = 0, dist = null, vd = 0, side = 0, vs = 0, lift = 0, vl = 0, held = 0, waited = 0, forced = 0;
+  let fresh = true, lag = 0, through = 0, dist = null, vd = 0, side = 0, vs = 0, lift = 0, vl = 0, held = 0, waited = 0, forced = 0;
   return {
     // Back to rest at a distance (a door passed, the view changed): the next frame starts from there.
-    reset(d = null) { fresh = true; dist = d; vd = vs = vl = lift = held = waited = through = 0; side = null; },
+    reset(d = null) { fresh = true; lag = 0; dist = d; vd = vs = vl = lift = held = waited = through = 0; side = null; },
     get dist() { return dist; },
     // True from a reset until the next step: the eye has just been put somewhere and nothing it did before carries over.
     get fresh() { return fresh; },
     get side() { return side; },
     // How far the eye last had to be put straight out of something it would otherwise have been inside.
     get forced() { return forced; },
+    /**
+     * This frame's followEye and, while the view swings, the one ahead of it, ready for `step`. Where the swing would take the arm
+     * across a thick wall (`space.thick`: a gable, not a column) the arm's bearing falls behind the view's, no faster than the eye
+     * can come in (`FOLLOW.lagSpeed`), and catches up again once it may: the eye keeps to the wall's inner side while the arm, which
+     * can only come in so fast, shortens, instead of sweeping through the wall and standing outside it (#562). Everywhere else the
+     * arm lies exactly behind the view. `at` is followEye's argument; `vy` the view's turn in radians a second.
+     */
+    look(walker, at, vy = 0, dt = 1 / 60) {
+      const turning = Math.abs(vy) > 0.5, lead = turning ? vy * T.ahead : 0, mk = (l, w) => followEye(walker, { ...at, yaw: at.yaw + l + (w ? lead : 0) });
+      const ahead = turning ? mk(0, true) : null;
+      if (!at.space?.thick || !at.arm) return { eye: mk(0, false), ahead };
+      const d = dist === null ? at.reach : dist, step = Math.min(0.5, (T.lagSpeed * dt) / Math.max(1, d)), crosses = (e) => !!(e.behindWall && e.behindWall(d, e.side));
+      if (lag === 0 && !(ahead && crosses(ahead))) return { eye: mk(0, false), ahead };
+      const toward = Math.sign(lag) * Math.max(0, Math.abs(lag) - step);
+      if (lag !== 0 && !crosses(mk(toward, true))) lag = toward;
+      else if (turning && crosses(mk(lag, true))) lag = Math.max(-1.6, Math.min(1.6, lag - Math.sign(vy) * step));
+      return { eye: mk(lag, false), ahead };
+    },
     // One frame: `eye` is this frame's followEye. Returns where the eye stands. `ahead`, if given, is followEye for
     // where the view will have turned a moment from now: while the visitor swings the view round, a wall that the arm
     // is about to sweep into brings the eye in before it gets there, not after it is inside (then it can only be put
@@ -219,7 +243,8 @@ export function createFollow(T = FOLLOW) {
       // Unless the view is swinging round and the arm will be clear of it a moment from now: then it is something
       // narrow sweeping past (a wall's end, a tree, the corner of an eave), and like a column it is let through, for
       // no longer than a column is.
-      const clears = !!ahead && ahead.open(dist, side);
+      // (not past a wall, though: swung round, an arm that crosses a thick wall and is clear again beyond it is not a wall's end passing, #562)
+      const clears = !!ahead && ahead.open(dist, side) && !(ahead.behindWall && ahead.behindWall(dist, side));
       const inside = eye.solid ? eye.solid(dist, side) : !eye.open(dist, side), passing = inside && clears && through < T.postWait;
       through = passing ? through + dt : 0;
       if (inside && !passing) {
@@ -238,7 +263,7 @@ export function createFollow(T = FOLLOW) {
       if (want < dist - 1e-4) {
         waited += dt;
         // A column or a trunk crossing the line of sight is let pass; anything larger, or one that stays, is not.
-        if ((stop !== "post" && !clears) || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, soon ? (eye.solid ? T.turnDrawn : T.turnSpeed) : eye.ground ? T.liftSpeed : eye.solid ? T.inDrawn : T.inSpeed);
+        if ((stop !== "post" && !clears) || waited >= T.postWait) [dist, vd] = damp(dist, want, vd, T.inTime, dt, soon ? (eye.solid ? (ahead.behindWall && ahead.behindWall(dist, side) ? T.turnWall : T.turnDrawn) : T.turnSpeed) : eye.ground ? T.liftSpeed : eye.solid ? T.inDrawn : T.inSpeed);
         else vd = 0;
       } else {
         waited = 0;
