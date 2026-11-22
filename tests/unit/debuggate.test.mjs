@@ -20,3 +20,8 @@ test("the canary opens it only when the address asks with ?debug=1", () => {
 test("the public page never opens it, whatever the address says", () => {
   for (const q of ["", "?debug", "?debug=1", "?debug=true"]) assert.equal(at("temple.rushiwowen.co", q), false, q);
 });
+
+test("a film is drawn with no panel over it, on the dev server and a preview too (#610)", () => {
+  assert.equal(at("127.0.0.1", "?trailer=1", true), false);
+  assert.equal(at("pr-12-temple-walk-preview.bole-chen.workers.dev", "?trailer"), false);
+});

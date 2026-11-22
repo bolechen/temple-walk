@@ -95,7 +95,7 @@ test("swinging the view round where he stands does not throw the eye about", () 
       const turning = i >= 60; if (turning) yaw += rate * dt;
       const rx = Math.cos(yaw), rz = Math.sin(yaw); side += ((walker.wall(x + rx * 1.4, z + rz * 1.4) ? 0 : 1.2) - side) * Math.min(1, dt * 3);
       const at = { x, z, foot, eyeY, yaw, pitch: 0.04, side, reach: 6.2 };
-      follow.step(dt, followEye(walker, at), turning ? followEye(walker, { ...at, yaw: yaw + rate * FOLLOW.ahead }) : null);
+      const led = follow.look(walker, at, turning ? rate : 0, dt); follow.step(dt, led.eye, led.ahead);
       if (!turning) continue;
       frames++; if (follow.forced > FLAT) put++; if (follow.forced > FORCED) far++; worst = Math.max(worst, follow.forced);
     }

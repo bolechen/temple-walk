@@ -5,14 +5,15 @@ import { AXIS, FOOT, LANE, SECOND } from "./axis.js";
 import { ARRIVE, PLATFORM, STATION } from "./site.js";
 
 const FLIGHT = "up the flight to the terrace and down again", SILL = "over the middle door's sill into the hall";
-// The camera is walked up the flight and down again and over the middle door's sill. The worship band's aisles are not walked yet: turned out of
-// either aisle's end round the side wall, the eye moves 0.155-0.157 m on its own in a frame against the tests' 0.15 and for some frames stands
-// outside the hall's 1 m side wall. The two sides are drawn alike (the east aisle walked alone jumps as the west does, at the mirrored frame), so
-// it is the camera's and not these routes' (#562); the route below comes in when it is mended:
-// [[0, -4], [12, -5], [21.3, -7], [21.3, -13], [12, -11], [0, -9], [-12, -5], [-21.3, -7], [-21.3, -13], [-12, -11], [0, -9], [0, -4]].
+const AISLE_E = "round the east aisle of the worship band", AISLE_W = "round the west aisle of the worship band", AISLES = "round both aisles, east first";
+// The camera is walked up the flight and down again, over the middle door's sill, and round the worship band's two aisles (PRD.md §1.4 route 3;
+// #562: turned out of an aisle's end the eye used to be taken through the hall's 1 m side wall and stand outside it).
 const HALL_ROUTES = Object.freeze({
   [FLIGHT]: [[0, 26], [0, 12], [0, 26]],
   [SILL]: [[0, 6], [0, -4]],
+  [AISLE_E]: [[0, -4], [12, -5], [21.3, -7], [21.3, -13], [12, -11], [0, -9], [0, -4]],
+  [AISLE_W]: [[0, -4], [-12, -5], [-21.3, -7], [-21.3, -13], [-12, -11], [0, -9], [0, -4]],
+  [AISLES]: [[0, -4], [12, -5], [21.3, -7], [21.3, -13], [12, -11], [0, -9], [-12, -5], [-21.3, -7], [-21.3, -13], [-12, -11], [0, -9], [0, -4]],
 });
 
 /** @type {Record<string, any>} */
@@ -43,7 +44,7 @@ export default {
     ],
   },
   // The camera's routes inside and up to the great hall (PLAN.md item 12, gap 4): up the flight to the terrace and down again, over the middle door's
-  // sill into the hall (the worship band's aisles, PRD.md §1.4 route 3, wait on the camera: above). tests/unit/follow.test.mjs and
+  // sill into the hall (and the worship band's aisles, PRD.md §1.4 route 3). tests/unit/follow.test.mjs and
   // spring-arm.test.mjs walk them with WALK_LEVEL=t05.
   // follow.test walks only the sill and the flight going up: it asks the written plan, which in T05 is only the eye's fallback for the half
   // second before the drawn geometry's hierarchy is built (step 6 deletes it), and T00's follow has no flight to come down either; going

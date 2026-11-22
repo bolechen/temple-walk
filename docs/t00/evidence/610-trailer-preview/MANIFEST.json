@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "stills.jpg",
+   "bytes": 218342,
+   "sha256": "dac3408284072a1653fb1519c156bc342b9310982048282d5f901f77d9901a19",
+   "rev": "70b94e9c1b1878823895d7ef047a91eaa00a0b6b"
+  },
+  {
+   "path": "t00-steam-1-640x360-12fps.mp4",
+   "bytes": 20713564,
+   "sha256": "8c6afd9f3d3a940ea9f4f4ff6937a891a6471045e2255be4885ac991d6005f20",
+   "rev": "70b94e9c1b1878823895d7ef047a91eaa00a0b6b"
+  }
+ ]
+}

@@ -11,6 +11,7 @@ export { BODY };
 import { makePlaque, makeWallPanel } from "../../src/plaque.js";
 import { CENSER } from "../../src/censer.js";
 import { LIT } from "./windows.js";
+import { buildStele } from "./stele.js";
 
 export const SITE = { x: 22, zS: 40, zN: -142, fore: 64, apron: 112, wallH: 3.0, GROVE_IN: 20.5 };   // GROVE_IN: where the bamboo closes in on the forecourt
 export const SCREEN = { z: 55, w: 11, h: 4.2 };   // the screen wall before the gate, where the two old paths meet
@@ -42,6 +43,15 @@ APPROACH.xC = (APPROACH.xB0 + APPROACH.xB1) / 2; APPROACH.zC0 = APPROACH.zA1 + A
 // where it is kept clear, the path and the half-way pavilion. Culms stand 9 to 15 m over the land (`top`). Shared with the
 // opening (opening.js), whose way down keeps over their tops except where it comes down the clear way of the path.
 const nearRect = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
+/** The strip behind the start of the walk, along the eye's line to him at the first picture after 入山, the title's picture and
+ *  the opening's last frame (#454): half its width, and how far back from the path's last step it reaches (the eye stands six
+ *  metres back). No culm stands in it, so that none crosses him or the stair's middle; the eye is not kept out of it either
+ *  (`eyeKeepOut` in level.js). */
+export const START_SIGHT = { hw: 0.95, back: 6.5 };
+/** The one near culm left in that strip to frame the first picture (#454, the art review): 2.8 m in front of the eye and 0.65 m to the
+ *  left, which on a phone held upright stands a tenth of the picture's width from its left edge, and on a wide screen beside the
+ *  stair, clear of him and of the stair's middle. */
+export const START_CULM = [APPROACH.xC - 0.65, APPROACH.zC1 + 2.0];   // (he stands at zC1 - 1.2, the eye 6 m behind him at zC1 + 4.8)
 export const GROVE = {
   top: 15,
   areas: [
@@ -65,6 +75,9 @@ export const GROVE = {
     for (let k = 0; k < 8; k++) if (!GROVE.grows(x + Math.cos((k * Math.PI) / 4) * 1.4, z + Math.sin((k * Math.PI) / 4) * 1.4)) return true;
     return false;
   },
+  /** Is a culm taken out here? Those in the strip behind the start (`START_SIGHT`), which would stand 1 to 6 m from the eye and
+   *  split the stair (#454). Taken out after it has drawn its numbers: the rest of the grove is as it was. */
+  cullSight(x, z) { return Math.abs(x - APPROACH.xC) < START_SIGHT.hw && z > APPROACH.zC1 && z < APPROACH.zC1 + START_SIGHT.back; },
   /** Is there bamboo at (x, z) (within an area, and not kept clear)? */
   grows(x, z) { return GROVE.areas.some((a) => x > a.x0 && x < a.x1 && z > a.z0 && z < a.z1) && GROVE.keep(x, z); },
 };
@@ -296,14 +309,20 @@ export function buildSite(M) {
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true },   // (three treads up from the path, #478: it had none, and 0.45 m is more than he steps; open floor like the path's other pavilions, #274)
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
   ], [-12.5, 50.5], 1);
-  sp.group.add(mesh(merge([box(1.5, 0.5, 0.9, 0, 0.7, 0), box(1.05, 2.3, 0.26, 0, 2.1, 0), box(1.25, 0.45, 0.4, 0, 3.4, 0)]), M.monolith));
+  // The stele itself: a Song imperial stele with a notched head on a stepped base (stele.js, #520).
+  const stele = buildStele(M);
+  stele.group.position.y = 0.45;   // (the platform's floor)
+  sp.group.add(stele.group);
+  if (typeof window === "object") window.__stele = (on) => { for (const m of Object.values(stele.parts)) { m.userData.paint ??= m.material; m.material = on === "black" ? (m.userData.black ??= new THREE.MeshBasicMaterial({ color: 0x000000 })) : m.userData.paint; } return { height: stele.height }; };   // (a view of its shape alone, black: tools/stele-views.cjs)
+  if (typeof window === "object") window.__steleInk = (on) => { const u = M.steleStone?.userData.inkUniforms; if (u) u.uInkOn.value = on ? 1 : 0; return !!u; };   // (the writing off and on, to see what it adds: tools/stele-views.cjs)
+  if (typeof window === "object") window.__steleAlone = () => { let r = /** @type {THREE.Object3D} */ (stele.group); while (r.parent) r = r.parent; r.attach(stele.group); stele.group.userData.part = "stele"; return true; };   // (taken out of the pavilion, so that the pavilion can be switched off with __part and the stone seen whole)
   // Open floor on the written plan (`walkAll`) leaves no solid round the platform, so that his shoes could come down on its lip from the
   // ground beside it (`edges`): the platform's own solid is put back, as a hall's is; the floor laid over it, the stair, is unchanged.
   walk.solids.push({ ...place({ x0: -3.3, x1: 3.3, z0: -3.3, z1: 3.3 }, [-12.5, 50.5], 1), own: true });
   // The open floor reaches the platform's lip, where the stair's cheek stones stand level with it: a post along the lip on each side of the stair keeps his shoes off them.
   for (const sx of [-1, 1]) walk.posts.push(place({ x0: sx > 0 ? 0.9 : -1.9, x1: sx > 0 ? 1.9 : -0.9, z0: 2.6, z1: 2.84 }, [-12.5, 50.5], 1));
-  // The written plan walks round the stele's foot (the baked floor takes it from the mesh): 1.5 by 0.9 m, turned a quarter, and his own width.
-  walk.posts.push({ x0: -12.5 - 0.45 - BODY, x1: -12.5 + 0.45 + BODY, z0: 50.5 - 0.75 - BODY, z1: 50.5 + 0.75 + BODY, eyeTop: 3.45 });   // (`eyeTop`: the stele stands 3.6 m, and the following eye stays out of it all the way up)
+  // The written plan walks round the stele's foot (the baked floor takes it from the mesh): the base's footprint, turned a quarter, and his own width.
+  walk.posts.push({ x0: -12.5 - stele.foot.hx - BODY, x1: -12.5 + stele.foot.hx + BODY, z0: 50.5 - stele.foot.hz - BODY, z1: 50.5 + stele.foot.hz + BODY, eyeTop: 3.45 });   // (the base: 0.77 by 1.24 m, turned a quarter, so that its depth lies along x, #520; `eyeTop`: the stele's top is 3.43 m up, and the following eye stays out of it all the way up)
 
   // ---- Terraces: a stone mass, paving on top, a parapet along the front, stairs on the axis ----
   const stone = [], flights = [], paving = [];   // `flights`: the stairs, which are dressed stone and not the terraces' rubble

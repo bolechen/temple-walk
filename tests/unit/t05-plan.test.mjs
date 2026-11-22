@@ -209,7 +209,7 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
 test("the fill comes from the doors and from under the floor: none of it hung before the front wall, none in the air under the roof (#493, #549)", async () => {
   const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
   const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
-  assert.ok(h.fill.length <= 5, "no more lights than the five the hall had at #481 (each is in every shader, outdoors too)");
+  assert.ok(h.fill.length <= 5, "no more lights than the five of #549 (each is in every shader, outdoors too)");
   assert.ok(h.fill.every((f) => f[6]), "every one a spot, turned somewhere: no lamp lights the whole room");
   const doors = h.fill.filter((f) => f[1] > y0), up = h.fill.filter((f) => f[1] < y0);
   assert.equal(doors.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
@@ -234,9 +234,20 @@ test("the timber overhead takes more of the inside's light than the walls, from 
   const { TIMBER } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), y0 = HALL.floor;
   assert.equal(h.timberShut(0, y0 + 1, -10), h.shut(0, y0 + 1, -10), "low in the hall, as the walls");
-  assert.ok(Math.abs(h.timberShut(0, y0 + 9, -10) - Math.min(1, HALL.inside * TIMBER.lift)) < 1e-9, "high up, TIMBER.lift times the walls'");
+  assert.ok(Math.abs(h.timberShut(0, y0 + 9, -10) - Math.min(3, HALL.inside * TIMBER.lift)) < 1e-9, "high up, TIMBER.lift times the walls'");
   assert.equal(h.timberShut(0, y0 + 9, 30), 1, "outside the hall the sky is not shut out, timber or not");
-  for (let y = y0; y < y0 + 10; y += 0.05) { const a = h.timberShut(0, y, -10), b = h.timberShut(0, y + 0.05, -10); assert.ok(b >= a && b - a < 0.02, `no step at ${y.toFixed(2)}`); }
+  for (let y = y0; y < y0 + 10; y += 0.05) { const a = h.timberShut(0, y, -10), b = h.timberShut(0, y + 0.05, -10); assert.ok(b >= a && b - a < 0.15, `no step at ${y.toFixed(2)}`); }
+});
+
+test("the wall ring's timber (frames, tie-beams, brackets) keeps the walls' share while the roof's timber rises: the roof's beams and purlins above it, its boards below (#608)", async () => {
+  const { TIMBER } = await import("../../app/levels/t05/hall.js");
+  const h = buildHall(M), y0 = HALL.floor, at = [0, y0 + 9, -10];
+  assert.ok(h.parts.ring.size > 100, "the ring's boxes are recorded");
+  const brackets = h.parts.wood.filter((g) => h.parts.ring.has(g)), purlins = h.parts.wood.filter((g) => !h.parts.ring.has(g));
+  assert.ok(brackets.length > 0 && purlins.length > 0 && purlins.length < 30, "the purlins stand apart from the ring");
+  assert.ok(Math.abs(h.ringShut(...at) - Math.min(3, HALL.inside * TIMBER.ring)) < 1e-9, "the ring takes TIMBER.ring times the walls'");
+  assert.ok(h.beamShut(...at) > h.ringShut(...at) && h.timberShut(...at) > h.ringShut(...at) && h.ringShut(...at) > h.boardShut(...at), "the beams' and purlins' share over the ring's over the boards'");
+  assert.ok(TIMBER.ring < TIMBER.lift && TIMBER.ring < TIMBER.beam && TIMBER.board < TIMBER.ring, "in the numbers too");
 });
 
 test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {

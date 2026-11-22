@@ -53,7 +53,7 @@ export function measure(fr, size, path, pitch0 = 0.06, opts = {}) {
     // and, while the view swings round, the eye looking where it swings to, as yard.js has it (eye.js `ahead`; FOLLOW.ahead)
     const vy = (yaw - lastYaw) / dt; lastYaw = yaw;
     const at = { x, z, foot, eyeY, yaw, pitch: pitch0, side, reach: 6.2, arm: arm ?? null, space };
-    const c = follow.step(dt, followEye(walker, at), opts.ahead !== false && Math.abs(vy) > 0.5 ? followEye(walker, { ...at, yaw: yaw + vy * 0.25 }) : null);
+    const led = follow.look(walker, at, opts.ahead !== false ? vy : 0, dt), c = follow.step(dt, led.eye, led.ahead);
     if (!count) return;
     frames++; dists.push(follow.dist);
     if (follow.dist < 0.85) { hidden++; return; }   // so near that he is hidden (yard.js)

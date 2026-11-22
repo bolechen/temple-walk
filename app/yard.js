@@ -1,5 +1,6 @@
 // The temple grounds: assembles the modules in src/, walks the visitor through them,
 // and hands over to the hall interior at the main hall's door.
+import { TRAILER } from "./src/trailer-boot.js";   // first: in trailer mode (#610) it replaces the page's clock before anything reads it
 import { debugGate } from "./src/debuggate.js";
 import { MAIN, photoUrl } from "./src/goshuin.js";
 import * as THREE from "three";
@@ -62,7 +63,8 @@ import { createCarryOut } from "./src/carry-page.js";
 import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
-import { poseQuery } from "./src/link.js";
+import { poseQuery, readEye } from "./src/link.js";
+import { PRODUCTION } from "./src/deploy.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop, stepOff, stepPose } from "./src/drop.js";
 import { planSteps, clearLine, wayThrough } from "./src/route.js";
 import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settleAt } from "./src/gridwalker.js";
@@ -72,6 +74,8 @@ import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
+import { createProbes, PROBE_ON } from "./src/probe.js";
+import { SKY_TRIAL } from "./src/atmosphere.js";
 import { walkIsHis, heldUnder, viewKeyHeard } from "./src/walkgate.js";
 /** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
 const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
@@ -119,7 +123,7 @@ createShare(ui);   // the sheet a picture is saved from where the system cannot 
 const carryOut = createCarryOut(ui);
 document.getElementById("bookCarry")?.addEventListener("click", () => { ui.close("bookMore"); carryOut.open(); });   // (from the book's 更多 sheet, which it puts away first, #473)
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
-const hints = createHints({ off: Q.has("shot"), ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
+const hints = createHints({ off: Q.has("shot") || TRAILER, ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 // What a visitor changes in the pause menu or the photograph's settings (#326): one event per key in 800 ms, the
 // last value winning, so that dragging a slider is a change and not a stream. A value that did not change is not sent.
@@ -205,6 +209,10 @@ site.seats.push(...rooms.seats);
 for (const [id, p] of [...INCENSE_HALLS.map((h) => [incenseId(h), site.places[incenseId(h)]]), ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)
+// Trial A (#592, `?trial=probe`): the baked light probes of the court and the great hall, loaded before the first frame so that no frame is drawn without them; a file that does not come leaves the page as it was.
+const probes = createProbes(L.id);
+if (PROBE_ON) await probes.load().catch((e) => { console.warn("probes: " + e.message); probes.strength(0); });
+window.__probes = (k) => { if (k !== undefined) probes.strength(+k); return { on: PROBE_ON, ready: probes.ready, grids: probes.grids }; };
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
 // The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
 // its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
@@ -220,7 +228,7 @@ const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
-const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow"), clearUnder: L.grove.clearUnder }));
+const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow"), clearUnder: L.grove.clearUnder, clearCulm: L.grove.clearCulm, extraCulms: L.grove.extraCulms }));
 await loading.step(tr("竹林"));
 const props = site.censer ? part("props", () => createProps(scene, M, site.censer, L.propsAt)) : { ...NONE, censer: () => ({ none: true }), setTraces: () => 0 };
 const post = createPost(renderer, scene, camera, quality, OFF);
@@ -263,10 +271,20 @@ const flock = site.places.bell && site.cedars ? createFlock(scene, site.cedars, 
 addEventListener("flush", () => { if (!inside && mood.time !== "night" && flock.flush()) flutter(0.8); });
 
 await loading.step(tr("石阶"));
-const monk = createMonk(); part("monk", () => scene.add(monk.group));
+const monk = createMonk(); monk.blinking = !Q.has("shot");   // the Tripo body blinks, but not in a held picture (#607)
+part("monk", () => scene.add(monk.group));
 // His opacity, for the eye going into his own eyes or out of them (#102): faded on every material he wears, and given back.
 let faded = 1;
 const fade = (a) => (faded = a, monk.group.traverse((/** @type {any} */ o) => { if (!o.isMesh) return; for (const m of [o.material].flat()) { if (m.userData.baseOpacity === undefined) m.userData.baseOpacity = m.opacity, m.userData.baseTransparent = m.transparent; m.opacity = m.userData.baseOpacity * a; const t = a < 1 || m.userData.baseTransparent; if (m.transparent !== t) { m.transparent = t; m.needsUpdate = true; } } }));
+// His own bounds in the world, the body, the hat and the beads but not his painted shadow, as the geometry's boxes put them where he
+// stands (#612), and how near the eye may come to them before he must be wholly clear: the corners of the near plane and 3 cm.
+const monkBounds = new THREE.Box3(), monkPart = new THREE.Box3();
+const monkWorld = () => {
+  monkBounds.makeEmpty(); monk.group.updateWorldMatrix(true, true);
+  monk.group.traverse((/** @type {any} */ o) => { if (!o.isMesh || o === monk.shadow) return; const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); monkPart.copy(g.boundingBox).applyMatrix4(o.matrixWorld); monkBounds.union(monkPart); });
+  return monkBounds;
+};
+const monkNear = () => eyeRadius(camera.fov, camera.aspect, camera.near) + 0.03;
 // He wears the layered body made from Tripo's model (#163; src/novice.js), fetched while the place is built; the page is
 // not called ready until it has arrived or failed, so that no picture catches him half dressed. ?body=sculpt wears the
 // older body made with Meshy, ?body=code keeps the figure built in code. A body that fails to arrive or to fit leaves
@@ -681,6 +699,9 @@ let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = fo
 // walk is the visitor's, sorted into a hierarchy by a worker, then asked with a sphere as big as the near plane's corners.
 // Until then (and with ?off=eyebvh) the eye asks the written plan, as it did.
 let eyeSpace = null, eyeGather = null, eyeHeld = null;
+// (#623) An address that names the eye (`eye=x,y,z,dist`, from __debugURL or ?devpose) stands it there and holds it until he
+// first walks or the view is dragged, so that what a tester saw is what opens. Production does not read it.
+let eyePin = null;
 const eyeInfo = { state: OFF.has("eyebvh") ? "off" : "waiting", tris: 0, gatherMs: 0, buildMs: 0, t0: 0, byPart: /** @type {Record<string, number>} */ ({}) };
 function growEyeSpace() {
   if (eyeInfo.state === "waiting") {
@@ -694,7 +715,7 @@ function growEyeSpace() {
   const w = new EyeWorker();
   w.onmessage = (e) => {
     const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(e.data.positions, 3));
-    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true }), L.eyeKeepOut || null); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
+    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true }), L.eyeKeepOut || null, { thickWalls: !!L.eyeThickWalls }); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
   };
   w.onerror = () => { eyeInfo.state = "failed"; w.terminate(); console.warn("the eye's hierarchy could not be built: it asks the written plan"); };
   w.postMessage({ positions }, [positions.buffer]);
@@ -707,7 +728,7 @@ function frame(now) {
   if (!running) return;
   if (frozen) { prev = now; requestAnimationFrame(frame); return; }
   governor.tick((now - prev) / 1000); tour?.frame(now); devpose?.tick(now); if (eyeInfo.state === "waiting" || eyeInfo.state === "gathering") growEyeSpace();
-  const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
+  const dt = Math.min(TRAILER ? 0.2 : 0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;   // (a film drawn at 12 frames a second for a preview must still run at the pace of a walk: its frame is the clock's, never slow)
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
@@ -780,7 +801,7 @@ function frame(now) {
   if (walkViz) walkViz.update(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
   // (`posed`: a tool may have him walk, hurry, climb, hop or sit on the spot, to be looked at closely: `__act`.)
   if (posed) monk.update(dt || 1 / 30, posed.speed || 0, posed.pose || false, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: !!posed.stairs, act: posed.act || null });
-  else monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) ? 0 : speedNow, (aloft && !stepping) || (climb && climb.t < climb.plan.duration * 0.5) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null });
+  else { monk.blinking = !Q.has("shot") && !photo.on; monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) ? 0 : speedNow, (aloft && !stepping) || (climb && climb.t < climb.plan.duration * 0.5) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null }); }
   // Where he steps outdoors in the snow he leaves his prints (a room's floor keeps none, and the square stays outside),
   // and every step is heard, as what it comes down on sounds: snow, dry stone, stone wet after rain, a puddle in the
   // paving, a hall's floor. A little to the side of the foot that made it (his left is the listener's left, from
@@ -818,10 +839,17 @@ function frame(now) {
     if (eyeSpace) eyeSpace.radius = eyeRadius(camera.fov, camera.aspect, camera.near);   // (the lens and the screen of this frame)
     const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant, arm: FRAME ? frameArm(FRAME, camera.fov, camera.aspect) : null, space: FRAME ? eyeSpace : null };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
-    const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
-    if (eyeHeld && (eyeSpace || !/waiting|gathering|building/.test(eyeInfo.state) || Math.hypot(pos.x - eyeHeld.x, pos.z - eyeHeld.z) > 0.3)) eyeHeld = null;
-    if (eyeHeld) { follow.reset(eyeHeld.dist); camera.position.fromArray(followEye(walker, at).at(eyeHeld.dist)); }   // (held where it stood before the change of language, #368)
-    else camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
+    // (And, before a thick wall that the swing would carry it through, the arm's bearing falls behind the view's: eye.js `look`, #562.)
+    const led = follow.look(walker, at, look.vy, dt);
+    if (eyePin) {
+      eyePin.yaw ??= yaw; eyePin.pitch ??= pitch;
+      if (Math.hypot(pos.x - eyePin.x, pos.z - eyePin.z) > 0.02 || Math.abs(yaw - eyePin.yaw) > 1e-4 || Math.abs(pitch - eyePin.pitch) > 1e-4 || photo.on || cine || director.active()) eyePin = null;
+    }
+    if (eyePin) { follow.reset(eyePin.dist); camera.position.fromArray(eyePin.at); }
+    if (!eyePin && eyeHeld && (eyeSpace || !/waiting|gathering|building/.test(eyeInfo.state) || Math.hypot(pos.x - eyeHeld.x, pos.z - eyeHeld.z) > 0.3)) eyeHeld = null;
+    if (eyePin) { /* held above */ }
+    else if (eyeHeld) { follow.reset(eyeHeld.dist); camera.position.fromArray(followEye(walker, at).at(eyeHeld.dist)); }   // (held where it stood before the change of language, #368)
+    else camera.position.fromArray(clearOfCenser(follow.step(dt, led.eye, led.ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
     // beyond a farther one, so that he does not flicker in and out at the edge of it.
     monkHidden = follow.dist < (monkHidden ? 0.85 : 0.6);
@@ -849,9 +877,14 @@ function frame(now) {
       const fovTo = zoomed(directedFov ?? baseFov()), goes = camera.position.distanceTo(push.p), widens = Math.abs(fovTo - push.fov) || 1e-6;   // (the new view's own angle, not this frame's mixed one)
       push.t = Math.min(1, push.t + Math.min(dt / PUSH.time, PUSH.move / (1.875 * Math.max(goes, 1e-6)), PUSH.fov / (1.875 * widens)));
       const k = push.t * push.t * push.t * (push.t * (push.t * 6 - 15) + 10);
+      const reachEnd = monkWorld().distanceToPoint(camera.position);   // (where the push ends, before it is mixed: the view's own eye)
       camera.position.lerpVectors(push.p, camera.position, k); camera.quaternion.slerpQuaternions(push.q, camera.quaternion, k);
       camera.fov = push.fov + (fovTo - push.fov) * k; camera.updateProjectionMatrix();
-      monk.group.visible = true; const was = faded; fade(view === "first" ? 1 - k : k);
+      // He fades by where the eye is, not by how far along the push is (#612: by time he was still a little drawn when the eye was
+      // already at the back of his head): wholly clear while the eye is inside his bounds and the near plane's reach, wholly drawn
+      // `PUSH.fade` beyond (or by where the push ends, if that is nearer: the eye behind him comes to rest drawn in full).
+      monk.group.visible = true; const was = faded, edge = monkNear(), range = reachEnd - edge > 0.05 ? Math.min(PUSH.fade, reachEnd - edge) : PUSH.fade;
+      fade(THREE.MathUtils.clamp((monkWorld().distanceToPoint(camera.position) - edge) / range, 0, 1));
       if (pushed) { const L = pushed.last; if (L) { pushed.fov = Math.max(pushed.fov, Math.abs(camera.fov - L.fov)); pushed.move = Math.max(pushed.move, camera.position.distanceTo(L.p)); } if (view === "first" ? faded > was + 1e-6 : faded < was - 1e-6) pushed.back++; pushed.frames++; pushed.last = { fov: camera.fov, p: camera.position.clone() }; }
       if (push.t >= 1) { push = null; fade(1); monk.group.visible = view === "third" && !monkHidden; lens(); }
     }
@@ -921,11 +954,12 @@ requestAnimationFrame(frame);
 
 // ---- The controls at the edge of the view ------------------------------------------
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id)), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
-if (Q.has("shot")) document.body.classList.add("bare");
+if (Q.has("shot") || TRAILER) document.body.classList.add("bare");
+if (TRAILER) document.body.classList.add("trailer");
 // Into his own eyes and out of them again, the eye is moved, not cut (#102, folded into #295: a phone measured the angle of
 // view jumping 13° in a frame): from where it stood, with the angle it had, it goes over to the new view's eye on a
 // smootherstep, never more than PUSH.move metres or PUSH.fov degrees in a frame, and he fades out (or in) as it comes.
-const PUSH = { time: 0.6, move: 0.12, fov: 1.5, far: 15 };   // (far: further than the follow arm ever reaches, 11 m, is not a push but a change of place)
+const PUSH = { time: 0.6, move: 0.12, fov: 1.5, far: 15, fade: 0.8 };   // (far: further than the follow arm ever reaches, 11 m, is not a push but a change of place)
 let push = null;
 const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return; }   // up on a balcony he sees with his own eyes only (#101)
   const from = frames > 3 && v !== view && !FIXED_VIEW && !cine && !photo.on && !reducedMotion.matches ? { p: camera.position.clone(), q: camera.quaternion.clone(), fov: camera.fov, to: v } : null;
@@ -1180,7 +1214,7 @@ function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; lookOut(hall); hallIn.hang(); }
   inside = on; if (rooms) rooms.group.visible = on;   // the rooms under the courts are drawn only from inside one (and into a doorway's cube, doorway.js)
-  walker.setRoom(on ? hallIn.room : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
+  walker.setRoom(on ? hallIn.room : null); probes.setRoom(on ? hall.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
   for (const o of scene.children) if (COURTS.includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
   hideDrift(on);
@@ -1192,7 +1226,9 @@ function indoors(hall) {
 }
 // `hall`: one of site.halls to go into, or null to come out of the one he is in.
 async function pass(hall) {
-  const on = !!hall; if (passing) return; passing = true;
+  const on = !!hall; if (passing) return;
+  if (TRAILER) { indoors(hall); return; }   // the film cuts on the frame, with no veil and no real-time wait (#610)
+  passing = true;
   if (veil) veil.className = on ? "on" : "on day"; await pause(900);
   indoors(hall); await pause(200);
   if (veil) { veil.className = on ? "" : "day"; if (!on) { await pause(700); veil.className = ""; } }
@@ -1250,6 +1286,7 @@ if (relang) {
   // there until the hierarchy can answer or he walks away from the spot.
   if (relang.view === "third" && relang.dist !== null && !relang.hall && !relang.up) eyeHeld = { dist: relang.dist, x: pos.x, z: pos.z };
 }
+if (!PRODUCTION && !relang && view === "third" && !Q.has("shot")) { const e = readEye(location.search); if (e) { eyePin = { at: e.at, dist: e.dist, x: pos.x, z: pos.z, yaw: null, pitch: null }; follow.reset(e.dist); } }
 // Choosing another language in the pause menu hands the walk across the reload that follows (lang.js calls this first).
 window.templeRelang = (to) => {
   if (!document.body.classList.contains("entered") || Q.has("shot")) return false;
@@ -1261,9 +1298,9 @@ window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, 
 window.__lofts = site.lofts;
 // A newer build put up while this page was open (#310, src/version.js): said once at the foot, never while an observance,
 // the raised camera, the close or the opening has the picture, and never on a page that names its own view.
-const updates = Q.has("shot") ? null : watchVersion({ say: () => hints.say.update(), busy: () => !document.body.classList.contains("entered") || photo.on || !!cine || !!stage || ["far", "opening", "directing"].some((c) => document.body.classList.contains(c)) });
+const updates = Q.has("shot") || TRAILER ? null : watchVersion({ say: () => hints.say.update(), busy: () => !document.body.classList.contains("entered") || photo.on || !!cine || !!stage || ["far", "opening", "directing"].some((c) => document.body.classList.contains(c)) });
 window.__updates = (now) => (updates ? (now ? updates.ask().then(() => updates.state()) : updates.state()) : null);
-window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
+window.__yard = () => ({ opacity: +faded.toFixed(3), monkShown: monk.group.visible, monkWorld: (() => { const b = monkWorld(); return { min: b.min.toArray().map((v) => +v.toFixed(3)), max: b.max.toArray().map((v) => +v.toFixed(3)), near: +monkNear().toFixed(3) }; })(), shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, lid: +monk.lid.value.toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 // For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
 window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
@@ -1271,10 +1308,11 @@ window.__views = Object.keys(site.views); window.__merged = merged; window.__tex
 // in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and
 // sends nothing anywhere; everything else in the address (the language, the tier, the parts switched off) is kept, and
 // a tool's `shot` is dropped.
+const eyeNow = () => (view === "third" && follow.dist !== null ? [camera.position.x, camera.position.y, camera.position.z, follow.dist] : null);   // where the eye is and how long its arm (#623)
 window.__debugURL = () => {
   const q = new URLSearchParams(location.search); q.delete("shot");
   return location.origin + location.pathname + poseQuery("?" + q.toString(), { x: pos.x, z: pos.z, yaw, pitch, view,
-    season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, devpose: true,
+    season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, devpose: true, eye: eyeNow(),
     ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) + location.hash;
 };
 // A named view, without loading the place again: out of any room, then stood where the view stands.
@@ -1376,7 +1414,9 @@ window.__litterDraw = (m) => { if (m !== undefined) U.uLitMode.value = m; return
 window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.position, (t) => { const w = windAt(mood?.wind ?? 0, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; }); return drift.litter?.(at) ?? null; };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__sun = (k) => { sky.scaleSun(k); return k; };   // the sun's light times k (tools/sun-lit.cjs: with it and without it, to see which paving is in direct sun, #488)
-window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
+window.__mood = (s, t) => { state.follow = false; setMood(s, t); };
+window.__skyTrial = (on) => { if (on !== undefined) { SKY_TRIAL.on = !!on; setMood(state.season, state.time); } return SKY_TRIAL.on; };   // #592 trial B: the sky from the sun's height, on or off while the page runs
+window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
 window.__flock = (go) => { if (go && flock.flush()) flutter(1); return flock.state(); };   // the birds going up now, if asked, and where they are
 window.__cues = cueState;   // how many times the wings and the far bell have sounded   // how many shutters and seals have sounded
@@ -1564,7 +1604,7 @@ window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: 
 // A picture tool's: the eye held `secs` seconds into the way down (null lets it go on), as if the opening were playing.
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
 window.__lampStrength = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
-window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
+window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), opacity: faded, hidden: monkHidden, w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 // A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).
 window.__walk = (pts) => { planning = null; route = wayThrough(walker, walker.drops, { x: pos.x, z: pos.z }, pts.map(([x, z]) => ({ x, z }))); target = route.shift() || null; };
@@ -1581,7 +1621,7 @@ if (Q.has("tour")) tour = createTour(Q.get("tour"), {
 if (DEVPOSE) {
   const { createDevPose } = await import("./src/devpose.js");
   devpose = createDevPose({ where: location, history,
-    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null,
+    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, eye: eyeNow(),
       ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) });   // the written point stands where he stands
   addEventListener("keydown", (e) => {   // C: the address of this view, to the clipboard and the console
     if (e.key.toLowerCase() !== "c" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || ui.modal() || /** @type {Element} */ (e.target)?.tagName === "INPUT") return;
@@ -1612,3 +1652,17 @@ if (DEBUG) {
 }
 
 await loading.step(tr("山路"));
+
+// ---- Trailer mode (#610): the page drawn frame by frame for the film (src/trailer-boot.js, src/trailer.js) --------------
+// The clock is the film's (trailer-clock.js); here are the two things only this file can reach: a free eye, and the wind's
+// accumulated path, which a shot starts again from nothing so that it is the same whenever it is drawn.
+if (TRAILER) {
+  const { createTrailerPlayer } = await import("./src/trailer.js");
+  window.__trailerEye = (eye) => {   // eye: { p: [x, y, z], look: [x, y, z], fov, stand?: boolean } or null to let it go
+    if (!eye) { cine = null; follow.reset(); lens(); return false; }
+    cine = (cam) => { cam.position.set(eye.p[0], eye.p[1], eye.p[2]); cam.lookAt(eye.look[0], eye.look[1], eye.look[2]); if (cam.fov !== eye.fov) { cam.fov = eye.fov; cam.updateProjectionMatrix(); } };
+    return true;
+  };
+  window.__trailerReset = () => { U.uWindPath.value.set(0, 0); };
+  createTrailerPlayer(window);
+}
