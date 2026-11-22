@@ -48,6 +48,10 @@ const nearRect = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0
  *  metres back). No culm stands in it, so that none crosses him or the stair's middle; the eye is not kept out of it either
  *  (`eyeKeepOut` in level.js). */
 export const START_SIGHT = { hw: 0.95, back: 6.5 };
+/** The one near culm left in that strip to frame the first picture (#454, the art review): 2.8 m in front of the eye and 0.6 m to the
+ *  left, which on a phone held upright stands a tenth of the picture's width from its left edge, and on a wide screen beside the
+ *  stair, clear of him and of the stair's middle. */
+export const START_CULM = [APPROACH.xC - 0.6, APPROACH.zC1 + 2.0];   // (he stands at zC1 - 1.2, the eye 6 m behind him at zC1 + 4.8)
 export const GROVE = {
   top: 15,
   areas: [

@@ -2,7 +2,7 @@
 // gathers what the engine's parts need to know of it, so that none of them has to know the temple's terraces, bamboo or
 // screen wall by name. The plan is imported through app/src/site.js, as everything else imports it, so that the unit
 // tests' swap of the walker (tools/walk/swap-hook.mjs) still finds every import of it.
-import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, START_SIGHT, terrain } from "../../src/site.js";
+import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, START_SIGHT, START_CULM, terrain } from "../../src/site.js";
 import { zoneBounds } from "../../src/score.js";
 
 // How far into the grove's edge the eye that follows him may stand (#518: 0.5 m, where it stood before #295).
@@ -18,7 +18,7 @@ export default {
   land: terrain,
   // The far hills are laid round the walls and follow the first and the top terrace.
   backdrop: { site: SITE, terraces: [LEVELS[0], LEVELS[2]] },
-  grove: { areas: GROVE.areas, keep: GROVE.keep, clearUnder: GROVE.underClear, clearCulm: GROVE.cullSight },
+  grove: { areas: GROVE.areas, keep: GROVE.keep, clearUnder: GROVE.underClear, clearCulm: GROVE.cullSight, extraCulms: [START_CULM] },
   // The eye from behind him does not go into the bamboo, as it does not go into a wall (#515): where the grove grows more
   // than `EYE_EDGE` deep, from a metre under the land to the tops of the culms. The grove is drawn as culms and cut-out
   // sprays, which the eye's gathering passes over, so it is said here instead. Into its edge the eye may go that far, as
