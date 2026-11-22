@@ -220,7 +220,7 @@ const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
-const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow") }));
+const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow"), clearUnder: L.grove.clearUnder }));
 await loading.step(tr("竹林"));
 const props = site.censer ? part("props", () => createProps(scene, M, site.censer, L.propsAt)) : { ...NONE, censer: () => ({ none: true }), setTraces: () => 0 };
 const post = createPost(renderer, scene, camera, quality, OFF);
@@ -373,7 +373,8 @@ const inkVeil = (k) => { const c = document.getElementById("curtain"); if (!c) r
 // What the director's swings and shots are kept out of (#295): once the eye's hierarchy is built, what is drawn, with the
 // sphere of this frame's lens (a railing is drawn, so `railNear` has nothing more to add); until then the written plan.
 const eyeWalker = Object.assign(Object.create(walker), {
-  eyeShut: (x, y, z, foot) => (eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
+  // (where the level keeps the eye out, the bamboo, it is shut whether or not the eye's space has been built yet: #515)
+  eyeShut: (x, y, z, foot) => (L.eyeKeepOut?.(x, y, z, eyeSpace ? eyeSpace.radius : 0.25) ? true : eyeSpace ? (eyeSpace.shut(x, y, z) ? true : false) : walker.eyeShut(x, y, z, foot)),
   railNear: (x, y, z, m) => (eyeSpace ? false : walker.railNear(x, y, z, m)),
 });
 const director = createDirector({ walker: eyeWalker,
@@ -689,7 +690,7 @@ function growEyeSpace() {
   const w = new EyeWorker();
   w.onmessage = (e) => {
     const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(e.data.positions, 3));
-    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true })); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
+    eyeSpace = createEyeSpace(MeshBVH.deserialize(e.data.data, geo, { setIndex: true }), L.eyeKeepOut || null); eyeInfo.buildMs = Math.round(e.data.ms); eyeInfo.state = "ready"; w.terminate();
   };
   w.onerror = () => { eyeInfo.state = "failed"; w.terminate(); console.warn("the eye's hierarchy could not be built: it asks the written plan"); };
   w.postMessage({ positions }, [positions.buffer]);

@@ -33,10 +33,13 @@ function segmentHitsBox(a, b, box) {
  * The space the eye moves in, over a MeshBVH of the drawn place. `radius` is set each frame from the camera
  * (`eyeRadius`). `along(a, b)` gathers the triangles within the radius of the segment from a to b (the arm, from the
  * point over his head to as far back as the eye may go), so that the many points the arm is asked at cost only a look
- * at those few; `shut(x, y, z)` says whether a sphere of the radius there touches anything drawn.
+ * at those few; `shut(x, y, z)` says whether a sphere of the radius there touches anything drawn, or lies where the level
+ * keeps the eye out (`keepOut(x, y, z, r)`: the prologue's bamboo, which is drawn as cut-out cards the gathering passes
+ * over, and was a solid the eye kept out of on the written plan; #515).
  * @param {any} bvh a MeshBVH
+ * @param {((x: number, y: number, z: number, r: number) => boolean) | null} [keepOut]
  */
-export function createEyeSpace(bvh) {
+export function createEyeSpace(bvh, keepOut = null) {
   let r = 0.25, near = [], seg = new THREE.Line3(), have = false;
   const box = new THREE.Box3(), p = new THREE.Vector3(), q = new THREE.Vector3(), s = new THREE.Sphere(new THREE.Vector3(), r), ray = new THREE.Ray();
   const touches = (x, y, z) => { p.set(x, y, z); for (const t of near) { t.closestPointToPoint(p, q); if (q.distanceToSquared(p) <= r * r) return true; } return false; };
@@ -62,6 +65,7 @@ export function createEyeSpace(bvh) {
     },
     /** Does the sphere at (x, y, z) touch anything drawn? Near the segment last gathered, only those triangles are asked. */
     shut(x, y, z) {
+      if (keepOut && keepOut(x, y, z, r)) return true;
       if (have) { p.set(x, y, z); seg.closestPointToPoint(p, true, q); if (q.distanceTo(p) < 1e-3) return touches(x, y, z); }
       s.center.set(x, y, z); s.radius = r; return bvh.intersectsSphere(s);
     },

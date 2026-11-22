@@ -12,6 +12,7 @@ import { buildSite, createWalker, SCREEN, GROVE, terrain } from "../../app/src/s
 import { followEye } from "../../app/src/eye.js";
 import { DIRECT, turnBetween, inWay } from "../../app/src/director.js";
 import { OPENING, openingFor, openingPlan, createOpening, atGate, SILENT } from "../../app/src/opening.js";
+const level = (await import("../../app/levels/t00/level.js")).default;
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
@@ -62,6 +63,7 @@ test("it keeps over the tops of the bamboo, except down the clear way of the pat
     const { x, y, z } = o.p; if (Math.hypot(x - A.p.x, z - A.p.z) < 6) continue;   // where the following eye stands among the culms at the start, as ever
     const grows = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => GROVE.grows(x + dx, z + dz));   // (a culm leans, and its leaves reach a metre)
     if (grows && y < terrain(x, z) + GROVE.top + 0.5) bad.push([x, y, z].map((v) => +v.toFixed(1)));
+    if (level.eyeKeepOut(x, y, z, 0.25)) bad.push(["in the level's keep-out (#515)", ...[x, y, z].map((v) => +v.toFixed(1))]);   // (the volume the eye from behind him keeps out of, which the way must agree with)
   }
   assert.deepEqual(bad.slice(0, 6), [], `${bad.length} points of the way are down among the bamboo`);
 });
