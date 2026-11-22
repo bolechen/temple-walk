@@ -431,8 +431,8 @@ export function createMaterials() {
       float nearK=1.-smoothstep(5.,9.,length(vWP-cameraPosition));
       vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
       float big=fbm3(vWP*1.7+vec3(3.,1.,7.)), mid=fbm3(vWP*5.+2.);
-      float pat_=smoothstep(.3,.7,fbm3(vWP*3.1+vec3(5.,2.,1.))); float fine=smoothstep(.3,.7,fbm3(vWP*8.+vec3(1.,6.,3.)));
-      col=vec3(.23,.255,.265)*A*(.84+.3*big)*(.66+.68*pat_)*(.92+.16*fine); col=mix(col,col*vec3(1.12,1.08,.95),smoothstep(.55,.8,fbm3(vWP*.9+9.))*.5);
+      float pat_=smoothstep(.3,.7,fbm3(vWP*4.4+vec3(5.,2.,1.))); float fine=smoothstep(.3,.7,fbm3(vWP*8.+vec3(1.,6.,3.)));
+      col=vec3(.25,.265,.27)*A*(.84+.3*big)*(.74+.52*pat_)*(.92+.16*fine); col=mix(col,col*vec3(1.12,1.08,.95),smoothstep(.55,.8,fbm3(vWP*.9+9.))*.5);
       float up=smoothstep(.85,.97,vWN.y), side=1.-step(.5,abs(nzf));
       float streak=smoothstep(.5,.9,fbm3(vec3(lx*13.,ly*.45,2.))); col*=1.-.16*streak*(1.-up)*(.4+.6*smoothstep(.3,2.5,ly));
       float wet=1.-smoothstep(.55,1.25+.25*(mid-.5),ly); col*=(1.-.58*wet*(.7+.6*mid))*(1.+.12*smoothstep(1.2,2.3,ly)*(1.-kb)); rough_=mix(rough_,.5,wet*.5);
