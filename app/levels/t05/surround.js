@@ -255,10 +255,10 @@ function house(hs, walls, roofs) {
   if (hs.roof === "hip") {
     const W = w + 2 * over, D = d + 2 * over, along = W >= D, half = Math.abs(W - D) / 2, v = [[-W / 2, 0, -D / 2], [W / 2, 0, -D / 2], [W / 2, 0, D / 2], [-W / 2, 0, D / 2]];
     const r1 = along ? [-half, rise, 0] : [0, rise, -half], r2 = along ? [half, rise, 0] : [0, rise, half];
-    const tris = along ? [[0, 1, r2, r1], [2, 3, r1, r2]] : [[1, 2, r2, r1], [3, 0, r1, r2]], ends = along ? [[3, 0, r1], [1, 2, r2]] : [[0, 1, r1], [2, 3, r2]];
     const pos = [], quad = (a, b, c, e) => pos.push(...a, ...b, ...c, ...a, ...c, ...e), tri = (a, b, c) => pos.push(...a, ...b, ...c);
-    for (const [i, j, p, q] of tris) quad(v[i], v[j], p, q);
-    for (const [i, j, p] of ends) tri(v[i], v[j], p);
+    const [A, B, C, Dd] = v;   // the four corners; the two long slopes, then the two hipped ends
+    if (along) { quad(A, B, r2, r1); quad(C, Dd, r1, r2); tri(Dd, A, r1); tri(B, C, r2); }
+    else { quad(B, C, r2, r1); quad(Dd, A, r1, r2); tri(A, B, r1); tri(C, Dd, r2); }
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.computeVertexNormals(); g.translate(x, y0 + eave, z); roofs.push(g); return;
   }
   const lean = hs.roof === "shed", run = (alongX ? d : w) / 2 + over, len = (alongX ? w : d) + 2 * over;
