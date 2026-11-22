@@ -1176,7 +1176,7 @@ const scenarios = {
       let best = Infinity, still = 0;
       for (let i = 0; i < 2000; i++) {
         const s2 = await t.page.evaluate(() => { const y = window.__yard(), e = window.__eyeSpace(); return { x: y.x, z: y.z, f: y.frames, done: !y.target && !y.route, shut: e.shutNow, eye: window.__frame().eye }; });
-        samples++; trail.push({ at: [+s2.x.toFixed(2), +s2.z.toFixed(2)], eye: s2.eye.map((v) => +v.toFixed(2)), f: s2.f }); if (trail.length > 8) trail.shift(); if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)), before: trail.slice() });
+        samples++; trail.push({ at: [+s2.x.toFixed(2), +s2.z.toFixed(2)], eye: s2.eye.map((v) => +v.toFixed(2)), f: s2.f }); if (trail.length > 8) trail.shift(); if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)), before: trail.slice(), vertical: await t.page.evaluate(([x, y, z]) => { const o = []; for (let k = -0.8; k <= 0.81; k += 0.1) o.push([+k.toFixed(1), window.__eyeShutAt(x, y + k, z)]); return o; }, s2.eye), lift: await t.page.evaluate(() => window.__frame()) });
         const d = Math.hypot(s2.x - p[0], s2.z - p[1]); if (d < best - 0.05) { best = d; still = 0; } else still++;
         if ((s2.done && (d < 1.5 || i > 8)) || still > 30) break;   // (there, or as near as the way goes: he has stopped, or makes no way)
         await t.page.waitForFunction((f) => window.__yard().frames > f, s2.f, { polling: 30, timeout: 120000 });   // (the next frame: t.frames looks only every 1.2 s)
