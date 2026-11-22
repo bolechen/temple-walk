@@ -17,6 +17,41 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// The push into his eyes and out of them, by the wheel, one body; every frame of each, the eye is asked against his own bounds in the
+// world (`__yard().monkWorld`: the body, hat and beads, and the near plane's corners with 3 cm): inside them he must not be drawn at all.
+async function pushRun(b, base, body) {
+  const t = await open(b, base, "q=low&view=third" + body);
+  await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(20);
+  await t.page.mouse.move(210, 400);
+  await t.page.evaluate(() => {
+    window.__pushSeen = []; const go = () => { const y = window.__yard(), e = window.__frame().eye, m = y.monkWorld, n = m.near;
+      const d = Math.hypot(Math.max(m.min[0] - e[0], 0, e[0] - m.max[0]), Math.max(m.min[1] - e[1], 0, e[1] - m.max[1]), Math.max(m.min[2] - e[2], 0, e[2] - m.max[2]));
+      window.__pushSeen.push({ d: +d.toFixed(3), n, op: y.monkShown ? y.opacity : 0 }); requestAnimationFrame(go); };
+    requestAnimationFrame(go);
+  });
+  const watch = async (what, notch, until) => {
+    const seen = [];
+    for (let i = 0; i < 40; i++) {
+      await t.page.mouse.wheel(0, notch); await t.frames(1); const p = await t.probe(); seen.push(p);
+      if (p.view === until) break;
+    }
+    for (let i = 0; i < 120 && (seen.at(-1).pushing || seen.at(-1).view !== until); i++) { await t.frames(1); seen.push(await t.probe()); }
+    expect(seen.at(-1).view === until && !seen.at(-1).pushing, `${what}: never came to the ${until} view: ${JSON.stringify(seen.at(-1))}`);
+    // (measured in the page, frame by frame: a probe may come a frame or two after another under software drawing)
+    const P = seen.at(-1).push;
+    expect(P && P.to === until && P.frames >= 3, `${what}: it was cut, not pushed: ${JSON.stringify(P)}`);
+    expect(P.fov <= 1.5 + 1e-3, `${what}: the angle of view changed ${P.fov}° in a frame`);
+    expect(P.move <= 0.12 + 1e-3, `${what}: the eye moved ${P.move} m in a frame`);
+    expect(P.back === 0, `${what}: he faded back the other way in ${P.back} frames`);
+    const inside = (await t.page.evaluate(() => { const r = window.__pushSeen; window.__pushSeen = []; return r; })).filter((r) => r.d <= r.n && r.op > 0.001);
+    expect(inside.length === 0, `${what}${body}: the eye was inside him or the near plane's reach in ${inside.length} frames with him still drawn, at most ${Math.max(...inside.map((r) => r.op))} (the nearest ${Math.min(...inside.map((r) => r.d))} m)`);
+    return P;
+  };
+  const into = await watch("into his eyes", -300, "first"), out = await watch("out of his eyes", 300, "third");
+  console.log("    push" + body, JSON.stringify({ into, out }));
+  expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+}
+
 // Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded,
 // and every tenth with nothing drawn between the eye and him; then the view turned aside, him still seen.
 // (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
@@ -3023,28 +3058,9 @@ const scenarios = {
     }
   } },
   push: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&view=third");
-    await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(20);
-    await t.page.mouse.move(210, 400);
-    const watch = async (what, notch, until) => {
-      const seen = [];
-      for (let i = 0; i < 40; i++) {
-        await t.page.mouse.wheel(0, notch); await t.frames(1); const p = await t.probe(); seen.push(p);
-        if (p.view === until) break;
-      }
-      for (let i = 0; i < 120 && (seen.at(-1).pushing || seen.at(-1).view !== until); i++) { await t.frames(1); seen.push(await t.probe()); }
-      expect(seen.at(-1).view === until && !seen.at(-1).pushing, `${what}: never came to the ${until} view: ${JSON.stringify(seen.at(-1))}`);
-      // (measured in the page, frame by frame: a probe may come a frame or two after another under software drawing)
-      const P = seen.at(-1).push;
-      expect(P && P.to === until && P.frames >= 3, `${what}: it was cut, not pushed: ${JSON.stringify(P)}`);
-      expect(P.fov <= 1.5 + 1e-3, `${what}: the angle of view changed ${P.fov}° in a frame`);
-      expect(P.move <= 0.12 + 1e-3, `${what}: the eye moved ${P.move} m in a frame`);
-      expect(P.back === 0, `${what}: he faded back the other way in ${P.back} frames`);
-      return P;
-    };
-    const into = await watch("into his eyes", -300, "first"), out = await watch("out of his eyes", 300, "third");
-    console.log("    push", JSON.stringify({ into, out }));
-    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    // Both bodies, the default (Tripo's) and the one built in code, each pushed in and out (#612: pressing V, the eye went into the back of his
+    // head for a moment, he still a little drawn: his fade followed the push's time, not where the eye was).
+    for (const body of ["", "&body=code"]) await pushRun(b, base, body);
   } },
   // #587: wherever he is moved while the view changes (up and down the summit pavilion's stair, off the balcony by a seal
   // in the book or a named view, a move while the eye is still being pushed into his eyes), the eye is with him the
