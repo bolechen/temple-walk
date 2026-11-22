@@ -45,6 +45,14 @@ const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
  */
 export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false });
 
+/**
+ * The lens a named view is seen through where it is not the fixed views' 52° from his eyes and 44° from behind him (app/yard.js `baseFov`: `?show=<name>` reads this table;
+ * tools/cameras.mjs writes it into the manifest). cam06, back on the axis, is 65° from his eyes, as docs/t05/PRD.md §3 has it: the middle five of the seven and half of the one at
+ * each end are in the picture (the reference picture's), where 52° holds three and a half either side, almost cam03's. From behind him it is 50°, the angle the walk is seen at
+ * from there: 65° from his eyes is the walk's own angle, and the same reason makes 50° the walk's from behind (the T05 lead, after the art director's ruling, 2026-11-21).
+ */
+export const LENS = Object.freeze({ cam06: Object.freeze({ first: 65, third: 50 }) });
+
 export function buildSite(M) {
   Object.assign((M.steps.userData.stairStyle ||= {}), STAIR_STYLE);   // (one page walks one level, so the material is this level's for good)
   const root = new THREE.Group();
@@ -187,7 +195,7 @@ export function buildSite(M) {
   // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.
   Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
-    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
+    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
     places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }
