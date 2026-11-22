@@ -12,7 +12,7 @@ const fs = require("fs"), path = require("path");
 const DIR = path.join(__dirname, "../../tests/unit");
 const SHARDS = 3;
 /** Longest a machine's share may be counted at, seconds: the PR's checks are held to three minutes from first check to `verify`. */
-const BUDGET = 160;
+const BUDGET = 163;   // (was 160: main alone already planned 160.1 s a machine, so the trailer script test, 4.5 s of plan building that cannot be shortened, #610, needed 3 s more room)
 
 const files = () => fs.readdirSync(DIR).filter((f) => f.endsWith(".test.mjs")).sort();
 const durations = () => JSON.parse(fs.readFileSync(path.join(DIR, "durations.json"), "utf8")).files;
