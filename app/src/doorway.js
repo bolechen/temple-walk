@@ -86,7 +86,8 @@ function doorMaterial(U, steps) {
           c=mix(c,room,uHas);
         }
         // At dusk and dawn a hall whose middle bay the plan leaves unlit is a dark door, as its windows are (windows.js, #459); at night every room shows.
-        c*=mix(1.,mix(uDusk,1.,uWinNight),smoothstep(0.,.5,uLamp));
+        // The lamp's strength only says whether it is after dark (a clear autumn dusk holds 0.23), so any lamp at all takes it fully (#555).
+        c*=mix(1.,mix(uDusk,1.,uWinNight),smoothstep(0.,.08,uLamp));
         gl_FragColor=vec4(c,1.);
         #include <fog_fragment>
         // The room drawn live has had the air between the eye and every point of it already (doorway-live.js).
