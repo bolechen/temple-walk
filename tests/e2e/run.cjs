@@ -302,6 +302,36 @@ const scenarios = {
     expect(page.ginkgoHash === geometryHash(node.ginkgos.map((g) => g.geometry)), `the page's ginkgoes (${page.ginkgoHash}) are not Node's (${geometryHash(node.ginkgos.map((g) => g.geometry))})`);
     await t.close();
   } },
+  // Trailer mode (#610): the clock is the film's, the interface is gone, and a frame is a function of its number: the same frame
+  // drawn in two fresh pages is the same picture, to the pixel, and while nothing steps the clock the page's time stands still.
+  trailer: { tier: 3, async run(b, base) {
+    const { TRAILER } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/levels/t00/trailer.js")).href);
+    const crypto = require("crypto"), FPS = 12, FRAME = 10 * FPS, shot = TRAILER.shots[1], errors = [];   // a frame ten seconds in: the bamboo shot, he has been walking a few steps
+    const draw = async () => {
+      const ctx = await b.newContext({ viewport: { width: 320, height: 180 }, deviceScaleFactor: 1, locale: "zh-CN" }), page = await ctx.newPage();
+      page.on("pageerror", (e) => errors.push(e.message)); page.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errors.push(m.text()));
+      await page.goto(`${base}?trailer=1&fps=${FPS}&show=arrive&enter=1&debug=0&q=low&season=${shot.season}&time=${shot.time}`, { waitUntil: "commit", timeout: 240000 });
+      await page.waitForFunction(() => document.body.dataset.ready === "1" && window.__trailer, null, { timeout: 600000, polling: 500 });
+      await page.waitForFunction(() => ["ready", "failed", "off"].includes(window.__eyeSpace?.().state), null, { timeout: 600000, polling: 500 });
+      await page.evaluate((s) => window.__trailer.load(s, { fps: 12 }), TRAILER);
+      const bare = await page.evaluate(() => ({ bare: document.body.classList.contains("bare"), trailer: document.body.classList.contains("trailer"), debug: !!document.querySelector(".lil-gui") }));
+      const t0 = await page.evaluate(() => performance.now()); await page.waitForTimeout(400);
+      const t1 = await page.evaluate(() => performance.now());
+      const r = await page.evaluate((i) => window.__trailer.frame(i), FRAME);
+      const cdp = await ctx.newCDPSession(page), png = Buffer.from((await cdp.send("Page.captureScreenshot", { format: "png", fromSurface: true })).data, "base64");   // (Playwright's own screenshot waits on animation frames, which only the film moves)
+      const probe = await page.evaluate(() => { const q = window.__probe(); return JSON.stringify([q.season, q.hour ?? q.time, q.view]); });
+      await ctx.close();
+      return { hash: crypto.createHash("sha256").update(png).digest("hex"), bare, still: t1 === t0, r, probe, png };
+    };
+    const a = await draw(), c = await draw();
+    expect(a.bare.bare && a.bare.trailer && !a.bare.debug, "the interface should be hidden and no debug panel mounted: " + JSON.stringify(a.bare));
+    expect(a.still, "the page's time moved while nobody stepped the clock");
+    expect(a.r.shot === shot.id, `frame ${FRAME} drew ${a.r.shot}, not ${shot.id}`);
+    expect(a.r.clock === c.r.clock, `the same frame was drawn at two times: ${a.r.clock} and ${c.r.clock}`);
+    expect(a.hash === c.hash, `frame ${FRAME} drawn twice is not the same picture (${a.hash.slice(0, 12)} and ${c.hash.slice(0, 12)})`);
+    fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(path.join(out, "trailer-frame.png"), a.png);
+    expect(errors.length === 0, "the page complained: " + errors.slice(0, 3).join(" | "));
+  } },
   boot: { tier: 1, async run(b, base) {
     const t = await open(b, base, "q=low", { enter: false, observeLoading: true });
     // The foot of the title says where this is and what road leads up, and nothing of how many seals (#445).

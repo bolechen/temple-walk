@@ -1,5 +1,6 @@
 // The temple grounds: assembles the modules in src/, walks the visitor through them,
 // and hands over to the hall interior at the main hall's door.
+import { TRAILER } from "./src/trailer-boot.js";   // first: in trailer mode (#610) it replaces the page's clock before anything reads it
 import { debugGate } from "./src/debuggate.js";
 import { MAIN, photoUrl } from "./src/goshuin.js";
 import * as THREE from "three";
@@ -119,7 +120,7 @@ createShare(ui);   // the sheet a picture is saved from where the system cannot 
 const carryOut = createCarryOut(ui);
 document.getElementById("bookCarry")?.addEventListener("click", () => { ui.close("bookMore"); carryOut.open(); });   // (from the book's 更多 sheet, which it puts away first, #473)
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
-const hints = createHints({ off: Q.has("shot"), ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
+const hints = createHints({ off: Q.has("shot") || TRAILER, ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 // What a visitor changes in the pause menu or the photograph's settings (#326): one event per key in 800 ms, the
 // last value winning, so that dragging a slider is a change and not a stream. A value that did not change is not sent.
@@ -706,7 +707,7 @@ function frame(now) {
   if (!running) return;
   if (frozen) { prev = now; requestAnimationFrame(frame); return; }
   governor.tick((now - prev) / 1000); tour?.frame(now); devpose?.tick(now); if (eyeInfo.state === "waiting" || eyeInfo.state === "gathering") growEyeSpace();
-  const dt = Math.min(0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;
+  const dt = Math.min(TRAILER ? 0.2 : 0.05, (now - prev) / 1000), t = still ? 0 : now / 1000; prev = now;   // (a film drawn at 12 frames a second for a preview must still run at the pace of a walk: its frame is the clock's, never slow)
 
   // Walk: keys or the tapped spot, at a slow pace, sliding along what blocks the way.
   const menuUp = ui.modal();   // a sheet over the walk: he stands still
@@ -920,7 +921,8 @@ requestAnimationFrame(frame);
 
 // ---- The controls at the edge of the view ------------------------------------------
 const $ = /** @type {(id: string) => any} */ ((id) => document.getElementById(id)), on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
-if (Q.has("shot")) document.body.classList.add("bare");
+if (Q.has("shot") || TRAILER) document.body.classList.add("bare");
+if (TRAILER) document.body.classList.add("trailer");
 // Into his own eyes and out of them again, the eye is moved, not cut (#102, folded into #295: a phone measured the angle of
 // view jumping 13° in a frame): from where it stood, with the angle it had, it goes over to the new view's eye on a
 // smootherstep, never more than PUSH.move metres or PUSH.fov degrees in a frame, and he fades out (or in) as it comes.
@@ -1191,7 +1193,9 @@ function indoors(hall) {
 }
 // `hall`: one of site.halls to go into, or null to come out of the one he is in.
 async function pass(hall) {
-  const on = !!hall; if (passing) return; passing = true;
+  const on = !!hall; if (passing) return;
+  if (TRAILER) { indoors(hall); return; }   // the film cuts on the frame, with no veil and no real-time wait (#610)
+  passing = true;
   if (veil) veil.className = on ? "on" : "on day"; await pause(900);
   indoors(hall); await pause(200);
   if (veil) { veil.className = on ? "" : "day"; if (!on) { await pause(700); veil.className = ""; } }
@@ -1260,7 +1264,7 @@ window.__halls = site.halls.map((h) => ({ id: h.id, name: h.name, door: h.door, 
 window.__lofts = site.lofts;
 // A newer build put up while this page was open (#310, src/version.js): said once at the foot, never while an observance,
 // the raised camera, the close or the opening has the picture, and never on a page that names its own view.
-const updates = Q.has("shot") ? null : watchVersion({ say: () => hints.say.update(), busy: () => !document.body.classList.contains("entered") || photo.on || !!cine || !!stage || ["far", "opening", "directing"].some((c) => document.body.classList.contains(c)) });
+const updates = Q.has("shot") || TRAILER ? null : watchVersion({ say: () => hints.say.update(), busy: () => !document.body.classList.contains("entered") || photo.on || !!cine || !!stage || ["far", "opening", "directing"].some((c) => document.body.classList.contains(c)) });
 window.__updates = (now) => (updates ? (now ? updates.ask().then(() => updates.state()) : updates.state()) : null);
 window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 // For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
@@ -1611,3 +1615,17 @@ if (DEBUG) {
 }
 
 await loading.step(tr("山路"));
+
+// ---- Trailer mode (#610): the page drawn frame by frame for the film (src/trailer-boot.js, src/trailer.js) --------------
+// The clock is the film's (trailer-clock.js); here are the two things only this file can reach: a free eye, and the wind's
+// accumulated path, which a shot starts again from nothing so that it is the same whenever it is drawn.
+if (TRAILER) {
+  const { createTrailerPlayer } = await import("./src/trailer.js");
+  window.__trailerEye = (eye) => {   // eye: { p: [x, y, z], look: [x, y, z], fov, stand?: boolean } or null to let it go
+    if (!eye) { cine = null; follow.reset(); lens(); return false; }
+    cine = (cam) => { cam.position.set(eye.p[0], eye.p[1], eye.p[2]); cam.lookAt(eye.look[0], eye.look[1], eye.look[2]); if (cam.fov !== eye.fov) { cam.fov = eye.fov; cam.updateProjectionMatrix(); } };
+    return true;
+  };
+  window.__trailerReset = () => { U.uWindPath.value.set(0, 0); };
+  createTrailerPlayer(window);
+}
