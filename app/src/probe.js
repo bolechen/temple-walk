@@ -21,7 +21,7 @@ export const PROBE_ON = typeof location !== "undefined" && /[?&]trial=([^&]*,)?p
 export const PROBE = {
   uProbeBox: { value: new THREE.Vector4(0, 0, 0, 0) },      // x, y, z of the lattice's low corner and the cell size, metres
   uProbeDim: { value: new THREE.Vector3(1, 1, 1) },          // points along x, y, z
-  uProbeK: { value: 1 }, uProbeAmb: { value: U.uAmb }, uProbeAbs: { value: 0 },   // the sky level the bounce is a share of (the hour sets it), or 1 where the bounce is absolute (a room's lamps)
+  uProbeK: { value: 1 }, uProbeAmb: U.uAmb, uProbeAbs: { value: 0 },   // the sky level the bounce is a share of (the hour sets it), or 1 where the bounce is absolute (a room's lamps)
                                       // how much of the trial shows (0 none: the surface as it was)
   tProbe0: { value: null }, tProbe1: { value: null }, tProbe2: { value: null }, tProbe3: { value: null },
 };
