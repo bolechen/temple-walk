@@ -509,8 +509,15 @@ canvas.addEventListener("contextmenu", (e) => { if (down?.moved) e.preventDefaul
 const ray = new THREE.Raycaster();
 // Where a tap lands on the ground. The ground is not flat: follow the line of sight outward until it first
 // dips below whatever can be stood on there (a court, a terrace, a flight of steps), then close in on that spot.
+// The dark behind each hall's open leaves is no ground (#411: the eye that follows him out of a door may stand in it, and a tap's line of sight then starts
+// inside it): the line passes through it and goes on to find the court. The boxes are the ones the doorways paint (`site.doorways`), taken in world space once.
+let darkBoxes = null;
+const inDark = (p) => {
+  darkBoxes ||= Object.values(site.doorways || {}).map((w) => { w.mesh.updateWorldMatrix(true, false); w.mesh.geometry.computeBoundingBox(); return w.mesh.geometry.boundingBox.clone().applyMatrix4(w.mesh.matrixWorld); });
+  return darkBoxes.some((bx) => bx.containsPoint(p));
+};
 function pickFloor() {
-  const o = ray.ray.origin, d = ray.ray.direction, p = new THREE.Vector3(), under = (s) => { p.copy(d).multiplyScalar(s).add(o); return p.y <= walker.heightAt(p.x, p.z); };
+  const o = ray.ray.origin, d = ray.ray.direction, p = new THREE.Vector3(), under = (s) => { p.copy(d).multiplyScalar(s).add(o); return p.y <= walker.heightAt(p.x, p.z) && !inDark(p); };
   let a = 0.3, b = -1;
   for (let s = 0.5; s < 90 && b < 0; s += 0.25) { if (under(s)) b = s; else a = s; }
   if (b < 0) return null;

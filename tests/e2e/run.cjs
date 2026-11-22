@@ -360,7 +360,10 @@ const scenarios = {
   // court's maple are handed to the ground's record as the frames go, and on an autumn night (a breeze below every leaf's
   // grip) none of them goes in the next minute; run on three minutes, more lie there than before.
   litter: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=-7.5,33,-0.38,-0.42&season=autumn&time=night" + BARE);
+    // The falling cloud draws its leaves' seeds from Math.random, so a leaf-count threshold failed now and then in CI ([10,0,26,0], run 45060329278): the page is
+    // given a seeded Math.random here (mulberry32, from before its scripts), in this test only; the page itself stays random.
+    const seeded = () => { let a = 0x5eed1e55; Math.random = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+    const t = await open(b, base, "q=low&cam=-7.5,33,-0.38,-0.42&season=autumn&time=night" + BARE, { init: seeded });
     const got = () => t.page.evaluate(() => window.__litter(0, true));
     await t.until(async () => (await got()).kept >= 5, 240000, "no leaf was handed to the ground under the maple");
     const L = (await got()).leaves.filter((l) => Math.abs(l[0]) > 3).slice(0, 30);
