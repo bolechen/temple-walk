@@ -3,16 +3,25 @@
 // text under 12 px, anything that runs off the screen, and whether the page scrolls or zooms when it should not.
 // It also lists a label broken onto a second line inside itself (a button's word, or a phrase of the line at the foot of
 // the view that would have fitted whole on one line).
-//   node tools/mobile-audit.cjs [out dir] [--lang=ja|en]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
+//   node tools/mobile-audit.cjs [out dir] [--lang=ja|en] [--shapes=upright,small] [--drawn]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
+//   (#614: the page is opened built but not drawn, since what is measured is the interface's DOM, and every wait is for a condition, not for seconds;
+//   a surface that lists anything is then opened again with the scene drawn and photographed as `<shape>-<surface>-drawn.png`, the evidence a person looks at.
+//   --shapes names the screens to measure, so that several machines can share them (upright, side, small, large); with none, all four, on one machine.
+//   --drawn opens every page with the scene drawn, as it was before.)
 //   (--only=title,menu audits only those surfaces, the others being opened on the way but not measured;
 //   --lang audits the page in Japanese or English, into tools/out/mobile-ja/ or mobile-en/ unless an out dir is named)
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--lang=")) || "").slice(7) || "zh");
 const ONLY = (ARGS.find((a) => a.startsWith("--only=")) || "").slice(7).split(",").filter(Boolean).length ? (ARGS.find((a) => a.startsWith("--only="))).slice(7).split(",") : null;
+const SHAPE_ARG = (ARGS.find((a) => a.startsWith("--shapes=")) || "").slice(9).split(",").filter(Boolean), DRAWN = ARGS.includes("--drawn");
 const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", LANG === "zh" ? "mobile" : `mobile-${LANG}`);
 const { serve } = require("./site.cjs");
 let srv;
+// The place built but not drawn (tests/e2e/run.cjs, BARE): `?off=` hides parts and unbuilds none, so everything the interface asks of the walk is there.
+const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// A surface that is only reached from another one's state.
+const NEEDS = { sitsay: "sit", clip: "clipping" };
 // Each surface: how to bring it up, and how to put it away again.
 const SURFACES = [
   ["title", null, null],
@@ -130,26 +139,63 @@ const measure = () => {
   if (card) { const r = card.getBoundingClientRect(); if (r.left < 15.5 || W - r.right < 15.5) placed.push(`paper has ${Math.round(r.left)} px to its left and ${Math.round(W - r.right)} to its right`); if (Math.abs((r.left + r.right) / 2 - W / 2) > 2) placed.push("paper is not in the middle"); if (r.top < -0.5 || r.bottom > H + 0.5) placed.push(`paper runs off the top or foot [${Math.round(r.top)}, ${Math.round(r.bottom)}] of ${H}`); }
   return { small, tiny, off, bare, broken, tight, wrapped, overlap, placed, scrolls: document.documentElement.scrollHeight > H + 1 || document.documentElement.scrollWidth > W + 1, vv: visualViewport ? +visualViewport.scale.toFixed(2) : 1, w: W };
 };
+// Waiting is for a condition, never for seconds (CLAUDE.md: wait on frames). A surface is settled when the page has drawn a few frames
+// and nothing finite is still moving (a fade, a slide: the Web Animations list holds CSS transitions too); a ring that pulses for ever never ends
+// and is left out. What a surface needs beyond that is named here: the page's own state that says it is whole.
+const READY = {
+  sit: () => { const b = document.getElementById("breathWord"); return b && !b.hidden && !!b.textContent.trim(); },
+  slip: () => { const d = document.getElementById("slip"); return d && d.open && !!document.getElementById("slipText").textContent.trim(); },
+  book: () => { const i = document.getElementById("bookImg"); return i && i.complete && i.naturalWidth > 0; },
+};
+const settle = (p, name) => p.evaluate(async ([name, ready]) => {
+  const frames = () => (window.__yard ? window.__yard().frames : 0), step = () => new Promise((r) => requestAnimationFrame(() => r()));
+  const f0 = frames(), t0 = performance.now();
+  const moving = () => document.getAnimations().some((a) => a.playState === "running" && a.effect && a.effect.getComputedTiming().iterations !== Infinity);
+  const need = ready ? (0, eval)(`(${ready})`) : () => true;
+  // (a hard stop, so that a surface that never settles is measured as it stands rather than hanging the audit: a minute of the page's own time)
+  while (performance.now() - t0 < 60000 && (frames() - f0 < 4 || moving() || !need())) await step();
+}, [name, READY[name] ? READY[name].toString() : null]);
+const LINES = (m) => [m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.placed.length ? `\n   placed badly: ${m.placed.join(" | ")}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : ""];
+const SHAPES = [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640], ["large", 430, 932]].filter(([n]) => !SHAPE_ARG.length || SHAPE_ARG.includes(n));
+const badOf = (m, vw) => m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + m.placed.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0);
+
+// One screen size, each of the surfaces named, in one page: measured, photographed, and put away again.
+async function pass(b, [shape, vw, vh], names, bare, tag, report) {
+  const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
+  const p = await ctx.newPage(), errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
+  await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
+  let bad = 0;
+  for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n))) {
+    if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
+    await settle(p, name);
+    // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
+    if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => settle(p, name)).catch(() => {});
+    const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}${tag}.png`) });
+    const n = badOf(m, vw); bad += n;
+    if (!tag) report[`${shape}/${name}`] = m;
+    console.log(`${shape}/${name}${tag}`.padEnd(22), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", ...LINES(m));
+    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name); }
+  }
+  if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
+  await ctx.close();
+  return bad;
+}
 (async () => {
   srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] }), report = {}; let bad = 0;
-  for (const [shape, vw, vh] of [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640], ["large", 430, 932]]) {
-    const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
-    const p = await ctx.newPage(), errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
-    await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}`, { waitUntil: "commit", timeout: 180000 });
-    await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
-    for (const [name, open, close] of SURFACES.filter(([n]) => !ONLY || ONLY.includes(n))) {
-      if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
-      await p.waitForTimeout(name === "sit" ? 12000 : name === "slip" ? 9000 : name === "book" ? 7000 : name === "walk" ? 4000 : 2500);
-      // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
-      if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => p.waitForTimeout(1200)).catch(() => {});
-      const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}.png`) });
-      report[`${shape}/${name}`] = m; const n = m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + m.placed.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0); bad += n;
-      console.log(`${shape}/${name}`.padEnd(16), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.placed.length ? `\n   placed badly: ${m.placed.join(' | ')}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : "");
-      if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await p.waitForTimeout(800); }
+  const wanted = SURFACES.map(([n]) => n).filter((n) => !ONLY || ONLY.includes(n));
+  for (const shape of SHAPES) {
+    const t0 = Date.now(), before = Object.keys(report).length;
+    bad += await pass(b, shape, wanted, !DRAWN, "", report);
+    console.log(`${shape[0]}: ${Math.round((Date.now() - t0) / 1000)} s`);
+    // What a phone would mind is then looked at in the whole picture: each surface that listed anything, with what it needs, drawn.
+    const failing = Object.keys(report).filter((k) => k.startsWith(shape[0] + "/")).filter((k) => badOf(report[k], shape[1]) > 0).map((k) => k.split("/")[1]);
+    if (!DRAWN && failing.length) {
+      const again = SURFACES.map(([n]) => n).filter((n) => failing.includes(n) || failing.some((f) => NEEDS[f] === n));
+      console.log(`${shape[0]}: ${failing.join(", ")} listed something; opened again with the scene drawn`);
+      await pass(b, shape, again, false, "-drawn", {});
     }
-    if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
-    await ctx.close();
   }
   fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1)); await b.close(); srv.close();
   console.log(bad ? `${bad} things a phone would mind` : "nothing a phone would mind"); process.exit(bad ? 1 : 0);
