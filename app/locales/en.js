@@ -368,6 +368,7 @@ export default {
   "使用这些馆藏，不表示任何一家博物馆认可或参与了本游戏。": "Using these collections does not mean that any museum endorses or took part in this game.",
   "名匾": "Name board",
   "大殿上檐「釋迦寶殿」四字：据 ColBase 所载无准师范《禅院额字「释迦宝殿」》（东京国立博物馆藏，重要文化财）加工，分离墨迹并裁切为四字。": "The four characters of the name board “Shijia Baodian” (Precious Hall of Shakyamuni) under the upper eaves of the main hall are adapted from Wuzhun Shifan’s “Name-board Calligraphy for a Chan Monastery: ‘Shijia Baodian’” (Tokyo National Museum, Important Cultural Property), as published by ColBase: the ink was separated from the paper and cut into four characters.",
+  "御碑亭中碑额「御书」二字，取自国家图书馆藏清同治十二年刻本《说文》，由 Wikimedia Commons 刊布，已过版权期，裁切后制成位图。": "The two characters in the title frame of the stele in the Imperial Stele Pavilion are taken from the Shuowen Jiezi (the 1873 Chen Changzhi block-print held by the National Library of China, as published on Wikimedia Commons; the copyright has expired), cut out and made into bitmaps.",
   "三维扫描": "3D scans",
   "殿内雕像的三维扫描：Minneapolis Institute of Art（5 件）、The Cleveland Museum of Art（2 件），CC0，经 Sketchfab、Objaverse 取得；本项目减面并烘焙为顶点色。": "3D scans of the statues in the halls: Minneapolis Institute of Art (5) and The Cleveland Museum of Art (2), CC0, obtained through Sketchfab and Objaverse; this project reduced their polygons and baked their textures into vertex colours.",
   "贴图": "Textures",
