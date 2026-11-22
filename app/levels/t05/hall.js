@@ -53,7 +53,7 @@ export const HALL = Object.freeze({
  * a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
-export const TIMBER = Object.freeze({ lift: 8, beam: 8.0, board: 0.9, from: 3.0, to: 4.5 });
+export const TIMBER = Object.freeze({ ring: 2.2, lift: 10.5, beam: 9.5, board: 1.0, from: 3.0, to: 4.5 });
 export const FILL = Object.freeze({
   door: 45, up: 105, upDist: 21, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-9, -11, -9], upAngle: 0.85, out: 9, depth: 3, ease: 0.5,
 });
@@ -78,7 +78,9 @@ export const RIDGE = (() => { const EX = XS[XS.length - 1] + HALL.overhang, EF =
 export function buildHall(M) {
   const H = HALL, y0 = H.floor, top = y0 + H.column, X = XS[XS.length - 1], zB = ZS[ZS.length - 1];
   const wallIn = H.wall - H.out;   // how far the wall's inner face lies inside the column line
-  const plaster = [], wood = [], woodZ = [], dark = [], mural = [], walk = { solids: [], decks: [], posts: [] };
+  const ring = new Set(), plaster = [], wood = [], woodZ = [], dark = [], mural = [], walk = { solids: [], decks: [], posts: [] };
+  /** The wall ring's timber (door and window frames, tie-beams, cap boards, bracket sets, the eave purlins) takes the walls' share of the sky, not the roof timber's (TIMBER.ring). */
+  const rw = (/** @type {THREE.BufferGeometry} */ g) => { wood.push(g); ring.add(g); };
   // The hall's own floor, a thin course laid over the platform's top within the walls: the platform's top is one face from
   // edge to edge, which the inside's shut-out sky (`shut` below) cannot reach at its corners; this one lies all inside.
   const inZ0 = ZS[ZS.length - 1] - H.out + H.wall, inZ1 = ZS[0] + H.front - H.wall, inX = XS[XS.length - 1] + H.out - H.wall;
@@ -106,22 +108,22 @@ export function buildHall(M) {
     if (kind === "wall") { along(a, b, zcF, 0, H.column); solid(a, b, fz0, fz1); return; }
     const l = a + J, r = b - J, w = r - l;
     for (const [x0, x1] of [[a, l], [r, b]]) {
-      wood.push(box(x1 - x0, head + J, FD + 0.04, (x0 + x1) / 2, y0 + (head + J) / 2, zFr));        // the jamb
+      rw(box(x1 - x0, head + J, FD + 0.04, (x0 + x1) / 2, y0 + (head + J) / 2, zFr));        // the jamb
       plaster.push(box(x1 - x0, head + J, RD, (x0 + x1) / 2, y0 + (head + J) / 2, zRv));            // and the wall behind it
       solid(x0, x1, fz0, fz1);
     }
-    wood.push(box(w, J, FD + 0.04, mid, y0 + head + J / 2, zFr));                                      // the head
+    rw(box(w, J, FD + 0.04, mid, y0 + head + J / 2, zFr));                                      // the head
     plaster.push(box(w, J, RD, mid, y0 + head + J / 2, zRv));                                          // and the wall's soffit behind it
     along(a, b, zcF, head + J, H.column);                                                               // the wall over it
     if (kind === "door") {
-      wood.push(box(w, H.door.sill, FD, mid, y0 + H.door.sill / 2, zFr));                               // the sill, under the frame
+      rw(box(w, H.door.sill, FD, mid, y0 + H.door.sill / 2, zFr));                               // the sill, under the frame
       walk.decks.push({ x0: l, x1: r, z0: zFr - FD / 2, z1: zFr + FD / 2, h: y0 + H.door.sill, floor: "wood" });
       walk.decks.push({ x0: l, x1: r, z0: fz0, z1: zFr - FD / 2, h: y0, floor: "stone" });             // the reveal's floor inside it
     } else {
       const s = H.window.sill, wh = head - s, n = H.window.bars;
       along(l, r, zcF, 0, s); solid(l, r, fz0, fz1);
-      wood.push(box(w, 0.2, FD + 0.04, mid, y0 + s + 0.1, zFr));                                        // the window's sill board
-      for (let k = 0; k < n; k++) wood.push(box(0.1, wh, 0.1, l + ((k + 0.5) * w) / n, y0 + s + wh / 2, zFr));
+      rw(box(w, 0.2, FD + 0.04, mid, y0 + s + 0.1, zFr));                                        // the window's sill board
+      for (let k = 0; k < n; k++) rw(box(0.1, wh, 0.1, l + ((k + 0.5) * w) / n, y0 + s + wh / 2, zFr));
     }
   });
   // The back wall, its middle bay a door kept shut (the way round behind the altar is not opened, PRD.md §1.5); the two end walls.
@@ -171,7 +173,7 @@ export function buildHall(M) {
     // (the hall's inside lit in diagonal bands). Its top above the outer face stays inside the roof's own thickness.
     const T = H.wall, inside = at + out * (off - T), wallUp = ax ? underAt(0, inside) : underAt(inside, zm);
     const put = (list, w, h, d, u, y, v) => list.push(ax ? box(w, h, d, u, y, v) : box(d, h, w, v, y, u));
-    const list = ax ? wood : woodZ;
+    const list = { push: (/** @type {THREE.BufferGeometry} */ g) => { (ax ? wood : woodZ).push(g); ring.add(g); } };
     put(list, len, lt, 0.4, mid, top - lt / 2, face + out * 0.1);                       // the tie-beam, proud of the wall
     put(list, len + 0.8, 0.2, H.wall + 0.3, mid, top + 0.1, at + out * (off - H.wall / 2 + 0.15));   // the cap board
     // The wall between the bracket sets is a thin board, as the Yingzao Fashi's gongyan boards are (chapter 7: BOARD.t, SOURCES.md),
@@ -257,7 +259,7 @@ export function buildHall(M) {
   return {
     // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
     // not a box's own 0 to 1, which laid the damp line slanting across every wall (the diagonal band the art review saw).
-    parts: { plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
+    parts: { plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
     walk,
     columns,
     inner,
@@ -275,6 +277,7 @@ export function buildHall(M) {
     // station E's upper 40% at L* 9.0, main 13.9), so above the doors' middle its share rises smoothly to TIMBER.lift times
     // the walls', between TIMBER.from and TIMBER.to over the floor; the walls, the columns and the figures keep theirs.
     timberShut: timber(TIMBER.lift),
+    ringShut: timber(TIMBER.ring),
     beamShut: timber(TIMBER.beam),
     boardShut: timber(TIMBER.board),
     // The same inside as a box the mist does not fill (fog.js, FOGSHUT): from the floor up to the ridge, within the walls.

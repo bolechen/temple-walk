@@ -239,6 +239,17 @@ test("the timber overhead takes more of the inside's light than the walls, from 
   for (let y = y0; y < y0 + 10; y += 0.05) { const a = h.timberShut(0, y, -10), b = h.timberShut(0, y + 0.05, -10); assert.ok(b >= a && b - a < 0.15, `no step at ${y.toFixed(2)}`); }
 });
 
+test("the wall ring's timber (frames, tie-beams, brackets) keeps the walls' share while the roof's timber rises: the roof's beams and purlins above it, its boards below (#608)", async () => {
+  const { TIMBER } = await import("../../app/levels/t05/hall.js");
+  const h = buildHall(M), y0 = HALL.floor, at = [0, y0 + 9, -10];
+  assert.ok(h.parts.ring.size > 100, "the ring's boxes are recorded");
+  const brackets = h.parts.wood.filter((g) => h.parts.ring.has(g)), purlins = h.parts.wood.filter((g) => !h.parts.ring.has(g));
+  assert.ok(brackets.length > 0 && purlins.length > 0 && purlins.length < 30, "the purlins stand apart from the ring");
+  assert.ok(Math.abs(h.ringShut(...at) - Math.min(3, HALL.inside * TIMBER.ring)) < 1e-9, "the ring takes TIMBER.ring times the walls'");
+  assert.ok(h.beamShut(...at) > h.ringShut(...at) && h.timberShut(...at) > h.ringShut(...at) && h.ringShut(...at) > h.boardShut(...at), "the beams' and purlins' share over the ring's over the boards'");
+  assert.ok(TIMBER.ring < TIMBER.lift && TIMBER.ring < TIMBER.beam && TIMBER.board < TIMBER.ring, "in the numbers too");
+});
+
 test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {
   const h = buildHall(M), X = XS[XS.length - 1], xi = X + HALL.out - HALL.wall, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall;
   // the east end wall's inner face at its front corner, inside the front wall's thickness: looking in, so inside

@@ -124,9 +124,11 @@ export function buildSite(M) {
   // The great hall's shell (./hall.js): its walls, timber, columns and roof, and what the written plan's walker is told of it.
   const hall = buildHall(M), hp = hall.parts;
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
+  // The wall ring's timber (hall.js, `ring`) in meshes of their own beside the roof's timber: the brackets keep the walls' share of the sky, the purlins and beams rise above it.
+  const splitRing = (/** @type {any[]} */ list, /** @type {any} */ mat, /** @type {any} */ own, /** @type {any} */ ringAo) => [[list.filter((g) => !hp.ring.has(g)), own], [list.filter((g) => hp.ring.has(g)), ringAo]].filter(([l]) => l.length).map(([l, o]) => mesh(merge(l), mat, o));
   const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
-  const shT = { ao: hall.timberShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
-  root.add(mesh(merge(hp.wood), M.woodX, shT), mesh(merge(hp.woodZ), M.woodZ, shBeam), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
+  const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
+  root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
     mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shBoard), mesh(merge(hp.ridge), M.ridge));
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
