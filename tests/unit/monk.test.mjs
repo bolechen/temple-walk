@@ -153,7 +153,7 @@ test("what hangs off him swings: the skirt trails his walk and flares as he turn
   const m = createMonk();
   for (let i = 0; i < 60; i++) { m.group.rotation.y = i * 0.05; m.update(1 / 30, 2.1, false, i / 30, () => 0, {}); }
   assert.ok(m.bones.robeBack.rotation.x > 0.03, "the skirt should trail behind him");
-  assert.ok(Math.abs(m.bones.robeLeft.rotation.z) > 0.02, "and swing out as he turns");
+  assert.ok(Math.abs(m.bones.robeFront.rotation.z) > 0.02, "and swing out as he turns (the side panels, over the thighs, hardly: #284)");
 });
 
 test("the robe covers the trousers above its hem, standing and through a walking stride", () => {
