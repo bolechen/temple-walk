@@ -83,6 +83,9 @@ const roofOf = (x, z, w, d, ridge, where) => {
 /** Three tones of tile: the old, dark one, the grey one (the base), and the newer, paler one. By the hash, about three in ten, five in ten, two in ten. */
 export const TILE_TONES = Object.freeze([{ name: "old", mul: 0.58, share: 0.3 }, { name: "grey", mul: 1, share: 0.5 }, { name: "pale", mul: 1.8, share: 0.2 }]);
 const toneOf = (x, z) => { const u = hash01(x, z, 2); return u < TILE_TONES[0].share ? 0 : u < TILE_TONES[0].share + TILE_TONES[1].share ? 1 : 2; };
+/** Two tiers of wall: the grey brick (three in four) and a warmer, a little lighter earth-grey (one in four). A house with the pale new tile (about L* 40) has a third, darker wall (about L* 31), so that its tile and its wall do not come to one lightness; no other house has it. */
+export const WALL_TONES = Object.freeze([{ name: "grey", mul: [0.38, 0.4, 0.43], share: 0.75 }, { name: "earth", mul: [0.55, 0.5, 0.41], share: 0.25 }, { name: "dark", mul: [0.29, 0.305, 0.33], share: 0 }]);   // (`share`: of the houses with the grey or the pale tile; the dark wall is only for the pale tile, below)
+const wallOf = (x, z, tone) => (tone === 2 ? 2 : hash01(x, z, 5) < 0.31 ? 1 : 0);
 /**
  * The trees and houses, as data: { kind: "pine" | "cypress" | "bare", x, z, h, r, row, cast, strip, along } and { x, z, w, d, alongX, eave, ridge, row, cast }.
  * `strip` names the row of trees a tree belongs to and `along` where on it (what the tests of its spacing, heights and kinds sort by). Seeded per strip from where it lies, so that tuning one does not move the others.
@@ -116,7 +119,7 @@ function plan(C) {
   const makeHouse = (cxh, czh, alongX, w, d, row, ridgeTo, where, ridgeFrom = 5) => {
     const onLine = onTowerLine(cxh, czh, Math.max(w, d) / 2), top = onLine ? L.firstRows : ridgeTo;
     const ridge = +clamp(pick(ridgeFrom, ridgeTo), 3.8, top).toFixed(2), hx = +cxh.toFixed(2), hz = +czh.toFixed(2);
-    houses.push(Object.freeze({ x: hx, z: hz, w: +w.toFixed(2), d: +d.toFixed(2), alongX, eave: 3, ridge, row, cast: row === 0, where, roof: roofOf(hx, hz, w, d, ridge, where), tone: toneOf(hx, hz) }));
+    houses.push(Object.freeze({ x: hx, z: hz, w: +w.toFixed(2), d: +d.toFixed(2), alongX, eave: 3, ridge, row, cast: row === 0, where, roof: roofOf(hx, hz, w, d, ridge, where), tone: toneOf(hx, hz), wall: wallOf(hx, hz, toneOf(hx, hz)) }));
   };
   const dims = () => { const long = pick(6.5, 10.5), short = pick(5, 7.5), alongX = rnd() < 0.5; return { alongX, w: alongX ? long : short, d: alongX ? short : long }; };
   /** A house along a wall: 6 to 9 m deep from it, 6 to 8.5 m along it (narrow enough that four or five show in a picture), the ridge running either way. `acrossX`: the wall runs along z. */
@@ -266,8 +269,9 @@ export function house(hs, walls, roofs) {
   if (hs.roof === "shed") {   // one slope: the low side has its eave out over the wall, the high side stops at the wall's face with the brick rising to it (no tile wall hanging in the air)
     const sr = Math.min(rise, SHED_RISE), span = alongX ? d : w, a = (span - 0.4) / 2, lo = span / 2 + over, len = (alongX ? w : d) + 2 * over, lenW = (alongX ? w : d) - 0.4, at = (u) => sr * (u + lo) / (lo + a);
     const flip = hash01(x, z, 4) < 0.5, place = (g, l) => { g.translate(0, 0, -l / 2); if (flip) g.rotateY(Math.PI); if (alongX) g.rotateY(Math.PI / 2); g.translate(x, y0 + eave, z); };
-    const roof = new THREE.Shape(); roof.moveTo(-lo, 0); roof.lineTo(a, 0); roof.lineTo(a, sr); roof.closePath();
-    const gable = new THREE.Shape(); gable.moveTo(-a, 0); gable.lineTo(a, 0); gable.lineTo(a, sr - 0.05); gable.lineTo(-a, at(-a) - 0.05); gable.closePath();
+    const T = 0.12;   // the roof is a thin plate laid on the slope, so that the brick wedge under it shows at the high end as brick
+    const roof = new THREE.Shape(); roof.moveTo(-lo, 0); roof.lineTo(a, sr); roof.lineTo(a, sr - T); roof.lineTo(-lo, -T); roof.closePath();
+    const gable = new THREE.Shape(); gable.moveTo(-a, 0); gable.lineTo(a, 0); gable.lineTo(a, sr - 0.08); gable.lineTo(-a, at(-a) - 0.08); gable.closePath();
     const r = new THREE.ExtrudeGeometry(roof, { depth: len, bevelEnabled: false }), g = new THREE.ExtrudeGeometry(gable, { depth: lenW, bevelEnabled: false });
     place(r, len); place(g, lenW); roofs.push(r); walls.push(g); return;
   }
@@ -277,13 +281,15 @@ export function house(hs, walls, roofs) {
   if (alongX) g.rotateY(Math.PI / 2);   // the extrusion's length now along x, the gable's section across z
   g.translate(x, y0 + eave, z); roofs.push(g);
 }
-/** The court wall's plaster with its colour pressed down to a grey brick (the art director, 2nd round: the houses' walls were the brightest thing at the arrival, 10 L* under the court's wall at least). */
+/** The court wall's plaster with its colour pressed down to a brick, in each of WALL_TONES (the art director: the houses' walls were the brightest thing at the arrival; both tiers at least 8 L* under the court's wall). */
 export const BRICK_TONE = 0.4;
-function brick(M) {
-  const base = M.plaster(), m = base.clone(), was = base.onBeforeCompile;
-  m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", `diffuseColor.rgb=col*vec3(${BRICK_TONE});`); };
-  m.customProgramCacheKey = () => "surround-brick"; m.name = "surround-brick";
-  return m;
+function bricks(M) {
+  return WALL_TONES.map((tone) => {
+    const base = M.plaster(), m = base.clone(), was = base.onBeforeCompile, key = "surround-brick-" + tone.name, ckey = "surroundBrick" + tone.name[0].toUpperCase() + tone.name.slice(1);   // (the cache key is letters only so that `__pick` names it)
+    m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", `diffuseColor.rgb=col*vec3(${tone.mul.join(",")});`); };
+    m.customProgramCacheKey = () => ckey; m.name = key;
+    return m;
+  });
 }
 
 /**
@@ -305,17 +311,18 @@ function tiles(M) {
  * @param {*} M the level's materials @param {{ x: number, zN: number, zS: number, t: number }} C the compound's walls
  */
 export function buildSurround(M, C) {
-  const PLAN = planSurround(C), group = new THREE.Group(), tone = () => TILE_TONES.map(() => []);
-  const near = { trunk: [], crown: [], walls: [], roofs: tone() }, far = { trunk: [], crown: [], walls: [], roofs: tone() };
+  const PLAN = planSurround(C), group = new THREE.Group(), tone = () => TILE_TONES.map(() => []), tone2 = () => WALL_TONES.map(() => []);
+  const near = { trunk: [], crown: [], walls: tone2(), roofs: tone() }, far = { trunk: [], crown: [], walls: tone2(), roofs: tone() };
   for (const t of PLAN.trees) { const into = t.cast ? near : far; (t.kind === "pine" ? pine : t.kind === "cypress" ? cypress : bare)(t, into.trunk, into.crown); }
-  for (const h of PLAN.houses) { const into = h.cast ? near : far; house(h, into.walls, into.roofs[h.tone]); }
-  const wall = brick(M), tile = tiles(M);
+  for (const h of PLAN.houses) { const into = h.cast ? near : far; house(h, into.walls[h.wall], into.roofs[h.tone]); }
+  const wall = bricks(M), tile = tiles(M);
   const put = (list, material, name, cast, mname) => {
     if (!list.length) return;
     const m = mesh(merge(list), material, { cast }); m.userData.surround = name; m.userData.walk = false; m.name = mname; group.add(m);
   };
   const add = (set, name, cast) => {
-    for (const [key, material] of [["trunk", M.bark], ["crown", M.cedar], ["walls", wall]]) put(set[key], material, name, cast, `surround-${name}-${key}`);
+    for (const [key, material] of [["trunk", M.bark], ["crown", M.cedar]]) put(set[key], material, name, cast, `surround-${name}-${key}`);
+    set.walls.forEach((list, i) => put(list, wall[i], name, cast, i ? `surround-${name}-${WALL_TONES[i].name}-walls` : `surround-${name}-walls`));   // (the walls, a draw to each tier)
     set.roofs.forEach((list, i) => put(list, tile[i], name, cast, `surround-${name}-${TILE_TONES[i].name}-roofs`));   // (the roofs, a draw to each tone of tile)
   };
   add(near, "near", true); add(far, "far", false);

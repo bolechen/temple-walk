@@ -13,7 +13,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker, COMPOUND } = await import("../../app/levels/t05/site.js");
-const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE, SHED_RISE, house } = await import("../../app/levels/t05/surround.js");
+const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE, SHED_RISE, WALL_TONES, house } = await import("../../app/levels/t05/surround.js");
 const { HALL_HALF, LANE, SECOND } = await import("../../app/levels/t05/axis.js");
 const { HALL } = await import("../../app/levels/t05/hall.js");
 const { default: checks } = await import("../../app/levels/t05/checks.js");
@@ -160,10 +160,10 @@ test("it stands outside the walls, none of it walked on or in (left out of the b
     if (!o.userData.surround) return;
     assert.equal(o.userData.walk, false, `${o.name} is not in the bake`);
     const n = (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; tris += n;
-    if (/walls$/.test(o.name)) { brick++; assert.equal(o.material.name, "surround-brick", "the houses' walls are the brick, not the court's plaster"); }
+    if (/walls$/.test(o.name)) { brick++; assert.ok(/^surround-brick-(grey|earth|dark)$/.test(o.material.name), "the houses' walls are the brick, not the court's plaster"); }
     if (o.userData.surround === "near") { near++; assert.ok(o.castShadow, `${o.name} casts shadows`); } else { far++; if (!o.castShadow) shadowless++; }
   });
-  assert.ok(brick === 2 && near >= 3 && far >= 3 && shadowless === far, `the near meshes cast shadows (${near}), the far ones do not (${far}); ${brick} wall meshes`);
+  assert.ok(brick >= 4 && brick <= 6 && near >= 3 && far >= 3 && shadowless === far, `the near meshes cast shadows (${near}), the far ones do not (${far}); ${brick} wall meshes`);
   assert.ok(tris > 5000 && tris < 45000, `${tris} triangles outside the walls`);
   assert.ok(plan.houses.filter((h) => h.row === 0 && h.cast).length >= 30 && plan.trees.filter((t) => t.cast).length >= 5, "the first row of houses and the trees by the walls are the real, shadow-casting geometry");
 });
@@ -200,10 +200,25 @@ test("a lean-to's high side has brick under it and the slope stays low; none sta
     const roofs = [], walls = [], hs = { x, z: 20, w: alongX ? 9 : 6, d: alongX ? 6 : 9, eave: 3, ridge: 5.3, alongX, roof: "shed" };
     house(hs, walls, roofs);
     const r = new THREE.Box3().setFromBufferAttribute(roofs[0].attributes.position), wall = new THREE.Box3().setFromBufferAttribute(walls[1].attributes.position);
-    assert.ok(r.max.y - r.min.y <= SHED_RISE + 1e-6, `the slope rises ${(r.max.y - r.min.y).toFixed(2)} m`);
+    assert.ok(r.max.y - r.min.y <= SHED_RISE + 0.12 + 1e-6, `the slope rises ${(r.max.y - r.min.y).toFixed(2)} m`);
     // across the slope the roof sticks out past the wall on its low side only; on the high side it stops at the wall's face
     const [lo, hi] = alongX ? ["z", "z"] : ["x", "x"], sticks = [wall.min[lo] - r.min[lo], r.max[hi] - wall.max[hi]];
     assert.ok(Math.min(...sticks) <= 1e-6 && Math.max(...sticks) > 0.3, `the roof sticks out by ${sticks.map((v) => v.toFixed(2))} on its two sides: one side none`);
-    assert.ok(wall.max.y >= r.max.y - 0.06 - 1e-6, `the brick rises to ${wall.max.y.toFixed(2)} under a high edge at ${r.max.y.toFixed(2)}`);
+    assert.ok(wall.max.y >= r.max.y - 0.12 - 1e-6, `the brick rises to ${wall.max.y.toFixed(2)} under a high edge at ${r.max.y.toFixed(2)}`);
   }
+});
+
+test("two tiers of wall, the earth-grey about a quarter; a pale-tiled house has the dark wall; a lean-to's roof is a thin plate, so its brick shows", () => {
+  const share = plan.houses.filter((h) => h.wall === 1).length / plan.houses.length;
+  assert.ok(share >= 0.12 && share <= 0.35, `${(share * 100).toFixed(0)}% of the houses have the earth wall`);
+  assert.ok(plan.houses.every((h) => (h.tone === 2) === (h.wall === 2)), "the pale tile has the dark wall, and nothing else has");
+  assert.equal(WALL_TONES.length, 3);
+  const [g, e, k] = WALL_TONES.map((t) => t.mul); assert.ok(e[0] > g[0] && e[0] - e[2] > 0.05 && g[2] > g[0], "the earth is lighter and warmer (red over blue), the grey cooler");
+  assert.ok(k[1] < g[1], "the dark wall is darker than the grey");
+  const roofs = [], walls = [], hs = { x: 10, z: 20, w: 9, d: 6, eave: 3, ridge: 5.3, alongX: true, roof: "shed" };
+  house(hs, walls, roofs);
+  const p = roofs[0].attributes.position; const bb = new THREE.Box3().setFromBufferAttribute(p);
+  const edge = (zEdge) => { let lo = 1e9, hi = -1e9; for (let i = 0; i < p.count; i++) if (Math.abs(p.getZ(i) - zEdge) < 1e-6) { lo = Math.min(lo, p.getY(i)); hi = Math.max(hi, p.getY(i)); } return [lo, hi]; };
+  const highEdge = edge(edge(bb.max.z)[1] > edge(bb.min.z)[1] ? bb.max.z : bb.min.z);
+  assert.ok(highEdge[1] - highEdge[0] <= 0.13, `the plate is ${(highEdge[1] - highEdge[0]).toFixed(2)} m thick at its high edge, not a solid wedge`);
 });
