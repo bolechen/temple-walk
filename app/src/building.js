@@ -303,6 +303,10 @@ export function buildHall(M, opts) {
     di.splice(24, 6); dg.setIndex(di); dg.clearGroups();   // (BoxGeometry's faces go +x, -x, +y, -y, +z, -z, six indices each)
     const m = new THREE.Mesh(dg, M.interior(p.platH));
     m.userData.doorway = true; g.add(m);   // a hall that can be entered paints its own room here instead (doorway.js)
+    // The front face the box lost is put back for the baked floor alone: without it the box is not closed, and the bake takes the floor
+    // inside a closed solid for none, so the floor ran in at the door into the hollow hall (hall-funnel-349). Never drawn, and the eye's gathering skips it.
+    const front = new THREE.Mesh(new THREE.PlaneGeometry(X * 2 - 0.3, topY - p.platH - 0.03).translate(0, p.platH + (topY - p.platH) / 2, Z - 0.1), new THREE.MeshBasicMaterial({ visible: false }));
+    front.userData.eye = false; front.userData.keep = true; g.add(front);
     // To the eye that follows him out of the door, the back of the dark is a wall: the dark is painted (a shader, which the
     // eye's gathering passes over), and behind it the hall is hollow, so the eye backed in through the open leaves into the
     // building (#391). It may stand in the dark, though, as far as its back: there it sees him framed in the door as he

@@ -45,6 +45,7 @@ export function* gatherEye(scene, boxes, budget = 4, off = new Set(), byPart = n
       if (!o.isMesh) return;
       const stop = o.userData.eye === "stop";   // drawn nowhere, there only to stop the eye (a hall's doorway seen from inside)
       // (a part's own top may be a mesh, as the land's and the trees' are: whether it is shown is the part's, said above)
+      if (o.userData.eye === false) return;   // there for the baked floor alone (a hall's dark box's front face)
       if (!stop && (o.userData.walk === false || (o !== top && !o.visible) || airy(Array.isArray(o.material) ? o.material[0] : o.material))) return;
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
       if (o.isInstancedMesh) { for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m4); m4.premultiply(o.matrixWorld); if (kept(tb.copy(o.geometry.boundingBox).applyMatrix4(m4))) jobs.push({ geo: o.geometry, m: m4.clone(), part: top.userData.part }); } return; }
