@@ -17,3 +17,8 @@ test("the dark-door factor is fully on at the weakest dusk lamp of any season, a
     assert.equal(day, 0, `${s} by day the lamps are out, so every room shows as it was baked`);
   }
 });
+
+test("a hall with no lamp lit holds no lamplight at dusk and dawn: the night bake is blended only for a lit hall or at night (#595)", () => {
+  assert.ok(/float nb=clamp\(uLamp,0\.,1\.\)\*mix\(uLit,1\.,uWinNight\)/.test(src), "the weight of the night picture is the lamp's, times 1 at night and the hall's own lit flag otherwise");
+  assert.ok(/u\.uLit\.value = lv > 0 \? 1 : 0/.test(src), "a hall is lit at dusk when the plan's middle bay is");
+});

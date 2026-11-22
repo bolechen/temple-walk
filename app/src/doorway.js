@@ -31,7 +31,7 @@ function doorMaterial(U, steps) {
       tInDay: { value: null }, tInNight: { value: null }, tInDist: { value: null }, uHi: { value: 0 },
       tLive: { value: null }, uLive: { value: 0 }, uLiveOn: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) }, uGain: { value: GAIN[0] },
       uW2R: { value: new THREE.Matrix4() }, uMin: { value: new THREE.Vector3() }, uMax: { value: new THREE.Vector3() }, uC: { value: new THREE.Vector3() }, uDoor: { value: new THREE.Vector4(-1, 1, 0, 3) },
-      uLamp: U.uLamp, uWinNight: U.uWinNight, uDusk: { value: 1 },
+      uLamp: U.uLamp, uWinNight: U.uWinNight, uDusk: { value: 1 }, uLit: { value: 1 },
     }),
     vertexShader: `
       #include <common>
@@ -44,7 +44,7 @@ function doorMaterial(U, steps) {
     fragmentShader: `
       #include <common>
       #include <fog_pars_fragment>
-      uniform samplerCube tDay, tNight, tDist; uniform float uHas, uLamp, uWinNight, uDusk; uniform mat4 uW2R; uniform vec3 uMin, uMax, uC; uniform vec4 uDoor;
+      uniform samplerCube tDay, tNight, tDist; uniform float uHas, uLamp, uWinNight, uDusk, uLit; uniform mat4 uW2R; uniform vec3 uMin, uMax, uC; uniform vec4 uDoor;
       uniform sampler2D tInDay, tInNight, tInDist, tLive; uniform float uHi, uLive, uLiveOn, uGain; uniform vec2 uRes;
       varying vec3 vWP;
       // On the face into the room (-z, as the capture's sixth camera saw it), laid as the cube's own -z face is: a cube's
@@ -82,7 +82,8 @@ function doorMaterial(U, steps) {
             }
           #endif
           vec3 q=ro+rd*t-uC;
-          vec3 room=inward(q) ? mix(textureGrad(tInDay,inUV(q),gx,gy).rgb,textureGrad(tInNight,inUV(q),gx,gy).rgb,clamp(uLamp,0.,1.)) : mix(texture(tDay,q).rgb,texture(tNight,q).rgb,clamp(uLamp,0.,1.));
+          float nb=clamp(uLamp,0.,1.)*mix(uLit,1.,uWinNight);   // a hall with no lamp lit holds no lamplight at dusk and dawn: only the room as the day left it (#595)
+          vec3 room=inward(q) ? mix(textureGrad(tInDay,inUV(q),gx,gy).rgb,textureGrad(tInNight,inUV(q),gx,gy).rgb,nb) : mix(texture(tDay,q).rgb,texture(tNight,q).rgb,nb);
           c=mix(c,room,uHas);
         }
         // At dusk and dawn a hall whose middle bay the plan leaves unlit is a dark door, as its windows are (windows.js, #459); at night every room shows.
@@ -154,7 +155,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     u.uDoor.value.set(xs[mid] + 1.3 - 0.02, xs[mid + 1] - 1.3 + 0.02, 0.1, 3.1);
     // How much of its room shows through the door at dusk: the plan's level for the middle bay, never quite none.
     const lv = Math.max(0, ...(site.litWindows || []).filter((w) => w.building === h.id && w.face === "front" && w.bay === mid).map((w) => w.dusk));
-    u.uDusk.value = 0.05 + 0.95 * (lv / 7);
+    u.uDusk.value = 0.3 + 0.7 * (lv / 7); u.uLit.value = lv > 0 ? 1 : 0;
     d.mesh.material = mat;
     const o = { hall: h, d, r, mat, zs, door: new THREE.Vector3(), want: false, taken: 0, fade: 0, tex: null, pending: null, source: null };
     place(o); d.mesh.geometry.computeBoundingSphere();
