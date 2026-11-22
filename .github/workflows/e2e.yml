@@ -1,7 +1,7 @@
 name: End to end, every scenario
 
 # The whole suite takes the better part of an hour on one machine without a GPU, so it does not run on every push:
-# once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among as many machines as the list needs (twelve at present, `shards` below) by each scenario's measured time (tests/e2e/shards.cjs, #335, #376), or, asked for by hand with `runner: t4`, among four Hugging Face Jobs on a T4 (the `t4` jobs below).
+# once a night (the owner, 2026-11-17: a scenario was red on main for days because only the weekly run walked it, #149), and whenever it is asked for (Actions → this workflow → Run workflow), shared among as many machines as the list needs (twelve at present, `shards` below) by each scenario's measured time (tests/e2e/shards.cjs, #335, #376), or, asked for by hand with `runner: t4`, among ten Hugging Face Jobs on a T4 (the `t4` jobs below).
 on:
   # Beside every publication, and not in its way: his body and the camera's near plane against everything built, and the
   # pause menu in every language. (The stairs and the low drop, which change most often, stop the publication itself since
@@ -21,7 +21,7 @@ on:
         type: boolean
         default: false
       runner:
-        description: "Where the scenarios are walked: github (twelve free machines, software drawing) or t4 (four Hugging Face Jobs on a T4 card; needs the HF_TOKEN secret, #335)"
+        description: "Where the scenarios are walked: github (twelve free machines, software drawing) or t4 (ten Hugging Face Jobs on a T4 card; needs the HF_TOKEN secret, #335)"
         type: choice
         options: [github, t4]
         default: github
@@ -278,7 +278,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -300,7 +300,7 @@ jobs:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
           set -o pipefail
-          if [ -n "$SCENARIOS" ]; then tools/ci/t4-launch.sh $SCENARIOS; else tools/ci/t4-launch.sh --shard=${{ matrix.shard }}/4; fi 2>&1 | tee "$RUNNER_TEMP/t4.log"
+          if [ -n "$SCENARIOS" ]; then tools/ci/t4-launch.sh $SCENARIOS; else tools/ci/t4-launch.sh --shard=${{ matrix.shard }}/10; fi 2>&1 | tee "$RUNNER_TEMP/t4.log"
       - name: What it took
         if: always()
         shell: bash

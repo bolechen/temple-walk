@@ -54,11 +54,11 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 发版前要看全量时：Actions → **End to end, every scenario** → Run workflow，选 `runner`。
 
 - `github`（默认，夜间也是它）：十二台免费机器，软件渲染，按各场景上次实测的时间分片（`tests/e2e/shards.cjs`）。
-- `t4`：四个 Hugging Face Job，每个一块 T4，Chromium 经 Vulkan 用显卡画。流程：`t4-pack` 建站并连检出一起打成一个包；`t4` 四片各把包传到私有桶 `<账号>/temple-walk-e2e` 的 `runs/<运行>/`，起 Job 跑 `tools/ci/t4-job.sh`（解包、`pnpm install`、`tests/e2e/run.cjs --shard=i/4`），等它结束，把报告、截图、Job 日志取回作为 artifact `e2e-t4-<片>-…`，再从桶里删掉这一次的文件；`t4-checks` 在免费机器上并行跑 shard 1 通常先跑的解析、类型、单测和 `edges`。运行摘要里有每片的显卡型号和各场景耗时。
+- `t4`：十个 Hugging Face Job，每个一块 T4，Chromium 经 Vulkan 用显卡画。流程：`t4-pack` 建站并连检出一起打成一个包；`t4` 十片各把包传到私有桶 `<账号>/temple-walk-e2e` 的 `runs/<运行>/`，起 Job 跑 `tools/ci/t4-job.sh`（解包、`pnpm install`、`tests/e2e/run.cjs --shard=i/10`），等它结束，把报告、截图、Job 日志取回作为 artifact `e2e-t4-<片>-…`，再从桶里删掉这一次的文件；`t4-checks` 在免费机器上并行跑 shard 1 通常先跑的解析、类型、单测和 `edges`。运行摘要里有每片的显卡型号和各场景耗时。
 - 红的情况都是真红：没有 `HF_TOKEN`、Job 起不来、报错、超时、被取消、没带回报告、场景不过，都让那一片失败，日志第一行附近有 Job 的地址（`https://huggingface.co/jobs/<账号>/<id>`）。浏览器若退回软件渲染（`SwiftShader`/`llvmpipe`），`run.cjs` 直接退出码 3：T4 的运行不会是披着 T4 名字的免费机器运行。取消这次运行会取消 Job，不会留着显卡计费。
 - 密钥：仓库 secret `HF_TOKEN`（只给这个 workflow，需要有建桶和跑 Job 的权限；Settings → Secrets and variables → Actions 里加，值不进任何日志或文件）。只在 `t4` 的启动那一步读取。这个 workflow 没有 `pull_request` 触发，所以 PR（包括外部 fork 的 PR）碰不到它；手动触发只有有写权限的人能做。
-- 费用：T4 约 0.4 美元每小时，四个 Job 各按墙钟计，一次全量按每片约 15 分钟算，约 0.4 美元。夜间默认用哪个，等 T4 与免费机器的对比（结果是否一致、墙钟时间）出来后由所有者定。
-- 本地试一片：`HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/4`（或直接写场景名）；没有显卡的 CPU 规格上试流程：`T4_GPU=0 T4_FLAVOR=cpu-performance tools/ci/t4-launch.sh boot`。`tests/unit/t4-run.test.mjs` 守着触发条件、密钥只在一处读取、启动器的各种失败。
+- 费用：T4 约 0.4 美元每小时，十个 Job 各按墙钟计（含启动），一次全量约 13 分钟墙钟、约 0.8 美元（所有者 2026-11-22：「分 10 片可以接受」；四片时实测 30.9 分钟、约 0.58 美元）。只在手动触发时用，夜间照旧走免费机器；单次超过 1 美元先问所有者。
+- 本地试一片：`HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/10`（或直接写场景名）；没有显卡的 CPU 规格上试流程：`T4_GPU=0 T4_FLAVOR=cpu-performance tools/ci/t4-launch.sh boot`。`tests/unit/t4-run.test.mjs` 守着触发条件、密钥只在一处读取、启动器的各种失败。
 
 ## 出事先回滚，再修
 
