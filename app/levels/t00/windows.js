@@ -21,8 +21,10 @@ export const LIT = {
   chan: { front: { 3: [2, 5], 1: [0, 2] } },
   tea: { front: { 1: [0, 4], 3: [0, 6], 2: [0, 2] } },
   library: { front: { 4: [2, 3], 1: [0, 5] } },
-  // The halls on the terraces keep their lamps for the night.
-  yaoshi: { front: { 1: [0, 5] } },
+  // The Medicine hall keeps incense like the great hall and the Guanyin hall, so its middle bay holds a lamp at dusk as theirs do
+  // (T00 lead's call, 2026-11-22: the three halls where incense is offered all show a light at dusk; #595).
+  yaoshi: { front: { 1: [5, 5] } },
+  // The halls on the terraces keep their other lamps for the night.
   dahui: { front: { 1: [0, 4] } },
   // The gate's upper room and the summit pavilion's top storey: a single lamp at night.
   "云径禅寺#1": { front: { 1: [0, 4] } },
@@ -31,4 +33,4 @@ export const LIT = {
 
 // How many bays may be lit at each hour (tests/unit/windows.test.mjs holds the data to them, and mood.js's winNight
 // to the hours): "a few" at dusk, more at night, never all.
-export const BUDGET = { dusk: 10, night: 22 };
+export const BUDGET = { dusk: 11, night: 22 };
