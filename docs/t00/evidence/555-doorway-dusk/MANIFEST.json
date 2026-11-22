@@ -3,6 +3,18 @@
  "dataset": "bolechen/temple-walk-evidence",
  "files": [
   {
+   "path": "autumndawn-chan-base-1920x1080.jpg",
+   "bytes": 323814,
+   "sha256": "ef0acfb50f324875e273886868064a16220172fc87ba9570d355b44ee9dabec6",
+   "rev": "e5c2fa9ed2a48acd686c5e84009a459969d3fe8f"
+  },
+  {
+   "path": "autumndawn-chan-new-1920x1080.jpg",
+   "bytes": 324461,
+   "sha256": "7ce56e44800a8d1a459fadc4d9b42d3b04e9df4a0273b186f58afb593440e93d",
+   "rev": "e5c2fa9ed2a48acd686c5e84009a459969d3fe8f"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 396990,
    "sha256": "5f965e3d95ea1897d9de6b1ab4cfe787d4f2b29bb615a226e3a4ec1824fca45e",
@@ -103,6 +115,18 @@
    "bytes": 323725,
    "sha256": "68810e0bf3254262684016e1bfb601f3133a60e737a6aca498e7e143ec9aba69",
    "rev": "f2a029fd3e0108fcc1a716fd078c2d715306ddd5"
+  },
+  {
+   "path": "summerdusk-chan-base-1920x1080.jpg",
+   "bytes": 338945,
+   "sha256": "2acb2f0b56a033bfbf41d7894208caba7549d585fa5fc916dc02fd47f6c7a422",
+   "rev": "e5c2fa9ed2a48acd686c5e84009a459969d3fe8f"
+  },
+  {
+   "path": "summerdusk-chan-new-1920x1080.jpg",
+   "bytes": 337795,
+   "sha256": "2b4422262eaf7bd52366be9fb6e59234f847138b50d8b7d581047ad767fd26e9",
+   "rev": "e5c2fa9ed2a48acd686c5e84009a459969d3fe8f"
   }
  ]
 }
