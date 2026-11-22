@@ -292,7 +292,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
   // lent to another stream for a moment without disturbing it.
   let draw = seeded(311); const rnd = () => draw();
-  const wood = [], ginkgoWood = [], ginkgoBeds = [], pitStone = [], pitCap = [], pitEarth = [], moss = [], pits = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
+  const wood = [], ginkgoWood = [], ginkgoBeds = [], pitStone = [], pitCap = [], moss = [], pits = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), V = (x, y, z) => new THREE.Vector3(x, y, z);
   // One flat spray at `p`, lit as part of the crown round `centre`; `shade` darkens those deep inside.
   const card = (list, g, p, centre, shade, squash = 0.75, lift = 0.35) => {
@@ -473,7 +473,7 @@ export function createTrees(scene, M, spots, opts = {}) {
         }
         const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
         nth++; ginkgoBeds.push(softBed(x, y, z, flare * 3 + 0.9, nth));
-        const side = pitSide(flare); pitStone.push(...pitStones(x, y, z, side)); pitEarth.push(pitSoil(x, y, z, side)); pitCap.push(...pitSnow(x, y, z, side)); pits.push({ at: [x, z], side, flare });
+        const side = pitSide(flare); pitStone.push(...pitStones(x, y, z, side)); beds.push(pitSoil(x, y, z, side)); pitCap.push(...pitSnow(x, y, z, side)); pits.push({ at: [x, z], side, flare });
         moss.push(mossPatch(x, y, z, flare * 1.7 + 0.2, 0.45, nth + 5, MOSS, 0.9, PIT.up - PIT.drop + 0.012));   // moss at the roots, inside the pit
       }
       clump(kind, V(x, top - 0.2, z), centre, 1.1, 5);
@@ -532,10 +532,10 @@ export function createTrees(scene, M, spots, opts = {}) {
   if (ginkgoBeds.length) { gbed = new THREE.Mesh(mergeGeometries(ginkgoBeds), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 1, envMapIntensity: 0.1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); gbed.receiveShadow = true; gbed.userData.keep = true; gbed.name = "ginkgo-beds"; gbed.renderOrder = 0; scene.add(gbed); }
   // The ginkgoes' pits (#611): the edge stones are the court's stone, the soil inside lies a little under their tops. In
   // winter the soil and the moss are put away like the beds, and the paving's one blanket of snow runs to the trunk.
-  let pitMesh = null, pitSoilMesh = null, mossMesh = null, capMesh = null;
-  if (pitStone.length) { pitMesh = mesh(merge(pitStone), M.stone); pitMesh.userData.keep = true; pitMesh.name = "ginkgo-pits"; scene.add(pitMesh); }
+  let pitMesh = null, mossMesh = null, capMesh = null;
+  // (the stones are static and always drawn, so mergeStatic takes them into the stone batch with the buildings)
+  if (pitStone.length) { pitMesh = mesh(merge(pitStone), M.stone); pitMesh.name = "ginkgo-pits"; scene.add(pitMesh); }
   if (pitCap.length) { capMesh = new THREE.Mesh(mergeGeometries(pitCap.map((g) => { g.deleteAttribute("uv"); return g; })), new THREE.MeshStandardMaterial({ color: new THREE.Color(0.86, 0.89, 0.93), roughness: 1, envMapIntensity: 0.25 })); capMesh.receiveShadow = true; capMesh.userData.keep = true; capMesh.name = "ginkgo-pit-snow"; capMesh.userData.walk = false; capMesh.visible = false; scene.add(capMesh); }
-  if (pitEarth.length) { pitSoilMesh = mesh(merge(pitEarth), M.earth, { cast: false }); pitSoilMesh.userData.keep = true; pitSoilMesh.name = "ginkgo-pit-soil"; scene.add(pitSoilMesh); }
   if (moss.length) { mossMesh = new THREE.Mesh(mergeGeometries(moss), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 1, envMapIntensity: 0.1, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })); mossMesh.receiveShadow = true; mossMesh.userData.keep = true; mossMesh.name = "tree-moss"; mossMesh.renderOrder = 0; scene.add(mossMesh); }
   const tex = { blossom: sheet("blossom"), maple: sheet("maple"), ginkgo: sheet("ginkgo"), cedar: sheet("cedar"), twig: sheet("twig") }, crowns = {};
   const put = (kind, map, o) => {
@@ -545,7 +545,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, { glow: 0.16 }); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed, pits, pitStones: pitMesh, pitSoil: pitSoilMesh, pitSnow: capMesh, moss: mossMesh,
+    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed, pits, pitStones: pitMesh, pitSoil: soil, pitSnow: capMesh, moss: mossMesh,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
@@ -553,7 +553,6 @@ export function createTrees(scene, M, spots, opts = {}) {
         k.mat.color.setRGB(...c); if (kind === "maple") k.mat.map = m.season === "spring" ? tex.blossom : tex.maple;
       }
       if (soil) soil.visible = !(m.snow > 0.5);
-      if (pitSoilMesh) pitSoilMesh.visible = !(m.snow > 0.5);
       if (mossMesh) mossMesh.visible = !(m.snow > 0.5);
       if (capMesh) capMesh.visible = m.snow > 0.5;
       // the leaves under a ginkgo are the season's own, and are not there when it is bare
