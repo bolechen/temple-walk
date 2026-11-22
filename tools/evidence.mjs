@@ -112,15 +112,31 @@ export function checkTree(root = ROOT, files = null) {
 
 // ---------------------------------------------------------------- network
 
+// How long to wait before asking again. A store that says "too many" (429) or "busy" (503) is waited on as it asks
+// (Retry-After, in seconds, at most a minute), or else for a few seconds that double each time; anything else gets the short
+// pause it always had. The nightly run asks the original store for three thousand files, and Hugging Face turned 62 of them
+// away with 429 on 2026-11-22 while every hash it did answer matched (run 45060329278): that is the store's breath, not the
+// evidence, and is waited out rather than reported.
+export function retryWait(status, retryAfter, i) {
+  if (status === 429 || status === 503) {
+    const s = retryAfter == null || retryAfter === "" ? NaN : Number(retryAfter);
+    return Number.isFinite(s) && s >= 0 ? Math.min(s, 60) * 1000 : Math.min(60000, 4000 * 2 ** i);
+  }
+  return 300 * 2 ** i;
+}
 async function get(url, tries = 3) {
   let last;
-  for (let i = 0; i < tries; i++) {
+  for (let i = 0, busy = 0; i < tries + busy; i++) {
+    let wait = 300 * 2 ** i;
     try {
       const r = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(CONFIG.timeoutMs || 60000) });
       if (r.status === 404) throw Object.assign(new Error(`404 ${url}`), { fatal: true });
       if (!r.ok) {
         // A verification page is the zone's answer to who is asking, not to what is asked for: asking again changes nothing.
         const challenged = r.headers.get("cf-mitigated") === "challenge";
+        wait = retryWait(r.status, r.headers.get("retry-after"), i);
+        // A busy store gets up to five more tries than an ordinary failure, so a run that crowds it still finishes.
+        if ((r.status === 429 || r.status === 503) && busy < 5) busy++;
         await r.body?.cancel();
         throw Object.assign(new Error(`HTTP ${r.status} ${url}`), { fatal: challenged, challenged });
       }
@@ -128,7 +144,7 @@ async function get(url, tries = 3) {
     } catch (e) {
       last = e;
       if (e.fatal) break;
-      await new Promise((r) => setTimeout(r, 300 * 2 ** i));
+      await new Promise((r) => setTimeout(r, wait));
     }
   }
   throw last;
