@@ -38,6 +38,7 @@ export const LIMITS = Object.freeze({
 
 /** One number for the whole layout: a different one lays out the same rules differently (picked once, by trying, until every limit in tests/unit/t05-surround.test.mjs held with room to spare). */
 const SEED = 0;
+const SSEED = 7;   // the south side's own seed: the one the art director passed (docs/t05/DECISIONS.md); it was first chosen among 12 for the A and B roof-slope numbers, and the ceiling on the houses' share has since been widened to 65%, so a seed can now be chosen by the picture
 const seeded = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const ground = 0.06;   // the plain is laid a little above y = 0 (site.js `lift`)
 /**
@@ -78,7 +79,7 @@ function plan(C) {
   const nearWall = (x, z) => Math.min(Math.abs(x) - cx > -1 && z < cs + 1 ? Math.abs(x) - cx : Infinity, z - cs > -1 && Math.abs(x) < cx + 14 ? z - cs : Infinity);   // how far outside the court's walls
   const overlapsHouse = (x, z, pad) => houses.some((h) => Math.abs(x - h.x) < h.w / 2 + pad && Math.abs(z - h.z) < h.d / 2 + pad);
   /** One tree: its kind and height are chosen so that it differs from the one before it on its strip (by 20% in height; never a fourth of a kind in a row). */
-  const tree = (x, z, along, mix = [0.45, 0.25], row = 1) => {
+  const tree = (x, z, along, mix = [0.45, 0.25], row = 1, clump = -1) => {
     const st = state.get(id) || state.set(id, { h: 0, kind: "", n: 0 }).get(id), r0 = rnd();
     let kind = r0 < mix[0] ? "pine" : r0 < mix[0] + mix[1] ? "cypress" : "bare";
     if (kind === st.kind && st.n >= 3) kind = ["pine", "cypress", "bare"].find((k) => k !== st.kind && (k !== "cypress" || mix[1] > 0)) || "bare";
@@ -93,24 +94,32 @@ function plan(C) {
     }
     h = clamp(h, 3.2, cap);
     st.n = kind === st.kind ? st.n + 1 : 1; st.kind = kind; st.h = h;
-    trees.push(Object.freeze({ kind, x: +x.toFixed(2), z: +z.toFixed(2), h: +h.toFixed(2), r: +(h * pick(0.032, 0.042)).toFixed(2), row, cast: nearWall(x, z) <= 14, strip: id, along: +along.toFixed(2), yaw: +(rnd() * Math.PI * 2).toFixed(2) }));
+    trees.push(Object.freeze({ kind, x: +x.toFixed(2), z: +z.toFixed(2), h: +h.toFixed(2), r: +(h * pick(0.032, 0.042)).toFixed(2), row, cast: nearWall(x, z) <= 14, strip: id, clump, along: +along.toFixed(2), yaw: +(rnd() * Math.PI * 2).toFixed(2) }));
   };
   /** A house of one storey: eaves at 3 m, a gable roof, ridge 5 to 6.3 m (5 or lower in the first two rows on the line to the pagoda), the ridge along x or along z. Its centre is given. */
-  const makeHouse = (cxh, czh, alongX, w, d, row, ridgeTo, where) => {
+  const makeHouse = (cxh, czh, alongX, w, d, row, ridgeTo, where, ridgeFrom = 5) => {
     const onLine = onTowerLine(cxh, czh, Math.max(w, d) / 2), top = onLine ? L.firstRows : ridgeTo;
-    houses.push(Object.freeze({ x: +cxh.toFixed(2), z: +czh.toFixed(2), w: +w.toFixed(2), d: +d.toFixed(2), alongX, eave: 3, ridge: +clamp(pick(5, ridgeTo), 3.8, top).toFixed(2), row, cast: row === 0, where }));
+    houses.push(Object.freeze({ x: +cxh.toFixed(2), z: +czh.toFixed(2), w: +w.toFixed(2), d: +d.toFixed(2), alongX, eave: 3, ridge: +clamp(pick(ridgeFrom, ridgeTo), 3.8, top).toFixed(2), row, cast: row === 0, where }));
   };
   const dims = () => { const long = pick(6.5, 10.5), short = pick(5, 7.5), alongX = rnd() < 0.5; return { alongX, w: alongX ? long : short, d: alongX ? short : long }; };
   /** A house along a wall: 6 to 9 m deep from it, 6 to 8.5 m along it (narrow enough that four or five show in a picture), the ridge running either way. `acrossX`: the wall runs along z. */
   const wallDims = (acrossX) => { const deep = pick(6, 9), along = pick(6, 8.5), alongX = rnd() < 0.5; return acrossX ? { alongX, w: deep, d: along } : { alongX, w: along, d: deep }; };
+  /** The south side's houses (the art director, step two: not a row of tents the same size): small sheds, middling houses and long ones, the ridge along the wall or across it, each class with its own ridge heights. */
+  const southDims = () => {
+    const r = rnd(), alongX = rnd() < 0.6; let along, deep, ridge;
+    if (r < 0.28) { along = pick(4.2, 6); deep = pick(4, 5.5); ridge = [3.8, 4.7]; }
+    else if (r < 0.72) { along = pick(6.5, 9.5); deep = pick(5.5, 8); ridge = [4.8, 5.8]; }
+    else { along = pick(10.5, 15); deep = pick(6, 8.5); ridge = [5.5, 6.3]; }
+    return alongX ? { alongX, w: along, d: deep, ridge } : { alongX, w: deep, d: along, ridge };
+  };
   /** A row of houses along a wall, each its own distance (3 to 6 m) from the wall's outer face, with a gap of 2 to 8 m between: `across(g, hx, hz)` and `along(cursor, ext)` give the centre. */
   const houseRow = (from, to, place, row, gapRange, ridgeTo, where, dim = dims) => {
     const made = []; let cur = from + rnd() * 2;
     while (cur < to) {
-      const { alongX, w, d } = dim(), g = pick(...L.houseGap);
+      const { alongX, w, d, ridge } = dim(), g = pick(...L.houseGap);
       const [px, pz, ext] = place(cur, g, w, d);
       if (overlapsHouse(px, pz, 1) || (row === 0 && withinWalls(C, px, pz, 0.6 + w / 2, 0.6 + d / 2))) { cur += 3; continue; }
-      makeHouse(px, pz, alongX, w, d, row, ridgeTo, where); made.push(houses.at(-1));
+      makeHouse(px, pz, alongX, w, d, row, ridge ? ridge[1] : ridgeTo, where, ridge ? ridge[0] : 5); made.push(houses.at(-1));
       cur += ext + pick(...gapRange);
     }
     return made;
@@ -133,8 +142,8 @@ function plan(C) {
     rnd = seeded(5482 + SEED + sx * 17);
     houseRow(C.zN, cs + 4, (cur, g, hx, hz) => [sx * (cx + 34 + pick(0, 6) + hx / 2), cur + hz / 2, hz], 1, [14, 30], L.ridgeMax, "ew");
     // ---- south of the court's south wall, beside the terrace ----
-    rnd = seeded(5483 + SEED + sx * 17);
-    const s0 = houseRow(SECOND.hw + 3.2, cx + 24, (cur, g, hx, hz) => [sx * (cur + hx / 2), cs + g + hz / 2, hx], 0, [7, 12], L.ridgeMax, "s", () => wallDims(false));
+    rnd = seeded(5483 + SEED + SSEED + sx * 17);
+    const s0 = houseRow(SECOND.hw + 3.2, cx + 24, (cur, g, hx, hz) => [sx * (cur + hx / 2), cs + g + hz / 2, hx], 0, [2, 13], L.ridgeMax, "s", southDims);
     rnd = seeded(5485 + SEED + sx * 17);
     houseRow(SECOND.hw + 5, cx + 26, (cur, g, hx, hz) => [sx * (cur + hx / 2), cs + 34 + pick(0, 6) + hz / 2, hx], 1, [14, 30], L.ridgeMax, "s");
     // ---- beside the terrace and the way: the arrival looks east and west along these (kept as the art director passed them) ----
@@ -145,10 +154,19 @@ function plan(C) {
     for (let k = 0; k + 1 < ew0.length; k++) { const a = ew0[k], b = ew0[k + 1], z0 = a.z + a.d / 2, z1 = b.z - b.d / 2; if (z1 - z0 >= 3.5 && rnd() < 0.7) tree(sx * (cx + pick(3.2, 5.2)), (z0 + z1) / 2, (z0 + z1) / 2, [0.4, 0.35], 0); }
     stripRun(`ew${sx}-behind1`, C.zN - 2, cs + 4, [5, 9], (z) => [sx * (cx + 17.5 + ((z * 7) % 3) * 1.2), z]);
     stripRun(`ew${sx}-behind2`, C.zN, cs + 6, [4.5, 8], (z) => [sx * (cx + 25.5 + ((z * 5) % 4) * 1.4), z]);
-    id = `s${sx}-between`; rnd = seeded(5484 + SEED + sx * 17);
-    for (let k = 0; k + 1 < s0.length; k++) { const a = s0[k], b = s0[k + 1], x0 = Math.abs(a.x) + a.w / 2, x1 = Math.abs(b.x) - b.w / 2; if (x1 - x0 >= 3.5 && rnd() < 0.7) tree(sx * (x0 + x1) / 2, cs + pick(3.2, 5.2), (x0 + x1) / 2, [0.4, 0.35], 0); }
-    stripRun(`s${sx}-behind1`, SECOND.hw + 2.5, cx + 26, [5, 9], (a) => [sx * a, cs + 17.5 + ((a * 7) % 3) * 1.2]);
-    stripRun(`s${sx}-behind2`, SECOND.hw + 4, cx + 28, [5, 10], (a) => [sx * a, cs + 25.5 + ((a * 5) % 4) * 1.4]);
+    // the south side's trees stand in groves of two to four, a grove two rows deep, with 15 to 25 m of roofs and no tree between one and the next (the art director, step two; docs/t05/DECISIONS.md)
+    rnd = seeded(5486 + SEED + SSEED + sx * 17);
+    for (let at0 = SECOND.hw + 2.5 + pick(0, 8), gid = 1; at0 < cx + 26; gid++) {
+      const n = 2 + Math.floor(rnd() * 3), xs = []; let at = at0;
+      for (let k = 0; k < n; k++) { xs.push(at); at += pick(3.2, 5.2); }
+      for (const { name, zoff, jit } of [{ name: `s${sx}-behind1`, zoff: 17.5, jit: 1.2 }, { name: `s${sx}-behind2`, zoff: 25.5, jit: 1.4 }]) {
+        id = name;
+        for (const a of xs) {
+          for (let k = 0; k < 5; k++) { const px = sx * (a + (k ? 0 : (name.endsWith("2") ? pick(-1.5, 1.5) : 0))), pz = cs + zoff + pick(-jit, jit) + k * 3; if (!overlapsHouse(px, pz, 1.2)) { tree(px, pz, a, undefined, 1, gid); break; } }
+        }
+      }
+      at0 = xs.at(-1) + pick(15, 25);
+    }
     const lane = (name, from, to, gap, place, mix) => { id = name; rnd = seeded(548 + Math.round(from * 13 + to * 7 + gap * 101 + sx * 977)); for (let s = from + rnd() * gap * 0.5; s < to; s += gap * (0.7 + rnd() * 0.6)) { const [px, pz, row] = place(s); if (!overlapsHouse(px, pz, 1.2)) tree(px, pz, s, mix, row); } };
     lane(`lane${sx}-a`, cs + 12, 224, sx > 0 ? 13 : 11, (z) => [sx * (Math.max(SECOND.hw, lx) + 1.8 + rnd() * 3), z, z < 140 ? 1 : 0], [0.5, 0.2]);
     lane(`lane${sx}-b`, cs + 22, 224, sx > 0 ? 17 : 15, (z) => [sx * (lx + 8 + rnd() * 6), z, 1], [0.4, 0.2]);

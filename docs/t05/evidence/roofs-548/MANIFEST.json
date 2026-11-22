@@ -1,0 +1,144 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "A-E-after.jpg",
+   "bytes": 153560,
+   "sha256": "72618e20906409b97cdfae1a84844d882df516d37e99c1b7153fe283e8e2389c",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "A-E-before.jpg",
+   "bytes": 163213,
+   "sha256": "7aa78ced64404b9793ad3354f3408e9d1819ff9f3235ae4c31b4645bcba3efbc",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "A-S-after.jpg",
+   "bytes": 179996,
+   "sha256": "f7202490d14d98d518cc90f440c3dd1ee7d6159fc3e0e78837f792eb4b4da389",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "A-S-before.jpg",
+   "bytes": 178921,
+   "sha256": "e75ff8dcb1a2a798556d9011bacad3bf00cd33b2c4f44c64463f7e98d148ce4f",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "A-W-after.jpg",
+   "bytes": 159436,
+   "sha256": "0e7635b100d9aee4769f45521687fd1a507017577e3c4d5837efd0cd906d50f7",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "A-W-before.jpg",
+   "bytes": 161008,
+   "sha256": "cc9306eb23332b84cdbd8244382e897740b7df7cf5ad2dc2841e7514ee40b101",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "B-E-after.jpg",
+   "bytes": 151033,
+   "sha256": "6631ceb886fd3f2a43da91e2222fb34da668413c74cc5419380a3666dce5e9cf",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "B-E-before.jpg",
+   "bytes": 153509,
+   "sha256": "2df373a09991435eb3e307c38b1874f309a659da89d587c920818228ba898e91",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "C-S-after.jpg",
+   "bytes": 147530,
+   "sha256": "eea5157ef401fc71b1b874c025fbe731e547d5f2f8c5be5ff8132607e2dd6b73",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "C-S-before.jpg",
+   "bytes": 151460,
+   "sha256": "3cdf538933a8217f647109d43464d845e2fcd55d6e1791daf42201e6f128ea67",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "C-SE-after.jpg",
+   "bytes": 157686,
+   "sha256": "4327dc8c84ef637d6b6e3f2df8e64321440d177cbf4d32628f7f0adc0a21f7db",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "C-SE-before.jpg",
+   "bytes": 160432,
+   "sha256": "f68c7da4c200cdc0a0a8b70bb25b48b70e9c6ab0ba2ede739610257365ffd9d7",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "C-SW-after.jpg",
+   "bytes": 161838,
+   "sha256": "493f9474c7d8730f57e1b876c94cd25a9d1202370a9c5862021bfe5a864e3171",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "C-SW-before.jpg",
+   "bytes": 162017,
+   "sha256": "2a9dd0a27d303a4258268bf3e5ebf8cbf48f348de38b2b9a78862fb6f9e74d4a",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "F-S-after.jpg",
+   "bytes": 148414,
+   "sha256": "7ef40c3480a7f4fbc87048f949f0d7709d4171ad792db7b8f48e3266336dc80a",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "F-S-before.jpg",
+   "bytes": 152357,
+   "sha256": "22589647b930cad2be7197234cce5d442c0d87d9cdf9af30ed096993d0ed7123",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "arrive-S-after.jpg",
+   "bytes": 144473,
+   "sha256": "34d0473293cdb19756da51512b57dbbb4260015d8212c5e835a6bf53dfdf9b6f",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "arrive-S-before.jpg",
+   "bytes": 144501,
+   "sha256": "b2361e3422f95a67c93b7eec636cb4a940cedc4d04959f812ed80700786c01d0",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "cam01-after.jpg",
+   "bytes": 170455,
+   "sha256": "31980f84ac9b3810e97cecff7dadbe29fed2b0dabbb781db08b538a318714d79",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "cam01-before.jpg",
+   "bytes": 170468,
+   "sha256": "83bcbcac9bde0fac665d01e10ad28d66c0f9af1e37cff9a9c67661e00ae000e8",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "cam07-after.jpg",
+   "bytes": 151333,
+   "sha256": "ff7bfd206230de894cfe806125eb2e7819e6a38c1e4e06820f6f63ca34e3727a",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "cam07-before.jpg",
+   "bytes": 151363,
+   "sha256": "0b0eb67be7c2ff45b874e6d51974a5af5139c5c0567741f0e4ff96c4a3e4b64f",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 430599,
+   "sha256": "99a78ef621e52dc0abb6c3203a39869b35e10649efabbf9abeb2b4afe668dd1d",
+   "rev": "619cb3814af38de1d57b88acacaefae77854f9af"
+  }
+ ]
+}
