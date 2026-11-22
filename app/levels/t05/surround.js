@@ -84,8 +84,16 @@ const roofOf = (x, z, w, d, ridge, where) => {
 export const TILE_TONES = Object.freeze([{ name: "old", mul: 0.58, share: 0.3 }, { name: "grey", mul: 1, share: 0.5 }, { name: "pale", mul: 1.8, share: 0.2 }]);
 const toneOf = (x, z) => { const u = hash01(x, z, 2); return u < TILE_TONES[0].share ? 0 : u < TILE_TONES[0].share + TILE_TONES[1].share ? 1 : 2; };
 /** Two tiers of wall: the grey brick (three in four) and a warmer, a little lighter earth-grey (one in four). A house with the pale new tile (about L* 40) has a third, darker wall (about L* 31), so that its tile and its wall do not come to one lightness; no other house has it. */
-export const WALL_TONES = Object.freeze([{ name: "grey", mul: [0.38, 0.4, 0.43], share: 0.75 }, { name: "earth", mul: [0.55, 0.5, 0.41], share: 0.25 }, { name: "dark", mul: [0.29, 0.305, 0.33], share: 0 }]);   // (`share`: of the houses with the grey or the pale tile; the dark wall is only for the pale tile, below)
-const wallOf = (x, z, tone) => (tone === 2 ? 2 : hash01(x, z, 5) < 0.31 ? 1 : 0);
+export const WALL_TONES = Object.freeze([{ name: "grey", mul: [0.38, 0.4, 0.43], share: 0.75 }, { name: "earth", mul: [0.68, 0.48, 0.41], share: 0.25 }, { name: "dark", mul: [0.29, 0.305, 0.33], share: 0 }]);   // (`share`: of the houses with the grey or the pale tile; the dark wall is only for the pale tile, below)
+/**
+ * What the arrival point sees in the middle of its picture is set by hand, house by house (the art director's review of #637; DECISIONS, 2026-11-22): two houses of the end row without the pale tile are earth-grey, so that the second tier shows where the visitor
+ * stands (the quarter is the whole town's share, this is a local adjustment); and two pale-tiled houses, whose roofs face away from the sun and read dark, take the grey wall instead of the dark one, since the dark one came out at the roof's own lightness there.
+ */
+export const WALL_AT_ARRIVAL = Object.freeze([[-9.26, 247.76, 1], [25.3, 259.46, 1], [37.31, 246.42, 0], [4.35, 258.22, 0]]);
+const wallOf = (x, z, tone) => {
+  const set = WALL_AT_ARRIVAL.find(([ex, ez]) => Math.abs(x - ex) < 0.3 && Math.abs(z - ez) < 0.3);
+  return set ? set[2] : tone === 2 ? 2 : hash01(x, z, 5) < 0.31 ? 1 : 0;
+};
 /**
  * The trees and houses, as data: { kind: "pine" | "cypress" | "bare", x, z, h, r, row, cast, strip, along } and { x, z, w, d, alongX, eave, ridge, row, cast }.
  * `strip` names the row of trees a tree belongs to and `along` where on it (what the tests of its spacing, heights and kinds sort by). Seeded per strip from where it lies, so that tuning one does not move the others.

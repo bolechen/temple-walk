@@ -13,7 +13,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker, COMPOUND } = await import("../../app/levels/t05/site.js");
-const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE, SHED_RISE, WALL_TONES, house } = await import("../../app/levels/t05/surround.js");
+const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE, SHED_RISE, WALL_TONES, WALL_AT_ARRIVAL, house } = await import("../../app/levels/t05/surround.js");
 const { HALL_HALF, LANE, SECOND } = await import("../../app/levels/t05/axis.js");
 const { HALL } = await import("../../app/levels/t05/hall.js");
 const { default: checks } = await import("../../app/levels/t05/checks.js");
@@ -211,7 +211,10 @@ test("a lean-to's high side has brick under it and the slope stays low; none sta
 test("two tiers of wall, the earth-grey about a quarter; a pale-tiled house has the dark wall; a lean-to's roof is a thin plate, so its brick shows", () => {
   const share = plan.houses.filter((h) => h.wall === 1).length / plan.houses.length;
   assert.ok(share >= 0.12 && share <= 0.35, `${(share * 100).toFixed(0)}% of the houses have the earth wall`);
-  assert.ok(plan.houses.every((h) => (h.tone === 2) === (h.wall === 2)), "the pale tile has the dark wall, and nothing else has");
+  const set = (h) => WALL_AT_ARRIVAL.some(([x, z]) => Math.abs(h.x - x) < 0.3 && Math.abs(h.z - z) < 0.3);
+  assert.equal(WALL_AT_ARRIVAL.filter(([x, z]) => plan.houses.some((h) => set(h) && Math.abs(h.x - x) < 0.3 && Math.abs(h.z - z) < 0.3)).length, WALL_AT_ARRIVAL.length, "every house named for the arrival point is in the plan");
+  assert.ok(plan.houses.every((h) => set(h) || (h.tone === 2) === (h.wall === 2)), "the pale tile has the dark wall, and nothing else has, but at the arrival point");
+  assert.ok(plan.houses.filter((h) => h.where === "end" && h.wall === 1).length >= 1 && plan.houses.filter((h) => h.where === "end" && h.wall === 1 && h.tone !== 2).length === plan.houses.filter((h) => h.where === "end" && h.wall === 1).length, "the arrival sees the earth wall, never under the pale tile");
   assert.equal(WALL_TONES.length, 3);
   const [g, e, k] = WALL_TONES.map((t) => t.mul); assert.ok(e[0] > g[0] && e[0] - e[2] > 0.05 && g[2] > g[0], "the earth is lighter and warmer (red over blue), the grey cooler");
   assert.ok(k[1] < g[1], "the dark wall is darker than the grey");
