@@ -8,6 +8,7 @@
 /** @param {{ dev: boolean, hostname: string, search: string }} o */
 export function debugGate({ dev, hostname, search }) {
   const q = new URLSearchParams(search), preview = /-temple-walk-preview\./.test(hostname);
+  if (q.has("trailer")) return false;   // a film is drawn with nothing over the picture (src/trailer-boot.js, #610)
   if (dev || preview) return q.get("debug") !== "0";
   return /\.workers\.dev$/.test(hostname) && q.get("debug") === "1";
 }
