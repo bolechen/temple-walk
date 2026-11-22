@@ -84,10 +84,15 @@ export function buildStele(M) {
   for (const [k, list] of Object.entries(parts)) parts[k] = list.map((g) => tag(g, k === "base" ? 1 : 0));
   const stone = M.steleStone || M.monolith;
   if (M.steleStone) {   // the writing: the body's text, weathered, and the title in its frame (pictures of two bytes and one byte a pixel, mipmapped)
-    const ink = makeInk(), tex = (data, w, h, fmt) => { const t = new THREE.DataTexture(data, w, h, fmt, THREE.UnsignedByteType); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 8; t.needsUpdate = true; return t; };
-    M.steleStone.userData.ink = tex(ink.data, INK.W, INK.H, THREE.RGFormat);
-    M.steleStone.userData.title = tex(makeTitle(TITLE), INK.title.W, INK.title.H, THREE.RedFormat);
-    M.steleStone.userData.inkStats = ink.stats;
+    // They are made a little after the place is built (a fifth of a second of the page's thread), so that the first frames do not wait for them: until then the stone is blank.
+    const tex = (data, w, h, fmt) => { const t = new THREE.DataTexture(data, w, h, fmt, THREE.UnsignedByteType); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 8; t.needsUpdate = true; return t; };
+    const inkT = tex(new Uint8Array(4), 1, 1, THREE.RGFormat), titleT = tex(new Uint8Array(4), 1, 1, THREE.RedFormat);
+    M.steleStone.userData.ink = inkT; M.steleStone.userData.title = titleT;
+    const fill = () => {
+      const ink = makeInk(); inkT.dispose(); titleT.dispose(); inkT.image = { data: ink.data, width: INK.W, height: INK.H }; inkT.needsUpdate = true;
+      titleT.image = { data: makeTitle(TITLE), width: INK.title.W, height: INK.title.H }; titleT.needsUpdate = true; M.steleStone.userData.inkStats = ink.stats;
+    };
+    if (typeof setTimeout === "function") setTimeout(fill, 2500); else fill();
   }
   const group = new THREE.Group(); group.name = "stele";
   /** @type {Record<string, THREE.BufferGeometry>} */

@@ -27,6 +27,7 @@ const VIEWS = {
   foot: { eye: [1.3, -1.7, 0.95], at: [0.1, -0.3, 0.75] },       // the stone's foot and the base's top, from the shaded side: damp, moss, the base's lighter top
   path: { show: "stele", ctx: true },                                // from the old path, the named view
 };
+const noink = arg("noink", "") === "1";
 const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
 (async () => {
   const given = arg("base", ""), srv = given ? { base: given, close() {} } : await serve(), b = await launch();
@@ -40,6 +41,8 @@ const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
     const info = await p.evaluate(() => ({ y: window.__yard(), st: window.__stele ? window.__stele() : null }));
     const floor = info.y.h != null ? info.y.h : info.y.y;
     await p.evaluate(() => { window.__steleAlone(); window.__pose(0, 75, 0, 0); });   // the stone out of its pavilion, the novice out of the way
+    if (noink) await p.evaluate(() => window.__steleInk(false));
+    await p.waitForTimeout(4000);   // (the stone's writing is made a little after the place is built)
     for (const mode of modes) {
       await p.evaluate((m) => window.__stele(m === "black" ? "black" : "paint"), mode);
       for (const id of only) {
@@ -48,7 +51,7 @@ const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
         if (v.show) await p.evaluate((s) => { window.__look(); window.__show(s); }, v.show);
         else await p.evaluate(([e, a]) => window.__look(e, a), [[C[0] + e0(v.eye[0]), floor + v.eye[2], C[1] + v.eye[1]], [C[0] + v.at[0], floor + v.at[2], C[1] + v.at[1]]]);
         await p.waitForTimeout(900); await p.evaluate(() => window.__probe()); await p.waitForTimeout(500);
-        const f = path.join(out, `${id}_${mode}_${arg("season", "summer")}-${arg("time", "day")}.png`); await p.screenshot({ path: f, timeout: 240000 }); console.log(f);
+        const f = path.join(out, `${id}_${mode}_${arg("season", "summer")}-${arg("time", "day")}${noink ? "_noink" : ""}.png`); await p.screenshot({ path: f, timeout: 240000 }); console.log(f);
       }
     }
     await p.close();

@@ -15,7 +15,7 @@
 export const INK = Object.freeze({
   x0: -0.425, x1: 0.425, y0: 0.58, y1: 2.28,   // the body's field below the title's frame
   cols: 14, rows: 26,
-  W: 512, H: 1024,
+  W: 768, H: 1536,
   title: Object.freeze({ x0: -0.23, x1: 0.23, y0: 2.34, y1: 2.74, W: 512, H: 448 }),
   /** how much of the cut is gone, at the least and at the most; the cells left whole, at the most; the columns that still show ink, at the least */
   lossMin: 0.6, lossMax: 0.76, wholeMax: 3, colsMin: 10,
@@ -33,39 +33,59 @@ function noiser(seed) {
   return (x, y) => 0.6 * n(x, y) + 0.4 * n(x * 2.3 + 11, y * 2.3 + 5);
 }
 
-/** Draw one stroke (a segment of width w, in pixels) into a coverage buffer, soft at its edge by about a pixel. */
-function stroke(buf, W, H, x0, y0, x1, y1, w) {
-  const minx = Math.max(0, Math.floor(Math.min(x0, x1) - w - 1)), maxx = Math.min(W - 1, Math.ceil(Math.max(x0, x1) + w + 1));
-  const miny = Math.max(0, Math.floor(Math.min(y0, y1) - w - 1)), maxy = Math.min(H - 1, Math.ceil(Math.max(y0, y1) + w + 1));
-  const dx = x1 - x0, dy = y1 - y0, L2 = dx * dx + dy * dy || 1;
-  for (let y = miny; y <= maxy; y++) for (let x = minx; x <= maxx; x++) {
-    let t = ((x + 0.5 - x0) * dx + (y + 0.5 - y0) * dy) / L2; t = Math.min(1, Math.max(0, t));
-    const px = x0 + t * dx - (x + 0.5), py = y0 + t * dy - (y + 0.5), d = Math.sqrt(px * px + py * py), c = Math.min(1, Math.max(0, w / 2 + 0.5 - d));
-    if (c > buf[y * W + x]) buf[y * W + x] = c;
+/** How wide a stroke is at each sixty-fourth of its length, as a share of its full width: a point at each end, full a third of the way along. */
+const TAPER = Array.from({ length: 64 }, (_, i) => 0.18 + 0.82 * Math.pow(Math.sin(Math.PI * (0.08 + 0.84 * ((i + 0.5) / 64))), 0.7));
+
+/** What kinds of stroke were drawn, so that a test can count them (the falling strokes and dots together make up well over a third of a small regular hand's strokes). */
+const KINDS = { horizontal: 0, vertical: 0, left: 0, right: 0, dot: 0, turn: 0 };
+
+/**
+ * Cut one stroke into the depth buffer: a polyline of points (pixels, y up) that the knife follows, as a V-shaped groove whose width swells from a point at the
+ * entry to the full width a third of the way along and thins to a point at the exit; the depth is 1 on the line and falls to 0 at the groove's edge.
+ */
+function stroke(buf, W, H, pts, w) {
+  let len = 0; const segs = [];
+  for (let i = 1; i < pts.length; i++) { const l = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push({ a: pts[i - 1], b: pts[i], l, at: len }); len += l; }
+  if (len < 1) return;
+  const half = (t) => (w / 2) * TAPER[Math.min(63, Math.max(0, Math.floor(t * 64)))];
+  for (const sg of segs) {   // (each segment over its own small box)
+    const dx = sg.b[0] - sg.a[0], dy = sg.b[1] - sg.a[1], pad = w / 2 + 1;
+    const minx = Math.max(0, Math.floor(Math.min(sg.a[0], sg.b[0]) - pad)), maxx = Math.min(W - 1, Math.ceil(Math.max(sg.a[0], sg.b[0]) + pad));
+    const miny = Math.max(0, Math.floor(Math.min(sg.a[1], sg.b[1]) - pad)), maxy = Math.min(H - 1, Math.ceil(Math.max(sg.a[1], sg.b[1]) + pad));
+    for (let y = miny; y <= maxy; y++) for (let x = minx; x <= maxx; x++) {
+      let u = ((x + 0.5 - sg.a[0]) * dx + (y + 0.5 - sg.a[1]) * dy) / (sg.l * sg.l); u = Math.min(1, Math.max(0, u));
+      const px = sg.a[0] + u * dx - (x + 0.5), py = sg.a[1] + u * dy - (y + 0.5), d = Math.sqrt(px * px + py * py), hw = half((sg.at + u * sg.l) / len);
+      const v = 1 - d / hw; if (v > buf[y * W + x]) buf[y * W + x] = v;
+    }
   }
 }
 
-/** One invented glyph in the box [bx, bx+bw] × [by, by+bh] (pixels, y up): two halves or one body, each of a few strokes. */
+/** A gentle curve from (x0, y0) through a bulge to (x1, y1), as a few points. */
+const curve = (x0, y0, x1, y1, bx, by) => [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => [(1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * bx + t * t * x1, (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * by + t * t * y1]);
+
+/** One invented glyph in the box [bx, bx+bw] x [by, by+bh] (pixels, y up): two halves or one body, each of a few strokes. */
 function glyph(buf, W, H, r, bx, by, bw, bh, sw) {
   const mx = bw * 0.1, my = bh * 0.09, x0 = bx + mx, y0 = by + my, w = bw - 2 * mx, h = bh - 2 * my, split = r();
   /** @type {Array<[number, number, number, number]>} */
   const boxes = split < 0.4 ? [[x0, y0, w, h]] : split < 0.7 ? [[x0, y0, w * 0.42, h], [x0 + w * 0.5, y0, w * 0.5, h]] : [[x0, y0 + h * 0.5, w, h * 0.5], [x0, y0, w, h * 0.46]];
   for (const [ax, ay, aw, ah] of boxes) {
-    const n = 3 + Math.floor(r() * 3);
+    const n = 4 + Math.floor(r() * 3);
     for (let i = 0; i < n; i++) {
       const k = r(), jx = (r() - 0.5) * aw * 0.12, jy = (r() - 0.5) * ah * 0.12;
-      if (k < 0.34) { const yy = ay + ah * (0.15 + 0.7 * r()); stroke(buf, W, H, ax + jx, yy + jy, ax + aw + jx, yy + jy + (r() - 0.5) * ah * 0.08, sw); }               // a horizontal
-      else if (k < 0.62) { const xx = ax + aw * (0.2 + 0.6 * r()); stroke(buf, W, H, xx + jx, ay + ah + jy, xx + jx + (r() - 0.5) * aw * 0.1, ay + jy, sw); }                // a vertical
-      else if (k < 0.8) { const xx = ax + aw * (0.4 + 0.5 * r()); stroke(buf, W, H, xx, ay + ah * 0.95, ax + aw * (0.05 + 0.3 * r()), ay + ah * (0.05 + 0.2 * r()), sw); }  // a falling stroke to the left
-      else if (k < 0.92) { const xx = ax + aw * (0.1 + 0.3 * r()); stroke(buf, W, H, xx, ay + ah * (0.9 - 0.3 * r()), ax + aw * (0.9 + 0.1 * r()), ay + ah * (0.05 + 0.2 * r()), sw); }   // a falling stroke to the right
-      else { const xx = ax + aw * (0.3 + 0.4 * r()), yy = ay + ah * (0.2 + 0.6 * r()); stroke(buf, W, H, xx, yy, xx + aw * 0.12, yy - ah * 0.1, sw * 1.15); }              // a dot
+      if (k < 0.2) { KINDS.horizontal++; const yy = ay + ah * (0.15 + 0.7 * r()) + jy, tilt = (r() - 0.3) * ah * 0.08; stroke(buf, W, H, [[ax + jx, yy], [ax + aw * 0.5 + jx, yy + tilt * 0.6], [ax + aw + jx, yy + tilt]], sw); }
+      else if (k < 0.4) { KINDS.vertical++; const xx = ax + aw * (0.2 + 0.6 * r()) + jx, lean = (r() - 0.5) * aw * 0.1; stroke(buf, W, H, [[xx, ay + ah + jy], [xx + lean * 0.5, ay + ah * 0.5], [xx + lean, ay + jy]], sw); }
+      else if (k < 0.62) { KINDS.left++; const xx = ax + aw * (0.4 + 0.5 * r()), ex = ax + aw * (0.02 + 0.3 * r()), top = ay + ah * (0.9 + 0.08 * r()), bot = ay + ah * (0.04 + 0.2 * r()); stroke(buf, W, H, curve(xx, top, ex, bot, xx - aw * 0.05, (top + bot) / 2 - ah * 0.12), sw * 1.1); }
+      else if (k < 0.78) { KINDS.right++; const xx = ax + aw * (0.1 + 0.3 * r()), ex = ax + aw * (0.88 + 0.12 * r()), top = ay + ah * (0.88 - 0.25 * r()), bot = ay + ah * (0.04 + 0.2 * r()); stroke(buf, W, H, curve(xx, top, ex, bot, xx + aw * 0.1, bot + ah * 0.18), sw * 1.15); }
+      else if (k < 0.9) { KINDS.dot++; const xx = ax + aw * (0.25 + 0.5 * r()), yy = ay + ah * (0.25 + 0.6 * r()); stroke(buf, W, H, [[xx, yy], [xx + aw * 0.12, yy - ah * 0.09], [xx + aw * 0.18, yy - ah * 0.16]], sw * 1.2); }
+      else { KINDS.turn++; const xx = ax + aw * (0.15 + 0.3 * r()), yy = ay + ah * (0.55 + 0.3 * r()); stroke(buf, W, H, [[xx, yy], [xx + aw * 0.55, yy], [xx + aw * 0.55, yy - ah * 0.4], [xx + aw * 0.48, yy - ah * 0.5]], sw); }
     }
   }
 }
 
 /** The body's text, weathered: `{ data, stats }`, `data` two bytes a pixel (R: the cut that is left, G: its worn trace), rows from the bottom up. */
 export function makeInk(seed = 520) {
-  const { cols, rows, W, H } = INK, r = rng(seed), cw = W / cols, ch = H / rows, sw = cw * 0.075;
+  for (const k of Object.keys(KINDS)) KINDS[k] = 0;
+  const { cols, rows, W, H } = INK, r = rng(seed), cw = W / cols, ch = H / rows, sw = cw * 0.21;
   const cut = new Float32Array(W * H);
   const blank = new Set(); for (let c = 0; c < cols; c++) if (r() < 0.12) blank.add(c);   // a column left unwritten here and there
   for (let c = 0; c < cols; c++) for (let row = 0; row < rows; row++) {
@@ -75,8 +95,11 @@ export function makeInk(seed = 520) {
   }
   // Erosion, in patches: a wide field (a hand's breadth) and a fine one (a character's stroke), so that the cut goes in blotches and in chips,
   // and a little more of it from the stone's foot, where it stays damp. The threshold is found for the share to lose.
-  const e1 = noiser(seed + 1), e2 = noiser(seed + 2), field = new Float32Array(W * H);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) field[y * W + x] = 0.62 * e1(x / (cw * 2.6), y / (ch * 2.4)) + 0.38 * e2(x / (cw * 0.55), y / (ch * 0.55)) + 0.12 * (1 - y / H) * (1 - y / H) * 2;
+  // (worked out on a grid a fifth of the size and read back smoothly: the patches are never finer than a third of a cell)
+  const e1 = noiser(seed + 1), e2 = noiser(seed + 2), field = new Float32Array(W * H), D = 5, gw = Math.ceil(W / D) + 2, gh = Math.ceil(H / D) + 2, coarse = new Float32Array(gw * gh);
+  for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) { const x = i * D, y = j * D; coarse[j * gw + i] = 0.62 * e1(x / (cw * 2.6), y / (ch * 2.4)) + 0.38 * e2(x / (cw * 0.55), y / (ch * 0.55)) + 0.12 * (1 - y / H) * (1 - y / H) * 2; }
+  for (let y = 0; y < H; y++) { const fy = y / D, j = Math.floor(fy), ty = fy - j; for (let x = 0; x < W; x++) { const fx = x / D, i = Math.floor(fx), tx = fx - i, o = j * gw + i;
+    field[y * W + x] = (coarse[o] * (1 - tx) + coarse[o + 1] * tx) * (1 - ty) + (coarse[o + gw] * (1 - tx) + coarse[o + gw + 1] * tx) * ty; } }
   let total = 0; for (let i = 0; i < cut.length; i++) total += cut[i];
   const lossOf = (thr) => { let gone = 0, all = 0; for (let i = 0; i < cut.length; i += 5) { all += cut[i]; if (field[i] > thr) gone += cut[i]; } return gone / (all || 1); };   // (every fifth pixel: it need only be near)
   let lo = 0, hi = 1.5, thr = 0.5; const target = 0.62;
@@ -94,9 +117,13 @@ export function makeInk(seed = 520) {
     let a = 0, b = 0; for (let y = Math.floor(s.row * ch); y < Math.floor((s.row + 1) * ch); y++) for (let x = Math.floor(s.c * cw); x < Math.floor((s.c + 1) * cw); x++) { const i = y * W + x; a += cut[i]; b += cut[i] * alive[i]; }
     if (a && b / a < 0.62) break;
   }
+  // The columns' ruled lines (as many Song stones are cut between the lines of writing): a shallow groove at each column's side, worn like the rest but less, so that
+  // from farther off the writing still reads in columns. They are added after the count of what the weather left (they are not writing).
+  const rule = new Float32Array(W * H);
+  for (let c = 0; c <= cols; c++) { const x = Math.min(W - 2, Math.round(c * cw)); for (let y = 0; y < H; y++) for (let k = -1; k <= 1; k++) { const xx = x + k; if (xx >= 0 && xx < W) rule[y * W + xx] = Math.max(rule[y * W + xx], k === 0 ? 0.32 : 0.16); } }
   const data = new Uint8Array(W * H * 2);
-  for (let i = 0; i < cut.length; i++) { const k = cut[i] * alive[i], g = cut[i] * (1 - alive[i]) * 0.5; data[i * 2] = Math.round(255 * k); data[i * 2 + 1] = Math.round(255 * g); }
-  return { data, stats: inkStats(cut, alive) };
+  for (let i = 0; i < cut.length; i++) { const keepRule = rule[i] * (1 - smooth(thr + 0.02, thr + 0.1, field[i])); if (keepRule > cut[i] * alive[i]) { data[i * 2] = Math.round(255 * keepRule); data[i * 2 + 1] = 0; continue; } const k = cut[i] * alive[i], g = cut[i] * (1 - alive[i]) * 0.5; data[i * 2] = Math.round(255 * k); data[i * 2 + 1] = Math.round(255 * g); }
+  return { data, stats: { ...inkStats(cut, alive), kinds: { ...KINDS } } };
 }
 
 /** What the weather left: the share of the cut that is gone, the cells still whole (most of their cut left), the columns that still show ink. */

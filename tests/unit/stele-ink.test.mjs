@@ -10,6 +10,8 @@ test('most of the cut is gone, two or three cells are whole, and the lines can s
   assert.ok(stats.whole <= INK.wholeMax, `${stats.whole} cells still whole, at most ${INK.wholeMax}`);
   assert.ok(stats.colsShown >= INK.colsMin, `${stats.colsShown} columns still show ink, at least ${INK.colsMin}`);
   assert.equal(data.length, INK.W * INK.H * 2);
+  const k = stats.kinds, total = Object.values(k).reduce((a, b) => a + b, 0), slanted = k.left + k.right + k.dot;
+  assert.ok(slanted / total >= 0.4, `falling strokes and dots are ${(slanted / total * 100).toFixed(0)}% of the strokes (at least 40%)`);
   let r = 0, g = 0; for (let i = 0; i < data.length; i += 2) { r += data[i] > 40 ? 1 : 0; g += data[i + 1] > 20 ? 1 : 0; }
   assert.ok(r > 0 && g > 0, 'both the cut that is left and its worn trace are there');
 });

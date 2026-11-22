@@ -431,14 +431,14 @@ export function createMaterials() {
       float nearK=1.-smoothstep(5.,9.,length(vWP-cameraPosition));
       vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
       float big=fbm3(vWP*1.7+vec3(3.,1.,7.)), mid=fbm3(vWP*5.+2.);
-      float pat_=smoothstep(.3,.7,fbm3(vWP*4.4+vec3(5.,2.,1.))); float fine=smoothstep(.3,.7,fbm3(vWP*8.+vec3(1.,6.,3.)));
-      col=vec3(.25,.265,.27)*A*(.84+.3*big)*(.74+.52*pat_)*(.92+.16*fine); col=mix(col,col*vec3(1.12,1.08,.95),smoothstep(.55,.8,fbm3(vWP*.9+9.))*.5);
+      vec3 st_=vec3(4.4,1.6,4.4); float pat_=smoothstep(.3,.7,fbm3(vWP*st_+vec3(5.,2.,1.))); float fine=smoothstep(.3,.7,fbm3(vWP*vec3(8.,3.4,8.)+vec3(1.,6.,3.)));
+      col=vec3(.25,.265,.27)*A*(.84+.3*big)*(.74+.52*pat_)*(.92+.16*fine); col=mix(col,col*vec3(1.1,1.07,1.),smoothstep(.55,.8,fbm3(vWP*vec3(.9,.45,.9)+9.))*.5);
       float up=smoothstep(.85,.97,vWN.y), side=1.-step(.5,abs(nzf));
-      float streak=smoothstep(.5,.9,fbm3(vec3(lx*13.,ly*.45,2.))); col*=1.-.16*streak*(1.-up)*(.4+.6*smoothstep(.3,2.5,ly));
-      float wet=1.-smoothstep(.55,1.25+.25*(mid-.5),ly); col*=(1.-.58*wet*(.7+.6*mid))*(1.+.12*smoothstep(1.2,2.3,ly)*(1.-kb)); rough_=mix(rough_,.5,wet*.5);
-      col=mix(col,vec3(dot(col,vec3(.33)))*1.22+.012,.5*up*kb+.3*up*(1.-kb));
+      float streak=smoothstep(.45,.85,fbm3(vec3(lx*15.,ly*.35,2.))); float streak2=smoothstep(.5,.85,fbm3(vec3(lx*34.,ly*.6,5.))); col*=1.-(.2*streak+.1*streak2)*(1.-up)*(.35+.65*smoothstep(.4,2.6,ly));
+      float wet=(1.-smoothstep(.55,1.25+.25*(mid-.5),ly))*(1.-.85*up*kb); col*=(1.-.58*wet*(.7+.6*mid))*(1.+.12*smoothstep(1.2,2.3,ly)*(1.-kb)); rough_=mix(rough_,.5,wet*.5);
+      col=mix(col,vec3(dot(col,vec3(.33)))*1.3+.012,.5*up*kb+.3*up*(1.-kb)); col=mix(col,vec3(.5,.5,.48)*(.55+.45*pat_)*A,.6*up*kb);
       float topw=smoothstep(2.35,2.95,ly)*(1.-kb); float corner=smoothstep(.2,.5,abs(lx))*topw;
-      col=mix(col,col*1.4+.012,smoothstep(.6,.72,fbm3(vWP*7.+4.))*(.3*topw+.5*corner)); col*=1.-.3*step(.64,n3(vWP*34.))*corner*nearK;
+      col=mix(col,(col*1.3+.012)*vec3(1.04,1.02,.98),smoothstep(.6,.72,fbm3(vWP*vec3(7.,3.,7.)+4.))*(.3*topw+.5*corner)); col*=1.-.3*step(.64,n3(vWP*34.))*corner*nearK;
       float band=smoothstep(.7,.86,ly)*(1.-smoothstep(1.34,1.5,ly))*(1.-kb); float worn=cham*(1.-kb)*step(.45,abs(lx))*band;
       float hand=.35+.65*smoothstep(.2,.8,fbm3(vec3(ly*5.5,abs(lx)*30.,1.)));
       float baseTop=cham*kb*smoothstep(.43,.46,ly)*(1.-smoothstep(.5,.54,ly))*(.3+.7*smoothstep(.2,.8,fbm3(vec3(lx*6.,1.,4.))));
@@ -450,8 +450,10 @@ export function createMaterials() {
       vec2 ink=texture2D(uInk,iuv).rg*ie.x*ie.y*inBody; float back=step(nzf,-.5)*(1.-kb); vec2 ib=texture2D(uInk,vec2(1.-iuv.x,iuv.y)).rg*ie.x*ie.y*back; ink=ink+vec2(0.,ib.x*.3+ib.y);
       vec2 tuv=vec2((lx+.23)/.46,(ly-2.34)/.4); vec2 te=step(vec2(0.),tuv)*step(tuv,vec2(1.)); float tk=texture2D(uTitle,tuv).r*te.x*te.y*inBody*step(2.3,ly);
       float chip=smoothstep(.55,.8,fbm3(vec3(vWP.zy*22.,vWP.x*22.)))*.35; tk*=1.-chip;
-      float cutK=clamp(ink.x+tk,0.,1.)*nearK; col*=1.-.42*cutK-.12*ink.y*nearK; ao_=min(ao_,1.-.5*cutK);
-      rough_=Nr.w; nd_=Nr.xyz*1.2; bump_=-(cutK*.0032)-(petal*.0012*nearK)+(mid-.5)*.0012;`, { tex: ["stone"], stair: true, snow: false, uniforms: (m) => ({ uInk: { value: m.userData.ink || BLANK }, uTitle: { value: m.userData.title || BLANK } }), glsl: "uniform sampler2D uInk, uTitle;" }),
+      float cutI=clamp(ink.x,0.,1.)*nearK*uInkOn, cutT=clamp(tk,0.,1.)*nearK*uInkOn;
+      float gy=(texture2D(uInk,iuv+vec2(0.,.0018)).r-texture2D(uInk,iuv-vec2(0.,.0018)).r)*ie.x*ie.y*inBody*uInkOn;
+      col*=(1.-.025*cutI-.4*cutT-.03*ink.y*nearK*uInkOn)*(1.+mix(.48,.45,step(0.,gy))*gy*nearK); ao_=min(ao_,1.-.5*cutT);
+      rough_=Nr.w; nd_=Nr.xyz*1.2; bump_=-(cutI*.0005+cutT*.0032)-(petal*.0012*nearK)+(mid-.5)*.0012;`, { tex: ["stone"], stair: true, snow: false, uniforms: (m) => (m.userData.inkUniforms = { uInk: { value: m.userData.ink || BLANK }, uTitle: { value: m.userData.title || BLANK }, uInkOn: { value: 1 } }), glsl: "uniform sampler2D uInk, uTitle; uniform float uInkOn;" }),
     // Woven rush and straw: mats and cushions.
     straw: procMat("straw", { roughness: 0.8, envMapIntensity: 0.25 }, `
       vec3 q=vWP*1.5, w=triW(vWN); vec3 A=triA(tWeaveA,q,w)/mWeave; vec4 Nr=triN(tWeaveN,q,w);
