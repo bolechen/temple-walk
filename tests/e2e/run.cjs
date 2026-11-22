@@ -326,7 +326,7 @@ const scenarios = {
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
-    expect((await t.state()).dressed === false, "a visitor should meet the novice built in code: the sculpted body is worn only with ?body=sculpt until its cloth stops tearing");
+    { const st = await t.state(); expect(st.dressed === true && st.body === "tripo", "a visitor should meet the novice in the layered body made from Tripo's model (#163; app/shared/models/novice-tripo.glb), on him before the page is ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
     { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
       expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
@@ -2990,9 +2990,9 @@ const scenarios = {
   views: { tier: 2, async run(b, base) {
     // `devpose` and `debug` are working aids (src/devpose.js, src/debug.js): the published site must neither show them
     // nor touch the address (the panel opens only on the dev server and a pull request's preview).
-    // `body=sculpt` asks for the sculpted body, which the page no longer wears unasked: this is where it is seen to arrive.
+    // `body=sculpt` asks for Meshy's body, which the page no longer wears unasked (Tripo's is the default, #163): this is where it is seen to arrive.
     const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug&body=sculpt");
-    await t.until(async () => (await t.state()).dressed === true, 90000, "the sculpted body never arrived on the novice (app/shared/models/novice.glb)");   // fetched after the first frames; a missing or ill-fitting file leaves him as built in code, and this fails
+    { const st = await t.state(); expect(st.dressed === true && st.body === "sculpt", "the sculpted body (Meshy's, app/shared/models/novice.glb) was not on the novice when the page was ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }   // fetched while the place is built; a missing or ill-fitting file leaves him as built in code, and this fails
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.keyboard.press("v"); await t.page.waitForTimeout(600);

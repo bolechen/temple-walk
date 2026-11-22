@@ -146,7 +146,9 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   // Every wall closes up to the roof's underside over its inner face: no slit along a wall's top lets the sun in.
   for (const g of h.parts.plaster) { const b = (g.computeBoundingBox(), g.boundingBox); if (b.min.y < HALL.floor + HALL.column + 0.15) continue;
     const inX = b.max.x - b.min.x < 2, cx = (b.min.x + b.max.x) / 2, cz = (b.min.z + b.max.z) / 2;
-    const innerX = inX ? (cx > 0 ? b.min.x : b.max.x) : 0, innerZ = inX ? (EF + EB) / 2 : (cz > (EF + EB) / 2 ? b.min.z : b.max.z);
+    // (a gongyan board, 3.7 cm thick, closes up to the underside over its own line: it is the one leaf between the cap board and the roof)
+    const thin = Math.min(b.max.x - b.min.x, b.max.z - b.min.z) < 0.1;
+    const innerX = inX ? (thin ? cx : cx > 0 ? b.min.x : b.max.x) : 0, innerZ = inX ? (EF + EB) / 2 : (thin ? cz : cz > (EF + EB) / 2 ? b.min.z : b.max.z);
     assert.ok(b.max.y >= under(innerX, innerZ) - 0.01, `a wall's top at ${b.max.y.toFixed(2)} leaves a slit under the roof's underside ${under(innerX, innerZ).toFixed(2)} over its inner face`); }
   // The structural review of #425: eleven purlins, one at each rafter's joint, 2.88 m apart about the ridge.
   const zm = (EF + EB) / 2, along = h.parts.wood.map((g) => (g.computeBoundingBox(), g.boundingBox)).filter((b) => b.max.x - b.min.x > 10 && Math.abs(b.max.y - b.min.y - 0.36) < 0.01 && Math.abs(b.max.z - b.min.z - 0.36) < 0.01);
