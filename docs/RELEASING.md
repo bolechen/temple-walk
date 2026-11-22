@@ -58,6 +58,7 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 - 红的情况都是真红：没有 `HF_TOKEN`、Job 起不来、报错、超时、被取消、没带回报告、场景不过，都让那一片失败，日志第一行附近有 Job 的地址（`https://huggingface.co/jobs/<账号>/<id>`）。浏览器若退回软件渲染（`SwiftShader`/`llvmpipe`），`run.cjs` 直接退出码 3：T4 的运行不会是披着 T4 名字的免费机器运行。取消这次运行会取消 Job，不会留着显卡计费。
 - 密钥：仓库 secret `HF_TOKEN`（只给这个 workflow，需要有建桶和跑 Job 的权限；Settings → Secrets and variables → Actions 里加，值不进任何日志或文件）。只在 `t4` 的启动那一步读取。这个 workflow 没有 `pull_request` 触发，所以 PR（包括外部 fork 的 PR）碰不到它；手动触发只有有写权限的人能做。
 - 费用：T4 约 0.4 美元每小时，十个 Job 各按墙钟计（含启动），一次全量约 13 分钟墙钟、约 0.8 美元（所有者 2026-11-22：「分 10 片可以接受」；四片时实测 30.9 分钟、约 0.58 美元）。只在手动触发时用，夜间照旧走免费机器；单次超过 1 美元先问所有者。
+- 等 Job 结束用自己的慢轮询（每 30 秒问一次 `hf jobs inspect`，各片错开几秒；答不出阶段，比如 429，就再问，不当成结束），不用 `hf jobs wait`：它约每秒问一次接口，十片一起等就用完账号每五分钟 2500 次的额度，十个启动器全死在 429 上，而 Job 自己都跑完了（2026-11-22，run 44967166241）。
 - 本地试一片：`HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/10`（或直接写场景名）；没有显卡的 CPU 规格上试流程：`T4_GPU=0 T4_FLAVOR=cpu-performance tools/ci/t4-launch.sh boot`。`tests/unit/t4-run.test.mjs` 守着触发条件、密钥只在一处读取、启动器的各种失败。
 
 ## 出事先回滚，再修
