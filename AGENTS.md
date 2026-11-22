@@ -103,9 +103,12 @@
 - 关卡主创只跟总主创沟通。要所有者拍板的事，由总主创汇总后转达。
 - 关卡主创可以直接找各专项评审（美术总监、审图二、审图三、结构评审、3D 评审）提问和派审；评审的结论同时告诉作者、关卡主创和总主创。会改动所有者批过范围的结论（例如 #479 御碑亭不设坐），由总主创转所有者定（2026-11-21）。
 - 合并：关卡主创写了「可合」之后，总主创做最后一道检查，然后合并。要不要放开「只改本关卡文件的 PR 由关卡主创自己合」，等跑顺以后再请所有者定。
-- 每个关卡各有一份跟进清单：`docs/t00/FOLLOW-UP.md`、`docs/t05/FOLLOW-UP.md`。`docs/handoff/FOLLOW-UP.md` 只记跨关卡的事，以及各关卡的一行摘要。
+- **进度不进 git**（所有者 2026-11-22：「都按你的建议来」；起因是 main 七天 403 个提交里有 215 个 docs，其中约 134 个是跟进清单和目标表的进度更新）。跟进清单是 GitHub 上的跟进 issue：总表 #570（总主创：跨关卡的事、等所有者的事、各关卡一行），「跟进：T00」「跟进：T05」各由关卡主创维护，号码写在 #570 的正文里。
+  - 正文只放当前状态，每次整段覆盖，不追加；有变化时在下面发一条短评论当历史，没变化不发。每件在途的事尽量就是一个 issue，挂成子 issue，进度看开关，不在正文里手写勾。
+  - 进仓库的只有以后还要查的：所有者原话和要求（`docs/handoff/LATEST-GOALS.md`）、决定（`docs/**/DECISIONS.md`）、出处（`SOURCES.md`）、经验（`LESSONS.md`、`docs/ART-LESSONS.md`）、规格和计划。这些也攒着改：零碎的留到每晚复盘或下一笔记录 PR 一起提交，不一条一推。
+  - 依据：Rust 项目目标用跟进 issue 加评论报进度；代理交接的通行做法是「状态和下一步进 issue，长期决定进仓库」。多个会话同推一个文件，每小时一个提交，正是要避开的。
 - **文档直推 main**（所有者 2026-11-21：「docs 变动不用 pr 吧，允许各主创直推 main」）。只限总主创和两位关卡主创，其他会话照旧开 PR。
-  - 能直推的：改动的文件全部是纯文字文档（`tools/ci/changes.cjs` 里 `PAPER` 认的那些，即 `codeChanged` 为假），不含图片或其他二进制文件。关卡主创只推本关卡的 `docs/<关卡>/**`（含跟进清单）；总主创推 `docs/handoff/**`、`LESSONS.md` 和跨关卡的 `docs/*.md`。
+  - 能直推的：改动的文件全部是纯文字文档（`tools/ci/changes.cjs` 里 `PAPER` 认的那些，即 `codeChanged` 为假），不含图片或其他二进制文件。关卡主创只推本关卡的 `docs/<关卡>/**`；总主创推 `docs/handoff/**`、`LESSONS.md` 和跨关卡的 `docs/*.md`。
   - 仍要开 PR、由总主创合的：`AGENTS.md`、`CLAUDE.md`、`CONTRIBUTING.md`、`README.md`、`skills/**`（这些是大家都要守的规则和对外的门面）；评审结论文件；任何代码、配置、JSON、图片。总主创改规则文件时，也只在所有者当场授权后直推。
   - 推之前：`node --test $(node -p 'require("./tools/ci/changes.cjs").DOC_TESTS.join(" ")')`、`node tools/evidence.mjs check` 都要过；然后 `git pull --rebase origin main`，再 `git push origin HEAD:main`。禁止 `--force`，也不改写已经推上去的历史。提交信息用 Conventional Commits（`docs(<范围>): …`），末尾带会话署名。
   - 推之后：看 main 上这次的 Verify and deploy（纯文档只跑 DOC_TESTS 和证据检查，不到一分钟）。红了立刻修，或者 `git revert` 自己那一笔，不能让 main 红着。
