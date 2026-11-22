@@ -1,5 +1,5 @@
 {
-  "started": "2026-11-22T10:59:24.489Z",
+  "started": "2026-11-22T11:14:33.081Z",
   "host": {
     "gpu": "Tesla T4, 620.70.06, 15360 MiB",
     "cpu": "8",
@@ -22,24 +22,25 @@
       "season": "summer",
       "time": "day",
       "path": "base/",
-      "fps": 42.4,
-      "ms": 23.58,
-      "cost": 11.16,
-      "loadMs": 19364,
-      "tris": 1345062,
-      "calls": 178,
+      "fps": 49.5,
+      "ms": 20.2,
+      "cost": 9.19,
+      "loadMs": 19963,
+      "tris": 1326618,
+      "calls": 180,
       "buffer": [
         1920,
         1080
       ],
       "tier": "high",
+      "body": "tripo",
       "walker": {
         "mode": "mesh",
-        "bytes": 207018,
+        "bytes": 207324,
         "inflated": 21517225,
-        "fetchMs": 1676,
-        "decodeMs": 582,
-        "prepareMs": 633,
+        "fetchMs": 1801,
+        "decodeMs": 604,
+        "prepareMs": 602,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -120,11 +121,13 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 7437,
+        "worstFrameMs": 7184.1,
         "spikes": [
-          7437,
-          190,
-          111
+          7184,
+          205,
+          114,
+          263,
+          311
         ],
         "live": null
       },
@@ -142,10 +145,497 @@
       ],
       "season": "summer",
       "time": "day",
-      "fps": 42.1,
-      "ms": 23.75,
-      "cost": 11.56,
-      "loadMs": 14775,
+      "fps": 47.3,
+      "ms": 21.14,
+      "cost": 9.42,
+      "loadMs": 13998,
+      "tris": 1327258,
+      "calls": 182,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207487,
+        "inflated": 21517225,
+        "fetchMs": 1974,
+        "decodeMs": 595,
+        "prepareMs": 609,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1592.6,
+        "spikes": [
+          1593,
+          111,
+          271
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 45,
+      "ms": 22.22,
+      "cost": 10.19,
+      "loadMs": 13633,
+      "tris": 1327258,
+      "calls": 182,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207487,
+        "inflated": 21517225,
+        "fetchMs": 1744,
+        "decodeMs": 596,
+        "prepareMs": 597,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1277.3,
+        "spikes": [
+          1277,
+          123,
+          101,
+          362
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 45.5,
+      "ms": 21.98,
+      "cost": 10.03,
+      "loadMs": 13372,
+      "tris": 1326618,
+      "calls": 180,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207324,
+        "inflated": 21517225,
+        "fetchMs": 1776,
+        "decodeMs": 580,
+        "prepareMs": 598,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1235,
+        "spikes": [
+          1235,
+          111,
+          266
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 45.9,
+      "ms": 21.79,
+      "cost": 9.71,
+      "loadMs": 13345,
+      "tris": 1326618,
+      "calls": 180,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207324,
+        "inflated": 21517225,
+        "fetchMs": 1844,
+        "decodeMs": 561,
+        "prepareMs": 604,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1218.1,
+        "spikes": [
+          1218,
+          102,
+          273
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 45.6,
+      "ms": 21.93,
+      "cost": 9.65,
+      "loadMs": 13574,
       "tris": 1327258,
       "calls": 182,
       "buffer": [
@@ -159,8 +649,8 @@
         "bytes": 207487,
         "inflated": 21517225,
         "fetchMs": 1818,
-        "decodeMs": 620,
-        "prepareMs": 615,
+        "decodeMs": 576,
+        "prepareMs": 594,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -241,13 +731,11 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1741.4,
+        "worstFrameMs": 1276.8,
         "spikes": [
-          1741,
-          116,
-          105,
-          319,
-          343
+          1277,
+          124,
+          282
         ],
         "live": null
       },
@@ -265,10 +753,10 @@
       ],
       "season": "summer",
       "time": "day",
-      "fps": 42.5,
-      "ms": 23.53,
-      "cost": 11.59,
-      "loadMs": 14474,
+      "fps": 47,
+      "ms": 21.28,
+      "cost": 9.48,
+      "loadMs": 13445,
       "tris": 1327258,
       "calls": 182,
       "buffer": [
@@ -281,8 +769,130 @@
         "mode": "mesh",
         "bytes": 207487,
         "inflated": 21517225,
-        "fetchMs": 1981,
-        "decodeMs": 662,
+        "fetchMs": 1870,
+        "decodeMs": 560,
+        "prepareMs": 598,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1264.5,
+        "spikes": [
+          1265,
+          113,
+          253
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 47.7,
+      "ms": 20.96,
+      "cost": 9.7,
+      "loadMs": 13004,
+      "tris": 1326618,
+      "calls": 180,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207324,
+        "inflated": 21517225,
+        "fetchMs": 1732,
+        "decodeMs": 595,
         "prepareMs": 600,
         "memory": 20144526,
         "ledges": 42,
@@ -364,11 +974,11 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1434.6,
+        "worstFrameMs": 1141.4,
         "spikes": [
-          1435,
-          117,
-          262
+          1141,
+          112,
+          332
         ],
         "live": null
       },
@@ -387,251 +997,12 @@
       "season": "summer",
       "time": "day",
       "path": "base/",
-      "fps": 39.6,
-      "ms": 25.25,
-      "cost": 11.96,
-      "loadMs": 13332,
-      "tris": 1345062,
-      "calls": 178,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207018,
-        "inflated": 21517225,
-        "fetchMs": 1925,
-        "decodeMs": 645,
-        "prepareMs": 633,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1384.1,
-        "spikes": [
-          1384,
-          103
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "path": "base/",
-      "fps": 42.8,
-      "ms": 23.36,
-      "cost": 11.14,
-      "loadMs": 13406,
-      "tris": 1345062,
-      "calls": 178,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207018,
-        "inflated": 21517225,
-        "fetchMs": 1938,
-        "decodeMs": 664,
-        "prepareMs": 608,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1378.3,
-        "spikes": [
-          1378,
-          103
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "fps": 41.2,
-      "ms": 24.27,
-      "cost": 11.26,
-      "loadMs": 14449,
-      "tris": 1327258,
-      "calls": 182,
+      "fps": 47.5,
+      "ms": 21.05,
+      "cost": 9.37,
+      "loadMs": 12902,
+      "tris": 1326618,
+      "calls": 180,
       "buffer": [
         1920,
         1080
@@ -640,11 +1011,11 @@
       "body": "tripo",
       "walker": {
         "mode": "mesh",
-        "bytes": 207487,
+        "bytes": 207324,
         "inflated": 21517225,
-        "fetchMs": 1942,
+        "fetchMs": 1805,
         "decodeMs": 609,
-        "prepareMs": 645,
+        "prepareMs": 586,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -725,11 +1096,10 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1434,
+        "worstFrameMs": 1110.9,
         "spikes": [
-          1434,
-          114,
-          293
+          1111,
+          256
         ],
         "live": null
       },
@@ -747,10 +1117,10 @@
       ],
       "season": "summer",
       "time": "day",
-      "fps": 43.7,
-      "ms": 22.88,
-      "cost": 10.96,
-      "loadMs": 13788,
+      "fps": 43.1,
+      "ms": 23.2,
+      "cost": 9.82,
+      "loadMs": 13411,
       "tris": 1327258,
       "calls": 182,
       "buffer": [
@@ -763,9 +1133,9 @@
         "mode": "mesh",
         "bytes": 207487,
         "inflated": 21517225,
-        "fetchMs": 1829,
-        "decodeMs": 616,
-        "prepareMs": 638,
+        "fetchMs": 1802,
+        "decodeMs": 609,
+        "prepareMs": 600,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -846,12 +1216,133 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1340.3,
+        "worstFrameMs": 1153.8,
         "spikes": [
-          1340,
-          116,
+          1154,
+          115,
+          270
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 46.8,
+      "ms": 21.37,
+      "cost": 9.44,
+      "loadMs": 13352,
+      "tris": 1327258,
+      "calls": 182,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207487,
+        "inflated": 21517225,
+        "fetchMs": 1840,
+        "decodeMs": 598,
+        "prepareMs": 615,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1112,
+        "spikes": [
+          1112,
+          112,
           102,
-          274
+          309
         ],
         "live": null
       },
@@ -870,23 +1361,146 @@
       "season": "summer",
       "time": "day",
       "path": "base/",
-      "fps": 44.1,
-      "ms": 22.68,
-      "cost": 10.4,
-      "loadMs": 13145,
-      "tris": 1345062,
-      "calls": 178,
+      "fps": 45.6,
+      "ms": 21.93,
+      "cost": 9.68,
+      "loadMs": 13032,
+      "tris": 1326618,
+      "calls": 180,
       "buffer": [
         1920,
         1080
       ],
       "tier": "high",
+      "body": "tripo",
       "walker": {
         "mode": "mesh",
-        "bytes": 207018,
+        "bytes": 207324,
         "inflated": 21517225,
-        "fetchMs": 1822,
-        "decodeMs": 591,
+        "fetchMs": 1805,
+        "decodeMs": 594,
+        "prepareMs": 624,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1088.8,
+        "spikes": [
+          1089,
+          111,
+          254
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 47.8,
+      "ms": 20.92,
+      "cost": 9.39,
+      "loadMs": 13162,
+      "tris": 1326618,
+      "calls": 180,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207324,
+        "inflated": 21517225,
+        "fetchMs": 1743,
+        "decodeMs": 572,
         "prepareMs": 605,
         "memory": 20144526,
         "ledges": 42,
@@ -968,252 +1582,11 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1264,
+        "worstFrameMs": 1085.8,
         "spikes": [
-          1264
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "path": "base/",
-      "fps": 42.3,
-      "ms": 23.64,
-      "cost": 10.54,
-      "loadMs": 12933,
-      "tris": 1345062,
-      "calls": 178,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207018,
-        "inflated": 21517225,
-        "fetchMs": 1711,
-        "decodeMs": 601,
-        "prepareMs": 613,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1193.7,
-        "spikes": [
-          1194,
-          106,
-          101
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "fps": 40,
-      "ms": 25,
-      "cost": 12.72,
-      "loadMs": 14153,
-      "tris": 1327258,
-      "calls": 182,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "body": "tripo",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207487,
-        "inflated": 21517225,
-        "fetchMs": 1953,
-        "decodeMs": 609,
-        "prepareMs": 625,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1226.2,
-        "spikes": [
-          1226,
+          1086,
           118,
-          100,
-          285
+          325
         ],
         "live": null
       },
@@ -1231,10 +1604,10 @@
       ],
       "season": "summer",
       "time": "day",
-      "fps": 42.6,
-      "ms": 23.47,
-      "cost": 11.82,
-      "loadMs": 14016,
+      "fps": 46.5,
+      "ms": 21.51,
+      "cost": 9.55,
+      "loadMs": 13214,
       "tris": 1327258,
       "calls": 182,
       "buffer": [
@@ -1247,9 +1620,9 @@
         "mode": "mesh",
         "bytes": 207487,
         "inflated": 21517225,
-        "fetchMs": 1978,
-        "decodeMs": 621,
-        "prepareMs": 622,
+        "fetchMs": 1808,
+        "decodeMs": 587,
+        "prepareMs": 593,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -1330,11 +1703,11 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1227.1,
+        "worstFrameMs": 1123.3,
         "spikes": [
-          1227,
-          117,
-          275
+          1123,
+          114,
+          257
         ],
         "live": null
       },
@@ -1352,373 +1725,10 @@
       ],
       "season": "summer",
       "time": "day",
-      "path": "base/",
-      "fps": 41.2,
-      "ms": 24.27,
-      "cost": 10.95,
-      "loadMs": 13358,
-      "tris": 1345062,
-      "calls": 178,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207018,
-        "inflated": 21517225,
-        "fetchMs": 1909,
-        "decodeMs": 652,
-        "prepareMs": 619,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1217,
-        "spikes": [
-          1217,
-          117,
-          104
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "path": "base/",
-      "fps": 42.9,
-      "ms": 23.31,
-      "cost": 11.15,
-      "loadMs": 12941,
-      "tris": 1345062,
-      "calls": 178,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207018,
-        "inflated": 21517225,
-        "fetchMs": 1740,
-        "decodeMs": 647,
-        "prepareMs": 675,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1187.8,
-        "spikes": [
-          1188,
-          103
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "fps": 41.4,
-      "ms": 24.15,
-      "cost": 11.47,
-      "loadMs": 14050,
-      "tris": 1327258,
-      "calls": 182,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "body": "tripo",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207487,
-        "inflated": 21517225,
-        "fetchMs": 1987,
-        "decodeMs": 568,
-        "prepareMs": 611,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1197,
-        "spikes": [
-          1197,
-          115,
-          101,
-          280
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "fps": 41,
-      "ms": 24.39,
-      "cost": 10.91,
-      "loadMs": 14135,
+      "fps": 47.5,
+      "ms": 21.05,
+      "cost": 9.36,
+      "loadMs": 13499,
       "tris": 1327258,
       "calls": 182,
       "buffer": [
@@ -1732,8 +1742,8 @@
         "bytes": 207487,
         "inflated": 21517225,
         "fetchMs": 1862,
-        "decodeMs": 642,
-        "prepareMs": 627,
+        "decodeMs": 638,
+        "prepareMs": 597,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -1814,375 +1824,10 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1216.9,
+        "worstFrameMs": 1111.3,
         "spikes": [
-          1217,
-          116,
-          102,
-          279
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "path": "base/",
-      "fps": 41.4,
-      "ms": 24.15,
-      "cost": 11.24,
-      "loadMs": 12790,
-      "tris": 1345062,
-      "calls": 178,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207018,
-        "inflated": 21517225,
-        "fetchMs": 1755,
-        "decodeMs": 611,
-        "prepareMs": 614,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1149.1,
-        "spikes": [
-          1149,
-          102,
-          103
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "path": "base/",
-      "fps": 42.2,
-      "ms": 23.7,
-      "cost": 10.5,
-      "loadMs": 13212,
-      "tris": 1345062,
-      "calls": 178,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207018,
-        "inflated": 21517225,
-        "fetchMs": 2009,
-        "decodeMs": 597,
-        "prepareMs": 617,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1151.7,
-        "spikes": [
-          1152,
-          105,
-          104
-        ],
-        "live": null
-      },
-      "at": [
-        -4,
-        52
-      ]
-    },
-    {
-      "view": "stele",
-      "q": "high",
-      "size": [
-        1920,
-        1080
-      ],
-      "season": "summer",
-      "time": "day",
-      "fps": 41.9,
-      "ms": 23.87,
-      "cost": 11.51,
-      "loadMs": 13878,
-      "tris": 1327258,
-      "calls": 182,
-      "buffer": [
-        1920,
-        1080
-      ],
-      "tier": "high",
-      "body": "tripo",
-      "walker": {
-        "mode": "mesh",
-        "bytes": 207487,
-        "inflated": 21517225,
-        "fetchMs": 1864,
-        "decodeMs": 652,
-        "prepareMs": 628,
-        "memory": 20144526,
-        "ledges": 42,
-        "grid": "outdoors",
-        "answers": true,
-        "drops": 42,
-        "start": [
-          21.3,
-          91.5
-        ],
-        "blockedHere": false,
-        "floor": 0,
-        "eye": 0.660842829491525,
-        "msPerFrame": null
-      },
-      "doors": {
-        "modes": [],
-        "halls": {
-          "chan": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "tea": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "main": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "library": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "yaoshi": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "dahui": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "guanyin": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          },
-          "lingxiao": {
-            "want": false,
-            "taken": 0,
-            "fade": 0,
-            "hi": false,
-            "source": null
-          }
-        },
-        "baked": null,
-        "failed": 0,
-        "steps": 12,
-        "keep": 4,
-        "dropped": 0,
-        "mb": 0,
-        "worstFrameMs": 1213.2,
-        "spikes": [
-          1213,
-          115,
-          102,
+          1111,
+          112,
           274
         ],
         "live": null
@@ -2201,12 +1846,13 @@
       ],
       "season": "summer",
       "time": "day",
-      "fps": 40.6,
-      "ms": 24.63,
-      "cost": 10.69,
-      "loadMs": 14002,
-      "tris": 1327258,
-      "calls": 182,
+      "path": "base/",
+      "fps": 45.8,
+      "ms": 21.83,
+      "cost": 9.56,
+      "loadMs": 13243,
+      "tris": 1326618,
+      "calls": 180,
       "buffer": [
         1920,
         1080
@@ -2215,11 +1861,11 @@
       "body": "tripo",
       "walker": {
         "mode": "mesh",
-        "bytes": 207487,
+        "bytes": 207324,
         "inflated": 21517225,
-        "fetchMs": 1911,
-        "decodeMs": 637,
-        "prepareMs": 614,
+        "fetchMs": 1795,
+        "decodeMs": 565,
+        "prepareMs": 591,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -2300,12 +1946,12 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1216.2,
+        "worstFrameMs": 1105.5,
         "spikes": [
-          1216,
-          129,
-          102,
-          272
+          1106,
+          113,
+          103,
+          291
         ],
         "live": null
       },
@@ -2324,24 +1970,25 @@
       "season": "summer",
       "time": "day",
       "path": "base/",
-      "fps": 44.1,
-      "ms": 22.68,
-      "cost": 10.79,
-      "loadMs": 12766,
-      "tris": 1345062,
-      "calls": 178,
+      "fps": 45.7,
+      "ms": 21.88,
+      "cost": 9.85,
+      "loadMs": 13246,
+      "tris": 1326618,
+      "calls": 180,
       "buffer": [
         1920,
         1080
       ],
       "tier": "high",
+      "body": "tripo",
       "walker": {
         "mode": "mesh",
-        "bytes": 207018,
+        "bytes": 207324,
         "inflated": 21517225,
-        "fetchMs": 1836,
-        "decodeMs": 601,
-        "prepareMs": 603,
+        "fetchMs": 1913,
+        "decodeMs": 585,
+        "prepareMs": 670,
         "memory": 20144526,
         "ledges": 42,
         "grid": "outdoors",
@@ -2422,10 +2069,376 @@
         "keep": 4,
         "dropped": 0,
         "mb": 0,
-        "worstFrameMs": 1146,
+        "worstFrameMs": 1082.5,
         "spikes": [
-          1146,
-          103
+          1083,
+          119,
+          259
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 46.3,
+      "ms": 21.6,
+      "cost": 9.36,
+      "loadMs": 13144,
+      "tris": 1327258,
+      "calls": 182,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207487,
+        "inflated": 21517225,
+        "fetchMs": 1575,
+        "decodeMs": 597,
+        "prepareMs": 620,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1166.2,
+        "spikes": [
+          1166,
+          108,
+          292
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "fps": 48.3,
+      "ms": 20.7,
+      "cost": 9.31,
+      "loadMs": 13490,
+      "tris": 1327258,
+      "calls": 182,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207487,
+        "inflated": 21517225,
+        "fetchMs": 1823,
+        "decodeMs": 595,
+        "prepareMs": 607,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1124.3,
+        "spikes": [
+          1124,
+          112,
+          295
+        ],
+        "live": null
+      },
+      "at": [
+        -4,
+        52
+      ]
+    },
+    {
+      "view": "stele",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 48.3,
+      "ms": 20.7,
+      "cost": 9.44,
+      "loadMs": 13035,
+      "tris": 1326618,
+      "calls": 180,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "tripo",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 207324,
+        "inflated": 21517225,
+        "fetchMs": 1605,
+        "decodeMs": 567,
+        "prepareMs": 640,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1122.7,
+        "spikes": [
+          1123,
+          117,
+          102,
+          263
         ],
         "live": null
       },
@@ -2440,10 +2453,10 @@
   "site": {
     "commit": "307f87e57d752da05e1e9c604d4a2dea7e587312",
     "entry": "assets/index-Bpa0TsLO.js",
-    "files": 370,
-    "sha256": "cacad217d6ef57b44877cf5f3bcdf031d4e1848ba0a9ef2657315507913f6ef9"
+    "files": 371,
+    "sha256": "7fb0ff5f068a2f1e02b050fea2c2e014231c339b91f3754ae7f11f8e294c7b38"
   },
   "using": "angle-vulkan+new-headless",
   "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
-  "finished": "2026-11-22T11:07:12.574Z"
+  "finished": "2026-11-22T11:22:17.093Z"
 }
