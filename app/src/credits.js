@@ -53,7 +53,7 @@ export function creditSections() {
     ] },
     { head: t("名匾"), paras: [
       { text: t("大殿上檐「釋迦寶殿」四字：据 ColBase 所载无准师范《禅院额字「释迦宝殿」》（东京国立博物馆藏，重要文化财）加工，分离墨迹并裁切为四字。"), href: PLAQUE_ITEM },
-      { text: t("御碑亭中碑额「御书」二字，取自国家图书馆藏清同治十二年刻本《说文》，由 Wikimedia Commons 刊布，已过版权期，裁切后制成位图。"), href: "https://commons.wikimedia.org/wiki/File:NLC892-312002098744-312890_%E8%AA%AA%E6%96%87%E8%A7%A3%E5%AD%97_%E5%8D%81%E4%BA%94%E5%8D%B7_%E7%AC%AC2%E5%86%8A.pdf" },
+      { text: t("御碑亭中碑额「御书」二字，取自国家图书馆藏清同治十二年刻本《说文》，由 Wikimedia Commons 刊布，已过版权期，裁切后制成位图。"), href: "https://commons.wikimedia.org/wiki/File:NLC892-312002098744-312890_%E8%AA%AA%E6%96%87%E8%A7%A3%E5%AD%97_%E5%8D%81%E4%BA%94%E5%8D%B7_%E7%AC%AC2%E5%86%8A.pdf", link: "commons.wikimedia.org" },
     ] },
     { head: t("三维扫描"), paras: [
       t("殿内雕像的三维扫描：Minneapolis Institute of Art（5 件）、The Cleveland Museum of Art（2 件），CC0，经 Sketchfab、Objaverse 取得；本项目减面并烘焙为顶点色。"),
