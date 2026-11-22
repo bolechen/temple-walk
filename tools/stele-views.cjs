@@ -1,28 +1,27 @@
 // The imperial stele in the stele pavilion, from the places the art review asked for (issue #520): the shape alone in black and in
-// colour, from the front, side and back and the four quarters, with the eye 2 m out at a visitor's height, from the old path
-// (`?show=stele`), and the two heights of the tortoise side by side (`--heights=0.704,0.48`, the page's `?steleH=`).
+// colour, from the front, side and back and the four quarters, with the eye 2 m out at a visitor's height, and from the old path
+// (`?show=stele`). `--stele=turtle` draws the spare, the dragon-headed stele on a tortoise (stele-turtle.js).
 //
 //   pnpm dev   (in another shell)
-//   node tools/stele-views.cjs [--base=http://127.0.0.1:8000/] [--out=tools/out/stele] [--heights=0.704,0.48] [--modes=color,black] [--views=front,side,...]
+//   node tools/stele-views.cjs [--base=http://127.0.0.1:8000/] [--out=tools/out/stele] [--stele=turtle] [--modes=color,black] [--views=front,side,...]
 //
 // The pavilion is turned a quarter, so the stele's face looks along +x in the world and its right-hand side along -z.
 const { serve, launch } = require("../tests/e2e/lib.cjs");
 const fs = require("fs"), path = require("path");
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
-const out = path.resolve(arg("out", "tools/out/stele")), heights = arg("heights", "0.704").split(",").map(Number), modes = arg("modes", "color,black").split(",");
+const out = path.resolve(arg("out", "tools/out/stele")), variant = arg("stele", "notch"), heights = [variant], modes = arg("modes", "color,black").split(",");
 const SIZE = [1280, 720], C = [-12.5, 50.5];   // the stele's place
 // Each view: where the eye is, in metres along the face (fx, +x in the world) and along the stele's side (fz, +z in the world), and
 // how high above the platform; and the point it looks at (above the platform).
 const VIEWS = {
   // The whole stone, from outside the columns (the pavilion is open on every side), at a visitor's height.
-  front: { eye: [5.2, 0, 1.7], at: [0, 0, 1.75] }, side: { eye: [0, 5.2, 1.7], at: [0, 0, 1.75] }, back: { eye: [-5.2, 0, 1.7], at: [0, 0, 1.75] },
-  q1: { eye: [4.0, 4.0, 1.7], at: [0, 0, 1.75] }, q2: { eye: [4.0, -4.0, 1.7], at: [0, 0, 1.75] },
-  q3: { eye: [-4.0, 4.0, 1.7], at: [0, 0, 1.75] }, q4: { eye: [-4.0, -4.0, 1.7], at: [0, 0, 1.75] },
-  // 2 m out, a visitor's own eye (the main distance for the stone and its writing); and the tortoise's head and the dragon head from near.
-  top: { eye: [0.05, 0.0, 6.5], at: [0, 0, 0.45] },       // straight down, for the plinth under the tortoise
-  front2m: { eye: [2.0, 0, 1.55], at: [0, 0, 1.7], ctx: true },
-  turtle: { eye: [1.8, 0.9, 0.8], at: [0.6, 0, 0.5] },
-  head: { eye: [1.6, 0.7, 2.9], at: [0, 0, 3.0] },
+  front: { eye: [5.2, 0, 1.5], at: [0, 0, 1.5] }, side: { eye: [0, 5.2, 1.5], at: [0, 0, 1.5] }, back: { eye: [-5.2, 0, 1.5], at: [0, 0, 1.5] },
+  q1: { eye: [4.0, 4.0, 1.5], at: [0, 0, 1.5] }, q2: { eye: [4.0, -4.0, 1.5], at: [0, 0, 1.5] },
+  q3: { eye: [-4.0, 4.0, 1.5], at: [0, 0, 1.5] }, q4: { eye: [-4.0, -4.0, 1.5], at: [0, 0, 1.5] },
+  // 2 m out, a visitor's own eye (the main distance for the stone and its writing).
+  top: { eye: [0.05, 0.0, 6.5], at: [0, 0, 0.45] },       // straight down, for the base's tiers
+  front2m: { eye: [2.0, 0, 1.55], at: [0, 0, 1.6], ctx: true },
+  head: { eye: [1.6, 0.7, 2.6], at: [0, 0, 2.7] },     // the notched head and the title's frame from near
   path: { show: "stele", ctx: true },                                // from the old path, the named view
 };
 const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
@@ -33,7 +32,7 @@ const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
   for (const h of heights) {
     const p = await ctx.newPage();
     p.on("pageerror", (e) => errors.push(String(e))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errors.push(m.text()));
-    await p.goto(`${srv.base}?shot=1&q=high&season=summer&time=day&view=first&off=doorway&debug=0&steleH=${h}&cam=${C[0] + 1.6},${C[1]},-1.5708,0`, { waitUntil: "commit", timeout: 300000 });
+    await p.goto(`${srv.base}?shot=1&q=high&season=summer&time=day&view=first&off=doorway&debug=0&stele=${h}&cam=${C[0] + 1.6},${C[1]},-1.5708,0`, { waitUntil: "commit", timeout: 300000 });
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 600000 });
     const info = await p.evaluate(() => ({ y: window.__yard(), st: window.__stele ? window.__stele() : null }));
     const floor = info.y.h != null ? info.y.h : info.y.y;
