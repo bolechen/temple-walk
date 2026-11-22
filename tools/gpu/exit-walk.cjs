@@ -16,27 +16,30 @@ exports.run = async ({ open, log, halls = ["main"], q = "high", secs = 5 }) => {
       await page.waitForTimeout(1000);
       await page.evaluate(() => window.__inside(null));
       await page.waitForFunction(() => !window.__yard().inside, null, { timeout: 120000, polling: 10 });
+      // __pick is slow (about half a second of a frame), so it is asked at a few moments only and every frame is logged cheaply beside it:
+      // the frames' own clock stays true, and the hidden time is given as a bound: surely hidden (two asks in a row low) and perhaps (one low).
       await page.evaluate(() => {
-        window.__exit = []; const t0 = performance.now(); let on = true;
+        window.__exit = []; const t0 = performance.now(); let on = true, next = 0;
         window.__exitStop = () => { on = false; };
         const go = (t) => {
           if (!on) return;
-          const f = window.__frame(), b = f.monkBox; let seen = 0;
-          if (b) seen = [0.1, 0.3, 0.5, 0.7, 0.9].filter((k) => (window.__pick(b[0] + b[2] / 2, b[1] + b[3] * k).find((h) => !h.transparent) || {}).part === "monk").length;
-          window.__exit.push({ t: +(t - t0).toFixed(1), seen, h: b ? +b[3].toFixed(3) : 0, dist: +f.dist.toFixed(2), op: +f.opacity.toFixed(2) });
+          const f = window.__frame(), b = f.monkBox, r = { t: +(t - t0).toFixed(1), h: b ? +b[3].toFixed(3) : 0, dist: +f.dist.toFixed(2), op: +f.opacity.toFixed(2) };
+          if (b && t - t0 >= next) {
+            const p0 = performance.now();
+            r.seen = [0.1, 0.3, 0.5, 0.7, 0.9].filter((k) => (window.__pick(b[0] + b[2] / 2, b[1] + b[3] * k).find((h) => !h.transparent) || {}).part === "monk").length;
+            r.pickMs = +(performance.now() - p0).toFixed(0); next = t - t0 + 60;
+          }
+          window.__exit.push(r);
           requestAnimationFrame(go);
         };
         requestAnimationFrame(go);
       });
       await page.keyboard.down("w"); await page.waitForTimeout(secs * 1000); await page.keyboard.up("w");
       const rows = await page.evaluate(() => { window.__exitStop(); return window.__exit; });
-      let hidden = 0, run = 0, longest = 0, worst = 5;
-      for (let i = 1; i < rows.length; i++) {
-        const d = rows[i].t - rows[i - 1].t, low = rows[i].seen < 3;
-        worst = Math.min(worst, rows[i].seen);
-        if (low) { hidden += d; run += d; longest = Math.max(longest, run); } else run = 0;
-      }
-      Object.assign(row, { frames: rows.length, hiddenMs: Math.round(hidden), longestMs: Math.round(longest), leastSeenOf5: worst, trace: rows.filter((_, i) => i % 6 === 0).slice(0, 60) });
+      const asks = rows.filter((r) => r.seen !== undefined), ft = rows.slice(1).map((r, i) => r.t - rows[i].t);
+      let sure = 0, maybe = 0;
+      for (let i = 1; i < asks.length; i++) { const d = asks[i].t - asks[i - 1].t, lo = [asks[i - 1].seen < 3, asks[i].seen < 3]; if (lo[0] && lo[1]) sure += d; else if (lo[0] || lo[1]) maybe += d; }
+      Object.assign(row, { frames: rows.length, meanFrameMs: Math.round(ft.reduce((a, b) => a + b, 0) / Math.max(1, ft.length)), asks: asks.length, pickMs: asks.map((r) => r.pickMs), sureHiddenMs: Math.round(sure), maybeHiddenMs: Math.round(maybe), seen: asks.map((r) => r.seen), lowest: Math.min(...asks.map((r) => r.seen)), trace: rows.filter((_, i) => i % 4 === 0).slice(0, 80) });
       await ctx.close();
     } catch (e) { row.error = String(e.message || e).slice(0, 300); }
     log("exit-walk", JSON.stringify({ ...row, trace: undefined }));
