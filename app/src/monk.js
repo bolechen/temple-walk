@@ -13,7 +13,7 @@
 // off him swings on small springs driven by his speed and his turning.
 import * as THREE from "three";
 import { STAIR } from "./geo.js";
-import { createBlink } from "./blink.js";
+import { createBlink, mulberry32 as createRnd } from "./blink.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -72,10 +72,10 @@ const PAL = {
 /** @returns {[HTMLCanvasElement, CanvasRenderingContext2D]} */
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; }
 function linen() {   // coarse, hand-woven: a thread to two pixels, and here and there a thicker slub
-  const [c, x] = canvas(256, 256);
+  const [c, x] = canvas(256, 256), rnd = createRnd(0x11e4);   // (seeded: the same cloth every time, #610)
   x.fillStyle = "#f3f3f3"; x.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 256; i += 2) { x.fillStyle = `rgba(255,255,255,${0.1 + Math.random() * 0.15})`; x.fillRect(i, 0, 1, 256); x.fillStyle = `rgba(60,48,38,${0.05 + Math.random() * 0.09})`; x.fillRect(0, i, 256, 1); }
-  for (let i = 0; i < 170; i++) { x.fillStyle = Math.random() < 0.5 ? `rgba(255,255,255,${0.08 + Math.random() * 0.1})` : `rgba(40,30,20,${0.06 + Math.random() * 0.08})`; x.fillRect(Math.random() * 256, Math.random() * 256, 6 + Math.random() * 44, 1 + Math.random()); }
+  for (let i = 0; i < 256; i += 2) { x.fillStyle = `rgba(255,255,255,${0.1 + rnd() * 0.15})`; x.fillRect(i, 0, 1, 256); x.fillStyle = `rgba(60,48,38,${0.05 + rnd() * 0.09})`; x.fillRect(0, i, 256, 1); }
+  for (let i = 0; i < 170; i++) { x.fillStyle = rnd() < 0.5 ? `rgba(255,255,255,${0.08 + rnd() * 0.1})` : `rgba(40,30,20,${0.06 + rnd() * 0.08})`; x.fillRect(rnd() * 256, rnd() * 256, 6 + rnd() * 44, 1 + rnd()); }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 function straw() {   // split bamboo plaited on the diagonal: two strips over, two under, converging to the crown

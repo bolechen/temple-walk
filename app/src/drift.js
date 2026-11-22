@@ -7,6 +7,7 @@
 // keep to the whole sky and the old even cloud.
 import * as THREE from "three";
 import { U } from "./glsl.js";
+import { mulberry32 } from "./blink.js";
 import { SHELTER } from "./shelter.js";
 import { SOURCES, CHANNEL, LAND, NO_GROUND, PER_M, bakeFall, leafAt, leafTimes, spotOf, densityAt, groundAt, fallAt } from "./fall.js";
 import { shelterAt } from "./shelter.js";
@@ -39,7 +40,8 @@ export const bambooOn = (kind) => kind !== "snow" && kind !== "firefly";
 
 // `opts`: `areas` (the grove's), `land` (the walker's landAt: the ground's height), `shelter` (shelter.js's map, for `report`).
 export function createDrift(scene, count, trees = [], opts = {}) {
-  const seed = new Float32Array(count * 4); for (let i = 0; i < seed.length; i++) seed[i] = Math.random();
+  // (Seeded, not Math.random: the air over a place is the same each time the page opens, so that the trailer's frame is a function of its number, #610.)
+  const seed = new Float32Array(count * 4), rnd = mulberry32(0x5eed); for (let i = 0; i < seed.length; i++) seed[i] = rnd();
   const map = bakeFall(trees, opts.areas || [], opts.land || null);
   const tex = (data, W, H, fmt, type, filter) => { const x = new THREE.DataTexture(data, W, H, fmt, type); x.minFilter = x.magFilter = filter; x.unpackAlignment = 1; x.needsUpdate = true; return x; };
   const tMap = map ? tex(map.data, map.W, map.H, THREE.RGBAFormat, THREE.UnsignedByteType, THREE.LinearFilter) : tex(new Uint8Array([0, 0, 0, 255]), 1, 1, THREE.RGBAFormat, THREE.UnsignedByteType, THREE.NearestFilter);
