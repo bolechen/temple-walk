@@ -195,3 +195,18 @@ test("no tree stands within 17 m of the archway whose crown comes within 8 m of 
   assert.ok(n > 1000, "many lines were tried");
   assert.deepEqual(blocked.slice(0, 6), [], `${blocked.length} lines over the archway's roofs are stopped by a tree`);
 });
+
+test("the monument pavilion is open on all four sides: between its columns, at the height of his eye and over the stele's foot, nothing stands in the way through it", () => {
+  const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, y = M0.y + 0.45 + 1.2, ray = new THREE.Raycaster();
+  site.root.updateMatrixWorld(true);
+  const inside = (p) => p.x > M0.x0 + 0.1 && p.x < M0.x1 - 0.1 && p.z > M0.z0 + 0.1 && p.z < M0.z1 - 0.1;
+  // A line a little off the middle, clear of the stele (a slab 1.0 × 0.3 m) and of the columns (±1.55 m), along each way.
+  for (const [o, d] of [[[M0.x0 - 1, y, mz + 0.7], [1, 0, 0]], [[M0.x1 + 1, y, mz - 0.7], [-1, 0, 0]], [[mx + 0.7, y, M0.z0 - 1], [0, 0, 1]], [[mx - 0.7, y, M0.z1 + 1], [0, 0, -1]]]) {
+    ray.set(new THREE.Vector3(...o), new THREE.Vector3(...d));
+    const hits = ray.intersectObject(site.root, true).filter((h) => inside(h.point));
+    assert.equal(hits.length, 0, `a line through the pavilion along (${d}) is stopped at ${hits[0]?.point.toArray().map((v) => v.toFixed(2))}`);
+  }
+  // And the stele is there, on the middle, for the written plan to stop him at (the pavilion's footprint stays shut to him).
+  ray.set(new THREE.Vector3(mx, y, M0.z0 - 1), new THREE.Vector3(0, 0, 1));
+  assert.ok(ray.intersectObject(site.root, true).some((h) => inside(h.point)), "the stele stands in the middle");
+});

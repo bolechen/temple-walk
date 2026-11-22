@@ -33,7 +33,7 @@ export function readNovice(file = FILE) {
 /** A monk wearing a body (by default the one the page wears, Tripo's), as the page dresses him once the file has arrived: its helper bones added, the beads laid on it. */
 export function dressed(createMonk, file = TRIPO) {
   const monk = createMonk(), { geometries, extras } = readNovice(file);
-  monk.dress(geometries, new THREE.MeshStandardMaterial(), extras.robeColor, { helpers: extras.helpers || [] });
+  monk.dress(geometries, new THREE.MeshStandardMaterial(), extras.robeColor, { helpers: extras.helpers || [], eyes: file === TRIPO });
   return monk;
 }
 /** A monk wearing Meshy's body (?body=sculpt). */
