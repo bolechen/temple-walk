@@ -101,6 +101,8 @@ export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 
+/** The monument pavilion's form (white box, own sizes: SOURCES.md): base height, column height and radius, their span centre to centre, the tie-beam's depth, how far the roof's edge reaches from the middle, and the pyramid's height. */
+export const MONUMENT_FORM = Object.freeze({ base: 0.45, column: 3.0, colR: 0.17, span: 3.1, beam: 0.3, eave: 2.5, roofH: 2.0 });
 /** The monument pavilion's place (月台西; ARCHITECTURE.md §3.2: 4–5 m square, off the 20 m middle way), against the terrace's west parapet. Held, not built. */
 export const MONUMENT = Object.freeze({ x0: -18.25, x1: -13.75, z0: 5.65, z1: 10.15, y: 3.0 });
 /** The lamp table's place inside the great hall's door (SCOPE-OPTIONS.md (b)): a low table on the floor against the front wall, in the bay east of the three doors. Held, not built. */
@@ -201,12 +203,26 @@ export function buildAxis(M, { C, W }) {
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
   group.add(sh.group, mesh(merge(earthSides), M.earth, { cast: false }), mesh(merge(trunk), M.bark), mesh(merge(crown), M.cedar, { cast: false }));
+  // The monument pavilion as it stands, open on all four sides (a Qing four-cornered pavilion with a pyramid roof: ARCHITECTURE.md §3.2,
+  // SOURCES.md): a stone base, four columns, a tie-beam round their heads, a ceiling plate and fascia under the roof, and under it a
+  // blank stele on its plinth. Nothing is walled: from the terrace the eye sees through between the columns under the eaves.
+  const PAV = MONUMENT_FORM, by = M0.y + PAV.base, ct = by + PAV.column, ceil = ct + 0.3 + PAV.beam, ch = PAV.span / 2;
+  const cols = [[-ch, -ch], [ch, -ch], [-ch, ch], [ch, ch]];
+  const pwood = [
+    ...cols.map(([dx, dz]) => new THREE.CylinderGeometry(PAV.colR * 0.92, PAV.colR, PAV.column, 12).translate(mx + dx, by + PAV.column / 2, mz + dz)),
+    ...cols.map(([dx, dz]) => box(0.5, 0.3, 0.5, mx + dx, ct + 0.15, mz + dz)),   // a block on each column's head
+    box(PAV.span + 0.5, PAV.beam, 0.26, mx, ct + PAV.beam / 2 + 0.3, mz - ch), box(PAV.span + 0.5, PAV.beam, 0.26, mx, ct + PAV.beam / 2 + 0.3, mz + ch),
+    box(0.26, PAV.beam, PAV.span + 0.5, mx - ch, ct + PAV.beam / 2 + 0.3, mz), box(0.26, PAV.beam, PAV.span + 0.5, mx + ch, ct + PAV.beam / 2 + 0.3, mz),
+    box(2 * PAV.eave, 0.1, 2 * PAV.eave, mx, ceil + 0.05, mz),   // the ceiling plate, seen from below
+    ...[-1, 1].flatMap((sg) => [box(2 * PAV.eave, 0.25, 0.12, mx, ceil + 0.12, mz + sg * PAV.eave), box(0.12, 0.25, 2 * PAV.eave, mx + sg * PAV.eave, ceil + 0.12, mz)]),   // the fascia
+  ];
+  const pstone = [box(mw, PAV.base, mw, mx, M0.y + PAV.base / 2, mz), box(1.6, 0.45, 0.95, mx, by + 0.225, mz), box(1.0, 2.3, 0.3, mx, by + 0.45 + 1.15, mz)];   // the base, the stele's plinth and the stele
   group.add(
-    mesh(merge([box(mw, 0.45, mw, mx, M0.y + 0.225, mz)]), M.stone),
-    mesh(merge([box(mw - 0.7, 3.4, mw - 0.7, mx, M0.y + 0.45 + 1.7, mz)]), M.plaster()),
-    mesh(merge([new THREE.ConeGeometry((mw + 0.5) / Math.SQRT2, 1.9, 4, 1).rotateY(Math.PI / 4).translate(mx, M0.y + 0.45 + 3.4 + 0.95, mz)]), M.tile),
+    mesh(merge(pstone), M.stone),
+    mesh(merge(pwood), M.woodX),
+    mesh(merge([new THREE.ConeGeometry(PAV.eave * Math.SQRT2, PAV.roofH, 4, 1).rotateY(Math.PI / 4).translate(mx, ceil + 0.1 + PAV.roofH / 2, mz), new THREE.ConeGeometry(0.22, 0.6, 8).translate(mx, ceil + 0.1 + PAV.roofH + 0.25, mz)]), M.tile),
   );
-  walk.solids.push({ x0: M0.x0 - BODY, x1: M0.x1 + BODY, z0: M0.z0 - BODY, z1: M0.z1 + BODY, eyeTop: M0.y + 0.45 + 3.4 + 1.9 });
+  walk.solids.push({ x0: M0.x0 - BODY, x1: M0.x1 + BODY, z0: M0.z0 - BODY, z1: M0.z1 + BODY, eyeTop: M0.y + PAV.base + PAV.column + 0.3 + PAV.beam + 0.1 + PAV.roofH + 0.85 });
   const L = LAMP, table = mesh(merge([box(L.w, L.h, L.d, L.x, L.y + L.h / 2, L.z)]), M.woodX);
   group.add(table);
   walk.solids.push({ x0: L.x - L.w / 2 - BODY, x1: L.x + L.w / 2 + BODY, z0: L.z - L.d / 2 - BODY, z1: L.z + L.d / 2 + BODY, eyeTop: L.y + L.h });
