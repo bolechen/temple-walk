@@ -20,6 +20,7 @@ export default {
   groveSound: () => 0,
   // Everything built that the following eye may meet: the compound and the way, with room round them.
   eyeBox: { x0: -COMPOUND.x - 20, x1: COMPOUND.x + 20, y0: -20, y1: 60, z0: COMPOUND.zN - 20, z1: WAY.zS + 20 },
+  eyeThickWalls: true,                 // its gable walls are 1 m thick: the following eye does not sweep through them when he turns out of an aisle (#562)
   hallTapZ: -Infinity,                 // no hall to tap yet
   // The sky's dome stands half way along the compound and the way, so that its far side is in view from either end.
   skyAt: [0, (COMPOUND.zN + WAY.zS) / 2],

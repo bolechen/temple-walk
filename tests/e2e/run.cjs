@@ -17,6 +17,55 @@ const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
 // `doorway` too: the rooms seen through the doors are drawn into cubes as he comes near (doorway.js), a face a frame, and
 // under software rendering one face of a room can hold a frame for a second, which no scenario that never looks needs.
 const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,doorway";
+// Out of every hall's door (#396): from the first frame he is out, sixty frames, each with him in the picture and not faded,
+// and every tenth with nothing drawn between the eye and him; then the view turned aside, him still seen.
+// (Held at the leaves the eye stood half a metre behind him and he was not drawn; it may now stand in the dark behind them.)
+// He does not walk here: he is set down outside the door behind the veil and stands, so `fast` only shortens the veil's
+// pauses. Each hall is a scenario of its own (`only`): with the view dragged round four ways in each, half the halls ran 29
+// minutes and the Guanyin hall and the summit pavilion together 23, over one machine's share of the night's run.
+async function exitFrames(b, base, only) {
+  const t = await open(b, base, "q=low&cam=0,30,0,0&view=third&off=reflect,bloom&fast=1", { viewport: { width: 480, height: 320 } });   // (fast: the veil through a door pauses a sixth as long)
+  await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
+  const all = await t.page.evaluate(() => window.__halls.map((h) => h.id)), halls = all.filter((h) => h === only), log = {}, bad = [];
+  expect(halls.length === 1, `no hall ${only} to come out of: ${all}`);
+  for (const id of halls) {
+    await t.page.evaluate((h) => window.__inside(h), id); await t.page.waitForFunction((h) => window.__yard().room === h, id, { polling: 50, timeout: 120000 });   // (waited on directly: t.until looks only every 1.2 s)
+    { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f + 5, f0, { polling: 20, timeout: 120000 }); }
+    await t.page.evaluate(() => window.__inside(null));
+    await t.page.waitForFunction(() => !window.__yard().inside, null, { polling: 10, timeout: 120000 });
+    const rows = [];
+    for (let i = 0; i < 60; i++) {
+      // Drawn is not seen (#411's art review: the box and the opacity passed with the wall between him and the eye): every
+      // tenth frame, at three points down the middle of his box, the first solid thing under the point must be him, twice.
+      const r = await t.page.evaluate((look) => {
+        const f = window.__frame(), b = f.monkBox, r = { f: f.frames, box: !!b, op: +f.opacity.toFixed(2), dist: +f.dist.toFixed(2) };
+        if (look && b) r.seen = [0.3, 0.5, 0.7].filter((k) => (window.__pick(b[0] + b[2] / 2, b[1] + b[3] * k).find((h) => !h.transparent) || {}).part === "monk").length;
+        return r;
+      }, i % 10 === 9);
+      rows.push(r); if (!r.box || r.op < 0.6 || (r.seen !== undefined && r.seen < 2)) bad.push(`${id} frame ${i}: ` + JSON.stringify(r));
+      await t.page.waitForFunction((f) => window.__yard().frames > f, r.f, { polling: 10, timeout: 120000 });
+    }
+    // Then the view dragged round with the mouse as a hand does it, 40° and 65° either way (0.455 of the width for 65°, the
+    // art review of #411, which found the picture black there with the box and the opacity both passing), and back.
+    const seenAt = {}, fr = async (n) => { const f0 = await t.page.evaluate(() => window.__yard().frames); await t.page.waitForFunction((f) => window.__yard().frames >= f, f0 + n, { polling: 20, timeout: 120000 }); };
+    for (const turn of [40, -40, 65, -65]) {
+      const px = Math.round((0.455 * 480 * turn) / 65);
+      await t.page.mouse.move(240, 140); await t.page.mouse.down();
+      for (let k = 1; k <= 8; k++) { await t.page.mouse.move(240 + (px * k) / 8, 140); await fr(1); }
+      await t.page.mouse.up(); await fr(16);
+      const r = await t.page.evaluate(() => { const f = window.__frame(), b = f.monkBox; return { dist: +f.dist.toFixed(2), seen: b ? [0.3, 0.5, 0.7].filter((k) => (window.__pick(b[0] + b[2] / 2, b[1] + b[3] * k).find((h) => !h.transparent) || {}).part === "monk").length : 0 }; });
+      seenAt[turn] = r; if (r.seen < 2) bad.push(`${id} turned ${turn}°: ` + JSON.stringify(r));
+      await t.page.mouse.move(240 + px, 140); await t.page.mouse.down();
+      for (let k = 1; k <= 8; k++) { await t.page.mouse.move(240 + px - (px * k) / 8, 140); await fr(1); }
+      await t.page.mouse.up(); await fr(4);
+    }
+    log[id] = { least: Math.min(...rows.map((r) => r.dist)), last: rows[rows.length - 1].dist, frames: rows.length, turned: seenAt };
+  }
+  console.log("    exitframe", JSON.stringify(log));
+  expect(bad.length === 0, `coming out of a door he left the picture or faded ${bad.length} times: ` + bad.slice(0, 6).join(" | "));
+  expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+}
+
 // The hop and the step down a low unrailed porch, by the keyboard (`drop`) and by a phone's stick and ring (`drop-touch`):
 // two scenarios so that the quick checks of a pull request run them on two machines (#442).
 async function dropRun(b, base, touches) {
@@ -1072,11 +1121,11 @@ const scenarios = {
     // which is how the gap in the hierarchy went unseen).
     await t.page.evaluate(() => window.__inside(null)); await t.until(() => t.page.evaluate(() => !window.__yard().inside), 60000, "he did not come out of the hall");
     await t.frames(40);
-    // just out of the door, facing the court: the eye behind him stays in front of the leaves, not in the hollow of the hall
-    // behind its painted dark (the preview of 574b14e: 5.7 m in, looking at the back of the dark)
+    // just out of the door, facing the court: the eye behind him stays within the dark behind the leaves, not in the hollow
+    // of the hall beyond it (the preview of 574b14e: 5.7 m in, looking at the back of the dark)
     { const o = await t.page.evaluate(() => { const h = window.__halls.find((x) => x.id === "main"), f = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], e = window.__frame().eye; return { into: -((e[0] - h.door[0]) * f[0] + (e[2] - h.door[1]) * f[1]), eye: e, box: window.__frame().monkBox }; });
-      // (it stands close behind him there, the leaves at his back: so near he fades, as he did before #354 on coming out)
-      expect(o.into < 0.45, "coming out of the great hall the eye should stay in front of its door: " + JSON.stringify(o)); }
+      // (since #396 it may stand in the dark behind the leaves, as far as its back, and sees him framed in the door)
+      expect(o.into < 3.0 && o.box, "coming out of the great hall the eye should stay within the dark behind its door, with him in the picture: " + JSON.stringify(o)); }
     lap("out of the door");
     const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 0], [0, 1.5]], shut = []; let samples = 0;   // ((19.5, 1) lies a few tenths past where he can stand)
     for (const p of round) {
@@ -1096,6 +1145,15 @@ const scenarios = {
     console.log("    eyeroom", JSON.stringify({ tris: fromHall.tris, door: f.eye.map((v) => +v.toFixed(2)), wall: g.map((v) => +v.toFixed(2)), round: samples }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // Out of every hall's door, in two halves (#396): exitFrames above.
+  "exitframe-chan": { tier: 3, run: (b, base) => exitFrames(b, base, "chan") },
+  "exitframe-tea": { tier: 3, run: (b, base) => exitFrames(b, base, "tea") },
+  "exitframe-main": { tier: 3, run: (b, base) => exitFrames(b, base, "main") },
+  "exitframe-library": { tier: 3, run: (b, base) => exitFrames(b, base, "library") },
+  "exitframe-yaoshi": { tier: 3, run: (b, base) => exitFrames(b, base, "yaoshi") },
+  "exitframe-dahui": { tier: 3, run: (b, base) => exitFrames(b, base, "dahui") },
+  "exitframe-guanyin": { tier: 3, run: (b, base) => exitFrames(b, base, "guanyin") },
+  "exitframe-lingxiao": { tier: 3, run: (b, base) => exitFrames(b, base, "lingxiao") },
   halls: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first");
     const halls = await t.page.evaluate(() => window.__halls); expect(halls.length === 8, "eight halls should have doors: " + halls.map((h) => h.id));
