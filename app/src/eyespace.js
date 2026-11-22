@@ -17,6 +17,9 @@ export function eyeRadius(fov, aspect, near, margin = 0.02) {
   return near * Math.sqrt(1 + t * t * (1 + aspect * aspect)) + margin;
 }
 
+/** How thick a solid the eye is not let pass through: more than any column (T05's inner columns are 0.83 m across), under a gable wall (1 m). */
+export const THICK = 0.95;
+
 /** Does the segment pass through the box? (the slab test, clipped to the segment's length) */
 function segmentHitsBox(a, b, box) {
   let t0 = 0, t1 = 1;
@@ -38,10 +41,11 @@ function segmentHitsBox(a, b, box) {
  * over, and was a solid the eye kept out of on the written plan; #515).
  * @param {any} bvh a MeshBVH
  * @param {((x: number, y: number, z: number, r: number) => boolean) | null} [keepOut]
+ * @param {{ thickWalls?: boolean }} [options] `thickWalls`: answer `thick` (a level asks for it, #562); off, `thick` is null and the eye behaves as it did
  */
-export function createEyeSpace(bvh, keepOut = null) {
+export function createEyeSpace(bvh, keepOut = null, { thickWalls = false } = {}) {
   let r = 0.25, near = [], seg = new THREE.Line3(), have = false;
-  const box = new THREE.Box3(), p = new THREE.Vector3(), q = new THREE.Vector3(), s = new THREE.Sphere(new THREE.Vector3(), r), ray = new THREE.Ray();
+  const box = new THREE.Box3(), p = new THREE.Vector3(), q = new THREE.Vector3(), s = new THREE.Sphere(new THREE.Vector3(), r), ray = new THREE.Ray(), dir = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   const touches = (x, y, z) => { p.set(x, y, z); for (const t of near) { t.closestPointToPoint(p, q); if (q.distanceToSquared(p) <= r * r) return true; } return false; };
   return {
     get radius() { return r; },
@@ -54,6 +58,26 @@ export function createEyeSpace(bvh, keepOut = null) {
         intersectsTriangle: (tri) => { if (tri.closestPointToSegment(seg) <= r) { const t = new THREE.Triangle(tri.a.clone(), tri.b.clone(), tri.c.clone()); near.push(t); } return false; },
       });
       return near.length;
+    },
+    /**
+     * Does the line from a to b ([x, y, z] each) cross a solid thicker than `min` (#562)? A wall is drawn as skins, an inner and an
+     * outer face with nothing between, so a thickness is read from the faces the line meets, in order: between two of them more than
+     * `min` apart the line is inside a solid if a line straight up from the middle of that stretch meets an odd number of faces (the
+     * hollow of a closed wall; a column is thinner than `min`, and the space between two things has an even number above it).
+     * T05's side walls are 1 m thick and its inner columns 0.83 m, so `min` stands between them.
+     */
+    thick: !thickWalls ? null : (a, b, min = THICK) => {
+      dir.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const len = dir.length(); if (len < 1e-6) return false; dir.divideScalar(len);
+      ray.origin.set(a[0], a[1], a[2]); ray.direction.copy(dir);
+      const hits = bvh.raycast(ray, THREE.DoubleSide).map((h) => h.distance).filter((t) => t <= len).sort((u, v) => u - v);
+      // (an end that is itself inside a closed solid, in a wall's hollow, is across it)
+      ray.origin.set(b[0], b[1], b[2]); ray.direction.copy(up); if (bvh.raycast(ray, THREE.DoubleSide).length % 2 === 1) return true; ray.origin.set(a[0], a[1], a[2]); ray.direction.copy(dir);
+      for (let i = 0; i + 1 < hits.length; i++) {
+        if (hits[i + 1] - hits[i] < min) continue;
+        const m = (hits[i] + hits[i + 1]) / 2; ray.origin.set(a[0] + dir.x * m, a[1] + dir.y * m, a[2] + dir.z * m); ray.direction.copy(up);
+        if (bvh.raycast(ray, THREE.DoubleSide).length % 2 === 1) return true;
+      }
+      return false;
     },
     /**
      * Is the line from a to b ([x, y, z] each) clear of everything drawn? (#396: an eye risen over a platform's balustrade
