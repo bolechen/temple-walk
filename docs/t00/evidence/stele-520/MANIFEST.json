@@ -9,6 +9,12 @@
    "rev": "e83177f0149d7f98cfdb57ac28f6cdcbea9a37b0"
   },
   {
+   "path": "collage-r2.jpg",
+   "bytes": 331367,
+   "sha256": "27cc015111a3e70e070e3e99cba407f15ebb93d076c512fe22b81e9c4ebd17d4",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
    "path": "r1/back_black_h0.48.png",
    "bytes": 1015633,
    "sha256": "251c19d06326c88b5ba52fc633eafbf8ffd91ec67ef7252860a64e1a335c6697",
@@ -259,6 +265,114 @@
    "bytes": 1175629,
    "sha256": "89fd789c8f3dcd9eb30da2f5d11aab8aad698740e200a87a617be5bd03e87e59",
    "rev": "e83177f0149d7f98cfdb57ac28f6cdcbea9a37b0"
+  },
+  {
+   "path": "r2/back_black_hnotch.png",
+   "bytes": 997773,
+   "sha256": "3f568ece07fcfdf7aa876e9476e9e6f9d5549202e8ab08ccf3dfeab9537eabfa",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/back_color_hnotch.png",
+   "bytes": 1044556,
+   "sha256": "10b09e4be6ce6b0bb72f720023b26078acc5be0f1c2843a21b828e2d807931ba",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/front2m_black_hnotch.png",
+   "bytes": 1072893,
+   "sha256": "69a882c11be26a360fa1da7f79687a99ddac0b10a523abbc1a74b5670a4cb5c7",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/front2m_color_hnotch.png",
+   "bytes": 1315995,
+   "sha256": "7031264ca8f60301992827a093e9256f524548f00fb05a10d685ba83b9588bdd",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/front_black_hnotch.png",
+   "bytes": 1033627,
+   "sha256": "4e330711c76abbc060496313bf8bb3ea357e1e42d9ddcd7d591a18633e54e676",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/front_color_hnotch.png",
+   "bytes": 1081178,
+   "sha256": "8f46785c9ab289e4b70bafde084d97aee2afdf6097256f22835e9c2463f5822b",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/head_black_hnotch.png",
+   "bytes": 933404,
+   "sha256": "47117973aa5cfd9165be37eeaeb0f290546a6d45dc9245bdd915075671c29e08",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/head_color_hnotch.png",
+   "bytes": 1139683,
+   "sha256": "55d99b52108760f50be42cd0b8b062d410d6241f1c2fbea331e421a01d6f6819",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/path_black_hnotch.png",
+   "bytes": 1254328,
+   "sha256": "7cb80bfb26e5ead0e3b80c9cbe4d41ad287478b73be6300b2903a7f3217bce17",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/path_color_hnotch.png",
+   "bytes": 1263967,
+   "sha256": "937917091216f5c8ab840c66cdc70fcdeb37f1a207fe03aba1fa99029162bade",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/q1_black_hnotch.png",
+   "bytes": 1046833,
+   "sha256": "e24ea59ad9b33f8fad68ed45b36da10efd5b8861365b08ba1fded9fb4f25ee59",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/q1_color_hnotch.png",
+   "bytes": 1088152,
+   "sha256": "86c330b165b9b9c79d29b51e9156eedfd54d35041050cea41a3999be64660bd8",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/q3_black_hnotch.png",
+   "bytes": 1014038,
+   "sha256": "68491e3267cc45e834384169204b4d8c61a285182e71f4192e21fb1733845b99",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/q3_color_hnotch.png",
+   "bytes": 1050973,
+   "sha256": "164a390c2ef03ec5b575c4c424197074d19bc6157887f7d5be6d666c829fa930",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/side_black_hnotch.png",
+   "bytes": 1037910,
+   "sha256": "8baeefc05b80598b11751b8a1f32d71b34674400ee2079155e42ceff8ca62114",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/side_color_hnotch.png",
+   "bytes": 1052588,
+   "sha256": "9b954d5a305954a26b257d5ec83712509d747d58dc0292c36a3cba5d0c47ff02",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/top_black_hnotch.png",
+   "bytes": 1184475,
+   "sha256": "e9783fac33873a34d6bf15c6e7392accf67305fdd8f6366180950e6a596a2a24",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r2/top_color_hnotch.png",
+   "bytes": 1198230,
+   "sha256": "0a5f65b7573b82a02de3ac92b86d6e8a08f414a0149832e060cd98bb871503f8",
+   "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
   }
  ]
 }
