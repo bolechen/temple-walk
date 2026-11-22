@@ -13,9 +13,10 @@ const { walker } = await levelPlan(M);
 const [cx, cz] = [-12.5, 50.5], STEP = 0.255;
 
 test("a stair of treads leads up the front, no tread higher than he steps", () => {
-  // The front faces +x (a quarter turn): from the path at x = -8 up to the stele's floor at x = -11.3.
+  // The front faces +x (a quarter turn): from the path at x = -8 up onto the platform's floor, short of the stele's plinth (#520: 1.92 m long
+  // along the way up, so it begins 0.96 m from the stele's middle, at x = -11.54, and the written plan keeps his width off it).
   let last = walker.heightAt(-8, cz);
-  for (let x = -8; x >= -11.3; x -= 0.02) {
+  for (let x = -8; x >= -10.7; x -= 0.02) {
     assert.ok(!walker.blocked(x, cz), `the way up is open at x ${x.toFixed(2)}`);
     const h = walker.heightAt(x, cz);
     assert.ok(h - last < STEP + 1e-6, `a step of ${(h - last).toFixed(3)} m at x ${x.toFixed(2)}`);
