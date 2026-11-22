@@ -61,6 +61,11 @@ function body({ state, sha, run, record, previous, manifest, files }) {
     return [MARK, ...stamp(m), "### PR 预览", "", `- 提交 \`${sha}\``, `- 最新地址（随推送更新）：${m.latest}`, `- 本提交固定地址：${m.fixed}`, `- canary（main 的最新版，内部地址）：${CANARY}`, "",
       ...links(m.fixed, manifest), "", FOOT(run), ...tail].join("\n");
   }
+  if (state === "same" && !(previous && previous.deployed && previous.fixed && previous.latest)) {
+    // A pull request with no preview yet that only changes papers (#601): nothing was built, so there is no address to give, and no
+    // marker either, so that a later push that does change the site has nothing to be compared with but the base.
+    return [MARK, "### PR 预览", "", `- 提交 \`${sha}\`：只改文档，没有构建预览`, `- canary（main 的最新版，内部地址）：${CANARY}`, "", FOOT(run), ...tail].join("\n");
+  }
   if (state === "same") {
     // Nothing of the site changed since `previous.deployed`: the preview was not built again and is still that commit's.
     return [MARK, ...stamp(previous), "### PR 预览", "", `- 提交 \`${sha}\`：本提交不改站点，预览仍是 \`${previous.deployed.slice(0, 7)}\` 的版本`, `- 最新地址（随推送更新）：${previous.latest}`,
@@ -82,7 +87,6 @@ module.exports = async ({ github, context, core }) => {
   const mine = comments.find((c) => c.user.type === "Bot" && c.body.includes(MARK));
   if (state === "removed" && !mine) return;
   const previous = mine ? markers(mine.body) : null;
-  if (state === "same" && !(previous && previous.deployed && previous.fixed && previous.latest)) return core.setFailed("the site was not built and the comment names no earlier preview to point to");
   const record = state === "success" ? previewRecord(OUTPUT_FILE) : null;
   if (state === "success" && !record) return core.setFailed("wrangler preview wrote no preview record");
   const files = state === "removed" ? null : (await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: issue_number, per_page: 100 })).map((f) => f.filename);
