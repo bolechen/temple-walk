@@ -81,7 +81,7 @@ const roofOf = (x, z, w, d, ridge, where) => {
   return "gable";
 };
 /** Three tones of tile: the old, dark one, the grey one (the base), and the newer, paler one. By the hash, about three in ten, five in ten, two in ten. */
-export const TILE_TONES = Object.freeze([{ name: "old", mul: 0.66, share: 0.3 }, { name: "grey", mul: 1, share: 0.5 }, { name: "pale", mul: 1.8, share: 0.2 }]);
+export const TILE_TONES = Object.freeze([{ name: "old", mul: 0.58, share: 0.3 }, { name: "grey", mul: 1, share: 0.5 }, { name: "pale", mul: 1.8, share: 0.2 }]);
 const toneOf = (x, z) => { const u = hash01(x, z, 2); return u < TILE_TONES[0].share ? 0 : u < TILE_TONES[0].share + TILE_TONES[1].share ? 1 : 2; };
 /**
  * The trees and houses, as data: { kind: "pine" | "cypress" | "bare", x, z, h, r, row, cast, strip, along } and { x, z, w, d, alongX, eave, ridge, row, cast }.
