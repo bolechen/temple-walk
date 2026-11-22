@@ -13,7 +13,7 @@
 // off him swings on small springs driven by his speed and his turning.
 import * as THREE from "three";
 import { STAIR } from "./geo.js";
-import { createBlink, mulberry32 as createRnd } from "./blink.js";
+import { createBlink, mulberry32 } from "./blink.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -71,8 +71,8 @@ const PAL = {
 // ---- Cloth and straw, painted once ----
 /** @returns {[HTMLCanvasElement, CanvasRenderingContext2D]} */
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; }
-function linen() {   // coarse, hand-woven: a thread to two pixels, and here and there a thicker slub
-  const [c, x] = canvas(256, 256), rnd = createRnd(0x11e4);   // (seeded: the same cloth every time, #610)
+function linen(createRnd) {   // coarse, hand-woven: a thread to two pixels, and here and there a thicker slub
+  const [c, x] = canvas(256, 256), rnd = createRnd ? createRnd(0x11e4) : Math.random;   // (the trailer seeds it: the same cloth every time, #610)
   x.fillStyle = "#f3f3f3"; x.fillRect(0, 0, 256, 256);
   for (let i = 0; i < 256; i += 2) { x.fillStyle = `rgba(255,255,255,${0.1 + rnd() * 0.15})`; x.fillRect(i, 0, 1, 256); x.fillStyle = `rgba(60,48,38,${0.05 + rnd() * 0.09})`; x.fillRect(0, i, 256, 1); }
   for (let i = 0; i < 170; i++) { x.fillStyle = rnd() < 0.5 ? `rgba(255,255,255,${0.08 + rnd() * 0.1})` : `rgba(40,30,20,${0.06 + rnd() * 0.08})`; x.fillRect(rnd() * 256, rnd() * 256, 6 + rnd() * 44, 1 + rnd()); }
@@ -197,7 +197,7 @@ const onFace = (az, el, lift = 0) => deform(V3(Math.sin(az) * Math.cos(el), Math
 
 const spring = (k = 70, c = 9) => ({ x: 0, v: 0, step(target, dt) { for (let left = dt; left > 1e-6; left -= 1 / 60) { const h = Math.min(left, 1 / 60); this.v += (k * (target - this.x) - c * this.v) * h; this.x += this.v * h; } return this.x; } });
 
-export function createMonk() {
+export function createMonk(opts = {}) {
   // ---- The skeleton, in the A-pose he was drawn in ----
   const group = new THREE.Group(), bones = [], B = {};
   const bone = (name, parent, x, y, z) => { const b = new THREE.Bone(); b.name = name; b.position.set(x, y, z); (parent || group).add(b); bones.push(b); B[name] = b; return b; };
@@ -409,7 +409,7 @@ export function createMonk() {
   }
 
   // ---- Materials and meshes ----
-  const lin = linen();
+  const lin = linen(opts.rand ? mulberry32 : null);
   const clothM = new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, map: lin, bumpMap: lin, bumpScale: 0.6, roughness: 0.92, sheen: 0.5, sheenRoughness: 0.75, sheenColor: new THREE.Color(0xffe2cc), envMapIntensity: 0.4 });
   const skinM = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.56, envMapIntensity: 0.45, emissive: 0x2a1206, emissiveIntensity: 0.5 });
   const shoeM = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.86, bumpMap: lin, bumpScale: 0.35, envMapIntensity: 0.3 });
