@@ -249,6 +249,18 @@
    "rev": "f026b8a1f61288e0f419e993113aa4500f7aac5a"
   },
   {
+   "path": "r3/t05/t05_topdown_arris.png",
+   "bytes": 2867906,
+   "sha256": "3ee463b7d360c2df362367f9637861c8ca871b19f1d9adf4ea7e2812e9fac497",
+   "rev": "038bc98d934f489783689ce1b85f18ff33105214"
+  },
+  {
+   "path": "r3/t05/t05_topdown_main.png",
+   "bytes": 2851932,
+   "sha256": "7ae2aa6222c2f5187bd64325df5107947e29284c4f130bb8dc39188c70b058a2",
+   "rev": "038bc98d934f489783689ce1b85f18ff33105214"
+  },
+  {
    "path": "r3/t4/art5_summer-day.png",
    "bytes": 2517217,
    "sha256": "18f48f26d471dc8d48675223068ef48a76b866b94d2b9f62b7aaeaed63a4cc5f",
