@@ -30,8 +30,8 @@ test("HF_TOKEN is read in one step of one job and nowhere else", () => {
 });
 
 test("the shards of a T4 run are the same plan as the free machines'", () => {
-  assert.match(job("t4"), /shard: \[1, 2, 3, 4\]/);
-  assert.match(job("t4"), /--shard=\$\{\{ matrix\.shard \}\}\/4/);
+  assert.match(job("t4"), /shard: \[1, 2, 3, 4, 5, 6, 7, 8, 9, 10\]/);
+  assert.match(job("t4"), /--shard=\$\{\{ matrix\.shard \}\}\/10/);
 });
 
 test("the launcher refuses to start with no token, naming it", () => {
