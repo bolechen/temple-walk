@@ -13,7 +13,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker, COMPOUND } = await import("../../app/levels/t05/site.js");
-const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap } = await import("../../app/levels/t05/surround.js");
+const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE } = await import("../../app/levels/t05/surround.js");
 const { HALL_HALF, LANE, SECOND } = await import("../../app/levels/t05/axis.js");
 const { HALL } = await import("../../app/levels/t05/hall.js");
 const { default: checks } = await import("../../app/levels/t05/checks.js");
@@ -166,4 +166,19 @@ test("it stands outside the walls, none of it walked on or in (left out of the b
   assert.ok(brick === 2 && near >= 3 && far >= 3 && shadowless === far, `the near meshes cast shadows (${near}), the far ones do not (${far}); ${brick} wall meshes`);
   assert.ok(tris > 5000 && tris < 45000, `${tris} triangles outside the walls`);
   assert.ok(plan.houses.filter((h) => h.row === 0 && h.cast).length >= 30 && plan.trees.filter((t) => t.cast).length >= 5, "the first row of houses and the trees by the walls are the real, shadow-casting geometry");
+});
+
+test("the roofs are mostly gable, a few hipped and a few leaning, in three tones of tile in three draws: the art director's step 5 (#573, #583)", () => {
+  const n = plan.houses.length, share = (f) => plan.houses.filter(f).length / n;
+  assert.ok(plan.houses.every((h) => ["gable", "hip", "shed"].includes(h.roof) && [0, 1, 2].includes(h.tone)), "every house has a shape and a tone");
+  assert.ok(share((h) => h.roof === "gable") >= 0.6 && share((h) => h.roof === "gable") <= 0.9, `gable roofs ${(share((h) => h.roof === "gable") * 100).toFixed(0)}%: the common one, but not the only one`);
+  assert.ok(share((h) => h.roof === "hip") >= 0.05 && share((h) => h.roof === "shed") >= 0.04, "a few hipped and a few leaning");
+  assert.ok(plan.houses.filter((h) => h.roof === "hip").every((h) => Math.min(h.w, h.d) >= 6) && plan.houses.filter((h) => h.roof === "shed").every((h) => h.ridge <= 5.3 && Math.min(h.w, h.d) <= 7), "hips on the broad houses, lean-tos on the narrow ones");
+  for (const [i, t] of TILE_TONES.entries()) assert.ok(Math.abs(share((h) => h.tone === i) - t.share) <= 0.12, `tone ${t.name}: ${(share((h) => h.tone === i) * 100).toFixed(0)}% against ${t.share * 100}%`);
+  assert.ok(TILE_TONES.reduce((a, t) => a + t.share, 0) > 0.999 && TILE_TONES.some((t) => t.mul < 1) && TILE_TONES.some((t) => t.mul > 1), "three shares make one; one tone darker than the base, one paler");
+  const near = [], far = [];
+  site.root.traverse((o) => { if (/roofs$/.test(o.name) && o.userData.surround) (o.userData.surround === "near" ? near : far).push(o); });
+  assert.ok(near.length === 3 && far.length === 3, `a mesh of roofs to each tone, near and far: ${near.length}, ${far.length}`);
+  assert.equal(new Set([...near, ...far].map((o) => o.material.name)).size, 3, "three materials, shared by the near and far roofs of a tone");
+  assert.ok(ROOF_SHARE.hip > 0 && ROOF_SHARE.shed < 1);
 });
