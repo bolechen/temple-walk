@@ -29,6 +29,9 @@ function culmTexture() {
 }
 
 // `areas`: [{x0, x1, z0, z1, n}], `heightAt(x, z)`: the land, `keep(x, z)`: false where nothing may grow.
+// `opts.clearCulm(x, z)`: true where a culm would grow but is taken out, because it stands in the eye's line to the first picture
+// after 入山 (#454). Like `clearUnder` it is asked after the culm has drawn its numbers, so no other culm or clump moves.
+// `opts.extraCulms`: [[x, z, height?]], stems stood where the plan wants one (#454: one near culm to frame the first picture on a phone).
 // `opts.clearUnder(x, z)`: true where a clump of the undergrowth would grow but is taken out, because it stands between the
 // eye that follows him and what it looks at (#518: round the ink-stone pool). It is asked only after the clump has drawn all
 // its own numbers, so taking one out moves no other clump or culm; `keep` would scatter all the rest anew.
@@ -38,6 +41,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
   for (const a of areas) for (let i = 0; i < a.n; i++) {
     const x = a.x0 + rnd() * (a.x1 - a.x0), z = a.z0 + rnd() * (a.z1 - a.z0);
     if (!keep(x, z)) continue;
+    const c0 = culms.length, k0 = leaves.length;
     const y = heightAt(x, z), h = 9 + rnd() * 6, r = 0.035 + rnd() * 0.03, leanA = rnd() * 6.28, lean = 0.03 + rnd() * 0.09;
     const c = new THREE.CylinderGeometry(r * 0.45, r, h, opts.fine === false ? 5 : 8, 1, true); c.translate(0, h / 2, 0);
     const uv = c.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setY(k, uv.getY(k) * h * 0.35);
@@ -59,6 +63,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
       for (let i2 = 0; i2 < P.count; i2++) { const nx = P.getX(i2) - crown.x, ny = (P.getY(i2) - crown.y) * 0.5 + 0.8, nz = P.getZ(i2) - crown.z, l = Math.hypot(nx, ny, nz) || 1; Nn.setXYZ(i2, nx / l, ny / l, nz / l); col[i2 * 3] = tint; col[i2 * 3 + 1] = tint * 0.5 + 0.5; col[i2 * 3 + 2] = tint; }
       g.setAttribute("color", new THREE.BufferAttribute(col, 3)); leaves.push(g);
     }
+    if (opts.clearCulm?.(x, z)) { culms.length = c0; leaves.length = k0; }   // (taken out after it has drawn all its numbers, so that no other culm moves, #454)
   }
   // Under the culms, what grows where nobody walks: knee-high clumps of dwarf bamboo and fern, thickest near the path.
   for (const a of areas) for (let i = 0, n = Math.round(a.n * (opts.fine === false ? 0.35 : 1.5)); i < n; i++) {
@@ -75,6 +80,8 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
     }
     if (opts.clearUnder?.(x, z)) leaves.length = l0;
   }
+  // Culms put where the plan says, after the grove is grown (they draw no numbers): a bare stem, whose sprays are above any eye.
+  for (const [x, z, h = 12] of opts.extraCulms || []) { const c = new THREE.CylinderGeometry(0.036, 0.075, h, opts.fine === false ? 5 : 8, 1, true); c.translate(0, h / 2, 0); const uv = c.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setY(k, uv.getY(k) * h * 0.35); c.translate(x, heightAt(x, z) - 0.2, z); culms.push(c); }
   if (!culms.length) return { setMood() {} };
   const cm = new THREE.Mesh(mergeGeometries(culms), new THREE.MeshStandardMaterial({ map: culmTexture(), roughness: 0.55, envMapIntensity: 0.4 }));
   cm.castShadow = true;

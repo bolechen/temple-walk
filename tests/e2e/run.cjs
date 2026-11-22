@@ -3062,6 +3062,27 @@ const scenarios = {
     // head for a moment, he still a little drawn: his fade followed the push's time, not where the eye was).
     for (const body of ["", "&body=code"]) await pushRun(b, base, body);
   } },
+  // #454: the first picture after the entry, in three shapes of screen: no culm within 12 m crosses the middle of the picture or his column,
+  // and one near culm (within 3.2 m of the eye) stands in the outer fifth of the picture's width, to frame it (the art review: on a
+  // phone held upright the strip cleared of culms left none).
+  "grove-start": { tier: 2, async run(b, base) {
+    const seen = {};
+    for (const [name, [w, h]] of Object.entries({ "16:9": [960, 540], "4:3": [800, 600], "9:16": [390, 693] })) {
+      const t = await open(b, base, "q=low&enter&season=summer&time=day&off=reflect,bloom,drift", { viewport: { width: w, height: h } });
+      await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 600000, "the eye's space was never built");
+      await t.frames(40);
+      const r = await t.page.evaluate(({ w, h }) => {
+        const box = window.__frame().monkBox, col = (cx, near) => { let n = 0; for (let k = 0; k < 60; k++) { const hit = window.__pick(cx, (h * (k + 0.5)) / 60).find((q) => !q.transparent); if (hit && /bamboo/i.test(hit.part || "") && hit.distance <= near) n++; } return n; };
+        const edge = (x0, x1, near) => { let n = 0; for (let x = x0; x < x1; x += Math.max(2, w / 80)) n += col(x, near); return n; };
+        return { middle: col(w / 2, 12), monk: box ? col(box[0] + box[2] / 2, 12) : -1, left: edge(0, w * 0.2, 3.2), right: edge(w * 0.8, w, 3.2) };
+      }, { w, h });
+      seen[name] = r;
+      expect(r.middle === 0 && r.monk === 0, `${name}: a culm within 12 m crosses the middle of the picture or his column: ${JSON.stringify(r)}`);
+      expect(r.left + r.right > 0, `${name}: no near culm (within 3.2 m) in the outer fifth of the picture to frame it: ${JSON.stringify(r)}`);
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    console.log("    grove-start", JSON.stringify(seen));
+  } },
   // #587: wherever he is moved while the view changes (up and down the summit pavilion's stair, off the balcony by a seal
   // in the book or a named view, a move while the eye is still being pushed into his eyes), the eye is with him the
   // next frames, not crawling there from where it stood at PUSH.move a frame. (Up and down the stair itself: `loft`. The
