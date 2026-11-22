@@ -1,0 +1,144 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-art3_autumn-dusk_third.jpg",
+   "bytes": 423801,
+   "sha256": "8567bc1ee11f897e6774e7b943a5386e7f81c945453913828088659ba534bae2",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "after-art4_autumn-dusk_first.jpg",
+   "bytes": 297280,
+   "sha256": "1b1cb3cec8d74f7193a9440e0ef29cfbf0ec87296db13d64247e2914f3f2b7c8",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "after-court_autumn-dusk_third.jpg",
+   "bytes": 428714,
+   "sha256": "f74bb526314548ddb5d2dbbf7d54500f86324edfbc1449016e3573f4957ad561",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "after-teatable_autumn-dusk_third.jpg",
+   "bytes": 286392,
+   "sha256": "53f05b112c7460f7d935e9e043f5af6a80951009e40c118f1e78ccacadeb4e38",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "art3-1920x1080.jpg",
+   "bytes": 538043,
+   "sha256": "547813d66b17504bebfe8a4c155f25a7c072213e2641d275ed931bc98bc578d2",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
+   "path": "art4-1920x1080.jpg",
+   "bytes": 300879,
+   "sha256": "514743ac138e58a5309e9f51f5851f42e4295007ce24b0580e4352a73257efa1",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
+   "path": "before-art3_autumn-dusk_third.jpg",
+   "bytes": 436561,
+   "sha256": "d8c1fc0d98469ba866146b2d41f4278031e9d59699ad4a50129282cb8f06a9f3",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "before-art4_autumn-dusk_first.jpg",
+   "bytes": 300301,
+   "sha256": "d9cc6e13bdef16413af44e11a99494a7d7d4bcc9287d7ab786fc1acd63c585fc",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "before-court_autumn-dusk_third.jpg",
+   "bytes": 411169,
+   "sha256": "820261bfd2c04f555baa8eeb8038278bbbfc0b63fb7f31524e32dd6970719c0e",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "before-teatable_autumn-dusk_third.jpg",
+   "bytes": 310668,
+   "sha256": "a6f17e0537652eb503ce47ed351274a188d27835bdfab3316b8868714b6d5ba7",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "collage-v3.jpg",
+   "bytes": 251581,
+   "sha256": "ff24058d90bc258eefc298890a4f8b39fbbdc3473990bcd543d4f82b1cd6b4bf",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 425221,
+   "sha256": "1a9a35311d13a19539851bb51cc2bae0484da9d55ded4eff63cceefe3da7fa0a",
+   "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
+  },
+  {
+   "path": "compare-k225-k125-v2.jpg",
+   "bytes": 427438,
+   "sha256": "dc03cf7dbb65747e7a4bf12ee14ae9e02b38216ec9f808f70ae10755333d1de4",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "compare-k225-k125.jpg",
+   "bytes": 426214,
+   "sha256": "ed1225f072b094945fb56b8d26d47a4b133bd0d3307a15e9b1a4dc7f7db1cc21",
+   "rev": "7aec75cec39e155d61bca75ec1655f0c0045534f"
+  },
+  {
+   "path": "court-1920x1080.jpg",
+   "bytes": 506915,
+   "sha256": "378726d7170211e40d816affffe876a7ae680b8f4c97e8ef52ae90510899446e",
+   "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
+   "path": "orig-art1-1920x1080.jpg",
+   "bytes": 635727,
+   "sha256": "09a967de1934dc729c2b0ef28cdf7a2483acaeca8b971cd99745de90b54210de",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-art3-1920x1080.jpg",
+   "bytes": 489341,
+   "sha256": "5f8f7f4c269f439026340863e295d58d5a26e89c6546b29128b3733374b0ac76",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-art4-1920x1080.jpg",
+   "bytes": 285348,
+   "sha256": "0d59762604e3fb1a2d9d647ea4f47f57ee867671695e0b7cf90b7dc9c3732b31",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-court-1920x1080.jpg",
+   "bytes": 466465,
+   "sha256": "7d96578e1c6905c20f2b898c92c32473d3792f9b770d696cc909071273aeccc5",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-door-chan-1920x1080.jpg",
+   "bytes": 397581,
+   "sha256": "405feaffe45905720b7f248347c02d8f62493fa3992944305644f7cd103d174a",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-teatable-1920x1080.jpg",
+   "bytes": 280557,
+   "sha256": "bb67d8d32404cd6d4e0ab98790cacb9fc6ff0d819824e5c04b073bf4401d671b",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "six-panel-v2.jpg",
+   "bytes": 264658,
+   "sha256": "a929bf17c5089e63e715cd907f24886a21cda9807fe2540da2fcb59f261ce685",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "six-panel.jpg",
+   "bytes": 263447,
+   "sha256": "b9418996a2c5cdc68dbdb45ee3259e8da2138fd007b679cad3b81f1d15d250cf",
+   "rev": "7aec75cec39e155d61bca75ec1655f0c0045534f"
+  }
+ ]
+}

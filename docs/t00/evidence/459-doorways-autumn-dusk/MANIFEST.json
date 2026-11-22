@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 113900,
+   "sha256": "43d908c323286cd5b7294e2711147364d37657122551949a21823adcc7b5c7fa",
+   "rev": "ed77263134866d829eb679dc1d87b3b450de6248"
+  },
+  {
+   "path": "door_chan.jpg",
+   "bytes": 400151,
+   "sha256": "49cfd805ed87b6519ca44eb5e19b0f40eefe6c4ae4b9ab55b2a1729b4423b9e1",
+   "rev": "ed77263134866d829eb679dc1d87b3b450de6248"
+  },
+  {
+   "path": "door_guanyin.jpg",
+   "bytes": 438138,
+   "sha256": "5d1c448b5fff615acb69be31aa43820a6e49ecb11e4f073e310d673cffdef652",
+   "rev": "ed77263134866d829eb679dc1d87b3b450de6248"
+  },
+  {
+   "path": "door_main.jpg",
+   "bytes": 350832,
+   "sha256": "b01147f3daf6e4f3577eee61bcfcdd874a9cf98d5aed9b8527ab044ce18de332",
+   "rev": "ed77263134866d829eb679dc1d87b3b450de6248"
+  }
+ ]
+}

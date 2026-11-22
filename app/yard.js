@@ -299,7 +299,7 @@ let afterMood = null;   // set further down, once there are rooms: what a change
 // takes them away again).
 const layers = () => { const L = mood.fogLayer; U.uFogLayer.value.set(OFF.has("layers") ? 0 : L[0], L[1], 1 / L[2], L[3]); if (document.body.classList.contains("indoors")) U.uFogLayer.value.x = 0; };
 function setMood(season, time) {
-  state.season = season; state.time = time; mood = moodOf(season, time);
+  state.season = season; state.time = time; mood = moodOf(season, time, L.moodFor);
   sky.setMood(mood);
   U.uSnow.value = mood.snow; U.uWet.value = mood.wet; U.uLamp.value = mood.lamp; U.uWinNight.value = mood.winNight; U.uLeaf.value.fromArray(mood.leaf); U.uWin.value.fromArray(mood.win);
   layers();
@@ -1366,6 +1366,7 @@ window.__fall = (k) => drift.fall?.(k);
 window.__litterDraw = (m) => { if (m !== undefined) U.uLitMode.value = m; return U.uLitMode.value; };   // which of the ground's kept things the paving draws (1 heaps, 2 kept leaves, 3 both), to measure each   // how readily the trees let go: 1 as built, 0.5 half, -1 the old steady fall (#267)
 window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.position, (t) => { const w = windAt(mood?.wind ?? 0, t); return [WIND_DIR[0] * w, WIND_DIR[1] * w]; }); return drift.litter?.(at) ?? null; };
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
+window.__sun = (k) => { sky.scaleSun(k); return k; };   // the sun's light times k (tools/sun-lit.cjs: with it and without it, to see which paving is in direct sun, #488)
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); }; window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
 window.__flock = (go) => { if (go && flock.flush()) flutter(1); return flock.state(); };   // the birds going up now, if asked, and where they are
