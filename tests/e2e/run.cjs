@@ -2032,6 +2032,9 @@ const scenarios = {
     expect((await t.page.textContent("#titleSeals")).includes("凌霄阁上"), "the title should say he was up on the pavilion: " + (await t.page.textContent("#titleSeals")) + " " + JSON.stringify(await t.page.evaluate(() => [window.__left(), localStorage.getItem("yunjing.place.v1")])));
     await t.page.click("#enterBtn"); await t.frames(3); s = await t.state();
     expect(s.up === "lingxiao" && Math.abs(s.h - L.floor) < 0.02 && s.view === "first", "coming back he is not up on the balcony: " + JSON.stringify(s));
+    // (#587) Stood up there again by the title's 接着走 (`place`), the eye is at his own eyes, not on its way from the title's.
+    await t.frames(5); v = await sight();
+    expect(v.camDist < 1 && v.pick !== "interior", "coming back up there the eye should be at his own eyes: " + JSON.stringify(v));
     await t.shot("e2e-loft");
     // Down from the door, to the stair's foot, the view he had below; and out of the hall.
     await t.page.evaluate((p) => window.__walk([p]), L.door); await t.until(async () => (await act()) === "下楼", 60000, "the door up there did not offer 下楼");
