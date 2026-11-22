@@ -1170,13 +1170,13 @@ const scenarios = {
       // (since #396 it may stand in the dark behind the leaves, as far as its back, and sees him framed in the door)
       expect(o.into < 3.0 && o.box, "coming out of the great hall the eye should stay within the dark behind its door, with him in the picture: " + JSON.stringify(o)); }
     lap("out of the door");
-    const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 0], [0, 1.5]], shut = []; let samples = 0;   // ((19.5, 1) lies a few tenths past where he can stand)
+    const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 0], [0, 1.5]], shut = [], trail = []; let samples = 0;   // ((19.5, 1) lies a few tenths past where he can stand)
     for (const p of round) {
       await t.page.evaluate((q) => window.__walk([q]), p);
       let best = Infinity, still = 0;
       for (let i = 0; i < 2000; i++) {
         const s2 = await t.page.evaluate(() => { const y = window.__yard(), e = window.__eyeSpace(); return { x: y.x, z: y.z, f: y.frames, done: !y.target && !y.route, shut: e.shutNow, eye: window.__frame().eye }; });
-        samples++; if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)) });
+        samples++; trail.push({ at: [+s2.x.toFixed(2), +s2.z.toFixed(2)], eye: s2.eye.map((v) => +v.toFixed(2)), f: s2.f }); if (trail.length > 8) trail.shift(); if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)), before: trail.slice() });
         const d = Math.hypot(s2.x - p[0], s2.z - p[1]); if (d < best - 0.05) { best = d; still = 0; } else still++;
         if ((s2.done && (d < 1.5 || i > 8)) || still > 30) break;   // (there, or as near as the way goes: he has stopped, or makes no way)
         await t.page.waitForFunction((f) => window.__yard().frames > f, s2.f, { polling: 30, timeout: 120000 });   // (the next frame: t.frames looks only every 1.2 s)
