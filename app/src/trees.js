@@ -7,7 +7,7 @@
 // light on top and toward the sun, dark within. With the sun behind them the leaves glow.
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { merge, mesh } from "./geo.js";
+import { box, merge, mesh } from "./geo.js";
 import { U } from "./glsl.js";
 import { SUN_DIR } from "./sky.js";
 import { TreeGenerator } from "./three-tree.js";
@@ -220,6 +220,38 @@ function softBed(x, y, z, r, seed) {
   return g;
 }
 
+// The stone pit a ginkgo stands in (#611): the edge stones of a square pit let into the paving, as courtyard trees of the
+// Chinese temples stand, so the stone never runs up to the bark. Edge stones are PIT.rim wide and stand PIT.up over the
+// paving (sunk PIT.sink into it); the soil inside lies PIT.drop under their tops. `side` is the pit's inside width.
+export const PIT = Object.freeze({ rim: 0.15, up: 0.065, sink: 0.1, drop: 0.045, min: 1.6, times: 2.5 });
+/** Inside width of the pit for a tree whose roots spread `flare` m from the trunk at the paving. */
+export const pitSide = (flare) => Math.max(PIT.min, PIT.times * 2 * flare);
+function pitStones(x, y, z, side) {
+  const w = PIT.rim, h = PIT.up + PIT.sink, cy = y + PIT.up - h / 2, half = side / 2 + w / 2, long = side + 2 * w;
+  return [box(long, h, w, x, cy, z - half), box(long, h, w, x, cy, z + half), box(w, h, side, x - half, cy, z), box(w, h, side, x + half, cy, z)];
+}
+function pitSoil(x, y, z, side) {
+  const g = new THREE.PlaneGeometry(side + 0.02, side + 0.02).rotateX(-Math.PI / 2).translate(x, y + PIT.up - PIT.drop, z);
+  return g;
+}
+// A soft patch of moss: a round laid a finger over the paving, `rgb` its colour, fully there from the middle out to
+// `hold` of its radius, then fading to nothing at the edge (the alpha in each vertex's colour): a seam that never ends
+// in a line (#611). A ring of vertices every `rings` fraction of the radius, wandering a little at its edge.
+function mossPatch(x, y, z, r, hold, seed, rgb, a0 = 0.85, lift = 0.016) {
+  const R = 36, rings = [0, hold, hold + (1 - hold) * 0.45, hold + (1 - hold) * 0.8, 1], alpha = [a0, a0, a0 * 0.55, a0 * 0.18, 0], pos = [x, y + lift, z], col = [...rgb, alpha[0]], idx = [];
+  for (let i = 1; i < rings.length; i++) for (let k = 0; k < R; k++) { const a = (k / R) * 6.283, rr = r * rings[i] * (1 + 0.06 * Math.sin(a * 3 + seed) + 0.04 * Math.sin(a * 7 + seed * 2)); pos.push(x + Math.cos(a) * rr, y + lift - 0.001 * i, z + Math.sin(a) * rr); col.push(...rgb, alpha[i]); }
+  for (let k = 0; k < R; k++) { const n = (k + 1) % R; idx.push(0, 1 + n, 1 + k); }
+  for (let i = 1; i < rings.length - 1; i++) for (let k = 0; k < R; k++) { const n = (k + 1) % R, a = 1 + (i - 1) * R, b = 1 + i * R; idx.push(a + k, a + n, b + k, a + n, b + n, b + k); }
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 4)); g.setIndex(idx); g.computeVertexNormals();
+  const N = g.attributes.normal; for (let i = 0; i < N.count; i++) N.setXYZ(i, 0, 1, 0);
+  return g;
+}
+/** How far past its earth a cedar's moss fades out to the paving, in metres (#611: at least 0.3). */
+export const MOSS_FADE = 0.45;
+const MOSS = [0.075, 0.115, 0.05];
+// The ring of moss between a cedar's earth and the paving: it covers the earth's own edge and fades out over MOSS_FADE.
+const edgeMoss = (x, y, z, r, seed) => mossPatch(x, y, z, r + MOSS_FADE, (r * 0.8) / (r + MOSS_FADE), seed, MOSS, 0.8, 0.019);
+
 // `spots`: [x, y, z, kind, height]. `opts.a2c`: the frame is multisampled, so leaf edges can be soft.
 // A short fingerprint of some geometry, every coordinate rounded to a tenth of a millimetre: the same plan grown in Node
 // and in the browser must give the same one (the cedars' wood is grown from a seed; #161, #162).
@@ -254,7 +286,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
   // lent to another stream for a moment without disturbing it.
   let draw = seeded(311); const rnd = () => draw();
-  const wood = [], ginkgoWood = [], ginkgoBeds = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
+  const wood = [], ginkgoWood = [], ginkgoBeds = [], pitStone = [], pitEarth = [], moss = [], pits = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), V = (x, y, z) => new THREE.Vector3(x, y, z);
   // One flat spray at `p`, lit as part of the crown round `centre`; `shade` darkens those deep inside.
   const card = (list, g, p, centre, shade, squash = 0.75, lift = 0.35) => {
@@ -390,7 +422,7 @@ export function createTrees(scene, M, spots, opts = {}) {
       // its bed: as wide against its flare where that meets the paving as the old foot's bed was against its trunk, so the
       // swelling comes down into earth and not onto the stone (lost with the foot in #199, put back)
       if (!far0) { const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
-        nth++; beds.push(bed(x, y, z, flare * 2.5 + 0.25, nth)); }
+        nth++; beds.push(bed(x, y, z, flare * 2.5 + 0.25, nth)); moss.push(edgeMoss(x, y, z, flare * 2.5 + 0.25, nth)); }
       for (const t of tubes) {
         if (t.level < 1) continue;
         const from = t.rings[0].pos, to = t.rings[t.rings.length - 1].pos, d = to.clone().sub(from), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
@@ -435,6 +467,8 @@ export function createTrees(scene, M, spots, opts = {}) {
         }
         const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
         nth++; ginkgoBeds.push(softBed(x, y, z, flare * 3 + 0.9, nth));
+        const side = pitSide(flare); pitStone.push(...pitStones(x, y, z, side)); pitEarth.push(pitSoil(x, y, z, side)); pits.push({ at: [x, z], side, flare });
+        moss.push(mossPatch(x, y, z, flare * 1.7 + 0.2, 0.45, nth + 5, MOSS, 0.9, PIT.up - PIT.drop + 0.012));   // moss at the roots, inside the pit
       }
       clump(kind, V(x, top - 0.2, z), centre, 1.1, 5);
       ginkgoSkeletons.push(sk);
@@ -490,6 +524,12 @@ export function createTrees(scene, M, spots, opts = {}) {
 
   let gbed = null;
   if (ginkgoBeds.length) { gbed = new THREE.Mesh(mergeGeometries(ginkgoBeds), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 1, envMapIntensity: 0.1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); gbed.receiveShadow = true; gbed.userData.keep = true; gbed.name = "ginkgo-beds"; gbed.renderOrder = 0; scene.add(gbed); }
+  // The ginkgoes' pits (#611): the edge stones are the court's stone, the soil inside lies a little under their tops. In
+  // winter the soil and the moss are put away like the beds, and the paving's one blanket of snow runs to the trunk.
+  let pitMesh = null, pitSoilMesh = null, mossMesh = null;
+  if (pitStone.length) { pitMesh = mesh(merge(pitStone), M.stone); pitMesh.userData.keep = true; pitMesh.name = "ginkgo-pits"; scene.add(pitMesh); }
+  if (pitEarth.length) { pitSoilMesh = mesh(merge(pitEarth), M.earth, { cast: false }); pitSoilMesh.userData.keep = true; pitSoilMesh.name = "ginkgo-pit-soil"; scene.add(pitSoilMesh); }
+  if (moss.length) { mossMesh = new THREE.Mesh(mergeGeometries(moss), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 1, envMapIntensity: 0.1, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })); mossMesh.receiveShadow = true; mossMesh.userData.keep = true; mossMesh.name = "tree-moss"; mossMesh.renderOrder = 0; scene.add(mossMesh); }
   const tex = { blossom: sheet("blossom"), maple: sheet("maple"), ginkgo: sheet("ginkgo"), cedar: sheet("cedar"), twig: sheet("twig") }, crowns = {};
   const put = (kind, map, o) => {
     if (!cards[kind].length) return;
@@ -498,7 +538,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, { glow: 0.16 }); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed,
+    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed, pits, pitStones: pitMesh, pitSoil: pitSoilMesh, moss: mossMesh,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
@@ -506,6 +546,8 @@ export function createTrees(scene, M, spots, opts = {}) {
         k.mat.color.setRGB(...c); if (kind === "maple") k.mat.map = m.season === "spring" ? tex.blossom : tex.maple;
       }
       if (soil) soil.visible = !(m.snow > 0.5);
+      if (pitSoilMesh) pitSoilMesh.visible = !(m.snow > 0.5);
+      if (mossMesh) mossMesh.visible = !(m.snow > 0.5);
       // the leaves under a ginkgo are the season's own, and are not there when it is bare
       if (gbed) { const c = COLOURS.ginkgo[m.season]; gbed.visible = !!c && !(m.snow > 0.5); if (c) gbed.material.color.setRGB(c[0] * 0.45, c[1] * 0.45, c[2] * 0.45); }
       // Bare twigs show only when the leaves are down.

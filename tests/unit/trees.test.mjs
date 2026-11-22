@@ -2,7 +2,7 @@ import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 const { buildSite } = await import("../../app/src/site.js");
-const { createTrees } = await import("../../app/src/trees.js");
+const { createTrees, PIT } = await import("../../app/src/trees.js");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M);
@@ -284,3 +284,37 @@ for (const c of inCourt.filter((t) => t[4] < 8)) for (const axis of ["x", "z"]) 
     assert.ok(worst * CELL <= 0.5, `${(worst * CELL).toFixed(2)} m of trunk shows through fewer than two sprays in the upper half`);
   });
 }
+
+// #611: a ginkgo stands in a square pit of edge stones let into the paving, and the cedars' earth rings meet the paving
+// through a band of moss that fades out, not at a hard line.
+test("every near ginkgo stands in a stone pit centred on its trunk, wide enough for its roots, its edge stones a low step", () => {
+  const wrong = [];
+  for (const t of site.trees.filter((s) => !s[5] && s[3] === "ginkgo")) {
+    const scene = new THREE.Group(), T = createTrees(scene, M, [t]), pit = T.pitStones;
+    if (!pit) { wrong.push(`the ginkgo at ${t[0]}, ${t[2]} has no pit`); continue; }
+    const P = pit.geometry.attributes.position, box = new THREE.Box3().setFromBufferAttribute(P), c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());
+    const B = scene.children.find((o) => o.material === M.barkGinkgo).geometry.attributes.position; let spread = 0;
+    for (let i = 0; i < B.count; i++) { const y = B.getY(i) - t[1]; if (y >= 0 && y < 0.05) spread = Math.max(spread, Math.hypot(B.getX(i) - t[0], B.getZ(i) - t[2])); }
+    const inside = size.x - 2 * PIT.rim;
+    if (Math.hypot(c.x - t[0], c.z - t[2]) > 0.05) wrong.push(`the pit at ${t[0]}, ${t[2]} is centred ${Math.hypot(c.x - t[0], c.z - t[2]).toFixed(2)} m off its trunk`);
+    if (inside < 2 * spread || inside < PIT.min - 1e-6) wrong.push(`the pit at ${t[0]}, ${t[2]} is ${inside.toFixed(2)} m inside, its roots spread ${spread.toFixed(2)} m`);
+    const up = box.max.y - t[1]; if (up < 0.05 || up > 0.08) wrong.push(`the pit's edge stones stand ${(up * 100).toFixed(1)} cm over the paving`);
+    const soil = new THREE.Box3().setFromBufferAttribute(T.pitSoil.geometry.attributes.position), drop = box.max.y - soil.max.y; if (drop < 0.03 || drop > 0.06) wrong.push(`the soil lies ${(drop * 100).toFixed(1)} cm under the edge stones`);
+    T.setMood({ season: "winter", snow: 1 }); if (T.pitSoil.visible || T.moss.visible) wrong.push("the pit's soil and moss are still drawn under snow");
+    T.setMood({ season: "autumn", snow: 0 }); if (!T.pitSoil.visible || !T.moss.visible) wrong.push("the pit's soil and moss are not back after the thaw");
+  }
+  assert.deepEqual(wrong, []);
+});
+test("a cedar's earth meets the paving through moss that fades out over at least 0.3 m", () => {
+  const wrong = [];
+  for (const t of site.trees.filter((s) => !s[5] && s[3] === "cedar")) {
+    const scene = new THREE.Group(), T = createTrees(scene, M, [t]), soil = scene.children.find((o) => o.material === M.earth);
+    if (!T.moss) { wrong.push(`the cedar at ${t[0]}, ${t[2]} has no moss ring`); continue; }
+    const P = T.moss.geometry.attributes.position, C = T.moss.geometry.attributes.color; let solid = 0, edge = 0, earth = 0;
+    for (let i = 0; i < P.count; i++) { const d = Math.hypot(P.getX(i) - t[0], P.getZ(i) - t[2]), a = C.getW(i); edge = Math.max(edge, d); if (a >= 0.4) solid = Math.max(solid, d); }
+    const S = soil.geometry.attributes.position; for (let i = 0; i < S.count; i++) if (Math.abs(S.getY(i) - t[1] - 0.012) < 1e-4) earth = Math.max(earth, Math.hypot(S.getX(i) - t[0], S.getZ(i) - t[2]));
+    if (edge - Math.max(earth, solid) < 0.3 - 1e-6) wrong.push(`the cedar at ${t[0]}, ${t[2]}: moss fades over ${(edge - Math.max(earth, solid)).toFixed(2)} m`);
+    if (solid < earth * 0.95) wrong.push(`the cedar at ${t[0]}, ${t[2]}: the moss is solid out to ${solid.toFixed(2)} m, its earth reaches ${earth.toFixed(2)} m, so the earth's edge shows`);
+  }
+  assert.deepEqual(wrong, []);
+});
