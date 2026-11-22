@@ -1,6 +1,7 @@
 // The temple grounds: assembles the modules in src/, walks the visitor through them,
 // and hands over to the hall interior at the main hall's door.
 import { TRAILER } from "./src/trailer-boot.js";   // first: in trailer mode (#610) it replaces the page's clock before anything reads it
+import { mulberry32 } from "./src/blink.js";   // (the trailer's seeded air and cloth, #610)
 import { debugGate } from "./src/debuggate.js";
 import { MAIN, photoUrl } from "./src/goshuin.js";
 import * as THREE from "three";
@@ -235,7 +236,7 @@ const post = createPost(renderer, scene, camera, quality, OFF);
 await loading.step(tr("院落"));
 // The trees that show the season, in every court; the things that fall through the air; the lamps' glow after dark.
 const trees = part("trees", () => createTrees(scene, M, site.trees, { a2c: quality.msaa > 0 }));
-const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { areas: L.grove?.areas || [], land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
+const drift = part("drift", () => createDrift(scene, quality.name === "low" ? 640 : 1400, site.trees, { rand: TRAILER ? mulberry32(0x5eed) : undefined, areas: L.grove?.areas || [], land: walker.landAt, shelter: roofMap, litter: quality.name !== "low", keep: OFF.has("litter") ? 0 : quality.name === "low" ? 24 : 32 }));
 // His footprints in the snow: on a phone a smaller square, more coarsely drawn.
 const trail = createTrail(renderer, quality.name === "low" ? { size: 1024, span: 24 } : { size: 2048, span: 32 });
 const glows = []; let glowCloud = null;
@@ -271,7 +272,7 @@ const flock = site.places.bell && site.cedars ? createFlock(scene, site.cedars, 
 addEventListener("flush", () => { if (!inside && mood.time !== "night" && flock.flush()) flutter(0.8); });
 
 await loading.step(tr("石阶"));
-const monk = createMonk(); monk.blinking = !Q.has("shot");   // the Tripo body blinks, but not in a held picture (#607)
+const monk = createMonk({ rand: TRAILER }); monk.blinking = !Q.has("shot");   // the Tripo body blinks, but not in a held picture (#607)
 part("monk", () => scene.add(monk.group));
 // His opacity, for the eye going into his own eyes or out of them (#102): faded on every material he wears, and given back.
 let faded = 1;
