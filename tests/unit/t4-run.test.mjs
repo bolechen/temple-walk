@@ -42,7 +42,7 @@ test("the launcher refuses to start with no token, naming it", () => {
 
 test("the launcher fails on every way a Job can fail to deliver", () => {
   const s = fs.readFileSync(root + "tools/ci/t4-launch.sh", "utf8");
-  for (const must of [/hf jobs wait/, /did not complete/, /no e2e-report\.json came back/, /scenarios failed/, /Job did not start/, /hf jobs cancel/, /jobs\/\$NS\/\$JOB/]) assert.match(s, must);
+  for (const must of [/hf jobs inspect/, /did not complete/, /no e2e-report\.json came back/, /scenarios failed/, /Job did not start/, /hf jobs cancel/, /jobs\/\$NS\/\$JOB/]) assert.match(s, must);
 });
 
 test("the browser is told to use the card only when E2E_GPU is set, and a software run is refused then", () => {
