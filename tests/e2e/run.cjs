@@ -1876,7 +1876,7 @@ const scenarios = {
           for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
-          if (onCourt) expect(Math.hypot(s1.target[0] - court[0], s1.target[1] - court[1]) <= 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court out from the door (${court.map((v) => v.toFixed(2))}) set ${s1.target}`);
+          if (onCourt) expect(s1.goal && Math.hypot(s1.goal[0] - court[0], s1.goal[1] - court[1]) <= 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court out from the door (${court.map((v) => v.toFixed(2))}) was bound for ${s1.goal} (first leg ${s1.target})`);
           expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
           // (what the nightly run needs to tell a tap that went to the door from a step the funnel drew in: where he stood, what the tap set, where he is now and which grid answers, #349)
           if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap (${fx}, ${fy}) from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
