@@ -98,9 +98,11 @@ export const sunHeight = (sun) => Math.asin(Math.max(-1, Math.min(1, sun[1] / Ma
 export function atmosphereMood(m) {
   if (m.time === "night") return null;
   const es = sunHeight(m.sun), a = skyTable(es), over = Math.pow(Math.min(1, Math.max(0, (m.cloud - 0.1) / 0.9)), 1.4);
-  const mix = (hand, air) => hand.map((v, i) => v * over + air[i] * (1 - over));
+  // `share`: how much of the air's hue each field takes. The sky and the sun take all of it; the mist and the sky-light take part, for the ground
+  // and the haze give light back that a clear atmosphere over bare earth does not (and a temple court is neither).
+  const mix = (hand, air, share = 1) => hand.map((v, i) => v * (over + (1 - over) * (1 - share)) + air[i] * (1 - over) * share);
   const lt = (c) => lum(c);
-  const zen = mix(m.zen, withY(a.zen, lt(m.zen))), hor = mix(m.hor, withY(a.hor, lt(m.hor))), fog = mix(m.fog, withY(a.fog, lt(m.fog))), hemiS = mix(m.hemiS, withY(a.hemi, lt(m.hemiS)));
+  const zen = mix(m.zen, withY(a.zen, lt(m.zen))), hor = mix(m.hor, withY(a.hor, lt(m.hor))), fog = mix(m.fog, withY(a.fog, lt(m.fog)), 0.6), hemiS = mix(m.hemiS, withY(a.hemi, lt(m.hemiS)), 0.4);
   // The sun's colour through the air, at the table's brightness; cloud puts the table's back.
   const sunCol = mix(m.sunCol, withY(a.sun, lt(m.sunCol)));
   const zl = lum([a.data[0], a.data[1], a.data[2]]);   // (a sentinel; the dome's scale is below)
