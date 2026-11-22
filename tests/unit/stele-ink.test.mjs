@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { INK, makeInk, makeTitle } from '../../app/levels/t00/stele-ink.js';
+import { TITLE } from '../../app/levels/t00/stele-title-data.js';
 
 test('most of the cut is gone, two or three cells are whole, and the lines can still be counted', () => {
   const { stats, data } = makeInk();
@@ -24,8 +25,18 @@ test('it is drawn the same way every time, and differently from another seed', (
 });
 
 test('the title is blank until its characters are given, and two characters fill the frame when they are', () => {
-  assert.ok(makeTitle({ size: 0, list: [] }).every((v) => v === 0));
-  const bits = new Uint8Array(16 * 16).fill(1), t = makeTitle({ size: 16, list: [bits, bits] }), W = INK.title.W;
+  assert.ok(makeTitle({ w: 0, h: 0, list: [] }).every((v) => v === 0));
+  const bits = new Uint8Array(12 * 16).fill(1), t = makeTitle({ w: 12, h: 16, list: [bits, bits] }), W = INK.title.W;
   let left = 0, right = 0; for (let y = 0; y < INK.title.H; y++) for (let x = 0; x < W; x++) if (t[y * W + x] > 128) { if (x < W / 2) left++; else right++; }
   assert.ok(left > 5000 && right > 5000, `a character on each side (${left}, ${right})`);
+});
+
+test('the title\'s characters are the Shuowen bitmaps: bytes of the size given, ink in them, and drawn into the frame', () => {
+  assert.ok(TITLE.w >= 64 && TITLE.h >= 64 && TITLE.list.length >= 1 && TITLE.list.length <= 2, `${TITLE.list.length} characters`);
+  for (const b64 of TITLE.list) {
+    const bytes = Buffer.from(b64, 'base64'); assert.equal(bytes.length, TITLE.w * TITLE.h, 'w x h bytes');
+    const ink = bytes.filter((v) => v > 128).length / bytes.length; assert.ok(ink > 0.08 && ink < 0.4, `a character fills ${(ink * 100).toFixed(0)}% of its box`);
+  }
+  const t = makeTitle(TITLE); let n = 0; for (const v of t) if (v > 128) n++;
+  assert.ok(n > 2000, `${n} cut pixels in the frame`);
 });

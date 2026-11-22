@@ -136,15 +136,17 @@ function inkStats(cut, alive) {
   return { loss: 1 - left / total, whole, colsShown };
 }
 
-/** The title's bytes, one a pixel: the two characters' bitmaps (each `size`² 0/1 values, 1 = cut) set side by side, the first at the right as a title is read. */
+/** The title's bytes, one a pixel: the two characters' bitmaps (each `size` x `size`, 1 = cut) set side by side, the first at the right as a title is read. */
 export function makeTitle(glyphs) {
-  const { W, H } = INK.title, data = new Uint8Array(W * H), size = glyphs?.size || 0;
-  if (!size) return data;
-  const gw = W * 0.4, gh = H * 0.8, y0 = (H - gh) / 2, xs = [W * 0.54, W * 0.06];   // (the first glyph on the right)
-  glyphs.list.forEach((bits, k) => {
+  const { W, H } = INK.title, data = new Uint8Array(W * H), gw0 = glyphs?.w || glyphs?.size || 0, gh0 = glyphs?.h || glyphs?.size || 0;
+  if (!gw0 || !gh0) return data;
+  const gh = H * 0.72, gw = Math.min(W * 0.44, gh * (gw0 / gh0)), y0 = (H - gh) / 2, xs = [W * 0.5 + (W * 0.5 - gw) / 2, (W * 0.5 - gw) / 2];   // (the first glyph in the right half, the second in the left)
+  glyphs.list.forEach((raw, k) => {
+    // (a glyph is a bitmap of values 0 to 1, or the base64 of its bytes, 255 = cut, as stele-title-data.js keeps them)
+    const bits = typeof raw === "string" ? Float32Array.from(Uint8Array.from(atob(raw), (c) => c.charCodeAt(0)), (v) => v / 255) : raw;
     for (let y = 0; y < Math.ceil(gh); y++) for (let x = 0; x < Math.ceil(gw); x++) {
-      const u = (x / gw) * (size - 1), v = (1 - y / gh) * (size - 1), i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0;
-      const a = (i, j) => bits[Math.min(size - 1, j) * size + Math.min(size - 1, i)];
+      const u = (x / gw) * (gw0 - 1), v = (1 - y / gh) * (gh0 - 1), i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0;
+      const a = (i, j) => bits[Math.min(gh0 - 1, j) * gw0 + Math.min(gw0 - 1, i)];
       const val = (a(i0, j0) * (1 - fu) + a(i0 + 1, j0) * fu) * (1 - fv) + (a(i0, j0 + 1) * (1 - fu) + a(i0 + 1, j0 + 1) * fu) * fv;
       const px = Math.floor(xs[k] + x), py = Math.floor(y0 + y); if (px >= 0 && px < W && py >= 0 && py < H) data[py * W + px] = Math.round(255 * val);
     }

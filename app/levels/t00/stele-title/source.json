@@ -1,0 +1,17 @@
+{
+ "book": "說文解字 十五卷, Chen Changzhi block-print, Tongzhi 12 (1873), National Library of China",
+ "file": "NLC892-312002098744-312890_說文解字_十五卷_第2冊.pdf",
+ "licence": "public domain (PD-old-100-expired, PD-scan, Wikimedia Commons)",
+ "crops": {
+  "yu": {
+   "page": 35,
+   "thumbnail_width": 1920,
+   "box": [
+    1228,
+    513,
+    1302,
+    620
+   ]
+  }
+ }
+}
