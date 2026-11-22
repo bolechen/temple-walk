@@ -57,7 +57,7 @@ jobs:
       - name: Every surface of the interface as a phone sees it
         run: node tools/mobile-audit.cjs ${{ matrix.lang != 'zh' && format('--lang={0}', matrix.lang) || '' }}
       - name: Keep the pictures
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-mobile-${{ matrix.lang }}-${{ github.run_id }}-${{ github.run_attempt }}
