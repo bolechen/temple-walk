@@ -138,10 +138,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
         if: steps.mine.outputs.run == 'true'
-      # A nightly run stands on its own, with no publication beside it: the quick checks go with the first machine.
-      - name: Parse, types, unit tests, and his body against everything built
-        if: steps.mine.outputs.run == 'true' && matrix.shard == 1
-        run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run test:grid && pnpm run edges && pnpm run edges:grid
       - name: Remember the browser between runs
         if: steps.mine.outputs.run == 'true'
         id: pw
@@ -169,8 +165,46 @@ jobs:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
           node tests/e2e/run.cjs $SCENARIOS --shard=${{ matrix.shard }}/${{ needs.shards.outputs.count }}
-      # Read after the scenarios, and whatever they gave: a read of the public address that timed out once stood before
-      # them and left the first machine's quarter of the scenarios unwalked (#276).
+      - name: Keep the report, the screenshots and the photograph
+        if: always() && steps.mine.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-full-${{ matrix.shard }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: tools/out/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # What a nightly run used to give its first machine besides its share of the scenarios (#335): the parse, types, unit tests and his
+  # body against everything built (about 17 minutes on one machine), and the evidence reads (about 12). With both on machine 1 it ran
+  # 36 minutes while the others ran 15 to 25; each is a job of its own now, side by side with the scenarios.
+  checks:
+    if: github.event_name != 'push' && github.event.inputs.runner != 't4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Parse, types, unit tests, and his body against everything built
+        run: pnpm run check && pnpm run typecheck && pnpm test && pnpm run test:grid && pnpm run edges && pnpm run edges:grid
+
+  evidence:
+    if: ${{ github.event_name != 'push' && github.event.inputs.runner != 't4' && (github.event_name == 'schedule' || github.event.inputs.evidence == 'true') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # A job of its own, so that a read of the public address that times out (#276) holds up no scenario's machine.
       # The evidence kept outside git (#223): every manifest entry fetched back and its SHA-256 compared. Over the
       # network, so only in the nightly run and when a run by hand asks for it (`evidence`), never in the way of a merge:
       # a branch's run by hand went red on a read of the public address that timed out (#276, #296), which says nothing
@@ -180,7 +214,7 @@ jobs:
       # Cloudflare's verification page being hashed from the original instead. If they disagree, the original is right
       # and the copy is mirrored again (`node tools/evidence.mjs mirror`).
       - name: The bucket holds what the manifests say (S3)
-        if: ${{ !cancelled() && steps.mine.outputs.run == 'true' && matrix.shard == 1 && (github.event_name == 'schedule' || github.event.inputs.evidence == 'true') }}
+        if: ${{ !cancelled() }}
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -188,19 +222,11 @@ jobs:
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: node tools/evidence.mjs verify-store
       - name: The evidence at the public address is what the manifests say
-        if: ${{ !cancelled() && steps.mine.outputs.run == 'true' && matrix.shard == 1 && (github.event_name == 'schedule' || github.event.inputs.evidence == 'true') }}
+        if: ${{ !cancelled() }}
         run: node tools/evidence.mjs verify --all
       - name: The evidence in the original store is what the manifests say
-        if: ${{ !cancelled() && steps.mine.outputs.run == 'true' && matrix.shard == 1 && (github.event_name == 'schedule' || github.event.inputs.evidence == 'true') }}
+        if: ${{ !cancelled() }}
         run: EVIDENCE_BASE="$(node -p 'require("./tools/evidence.config.json").fallback')" node tools/evidence.mjs verify --all
-      - name: Keep the report, the screenshots and the photograph
-        if: always() && steps.mine.outputs.run == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-full-${{ matrix.shard }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: tools/out/
-          retention-days: 14
-          if-no-files-found: ignore
 
   # The same suite on a graphics card (#335, docs/RELEASING.md): only when asked for by hand with `runner: t4`, never by a push,
   # a pull request (this workflow has no pull_request trigger, so a fork cannot reach the token) or the nightly run until the
