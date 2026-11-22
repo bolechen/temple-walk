@@ -6,8 +6,11 @@
 // What the book gives (the reading of the Siku quanshu text by the structure review, #520): the body is 0.40 L wide and 0.15 L thick; the
 // head is 0.44 L square and 0.18 L thick over a cloud plate 0.06 L high; the tortoise is twice the body's width long and 0.44 L
 // high; the plinth is two slabs of 0.6 L by 0.3 L by 0.1 L; from the tortoise to the head the stone is 1.8 L high, the plinth not
-// counted. Two things are ours: the head's height is taken as its width (the book writes it square), and the plinth's width is
-// doubled to one slab beside the other (0.3 L each would leave it narrower than the tortoise it carries).
+// counted. Three things are ours, and the sources table says so: the head's height is taken as its width (the book writes it square);
+// the plinth is 1.92 m by 0.96 m, two slabs end to end and as wide as it takes to carry the tortoise (the book's 0.3 L would leave it
+// narrower than the tortoise, and the Siku text is not consistent there); and the tortoise is 0.5 L wide, from memory and not checked
+// against the book, which gives its length and height but not its breadth, its feet standing in the middle of the plinth's top and its
+// belly raised a little off it.
 // L is 1.60 m, so that the whole stands 3.17 m: the pavilion's columns are 3.3 m.
 import * as THREE from "three";
 import { box, merge, mesh } from "../../src/geo.js";
