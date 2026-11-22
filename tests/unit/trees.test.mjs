@@ -290,6 +290,7 @@ for (const c of inCourt.filter((t) => t[4] < 8)) for (const axis of ["x", "z"]) 
 test("every near ginkgo stands in a stone pit centred on its trunk, wide enough for its roots, its edge stones a low step", () => {
   const wrong = [];
   for (const t of site.trees.filter((s) => !s[5] && s[3] === "ginkgo")) {
+    if (t[6] === "soft") { const sc = new THREE.Group(), S = createTrees(sc, M, [t]); if (S.pitStones || !S.moss || !S.beds || S.softGinkgos.length !== 1) wrong.push(`the soft-ringed ginkgo at ${t[0]}, ${t[2]} has a pit or lacks its earth and moss`); continue; }   // (the summit ginkgo: no pit, the platform being 0.6 m off)
     const scene = new THREE.Group(), T = createTrees(scene, M, [t]), pit = T.pitStones;
     if (!pit) { wrong.push(`the ginkgo at ${t[0]}, ${t[2]} has no pit`); continue; }
     const P = pit.geometry.attributes.position, box = new THREE.Box3().setFromBufferAttribute(P), c = box.getCenter(new THREE.Vector3()), size = box.getSize(new THREE.Vector3());

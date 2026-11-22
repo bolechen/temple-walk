@@ -201,9 +201,9 @@ function foot(y, trunk, top, seed, R = 24) {
 }
 // The bed it grows in: a round of dark earth standing a finger above the paving, uneven at its edge, heaped a little against the roots.
 function bed(x, y, z, r, seed) {
-  const R = 30, pos = [x, y + 0.07, z], idx = [];
-  for (const [f, lift] of [[0.62, 0.05], [1, 0.012]]) for (let k = 0; k < R; k++) { const a = (k / R) * 6.283, rr = r * f * (1 + 0.07 * Math.sin(a * 3 + seed) + 0.05 * Math.sin(a * 7 + seed * 2)); pos.push(x + Math.cos(a) * rr, y + lift, z + Math.sin(a) * rr); }
-  for (let k = 0; k < R; k++) { const n = (k + 1) % R; idx.push(0, 1 + n, 1 + k, 1 + k, 1 + n, 1 + R + k, 1 + n, 1 + R + n, 1 + R + k); }
+  const R = 48, pos = [x, y + 0.07, z], idx = [];
+  for (const [f, lift] of [[0.62, 0.05], [0.93, 0.02], [1, 0.012]]) for (let k = 0; k < R; k++) { const a = (k / R) * 6.283, rr = r * f * (1 + 0.07 * Math.sin(a * 3 + seed) + 0.05 * Math.sin(a * 7 + seed * 2)); pos.push(x + Math.cos(a) * rr, y + lift, z + Math.sin(a) * rr); }
+  for (let k = 0; k < R; k++) { const n = (k + 1) % R; idx.push(0, 1 + n, 1 + k, 1 + k, 1 + n, 1 + R + k, 1 + n, 1 + R + n, 1 + R + k, 1 + R + k, 1 + R + n, 1 + 2 * R + k, 1 + R + n, 1 + 2 * R + n, 1 + 2 * R + k); }
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
 
@@ -235,7 +235,7 @@ function pitStones(x, y, z, side) {
 function pitSnow(x, y, z, side) {
   const w = PIT.rim + 0.04, h = 0.035, cy = y + PIT.up + h / 2 - 0.005, half = side / 2 + PIT.rim / 2, long = side + 2 * PIT.rim + 0.04;
   return [box(long, h, w, x, cy, z - half), box(long, h, w, x, cy, z + half), box(w, h, side, x - half, cy, z), box(w, h, side, x + half, cy, z),
-    new THREE.PlaneGeometry(side, side).rotateX(-Math.PI / 2).translate(x, y + PIT.up - PIT.drop + 0.045, z)];   // (and the floor: snow over the gravel, which showed as black dots through the paving's snow)
+    new THREE.PlaneGeometry(side, side).rotateX(-Math.PI / 2).translate(x, y + PIT.up - PIT.drop + 0.03, z)];   // (and the floor: snow over the gravel, which showed as black dots through the paving's snow)
 }
 function pitSoil(x, y, z, side) {
   const g = new THREE.PlaneGeometry(side + 0.02, side + 0.02).rotateX(-Math.PI / 2).translate(x, y + PIT.up - PIT.drop, z);
@@ -256,15 +256,15 @@ function mossPatch(x, y, z, r, hold, seed, rgb, a0 = 0.85, lift = 0.016, R = 36)
 /** How far past its earth a cedar's moss fades out to the paving, in metres (#611: at least 0.3). */
 export const MOSS_FADE = 0.45;
 const MOSS = [0.08, 0.105, 0.062];
-// The moss between a cedar's earth and the paving: patches of it round the earth's edge, one every 0.9 m of the ring, so that the
+// The moss between a cedar's earth and the paving: patches of it round the earth's edge, one every 1.4 m of the ring, so that the
 // paving shows between them (#621: a continuous ring read as a felt, L* 16-20 and 0.25 saturated against the paving's 30-37 and 0.10),
 // each fading out over MOSS_FADE beyond its solid middle.
-const CEDAR_MOSS = [0.095, 0.105, 0.078];
+const CEDAR_MOSS = [0.125, 0.135, 0.105];
 function edgeMoss(x, y, z, r, seed) {
-  const n = Math.max(5, Math.ceil((2 * Math.PI * r) / 0.9)), out = [], size = 0.5;
+  const n = Math.max(4, Math.ceil((2 * Math.PI * r) / 1.4)), out = [], size = 0.5;
   for (let k = 0; k < n; k++) {
     const a = ((k + 0.35 * hash1(seed, 300 + k)) / n) * 6.283, d = r - 0.05 + 0.12 * (hash1(seed, 400 + k) - 0.5), t = hash1(seed, 500 + k);
-    out.push(mossPatch(x + Math.cos(a) * d, y, z + Math.sin(a) * d, size * (0.8 + 0.4 * hash1(seed, 600 + k)), 0.35, seed + k, [CEDAR_MOSS[0] * (0.85 + 0.35 * t), CEDAR_MOSS[1] * (0.9 + 0.25 * t), CEDAR_MOSS[2] * (0.9 + 0.2 * t)], 0.6, 0.019 + 0.0004 * k, 12));
+    out.push(mossPatch(x + Math.cos(a) * d, y, z + Math.sin(a) * d, size * (0.8 + 0.4 * hash1(seed, 600 + k)), 0.25, seed + k, [CEDAR_MOSS[0] * (0.85 + 0.35 * t), CEDAR_MOSS[1] * (0.9 + 0.25 * t), CEDAR_MOSS[2] * (0.9 + 0.2 * t)], 0.5, 0.019 + 0.0004 * k, 12));
   }
   return out;
 }
@@ -363,7 +363,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   // One stream of chance for the whole wood, so a tree's shape depends on those grown before it; `draw` can be
   // lent to another stream for a moment without disturbing it.
   let draw = seeded(311); const rnd = () => draw();
-  const wood = [], ginkgoWood = [], ginkgoBeds = [], pitStone = [], pitCap = [], moss = [], pits = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
+  const wood = [], ginkgoWood = [], ginkgoBeds = [], pitStone = [], pitCap = [], moss = [], softGinkgos = [], pits = [], cards = { maple: [], ginkgo: [], cedar: [], twig: [] };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1), V = (x, y, z) => new THREE.Vector3(x, y, z);
   // One flat spray at `p`, lit as part of the crown round `centre`; `shade` darkens those deep inside.
   const card = (list, g, p, centre, shade, squash = 0.75, lift = 0.35) => {
@@ -480,7 +480,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   // Every tree but a cedar is grown from a chance of its own, from where it stands, so that each differs from the
   // next and a picture of it can be taken again.
   const own = (x, z, k) => { const prev = draw; draw = seeded(Math.abs(Math.round(x * 211 + z * 37)) + k); for (let i = 0; i < 4; i++) rnd(); return () => { draw = prev; }; };   // (a small seed's first draws are all near nothing)
-  for (const [x, y, z, kind, h, far0] of spots) {
+  for (const [x, y, z, kind, h, far0, bedKind] of spots) {
     const info = { kind, h, at: [x, z], base: y, tris: 0 }, w0 = wood.length;
     if (kind === "cedar") {
       // A cryptomeria, its wood grown by three's TreeGenerator (three-tree.js; #162): one straight shaft swelling into its
@@ -499,7 +499,7 @@ export function createTrees(scene, M, spots, opts = {}) {
       // its bed: as wide against its flare where that meets the paving as the old foot's bed was against its trunk, so the
       // swelling comes down into earth and not onto the stone (lost with the foot in #199, put back)
       if (!far0) { const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
-        nth++; beds.push(bed(x, y, z, flare * 2.5 + 0.25, nth)); moss.push(...edgeMoss(x, y, z, flare * 2.5 + 0.25, nth)); }
+        nth++; beds.push(bed(x, y, z, flare * 2.5 + 0.25, nth)); moss.push(mossPatch(x, y, z, (flare * 2.5 + 0.25) * 1.03, 0.62, nth, [0.12, 0.112, 0.095], 0.6, 0.0165, 24), ...edgeMoss(x, y, z, flare * 2.5 + 0.25, nth)); }   // (a grey-brown dust over the earth's outer slope: its own litter is greener and darker than the court's stone)
       for (const t of tubes) {
         if (t.level < 1) continue;
         const from = t.rings[0].pos, to = t.rings[t.rings.length - 1].pos, d = to.clone().sub(from), a = Math.atan2(d.x, d.z), droop = Math.atan2(Math.hypot(d.x, d.z), -d.y);
@@ -543,10 +543,15 @@ export function createTrees(scene, M, spots, opts = {}) {
           else { const e = at(t, 1); if (Math.hypot(e.x - x, e.z - z) >= 0.55 * widthAt(e.y)) clump(kind, e, centre, 0.75 + rnd() * 0.35, 3); }
         }
         const rg = tubes[0].rings, i = Math.max(0, rg.findIndex((r) => r.pos.y > y) - 1), a = rg[i], b = rg[Math.min(i + 1, rg.length - 1)], f = b === a ? 0 : (y - a.pos.y) / (b.pos.y - a.pos.y), flare = a.radius + (b.radius - a.radius) * f;
-        nth++; const side = pitSide(flare); ginkgoBeds.push(softBed(x, y, z, side * 0.78, nth, PIT.up - PIT.drop + 0.012, 0.0004));   // (over the pit's soil and dust: lower, it was hidden by them and ended in a hard line)
-        pitStone.push(...pitStones(x, y, z, side)); beds.push(pitSoil(x, y, z, side), pitMound(x, y, z, flare * 1.05, nth, 0.05, 0.085)); pitCap.push(...pitSnow(x, y, z, side)); pits.push({ at: [x, z], side, flare });
-        moss.push(mossPatch(x, y, z, flare * 1.7 + 0.2, 0.45, nth + 5, MOSS, 0.55, PIT.up - PIT.drop + 0.012), pitContact(x, y, z, side), pitDust(x, y, z, side), ...pitMossPatches(x, y, z, side, flare, nth), pitMound(x, y, z, flare * 1.05, nth, 0.05, 0.085, true));   // (the earth heap's dark shading goes last, so that the moss does not cover it)   // moss at the roots and in patches, the dark contact line
-        pitStone.push(...pitGravel(x, y, z, side, flare, nth));   // gravel on the soil, drawn with the stones
+        if (bedKind === "soft") {   // a ginkgo that cannot have a pit (the pavilion's platform is 0.6 m off): an earth ring with moss, as a cedar's, and the leaves over it
+          nth++; const r = flare * 2.5 + 0.25; beds.push(bed(x, y, z, r, nth)); moss.push(mossPatch(x, y, z, r * 1.03, 0.62, nth, [0.12, 0.112, 0.095], 0.6, 0.0165, 24), ...edgeMoss(x, y, z, r, nth));
+          ginkgoBeds.push(softBed(x, y, z, r + 0.5, nth, 0.075, 0.002)); softGinkgos.push({ at: [x, z], r });
+        } else {
+          nth++; const side = pitSide(flare); ginkgoBeds.push(softBed(x, y, z, side * 0.78, nth, PIT.up - PIT.drop + 0.012, 0.0004));   // (over the pit's soil and dust: lower, it was hidden by them and ended in a hard line)
+          pitStone.push(...pitStones(x, y, z, side)); beds.push(pitSoil(x, y, z, side), pitMound(x, y, z, flare * 1.05, nth, 0.05, 0.085)); pitCap.push(...pitSnow(x, y, z, side)); pits.push({ at: [x, z], side, flare });
+          moss.push(mossPatch(x, y, z, flare * 1.7 + 0.2, 0.45, nth + 5, MOSS, 0.55, PIT.up - PIT.drop + 0.012), pitContact(x, y, z, side), pitDust(x, y, z, side), ...pitMossPatches(x, y, z, side, flare, nth), pitMound(x, y, z, flare * 1.05, nth, 0.05, 0.085, true));   // (the earth heap's dark shading goes last, so that the moss does not cover it)   // moss at the roots and in patches, the dark contact line
+          pitStone.push(...pitGravel(x, y, z, side, flare, nth));   // gravel on the soil, drawn with the stones
+        }
       }
       clump(kind, V(x, top - 0.2, z), centre, 1.1, 5);
       ginkgoSkeletons.push(sk);
@@ -607,7 +612,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   let pitMesh = null, mossMesh = null, capMesh = null;
   // (the stones are static and always drawn, so mergeStatic takes them into the stone batch with the buildings)
   if (pitStone.length) { pitMesh = mesh(merge(pitStone), M.stone); pitMesh.name = "ginkgo-pits"; scene.add(pitMesh); }
-  if (pitCap.length) { capMesh = new THREE.Mesh(mergeGeometries(pitCap.map((g) => { g.deleteAttribute("uv"); return g; })), new THREE.MeshStandardMaterial({ color: new THREE.Color(0.86, 0.89, 0.93), roughness: 1, envMapIntensity: 0.25 })); capMesh.receiveShadow = true; capMesh.userData.keep = true; capMesh.name = "ginkgo-pit-snow"; capMesh.userData.walk = false; capMesh.visible = false; scene.add(capMesh); }
+  if (pitCap.length) { capMesh = new THREE.Mesh(mergeGeometries(pitCap.map((g) => { g.deleteAttribute("uv"); return g; })), new THREE.MeshStandardMaterial({ color: new THREE.Color(0.7, 0.745, 0.81), roughness: 1, envMapIntensity: 0.25 })); capMesh.receiveShadow = true; capMesh.userData.keep = true; capMesh.name = "ginkgo-pit-snow"; capMesh.userData.walk = false; capMesh.visible = false; scene.add(capMesh); }
   if (moss.length) { mossMesh = new THREE.Mesh(mergeGeometries(moss), new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 1, envMapIntensity: 0.1, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })); mossMesh.receiveShadow = true; mossMesh.userData.keep = true; mossMesh.name = "tree-moss"; mossMesh.renderOrder = 0; scene.add(mossMesh); }
   const tex = { blossom: sheet("blossom"), maple: sheet("maple"), ginkgo: sheet("ginkgo"), cedar: sheet("cedar"), twig: sheet("twig") }, crowns = {};
   const put = (kind, map, o) => {
@@ -617,7 +622,7 @@ export function createTrees(scene, M, spots, opts = {}) {
   };
   put("maple", tex.maple, {}); put("ginkgo", tex.ginkgo, { glow: 0.16 }); put("cedar", tex.cedar, { sway: 0.02, snow: 0.8 }); put("twig", tex.twig, { sway: 0.012, snow: 0.55 });
   return {
-    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed, pits, pitStones: pitMesh, pitSoil: soil, pitSnow: capMesh, moss: mossMesh,
+    joints, branches, forks, census, limbs, cedars: cedarSkeletons, ginkgos: ginkgoSkeletons, beds: soil, ginkgoBeds: gbed, pits, softGinkgos, pitStones: pitMesh, pitSoil: soil, pitSnow: capMesh, moss: mossMesh,
     setMood(m) {
       for (const kind of ["maple", "ginkgo", "cedar"]) {
         const c = COLOURS[kind][m.season], k = crowns[kind]; if (!k) continue;
@@ -628,7 +633,7 @@ export function createTrees(scene, M, spots, opts = {}) {
       if (mossMesh) { mossMesh.visible = !(m.snow > 0.5); mossMesh.material.opacity = m.season === "autumn" ? 0.5 : 1; }   // (half as much moss in autumn: #621)
       if (capMesh) capMesh.visible = m.snow > 0.5;
       // the leaves under a ginkgo are the season's own, and are not there when it is bare
-      if (gbed) { const c = COLOURS.ginkgo[m.season]; gbed.visible = !!c && !(m.snow > 0.5); if (c) { const lum = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2], k = 0.45, mix = 0.62; gbed.material.color.setRGB((c[0] + (lum - c[0]) * mix) * k, (c[1] + (lum - c[1]) * mix) * k * 0.95, (c[2] + (lum - c[2]) * mix) * k * 0.8); } }   // (a yellow-brown that has given up two fifths of its colour: the litter over the pit's soil read 3 times the saturation of the bed on the paving, #611)
+      if (gbed) { const c = COLOURS.ginkgo[m.season]; gbed.visible = !!c && !(m.snow > 0.5); gbed.material.opacity = m.season === "summer" ? 0.6 : 1; if (c) { const lum = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2], k = 0.45, mix = 0.62; gbed.material.color.setRGB((c[0] + (lum - c[0]) * mix) * k, (c[1] + (lum - c[1]) * mix) * k * 0.95, (c[2] + (lum - c[2]) * mix) * k * 0.8); } }   // (a yellow-brown that has given up two fifths of its colour: the litter over the pit's soil read 3 times the saturation of the bed on the paving, #611)
       // Bare twigs show only when the leaves are down.
       if (crowns.twig) { crowns.twig.mesh.visible = m.season === "winter"; crowns.twig.mat.color.setRGB(0.2, 0.16, 0.13); }
     },
