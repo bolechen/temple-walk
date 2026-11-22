@@ -88,7 +88,7 @@ function doorMaterial(U, steps) {
         }
         // At dusk and dawn a hall whose middle bay the plan leaves unlit is a dark door, as its windows are (windows.js, #459); at night every room shows.
         // The lamp's strength only says whether it is after dark (a clear autumn dusk holds 0.23), so any lamp at all takes it fully (#555).
-        c*=mix(1.,mix(uDusk,1.,uWinNight),smoothstep(0.,.08,uLamp));
+        c*=mix(1.,mix(uDusk-.14*(1.-uLit)*smoothstep(4.,10.,distance(cameraPosition,vWP)),1.,uWinNight),smoothstep(0.,.08,uLamp));   // from far off an unlit hall's door goes darker still: it must read as a dark room, near it keeps its depth (#595)
         gl_FragColor=vec4(c,1.);
         #include <fog_fragment>
         // The room drawn live has had the air between the eye and every point of it already (doorway-live.js).
