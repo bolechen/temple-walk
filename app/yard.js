@@ -1382,7 +1382,8 @@ window.__litter = (secs, at) => { if (secs > 0) drift.runOn?.(secs, camera.posit
 window.__trail = (show) => { if (show === false) trail.hide(); return trail.state(); };
 window.__sun = (k) => { sky.scaleSun(k); return k; };   // the sun's light times k (tools/sun-lit.cjs: with it and without it, to see which paving is in direct sun, #488)
 window.__mood = (s, t) => { state.follow = false; setMood(s, t); };
-window.__skyTrial = (on) => { if (on !== undefined) { SKY_TRIAL.on = !!on; setMood(state.season, state.time); } return SKY_TRIAL.on; };   // #592 trial B: the sky from the sun's height, on or off while the page runs window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
+window.__skyTrial = (on) => { if (on !== undefined) { SKY_TRIAL.on = !!on; setMood(state.season, state.time); } return SKY_TRIAL.on; };   // #592 trial B: the sky from the sun's height, on or off while the page runs
+window.__view = setView; window.__photo = (open, opts) => { setPhoto(open); Object.assign(photo, opts || {}); resize(); };
 window.__shots = photoSounds;
 window.__flock = (go) => { if (go && flock.flush()) flutter(1); return flock.state(); };   // the birds going up now, if asked, and where they are
 window.__cues = cueState;   // how many times the wings and the far bell have sounded   // how many shutters and seals have sounded
