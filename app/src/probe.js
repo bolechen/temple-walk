@@ -41,7 +41,7 @@ float probeLight(vec3 p, vec3 n, out vec3 bounce){
   // The sky's share, from the first four harmonics, cosine-convolved: A0*Y0*c0 + A1*Y1*(c1*y + c2*z + c3*x), as a share of what an open sky gives.
   float vis=a.a*.282095+(b.x*n.y+b.y*n.z+b.z*n.x)*.325735;
   bounce=max(a.rgb*.282095,0.)*w*mix(uProbeAmb,vec3(1.),uProbeAbs);   // the light the walls give back, without a direction (the mean harmonic)
-  return mix(1.,clamp(vis,0.,1.2),w);
+  return mix(1.,clamp(vis,.42,1.2),w);   // never darker than .42 of the open sky: the gate's passage and the eaves keep their timber readable
 }`;
 
 /**
