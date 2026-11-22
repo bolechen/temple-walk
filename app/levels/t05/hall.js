@@ -53,11 +53,9 @@ export const HALL = Object.freeze({
  * a change), so that walking in it comes up over two or three seconds and never jumps (#481's art review).
  */
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
-export const TIMBER = Object.freeze({ lift: 10, beam: 8.0, board: 0.4, from: 3.0, to: 4.5 });
+export const TIMBER = Object.freeze({ lift: 8, beam: 8.0, board: 0.9, from: 3.0, to: 4.5 });
 export const FILL = Object.freeze({
-  door: 45, up: 105, upDist: 18, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-9, -11, -9], upAngle: 0.85, out: 9, depth: 3, ease: 0.5,
-  // The doors' light laid on the floor: one soft pool before the middle door, thrown in from the front wall's inner face over the worship band and gone by 16 m (the target picture's patch on the floor, fading inward).
-  pool: { at: 70, dist: 16, aim: [0, -7.5], angle: 0.35 },
+  door: 45, up: 105, upDist: 21, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-9, -11, -9], upAngle: 0.85, out: 9, depth: 3, ease: 0.5,
 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
@@ -254,7 +252,7 @@ export function buildHall(M) {
     const a = hallShut(x, y, z, nx, ny, nz);
     if (a >= 1) return a;
     const t = Math.min(1, Math.max(0, (y - y0 - TIMBER.from) / (TIMBER.to - TIMBER.from))), k = t * t * (3 - 2 * t);
-    return Math.min(2, a * (1 + (lift - 1) * k));
+    return Math.min(3, a * (1 + (lift - 1) * k));
   };
   return {
     // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
@@ -289,7 +287,6 @@ export function buildHall(M) {
       ...[-10, 10].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.9, y0 + 4, zB + 1]]),
       // (the timber's light, from under the floor: three narrow spots turned up into the frame over the worship band, as the light the doors lay on the floor goes up into it)
       ...FILL.upX.map((x, i) => [x, y0 - 0.5, FILL.upZ, FILL.up, FILL.upDist, 0xfff4e8, [x, y0 + FILL.upY, FILL.upAim[i]], FILL.upAngle]),
-      [0, y0 + 4.8, ZS[0] + H.front - H.wall - 0.55, FILL.pool.at, FILL.pool.dist, 0xfff4e8, [0, y0, FILL.pool.aim[1]], FILL.pool.angle],
     ],
     // How far inside the hall an eye is, 0 to 1: nothing outside the walls' box but for the FILL.out metres before the
     // threshold, then rising smoothly to FILL.depth metres in (PRD.md §2.1's "how far inside", its cheapest form).
