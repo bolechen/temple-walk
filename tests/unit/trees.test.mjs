@@ -297,7 +297,7 @@ test("every near ginkgo stands in a stone pit centred on its trunk, wide enough 
     for (let i = 0; i < B.count; i++) { const y = B.getY(i) - t[1]; if (y >= 0 && y < 0.05) spread = Math.max(spread, Math.hypot(B.getX(i) - t[0], B.getZ(i) - t[2])); }
     const inside = size.x - 2 * PIT.rim;
     if (Math.hypot(c.x - t[0], c.z - t[2]) > 0.05) wrong.push(`the pit at ${t[0]}, ${t[2]} is centred ${Math.hypot(c.x - t[0], c.z - t[2]).toFixed(2)} m off its trunk`);
-    if (inside < 2 * spread || inside < PIT.min - 1e-6) wrong.push(`the pit at ${t[0]}, ${t[2]} is ${inside.toFixed(2)} m inside, its roots spread ${spread.toFixed(2)} m`);
+    if (inside < 2 * spread || inside < PIT.min - 1e-6 || Math.abs(inside / PIT.block - Math.round(inside / PIT.block)) > 1e-6) wrong.push(`the pit at ${t[0]}, ${t[2]} is ${inside.toFixed(2)} m inside, its roots spread ${spread.toFixed(2)} m`);
     const up = box.max.y - t[1]; if (up < 0.05 || up > 0.08) wrong.push(`the pit's edge stones stand ${(up * 100).toFixed(1)} cm over the paving`);
     const soil = new THREE.Box3().setFromBufferAttribute(T.pitSoil.geometry.attributes.position), drop = box.max.y - soil.max.y; if (drop < 0.03 || drop > 0.06) wrong.push(`the soil lies ${(drop * 100).toFixed(1)} cm under the edge stones`);
     T.setMood({ season: "winter", snow: 1 }); if (T.pitSoil.visible || T.moss.visible) wrong.push("the pit's soil and moss are still drawn under snow");

@@ -223,9 +223,9 @@ function softBed(x, y, z, r, seed) {
 // The stone pit a ginkgo stands in (#611): the edge stones of a square pit let into the paving, as courtyard trees of the
 // Chinese temples stand, so the stone never runs up to the bark. Edge stones are PIT.rim wide and stand PIT.up over the
 // paving (sunk PIT.sink into it); the soil inside lies PIT.drop under their tops. `side` is the pit's inside width.
-export const PIT = Object.freeze({ rim: 0.15, up: 0.065, sink: 0.1, drop: 0.045, min: 1.6, times: 2.5 });
-/** Inside width of the pit for a tree whose roots spread `flare` m from the trunk at the paving. */
-export const pitSide = (flare) => Math.max(PIT.min, PIT.times * 2 * flare);
+export const PIT = Object.freeze({ rim: 0.15, up: 0.065, sink: 0.1, drop: 0.045, min: 1.6, times: 2.5, block: 0.93 });
+/** Inside width of the pit for a tree whose roots spread `flare` m from the trunk at the paving: 2.5 times their diameter, in whole stone-block lengths (`PIT.block`, a block of three chi in the Yingzao Fashi's juan 3, by analogy and not from a source), at least two of them (1.86 m). */
+export const pitSide = (flare) => PIT.block * Math.max(2, Math.ceil((PIT.times * 2 * flare) / PIT.block - 1e-9));
 function pitStones(x, y, z, side) {
   const w = PIT.rim, h = PIT.up + PIT.sink, cy = y + PIT.up - h / 2, half = side / 2 + w / 2, long = side + 2 * w;
   return [box(long, h, w, x, cy, z - half), box(long, h, w, x, cy, z + half), box(w, h, side, x - half, cy, z), box(w, h, side, x + half, cy, z)];
