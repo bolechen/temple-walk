@@ -834,6 +834,10 @@ function frame(now) {
   }
   if (push) {
     if (cine || photo.on || director.active() || opening.active() || push.to !== view) { push = null; fade(1); }
+    // Moved somewhere else while the view changed (up the stair to the balcony, down it, through a door: #587), the eye
+    // would set out from where it stood, hundreds of metres off, and creep there at PUSH.move a frame, the visitor seeing
+    // only the mist: a change of place behind the veil is a cut, and only what stays within PUSH.far is pushed.
+    else if (camera.position.distanceTo(push.p) > PUSH.far) { push = null; fade(1); monk.group.visible = view === "third" && !monkHidden; lens(); }
     else {
       // how far along: by time, and by no more than the frame's own bounds on moving and widening allow (smootherstep's
       // steepest is 1.875 times its mean)
@@ -916,7 +920,7 @@ if (Q.has("shot")) document.body.classList.add("bare");
 // Into his own eyes and out of them again, the eye is moved, not cut (#102, folded into #295: a phone measured the angle of
 // view jumping 13° in a frame): from where it stood, with the angle it had, it goes over to the new view's eye on a
 // smootherstep, never more than PUSH.move metres or PUSH.fov degrees in a frame, and he fades out (or in) as it comes.
-const PUSH = { time: 0.6, move: 0.12, fov: 1.5 };
+const PUSH = { time: 0.6, move: 0.12, fov: 1.5, far: 15 };   // (far: further than the follow arm ever reaches, 11 m, is not a push but a change of place)
 let push = null;
 const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return; }   // up on a balcony he sees with his own eyes only (#101)
   const from = frames > 3 && v !== view && !FIXED_VIEW && !cine && !photo.on && !reducedMotion.matches ? { p: camera.position.clone(), q: camera.quaternion.clone(), fov: camera.fov, to: v } : null;
