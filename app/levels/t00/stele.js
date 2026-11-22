@@ -10,6 +10,8 @@
 // chamfer on the arrises.
 import * as THREE from "three";
 import { box, merge, mesh } from "../../src/geo.js";
+import { INK, makeInk, makeTitle } from "./stele-ink.js";
+import { TITLE } from "./stele-title-data.js";
 
 /** The measures of the stone, in metres. */
 export const STELE = Object.freeze({
@@ -70,8 +72,22 @@ export function buildStele(M) {
   const fieldG = new THREE.ExtrudeGeometry(field, { depth: T - S.recess, bevelEnabled: false, curveSegments: 1 });
   fieldG.translate(0, y0, -T / 2); parts.body.push(fieldG);
   parts.body.push(box(t.w, t.h, T - S.recess - t.recess, 0, y0 + (ty0 + ty1) / 2, -T / 2 + (T - S.recess - t.recess) / 2));
+  // What the stone's shader reads, in the stele's own frame: where the point is across and up from the platform, which way its face looks (z of the
+  // normal), and whether it is the base (1) and a chamfer (2). The geometries are taken in the frame they were built in, the platform at y = 0.
+  const tag = (g, kind) => { const gg = g.index ? g.toNonIndexed() : g, p = gg.attributes.position, nrm = gg.attributes.normal, a = new Float32Array(p.count * 4);
+    for (let i = 0; i < p.count; i++) { const nx = nrm.getX(i), ny = nrm.getY(i), nz = nrm.getZ(i), flat = Math.max(Math.abs(nx), Math.abs(ny), Math.abs(nz)) > 0.97;
+      a[i * 4] = p.getX(i); a[i * 4 + 1] = p.getY(i); a[i * 4 + 2] = nz; a[i * 4 + 3] = kind + (flat ? 0 : 2); }
+    gg.setAttribute("stair", new THREE.BufferAttribute(a, 4)); return gg; };
+  for (const [k, list] of Object.entries(parts)) parts[k] = list.map((g) => tag(g, k === "base" ? 1 : 0));
+  const stone = M.steleStone || M.monolith;
+  if (M.steleStone) {   // the writing: the body's text, weathered, and the title in its frame (pictures of two bytes and one byte a pixel, mipmapped)
+    const ink = makeInk(), tex = (data, w, h, fmt) => { const t = new THREE.DataTexture(data, w, h, fmt, THREE.UnsignedByteType); t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 8; t.needsUpdate = true; return t; };
+    M.steleStone.userData.ink = tex(ink.data, INK.W, INK.H, THREE.RGFormat);
+    M.steleStone.userData.title = tex(makeTitle(TITLE), INK.title.W, INK.title.H, THREE.RedFormat);
+    M.steleStone.userData.inkStats = ink.stats;
+  }
   const group = new THREE.Group(); group.name = "stele";
   const out = {};
-  for (const [k, list] of Object.entries(parts)) { const m = mesh(merge(list), M.monolith); m.name = `stele-${k}`; m.userData.keep = true; group.add(m); out[k] = m; }
+  for (const [k, list] of Object.entries(parts)) { const m = mesh(merge(list), stone); m.name = `stele-${k}`; m.userData.keep = true; group.add(m); out[k] = m; }
   return { group, parts: out, height: y0 + H, S, foot: { hx: S.baseD / 2, hz: S.baseW / 2 } };   // (foot: half the base along the way up and across, in the stele's own frame)
 }

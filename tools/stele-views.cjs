@@ -20,7 +20,8 @@ const VIEWS = {
   q3: { eye: [-4.0, 4.0, 1.5], at: [0, 0, 1.5] }, q4: { eye: [-4.0, -4.0, 1.5], at: [0, 0, 1.5] },
   // 2 m out, a visitor's own eye (the main distance for the stone and its writing).
   top: { eye: [0.05, 0.0, 6.5], at: [0, 0, 0.45] },       // straight down, for the base's tiers
-  front2m: { eye: [2.0, 0, 1.55], at: [0, 0, 1.6], ctx: true },
+  front2m: { eye: [2.0, 0, 1.3], at: [0, 0, 1.3], ctx: true },   // his own eye (1.3 m), level, 2.0 m from the stone's middle
+  title: { eye: [3.75, 0, 1.3], at: [0, 0, 1.3], ctx: true },   // from the pavilion's mouth, level: the title's frame in the picture
   head: { eye: [1.6, 0.7, 2.6], at: [0, 0, 2.7] },     // the notched head and the title's frame from near
   path: { show: "stele", ctx: true },                                // from the old path, the named view
 };
