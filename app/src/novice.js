@@ -10,6 +10,7 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { BufferAttribute } from "three";
 import { asset } from "./assets.js";
+import { lidShader } from "./blink.js";
 
 export const PARTS = ["skin", "robe", "legs", "shoes"];
 
@@ -74,11 +75,12 @@ export function skinMaterial(material) {
 }
 
 /** Dress `monk` in a body. Resolves with `monk`; rejects (and leaves him as he was) if the file is missing or does not fit. */
-export async function loadNovice(monk, url = asset(BODY_FILE.tripo)) {
+export async function loadNovice(monk, url = asset(BODY_FILE.tripo), { eyes = url.endsWith("novice-tripo.glb") } = {}) {
   const gltf = await new GLTFLoader().loadAsync(url);
   const { geometries, material, robeColor, helpers } = bodyOf(gltf.scene, gltf.parser.json.extras, monk);
   /** @type {any} */ (material).envMapIntensity = 0.45;
   if (tintCloth(geometries, gltf.parser.json.extras)) /** @type {any} */ (material).vertexColors = true;
-  monk.dress(geometries, material, robeColor, { helpers, skinMaterial: skinMaterial(material) });
+  const skin = skinMaterial(material); if (eyes) lidShader(skin, monk.lid);   // the Tripo body's eyes are open in its texture: its lids close over them (#607)
+  monk.dress(geometries, material, robeColor, { helpers, skinMaterial: skin, eyes });
   return monk;
 }

@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createMonk } from "../../app/src/monk.js";
 import { bodyOf, skinMaterial, tintCloth } from "../../app/src/novice.js";
+import { lidShader } from "../../app/src/blink.js";
 import { helpersOf, relayBeads } from "../novice-rig.mjs";
 import { teaBowl } from "../../app/src/rites.js";
 
@@ -66,7 +67,8 @@ function showFaces(m) {
     mat.customProgramCacheKey = () => 'faces'; o.material = mat; });
 }
 function dress(m) { if (!body) return; const extras = body.gltf.parser.json.extras;   // a body weighted to helper bones (#286) has monk.js add them
-  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; if (tintCloth(g, extras)) material.vertexColors = true; m.dress(g, material, robeColor, { helpers: helpersOf(extras), skinMaterial: skinMaterial(material) }); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }   // dressed as the page dresses him: beads and straps laid on the worn robe
+  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; if (tintCloth(g, extras)) material.vertexColors = true; const eyes = !!extras.helpers?.length, skin = skinMaterial(material); if (eyes) lidShader(skin, m.lid);   // the Tripo body's lids (#607)
+  m.dress(g, material, robeColor, { helpers: helpersOf(extras), skinMaterial: skin, eyes }); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }   // dressed as the page dresses him: beads and straps laid on the worn robe
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
 const POSES = {
@@ -111,7 +113,7 @@ function hold(m, set, pose = false, floorY = 0) {
 }
 /** Pose him and look from `yaw` (0: before him) and `pitch`; returns a PNG data URL. */
 function shot(pose, yaw, pitch = 0.08, frame, near = 1) {
-  scene.remove(bowl); const m = fresh(); dress(m); showFaces(m); POSES[pose](m, frame); for (const n of stage.hide || []) if (m.parts[n]) m.parts[n].visible = false; m.group.updateMatrixWorld(true);
+  scene.remove(bowl); const m = fresh(); dress(m); showFaces(m); POSES[pose](m, frame); if (stage.lid != null) m.lid.value = stage.lid; for (const n of stage.hide || []) if (m.parts[n]) m.parts[n].visible = false; m.group.updateMatrixWorld(true);
   const seated = pose === "chair" || pose === "sit" || pose === "teaSeat";
   scene.remove(stool, cushion); if (pose !== "tea" && pose !== "teaSeat") scene.remove(bowl); if (pose === "chair" || pose === "teaSeat") scene.add(stool); if (pose === "sit") scene.add(cushion);
   floor.position.y = pose === "chair" || pose === "teaSeat" ? -0.44 : pose === "sit" ? -0.104 : 0;
