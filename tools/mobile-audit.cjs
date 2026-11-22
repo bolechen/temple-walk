@@ -35,7 +35,7 @@ const SURFACES = [
   // The year-end bell's night (#341): its one line at the top of the picture, then its card's sheet (laid out by
   // __joyaPreview, since the night is open only on the visitor's clock or the workbench, and this server is neither).
   ["joya", "window.__joyaPreview(true)", "window.__joyaPreview(false)"],
-  ["joyaCard", "(async () => { window.__joyaPreview(true); await __auditFrames(8); document.getElementById('joyaTake').click(); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
+  ["joyaCard", "(async () => { window.__joyaPreview(true); await __auditUntil(() => { const b = document.getElementById('joyaTake'); return b && !b.hidden; }); document.getElementById('joyaTake').click(); await __auditUntil(() => window.__ui().stack.includes('joyaCard')); })()", "document.getElementById('joyaClose')?.click(); window.__joyaPreview(false)"],
   ["prologue", "(() => { window.__pose(6.6, 53.4, Math.atan2(-6.6, 13.4), 0.05); window.__prologue(true); })()", null],
   // (with a temple closed, so that the map's row is there too, #449: the book's 更多 paper and the map's own sheet below keep it)
   ["menu", "document.body.classList.add('seasons'); window.__pilgrimage({ mark: 't00', season: 'autumn' }); window.__menu(true)", "window.__menu(false)"],   // with the seasons open: the hour row, 随时辰 first (#135)
@@ -176,6 +176,7 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
   await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
   let bad = 0, seen = 0;
   for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n))) {
+    if (process.env.AUDIT_DEBUG) console.log("   [debug] before", name, JSON.stringify(await p.evaluate(() => window.__ui())));
     if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
     await settle(p, name);
     // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
@@ -185,7 +186,7 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
     const n = badOf(m, vw); bad += n;
     if (!tag) report[`${shape}/${name}`] = m;
     console.log(`${shape}/${name}${tag}`.padEnd(22), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", ...LINES(m));
-    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name, true); }
+    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name, true); if (await p.evaluate(() => window.__ui().modal)) console.log(`   (a sheet is still open after "${name}" was put away: the surfaces after it are measured under it)`); }
   }
   if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
   await ctx.close();
