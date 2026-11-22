@@ -678,11 +678,11 @@ export function createMonk() {
       dt = Math.min(Math.max(dt || 0, 0), 0.1); speed = Math.max(0, speed || 0);
       bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
       if (pose === "bind") { legs.visible = shoes.visible = true; group.updateMatrixWorld(true); driveHelpers(true); return; }
-      lid.value = eyed ? blink.step(dt, pose === "sit", blinking) : 0;   // the Tripo body's eyelids (#607)
       const pray = pose === true || pose === "pray", sit = pose === "sit", chair = pose === "chair", hop = pose === "hop", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       // `seat`: cross-legged on a cushion; `perch`: on a stool, as on a chair.
       seat += ((sit ? 1 : 0) - seat) * ease(3.5); perch += ((chair ? 1 : 0) - perch) * ease(3.5);
+      lid.value = eyed ? blink.step(dt, sit && seat > 0.4, blinking) : 0;   // the Tripo body's eyelids (#607): shut once he is mostly down on the cushion, open as he rises
       // His legs fold into the seat as slowly as he sits down, but come out of it at once when he gets up: off a stool
       // a child slips down onto his feet, and the body (`seat`, `perch`) rises from that crouch over the next second.
       // Sent from one kind of seat to the other, he gets up from the first as above and folds into the second.

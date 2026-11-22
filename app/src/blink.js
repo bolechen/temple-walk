@@ -45,7 +45,7 @@ export function createBlink(seed = 607, B = BLINK) {
 
 // Where the eyes are in the body's bind pose (the head of novice-tripo.glb, metres, he faces +z) and the colour of the lid
 // (linear): an ellipse about each eye. The lid is drawn over the painted eye with a lash line along its lower edge.
-export const EYES = { y: 0.985, x: 0.067, rx: 0.054, ry: 0.036, zMin: 0.04, lid: [0.62, 0.40, 0.29], lash: [0.07, 0.035, 0.03] };
+export const EYES = { y: 0.985, x: 0.067, rx: 0.054, ry: 0.036, zMin: 0.04, lid: [0.5, 0.33, 0.245], lash: [0.07, 0.035, 0.03] };
 
 /** Patches a MeshStandardMaterial so its eyes close by `lid.value` (an object with a `value`, shared with the figure). Idempotent. */
 export function lidShader(material, lid) {
@@ -60,12 +60,13 @@ export function lidShader(material, lid) {
   if (uLid > 0.001 && vBind.z > ${f(EYES.zMin)}) {
     vec2 e = vec2(abs(vBind.x) - ${f(EYES.x)}, vBind.y - ${f(EYES.y)});
     float d = length(e / vec2(${f(EYES.rx)}, ${f(EYES.ry)}));
-    float over = smoothstep(1.0, 0.88, d) * uLid; lidOver = over;
-    float curve = -0.012 - 0.006 * (1.0 - clamp(e.x / ${f(EYES.rx)}, -1.0, 1.0) * clamp(e.x / ${f(EYES.rx)}, -1.0, 1.0));
-    float lash = smoothstep(0.0065, 0.002, abs(e.y - curve)) * smoothstep(1.0, 0.8, abs(e.x) / ${f(EYES.rx)}) * uLid;
+    float over = smoothstep(1.0, 0.62, d) * uLid; lidOver = over;
+    float xn = clamp(e.x / ${f(EYES.rx)}, -1.0, 1.0);
+    float curve = -0.004 - 0.009 * xn * xn;
+    float lash = smoothstep(0.0017, 0.0005, abs(e.y - curve)) * smoothstep(1.0, 0.7, abs(xn)) * uLid;
     diffuseColor.rgb = mix(diffuseColor.rgb, ${v3(EYES.lid)}, over);
-    diffuseColor.rgb = mix(diffuseColor.rgb, ${v3(EYES.lash)}, lash * over);
-  }`).replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, 1.0, lidOver);").replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  totalEmissiveRadiance *= 1.0 - lidOver;").replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n  normal = normalize(mix(normal, nonPerturbedNormal, lidOver));");
+    diffuseColor.rgb = mix(diffuseColor.rgb, ${v3(EYES.lash)}, lash * over * 0.9);
+  }`).replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, 1.0, lidOver);").replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  totalEmissiveRadiance *= 1.0 - lidOver;").replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n  normal = normalize(mix(normal, normalize(vViewPosition + vec3(0.0, 0.1, 0.0)), 0.9 * lidOver));");
   };
   material.customProgramCacheKey = () => "lid";
   material.needsUpdate = true;

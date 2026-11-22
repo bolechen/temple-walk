@@ -28,11 +28,11 @@ test("on a cushion his eyes are shut, and open within 0.3 s of getting up; on a 
   const m = dressed(createMonk), dt = 1 / 30; let t = 0;
   const run = (pose, secs) => { for (let i = 0; i < secs * 30; i++) { m.update(dt, 0, pose, t += dt, () => 0, {}); } };
   run(false, 1); assert.ok(m.lid.value < 0.01 || m.lid.value > 0, "stands");
-  run("sit", 1); assert.equal(m.lid.value, 1, "shut sitting"); run("sit", 5); assert.equal(m.lid.value, 1);
+  run(false, 1); m.update(dt, 0, "sit", t += dt, () => 0, {}); assert.ok(m.lid.value < 0.2, "not shut the moment he begins to sit down: he is still on his way"); run("sit", 1); assert.equal(m.lid.value, 1, "shut sitting"); run("sit", 5); assert.equal(m.lid.value, 1);
   for (let i = 0; i < Math.ceil(0.3 / dt); i++) m.update(dt, 0, false, t += dt, () => 0, {}); assert.ok(m.lid.value < 0.2, `open again within 0.3 s (${m.lid.value})`);
   let blinked = false; for (let i = 0; i < 30 * 20; i++) { m.update(dt, 0, "chair", t += dt, () => -0.44, {}); if (m.lid.value > 0.5) blinked = true; } assert.ok(blinked, "blinks on a stool");
   m.blinking = false; let most = 0; for (let i = 0; i < 30 * 20; i++) { m.update(dt, 0, false, t += dt, () => 0, {}); most = Math.max(most, m.lid.value); } assert.equal(most, 0, "with blinking off (?shot) his eyes are open");
-  m.update(dt, 0, "sit", t += dt, () => 0, {}); for (let i = 0; i < 20; i++) m.update(dt, 0, "sit", t += dt, () => 0, {}); assert.equal(m.lid.value, 1, "but he still shuts them to sit");
+  for (let i = 0; i < 30; i++) m.update(dt, 0, "sit", t += dt, () => 0, {}); assert.equal(m.lid.value, 1, "but he still shuts them to sit");
 });
 test("the figure built in code never blinks, and its lid stays 0 even sitting", () => {
   const m = createMonk(); let t = 0; for (let i = 0; i < 30 * 20; i++) m.update(1 / 30, 0, i > 300 ? "sit" : false, t += 1 / 30, () => 0, {}); assert.equal(m.lid.value, 0);
