@@ -147,14 +147,16 @@ const READY = {
   slip: () => { const d = document.getElementById("slip"); return d && d.open && !!document.getElementById("slipText").textContent.trim(); },
   book: () => { const i = document.getElementById("bookImg"); return i && i.complete && i.naturalWidth > 0; },
 };
-const settle = (p, name) => p.evaluate(async ([name, ready]) => {
+// (`closing`: the surface has just been put away; the next one must not open under a sheet still on its way out, which would hear its keys, ui.js `key`)
+const CLOSED = () => !window.__ui().modal;
+const settle = (p, name, closing) => p.evaluate(async ([name, ready, cap]) => {
   const frames = () => (window.__yard ? window.__yard().frames : 0), step = () => new Promise((r) => requestAnimationFrame(() => r()));
   const f0 = frames(), t0 = performance.now();
   const moving = () => document.getAnimations().some((a) => a.playState === "running" && a.effect && a.effect.getComputedTiming().iterations !== Infinity);
   const need = ready ? (0, eval)(`(${ready})`) : () => true;
-  // (a hard stop, so that a surface that never settles is measured as it stands rather than hanging the audit: a minute of the page's own time)
-  while (performance.now() - t0 < 60000 && (frames() - f0 < 4 || moving() || !need())) await step();
-}, [name, READY[name] ? READY[name].toString() : null]);
+  // (a hard stop, so that a surface that never settles is measured as it stands rather than hanging the audit: a minute of the page's own time, eight seconds for a sheet being put away)
+  while (performance.now() - t0 < cap && (frames() - f0 < 4 || moving() || !need())) await step();
+}, [name, closing ? CLOSED.toString() : READY[name] ? READY[name].toString() : null, closing ? 8000 : 60000]);
 const LINES = (m) => [m.bare.length ? `\n   paper left behind when drawn: ${m.bare.join(" | ")}` : "", m.placed.length ? `\n   placed badly: ${m.placed.join(" | ")}` : "", m.broken.length ? `\n   words broken across lines: ${m.broken.join(" | ")}` : "", m.tight.length ? `\n   too near the edge or each other: ${m.tight.join(" | ")}` : "", m.overlap.length ? `\n   overlapping: ${m.overlap.join(" | ")}` : "", m.wrapped.length ? `\n   wrapped: ${m.wrapped.join(" | ")}` : "", m.small.length ? `\n   small: ${m.small.join(" | ")}` : "", m.tiny.length ? `\n   tiny: ${m.tiny.join(" | ")}` : "", m.off.length ? `\n   off screen: ${m.off.join(" | ")}` : ""];
 const SHAPES = [["upright", 390, 844], ["side", 844, 390], ["small", 360, 640], ["large", 430, 932]].filter(([n]) => !SHAPE_ARG.length || SHAPE_ARG.includes(n));
 const badOf = (m, vw) => m.small.length + m.tiny.length + m.off.length + m.bare.length + m.broken.length + m.tight.length + m.wrapped.length + m.overlap.length + m.placed.length + (m.scrolls ? 1 : 0) + (m.w !== vw ? 1 : 0);
@@ -176,7 +178,7 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
     const n = badOf(m, vw); bad += n;
     if (!tag) report[`${shape}/${name}`] = m;
     console.log(`${shape}/${name}${tag}`.padEnd(22), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", ...LINES(m));
-    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name); }
+    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name, true); }
   }
   if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
   await ctx.close();
