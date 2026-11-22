@@ -3902,10 +3902,9 @@ const scenarios = {
     for (const lang of ["zh", "en", "ja", "ko"]) for (const [w, h] of [[360, 640], [390, 844], [844, 390], [430, 932]]) {
       const t = await open(b, base, `q=low&lang=${lang}` + BARE, { viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
       await t.page.evaluate(() => { const q = window.__places.sit; window.__pose(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); window.__rite("sit"); });
-      // (the three breaths are taken on the observances' clock, held and stepped here until the line is said, as the phone audit does)
+      // (the three breaths, the line and its six seconds are on the observances' clock, held and stepped here until the sitting is over and the way to stand up is offered)
       await t.page.evaluate(() => window.__riteClock(0));
-      await t.until(async () => { await t.page.evaluate(() => window.__riteClock(500)); return t.page.evaluate(() => document.getElementById("say").classList.contains("on")); }, 120000, `the line was never said, ${lang} ${w}x${h}`);
-      await t.until(() => t.page.evaluate(() => { const a = document.getElementById("act"), c = getComputedStyle(a); return !a.hidden && c.visibility !== "hidden" && +c.opacity > 0.9 && !!a.textContent.trim(); }), 120000, `the way to stand up never came, ${lang} ${w}x${h}`);
+      await t.until(async () => { await t.page.evaluate(() => window.__riteClock(500)); return t.page.evaluate(() => { const a = document.getElementById("act"), c = getComputedStyle(a); return !a.hidden && c.visibility !== "hidden" && +c.opacity > 0.9 && !!a.textContent.trim(); }); }, 180000, `the way to stand up never came, ${lang} ${w}x${h}`);
       const r = await t.page.evaluate(() => { const box = (e) => e.getBoundingClientRect(), a = box(document.getElementById("act")), out = [];
         for (const id of ["jumpBtn", "turnBtn"]) { const e = document.getElementById(id); if (!e || getComputedStyle(e).display === "none") continue; const c = box(e), ww = Math.min(a.right, c.right) - Math.max(a.left, c.left), hh = Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top); if (ww > 1 && hh > 1) out.push(`${id} ${Math.round(ww)}x${Math.round(hh)}`); }
         return { out, label: document.getElementById("act").textContent.trim(), l: Math.round(a.left), r: Math.round(a.right), w: innerWidth }; });
