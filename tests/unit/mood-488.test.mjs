@@ -24,7 +24,7 @@ test("the prologue changes autumn dusk's sun (direction, strength) and the glow 
     if (s === "autumn" && t === "dusk") {
       const changed = Object.keys(now).filter((k) => JSON.stringify(now[k]) !== JSON.stringify(was[k]));
       assert.deepEqual(changed.sort(), ["bloom", "disk", "glow", "sun", "sunI"], "only the sun and the sky's own glow differ");
-      assert.ok(Math.abs(now.sunI / was.sunI - 2.25) < 1e-9, "more than twice as bright, to part sun and shade by 1.4 to 2");
+      assert.ok(Math.abs(now.sunI / was.sunI - 1.25) < 1e-9, "a quarter brighter again, to part sun and shade by 1.4 to 2");
     } else assert.deepEqual(now, was, `${s} ${t} must not move (J01 is summer by day; the other dusks are prototype 05's and the rest)`);
   }
 });

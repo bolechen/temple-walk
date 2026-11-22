@@ -75,10 +75,70 @@
    "rev": "18ab8bad047cb4c324225506d8bd637419b99044"
   },
   {
+   "path": "compare-k225-k125-v2.jpg",
+   "bytes": 427438,
+   "sha256": "dc03cf7dbb65747e7a4bf12ee14ae9e02b38216ec9f808f70ae10755333d1de4",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "compare-k225-k125.jpg",
+   "bytes": 426214,
+   "sha256": "ed1225f072b094945fb56b8d26d47a4b133bd0d3307a15e9b1a4dc7f7db1cc21",
+   "rev": "7aec75cec39e155d61bca75ec1655f0c0045534f"
+  },
+  {
    "path": "court-1920x1080.jpg",
    "bytes": 506915,
    "sha256": "378726d7170211e40d816affffe876a7ae680b8f4c97e8ef52ae90510899446e",
    "rev": "a0797130229bb20eca3f3a51a2d85c1393b13990"
+  },
+  {
+   "path": "orig-art1-1920x1080.jpg",
+   "bytes": 635727,
+   "sha256": "09a967de1934dc729c2b0ef28cdf7a2483acaeca8b971cd99745de90b54210de",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-art3-1920x1080.jpg",
+   "bytes": 489341,
+   "sha256": "5f8f7f4c269f439026340863e295d58d5a26e89c6546b29128b3733374b0ac76",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-art4-1920x1080.jpg",
+   "bytes": 285348,
+   "sha256": "0d59762604e3fb1a2d9d647ea4f47f57ee867671695e0b7cf90b7dc9c3732b31",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-court-1920x1080.jpg",
+   "bytes": 466465,
+   "sha256": "7d96578e1c6905c20f2b898c92c32473d3792f9b770d696cc909071273aeccc5",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-door-chan-1920x1080.jpg",
+   "bytes": 397581,
+   "sha256": "405feaffe45905720b7f248347c02d8f62493fa3992944305644f7cd103d174a",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "orig-teatable-1920x1080.jpg",
+   "bytes": 280557,
+   "sha256": "bb67d8d32404cd6d4e0ab98790cacb9fc6ff0d819824e5c04b073bf4401d671b",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "six-panel-v2.jpg",
+   "bytes": 264658,
+   "sha256": "a929bf17c5089e63e715cd907f24886a21cda9807fe2540da2fcb59f261ce685",
+   "rev": "b06afa6802f8c5a5469f87a6da2ad35c27de5a0b"
+  },
+  {
+   "path": "six-panel.jpg",
+   "bytes": 263447,
+   "sha256": "b9418996a2c5cdc68dbdb45ee3259e8da2138fd007b679cad3b81f1d15d250cf",
+   "rev": "7aec75cec39e155d61bca75ec1655f0c0045534f"
   }
  ]
 }

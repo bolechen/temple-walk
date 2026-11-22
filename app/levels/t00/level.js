@@ -6,7 +6,7 @@ import { buildSite, createWalker, SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain
 import { zoneBounds } from "../../src/score.js";
 
 /** The direction toward the sun at autumn dusk in the plan's frame (north is -z): 65° west of north, 18° above the horizon; how much brighter than the hour's own it burns; and the sky's own glow, bloom and disk, drawn down to a small tight halo so that the low sun does not wash the great hall's roof out (under 2% of the court's pixels at full white). The numbers come from the T4 scans in docs/t00/evidence/488-autumn-dusk-sun/. */
-const AUTUMN_DUSK_SUN = [-0.8619, 0.309, -0.4019], AUTUMN_DUSK_SUN_K = 2.25, AUTUMN_DUSK_SKY = { glow: 0.1, bloom: 0.2, disk: 0.25 };
+const AUTUMN_DUSK_SUN = [-0.8619, 0.309, -0.4019], AUTUMN_DUSK_SUN_K = 1.25, AUTUMN_DUSK_SKY = { glow: 0.1, bloom: 0.2, disk: 0.25 };
 
 /** @type {import("../../src/level.js").Level} */
 export default {
