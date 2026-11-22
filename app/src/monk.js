@@ -14,7 +14,7 @@
 import * as THREE from "three";
 import { STAIR } from "./geo.js";
 import { createBlink, mulberry32 } from "./blink.js";
-import { pushOut, createCollider, markCollide, thighRadius, colliderShader } from "./robe-collider.js";
+import { pushOut, createCollider, markCollide, closeSeam, thighRadius, colliderShader } from "./robe-collider.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -669,6 +669,7 @@ export function createMonk(opts = {}) {
       }
       for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = name === "skin" && o.skinMaterial ? o.skinMaterial : material; }
       for (const [name, mesh] of Object.entries({ robe })) mesh.material = colliderShader(material.clone(), collider);
+      closeSeam(robe.geometry, thighBones, IDX.robeFront, bindAt("leftUpperLeg").y, [skin.geometry, legs.geometry, shoes.geometry]);   // a made robe's front halves hang from one thigh each: they share the front skirt bone at the seam (#615)
       setupHem(robe.geometry.attributes.position.count); setupCollider();
       straps.visible = true;
       dressed = true; eyed = !!o.eyes;

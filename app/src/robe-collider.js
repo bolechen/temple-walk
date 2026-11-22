@@ -53,6 +53,31 @@ export function markCollide(geometry, bones, hip, knee) {
 }
 
 /**
+ * Closes the front of a made robe at its middle seam (#615, the 3D review): the points either side of it are weighted to the left
+ * and to the right thigh, so that when one knee comes up the two halves part (up to 9 cm on a flight, in half the frames). Within
+ * 2 cm of the middle a point's thigh weight goes to the front skirt bone, which both halves share; out to 7 cm the share
+ * eases back to the thighs. Changes the weights in place; returns how many points it moved.
+ * A point that another part of the body shares (a robe point lying on the trousers: `others`) is left alone, the parts being held
+ * together there (a unit test holds copies of one point within a millimetre).
+ * @param {THREE.BufferGeometry} geometry @param {number[]} thighBones @param {number} frontBone @param {number} hipY the hip joint's height in the bind pose @param {THREE.BufferGeometry[]} others
+ */
+export function closeSeam(geometry, thighBones, frontBone, hipY, others = []) {
+  const P = geometry.attributes.position, si = geometry.attributes.skinIndex, sw = geometry.attributes.skinWeight; let moved = 0;
+  const key = (x, y, z) => `${Math.round(x * 1e4)},${Math.round(y * 1e4)},${Math.round(z * 1e4)}`, shared = new Set();
+  for (const g of others) { const Q = g.attributes.position; for (let i = 0; i < Q.count; i++) shared.add(key(Q.getX(i), Q.getY(i), Q.getZ(i))); }
+  for (let i = 0; i < P.count; i++) {
+    if (shared.has(key(P.getX(i), P.getY(i), P.getZ(i)))) continue;
+    const x = Math.abs(P.getX(i)); if (P.getZ(i) < 0.0 || x >= 0.07 || P.getY(i) > hipY - COLLIDER.below) continue;
+    const t = Math.min(1, Math.max(0, (x - 0.02) / 0.05)), keep = t * t * (3 - 2 * t); let share = 0, slot = -1;
+    for (let k = 0; k < 4; k++) { const b = si.getComponent(i, k), w = sw.getComponent(i, k); if (b === frontBone) slot = k; else if (thighBones.includes(b) && w > 0) { const m = w * (1 - keep); sw.setComponent(i, k, w - m); share += m; } }
+    if (share <= 0) continue;
+    if (slot < 0) { let low = 0; for (let k = 1; k < 4; k++) if (sw.getComponent(i, k) < sw.getComponent(i, low)) low = k; slot = low; si.setComponent(i, slot, frontBone); sw.setComponent(i, slot, 0); }
+    sw.setComponent(i, slot, sw.getComponent(i, slot) + share); moved++;
+  }
+  si.needsUpdate = sw.needsUpdate = true; return moved;
+}
+
+/**
  * The thigh's radius in the bind pose: the 85th percentile of the distance from the hip–knee line of the trousers' points that the
  * thigh carries (its own bone's weight over a half) between the knee and the hip, with COLLIDER.margin on top.
  * @param {THREE.BufferGeometry} legs @param {number[]} thighBones @param {THREE.Vector3[]} hip @param {THREE.Vector3[]} knee

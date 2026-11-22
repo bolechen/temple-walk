@@ -289,3 +289,24 @@ test("the thighs carry the skirt out of their way: nothing moves standing, nothi
     assert.equal(inside, 0, `${name}: ${inside} carried points of the skirt lay inside a thigh over ${frames} frames of a flight`);
   }
 });
+
+// #615, the 3D review's measure of a front that parts: the points of the robe's front either side of its middle seam, paired in the
+// bind pose (nearest across the middle, under 3 cm apart), and how much each pair's gap grows on a flight up; the front holds if
+// in at least 95 per cent of the frames no pair has opened by more than 3 cm.
+function seam({ make = createMonk, n = 10, dir = 1 }) {
+  const probe = make(); probe.group.updateMatrixWorld(true); probe.skeleton.update();
+  const rg = probe.parts.robe.geometry, P = rg.attributes.position, col = rg.attributes.collide, v = new THREE.Vector3(), w = new THREE.Vector3();
+  const L = [], R = [];
+  for (let i = 0; i < P.count; i++) { if (!col.getX(i) || P.getZ(i) < 0.02 || Math.abs(P.getX(i)) > 0.045) continue; (P.getX(i) < 0 ? L : R).push(i); }
+  const pairs = []; for (const i of L) { let best = -1, bd = 0.03; for (const j of R) { const d = Math.hypot(P.getX(i) - P.getX(j), P.getY(i) - P.getY(j), P.getZ(i) - P.getZ(j)); if (d < bd) { bd = d; best = j; } } if (best >= 0) pairs.push([i, best, bd]); }
+  let frames = 0, ok = 0, worst = 0;
+  walk({ n, dir, make: () => probe }, (m, frame) => {
+    if (frame % 3) return; frames++; m.skeleton.update(); let most = 0;
+    for (const [i, j, d0] of pairs) { m.parts.robe.getVertexPosition(i, v).applyMatrix4(m.parts.robe.matrixWorld); carried(m, i, v); m.parts.robe.getVertexPosition(j, w).applyMatrix4(m.parts.robe.matrixWorld); carried(m, j, w); most = Math.max(most, v.distanceTo(w) - d0); }
+    worst = Math.max(worst, most); if (most <= 0.03) ok++;
+  });
+  return { pairs: pairs.length, frames, ok, worst };
+}
+test("going up, the robe's front does not part at its middle seam: no pair of points across it opens by over 3 cm in 95% of the frames", () => {
+  for (const [name, make] of BODIES) { const s = seam({ make }); console.log(`# SEAM ${name}: ${s.pairs} pairs, ${s.ok} of ${s.frames} frames hold (no pair opened over 3 cm), worst ${(s.worst * 100).toFixed(1)} cm`); assert.ok(s.pairs > 10, `${name}: ${s.pairs} pairs`); assert.ok(s.ok >= 0.95 * s.frames, `${name}: the front held in ${s.ok} of ${s.frames} frames, parting by ${(s.worst * 100).toFixed(1)} cm at most`); }
+});
