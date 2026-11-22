@@ -207,9 +207,9 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
 test("the fill comes from the doors and from under the floor: none of it hung before the front wall, none in the air under the roof (#493, #549)", async () => {
   const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
   const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
-  assert.ok(h.fill.length <= 5, "no more lights than the five the hall had at #481 (each is in every shader, outdoors too)");
+  assert.ok(h.fill.length <= 6, "no more lights than the five of #549 and the one of the doors' floor pool (each is in every shader, outdoors too; the cost is measured, DECISIONS.md 2026-11-22)");
   assert.ok(h.fill.every((f) => f[6]), "every one a spot, turned somewhere: no lamp lights the whole room");
-  const doors = h.fill.filter((f) => f[1] > y0), up = h.fill.filter((f) => f[1] < y0);
+  const high = h.fill.filter((f) => f[1] > y0), up = h.fill.filter((f) => f[1] < y0), doors = high.filter((f) => f[7] === undefined);
   assert.equal(doors.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
   for (const [x, y, z, , , , aim] of doors) {
     assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X, `a door's light stands just inside the front wall (${x}, ${z.toFixed(2)})`);
@@ -218,6 +218,10 @@ test("the fill comes from the doors and from under the floor: none of it hung be
   }
   // The timber's light comes from under the floor over the worship band, narrow and turned up: a light hung in the air under this roof is close to
   // the beams (9–10 m) or the boards (15–19 m) wherever it hangs, and laid a bright spot on one of them (#549: 30 L* at 13 m, the beams at 9 m).
+  // The doors' light on the floor (one soft pool before the middle door), from just inside the front wall and not turned at the walls.
+  const rest = high.filter((f) => f[7] !== undefined);
+  assert.equal(rest.length, 1, "a pool on the floor");
+  for (const [x, y, z, , d, , aim, angle] of rest) { assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X && angle < 0.5 && aim[2] < zf - 5, `from just inside the front wall, narrow, and turned in (${x})`); assert.ok(d <= 40); }
   assert.equal(up.length, 3);
   for (const [x, y, z, , , , aim, angle] of up) {
     assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3 && z < zf - 3 && Math.abs(x) < X - 3, `under the floor, over the worship band (${x}, ${z})`);
@@ -232,9 +236,9 @@ test("the timber overhead takes more of the inside's light than the walls, from 
   const { TIMBER } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), y0 = HALL.floor;
   assert.equal(h.timberShut(0, y0 + 1, -10), h.shut(0, y0 + 1, -10), "low in the hall, as the walls");
-  assert.ok(Math.abs(h.timberShut(0, y0 + 9, -10) - Math.min(1, HALL.inside * TIMBER.lift)) < 1e-9, "high up, TIMBER.lift times the walls'");
+  assert.ok(Math.abs(h.timberShut(0, y0 + 9, -10) - Math.min(2, HALL.inside * TIMBER.lift)) < 1e-9, "high up, TIMBER.lift times the walls'");
   assert.equal(h.timberShut(0, y0 + 9, 30), 1, "outside the hall the sky is not shut out, timber or not");
-  for (let y = y0; y < y0 + 10; y += 0.05) { const a = h.timberShut(0, y, -10), b = h.timberShut(0, y + 0.05, -10); assert.ok(b >= a && b - a < 0.02, `no step at ${y.toFixed(2)}`); }
+  for (let y = y0; y < y0 + 10; y += 0.05) { const a = h.timberShut(0, y, -10), b = h.timberShut(0, y + 0.05, -10); assert.ok(b >= a && b - a < 0.12, `no step at ${y.toFixed(2)}`); }
 });
 
 test("a wall's inner face is inside all the way to its corners, its outer face outside, and the murals stay within the inner faces (#481)", () => {
