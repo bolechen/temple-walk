@@ -259,6 +259,7 @@ const glows = []; let glowCloud = null;
 
 await loading.step(tr("树影"));
 // Nothing built so far will move again: draw it in as few pieces as the materials allow.
+if (trees?.pitStones) site.root.add(trees.pitStones);   // the ginkgoes' pit stones are static stone: they go into the stone batches with the buildings (#611)
 const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
 // The dragon well's drops and the rings they send across the water (well.js); the rite's drops ring it too.
 // A level with no well has none, and nothing asks it for drops (the same for the birds below).
