@@ -95,7 +95,9 @@ const deg = (r) => (r * 180) / Math.PI;
     const scene = new THREE.Group(), g = createTrees(scene, M, spots), bed = g.ginkgoBeds, col = bed.geometry.attributes.color;
     assert.equal(col.itemSize, 4); let edge = 0, centre = 0; for (let i = 0; i < col.count; i++) { if (col.getW(i) === 0) edge++; if (col.getW(i) > 0.45) centre++; } assert.ok(edge >= 36 * 4 && centre >= 4, `${edge} edge points at 0 alpha, ${centre} thick ones`);
     const want = { summer: [0.34, 0.5, 0.17], autumn: [0.8, 0.56, 0.1] };
-    for (const [season, c] of Object.entries(want)) { g.setMood({ season, snow: 0 }); assert.ok(bed.visible, season); const k = bed.material.color; assert.ok(Math.abs(k.r - c[0] * 0.45) < 1e-6 && Math.abs(k.g - c[1] * 0.45) < 1e-6, `${season}: ${k.r}, ${k.g}`); }
+    // the bed's colour is the tree's season colour, darkened by 0.45 and, since #611, 62 per cent of the way to its grey and a little toward brown (the litter over the pit's soil read three times the paving's saturation)
+    const bedColour = (c) => { const lum = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2], k = 0.45, mix = 0.62; return [(c[0] + (lum - c[0]) * mix) * k, (c[1] + (lum - c[1]) * mix) * k * 0.95, (c[2] + (lum - c[2]) * mix) * k * 0.8]; };
+    for (const [season, c] of Object.entries(want)) { g.setMood({ season, snow: 0 }); assert.ok(bed.visible, season); const k = bed.material.color, e = bedColour(c); assert.ok(Math.abs(k.r - e[0]) < 1e-6 && Math.abs(k.g - e[1]) < 1e-6 && Math.abs(k.b - e[2]) < 1e-6, `${season}: ${k.r}, ${k.g}, ${k.b}`); }
     g.setMood({ season: "winter", snow: 0 }); assert.ok(!bed.visible, "winter"); g.setMood({ season: "summer", snow: 0.9 }); assert.ok(!bed.visible, "under snow");
   });
 
