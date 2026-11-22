@@ -23,7 +23,7 @@ const BARE = "&off=site,bamboo,trees,backdrop,reflect,bloom,drift,props,ground,d
 // What the opening scripts below wait with, in the page: frames drawn, or a condition (installed in every page before its own scripts run).
 const HELPERS = () => {
   window.__auditFrames = (n) => new Promise((r) => { let i = 0; const f = () => (++i >= n ? r() : requestAnimationFrame(f)); f(); });
-  window.__auditUntil = async (cond, ms = 15000) => { const t0 = performance.now(); while (!cond() && performance.now() - t0 < ms) await new Promise((r) => requestAnimationFrame(r)); };
+  window.__auditUntil = async (cond, ms = 90000) => { const t0 = performance.now(); while (!cond() && performance.now() - t0 < ms) await new Promise((r) => requestAnimationFrame(r)); };
 };
 // A surface that is only reached from another one's state.
 const NEEDS = { sitsay: "sit", clip: "clipping" };
