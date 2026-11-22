@@ -128,11 +128,16 @@ for (const id of ["main"]) {
   const box = { x0: R.x0 + 0.5, x1: R.x1 - 0.5, z0: R.z0 + 0.5, z1: R.z1 - 0.5, y0: R.y + 0.6, y1: R.y + 9 };
   grids.push(bakeGrid({ id: "room:" + id, S, box, cell: 1.5, lamps, hasSky: false }));
 }
-// The file: "PRB1", the header's length, the header (JSON), padding to four, then for each grid its four harmonics as RGBA half floats.
-const head = { version: 1, level: LEVEL, rays: RAYS, grids: grids.map((g) => ({ id: g.id, dim: g.dim, cell: g.cell, box: g.box, abs: g.abs })) };
-const hb = Buffer.from(JSON.stringify(head)), pad = (4 - ((8 + hb.length) % 4)) % 4, parts = [Buffer.from("PRB1"), Buffer.alloc(4), hb, Buffer.alloc(pad)];
+// The file: "PRB2", the header's length, the header (JSON), padding to four, then for each grid its four harmonics as RGBA half floats.
+const head = { version: 2, level: LEVEL, rays: RAYS, grids: grids.map((g) => ({ id: g.id, dim: g.dim, cell: g.cell, box: g.box, abs: g.abs })) };
+const hb = Buffer.from(JSON.stringify(head)), pad = (4 - ((8 + hb.length) % 4)) % 4, parts = [Buffer.from("PRB2"), Buffer.alloc(4), hb, Buffer.alloc(pad)];
 parts[1].writeUInt32LE(hb.length);
-for (const g of grids) { const n = g.dim[0] * g.dim[1] * g.dim[2]; for (let s = 0; s < 4; s++) { const u = new Uint16Array(n * 4); for (let i = 0; i < n; i++) for (let q = 0; q < 4; q++) u[i * 4 + q] = f16(g.coef[i * 16 + s * 4 + q]); parts.push(Buffer.from(u.buffer)); } }
+// Two volumes a grid (two fetches a pixel on the page, not four): the mean harmonic's light and sky, and the sky's three directional ones. The bounce is kept without a direction.
+for (const g of grids) {
+  const n = g.dim[0] * g.dim[1] * g.dim[2], v0 = new Uint16Array(n * 4), v1 = new Uint16Array(n * 4);
+  for (let i = 0; i < n; i++) { for (let q = 0; q < 4; q++) v0[i * 4 + q] = f16(g.coef[i * 16 + q]); for (let s = 1; s < 4; s++) v1[i * 4 + s - 1] = f16(g.coef[i * 16 + s * 4 + 3]); }
+  parts.push(Buffer.from(v0.buffer), Buffer.from(v1.buffer));
+}
 mkdirSync(OUT, { recursive: true });
 const file = OUT + `${LEVEL}.bin`, out = Buffer.concat(parts); writeFileSync(file, out);
 for (const g of grids) console.log(`${g.id}: ${g.dim.join("x")} at ${g.cell} m, ${g.solid} points inside something`);
