@@ -23,6 +23,8 @@ const VIEWS = {
   front2m: { eye: [2.0, 0, 1.3], at: [0, 0, 1.3], ctx: true },   // his own eye (1.3 m), level, 2.0 m from the stone's middle
   title: { eye: [3.75, 0, 1.3], at: [0, 0, 1.3], ctx: true },   // from the pavilion's mouth, level: the title's frame in the picture
   head: { eye: [1.6, 0.7, 2.6], at: [0, 0, 2.7] },     // the notched head and the title's frame from near
+  arris: { eye: [0.9, -1.2, 1.1], at: [0.185, -0.495, 1.1] },    // a front arris of the body, face on, for the worn band at 0.8 to 1.4 m
+  foot: { eye: [1.3, -1.7, 0.95], at: [0.1, -0.3, 0.75] },       // the stone's foot and the base's top, from the shaded side: damp, moss, the base's lighter top
   path: { show: "stele", ctx: true },                                // from the old path, the named view
 };
 const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
