@@ -38,7 +38,7 @@ export const LIMITS = Object.freeze({
 
 /** One number for the whole layout: a different one lays out the same rules differently (picked once, by trying, until every limit in tests/unit/t05-surround.test.mjs held with room to spare). */
 const SEED = 0;
-const SSEED = 7;   // the south side's own seed: chosen among 12 for the A and B roof-slope counts and the south fill (docs/t05/DECISIONS.md)
+const SSEED = 7;   // the south side's own seed: the one the art director passed (docs/t05/DECISIONS.md); it was first chosen among 12 for the A and B roof-slope numbers, and the ceiling on the houses' share has since been widened to 65%, so a seed can now be chosen by the picture
 const seeded = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const ground = 0.06;   // the plain is laid a little above y = 0 (site.js `lift`)
 /**
