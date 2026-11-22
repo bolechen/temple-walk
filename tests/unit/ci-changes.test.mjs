@@ -136,9 +136,8 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   const quick = jobOf(y, "quick");
   assert.match(quick, /needs: \[changes, build\]\n/, "quick waits for the one build and for nothing else");
   assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
-  assert.match(quick, /scenarios: "boot"/);
-  assert.match(quick, /scenarios: "drop-touch stairs-edge"/);
-  assert.match(quick, /scenarios: "stairs drop"/);
+  // four machines, paired by what CI measured (boot 129 s, drop-touch 134, drop 107, stairs 91 + stairs-edge 32): the longest is 134 s
+  for (const sc of ["boot", "drop-touch", "drop", "stairs stairs-edge"]) assert.match(quick, new RegExp(`scenarios: "${sc}"`));
   assert.match(quick, /run\.cjs \$\{\{ matrix\.scenarios \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
   const site = jobOf(y, "build");
