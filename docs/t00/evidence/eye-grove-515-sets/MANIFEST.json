@@ -1,0 +1,84 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "before-halfway-16x9.png",
+   "bytes": 1136972,
+   "sha256": "08446e6d6baa172b0d9fd9d47b43c30efb5b8ddd3cf6a553cee269448a7ef5b5",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "before-pool-16x9.png",
+   "bytes": 1449643,
+   "sha256": "4f148e75a9f19e1d686e22c0ae77886e80cb9459238052a5b3e8b166f262fcef",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "before-pool-9x19.5.png",
+   "bytes": 515526,
+   "sha256": "28eaa3c75236daab1e82996059eb50ea3d578a2c817401d14b4d19c1c806c29d",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "before-pool-high-16x9.png",
+   "bytes": 1818260,
+   "sha256": "e75f21f86b3d7fbfa78b80ad266ee2d193bcfca4ba1cba068d0af3c9b4d0ecf9",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "before-start-16x9.png",
+   "bytes": 1085336,
+   "sha256": "63add6c92ee1cd0748f8d84b199db65ed6a1e9c02ff6816c058879fb1adf0542",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "risen-halfway-16x9.png",
+   "bytes": 1074806,
+   "sha256": "376ab849c3ababefa27fac6c0062dfddf0135ae9f3e7d47dceb5a66c56f9ff24",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "risen-pool-16x9.png",
+   "bytes": 1415267,
+   "sha256": "ba09a87a8ccc000d21baad4cc6b6feb0096df6ac6944ed239a6d3bea3fe87d3e",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "risen-pool-9x19.5.png",
+   "bytes": 495557,
+   "sha256": "a803339570cf7adfb6acc158664f45ee6ff8d19acc1ccd998c2875ebe13a113f",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "risen-start-16x9.png",
+   "bytes": 1026367,
+   "sha256": "d263138c50120dfa39bc2c118e52b9be2aeabe5ef8ac7db95be607fb528bcd94",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "straight-halfway-16x9.png",
+   "bytes": 1073817,
+   "sha256": "b7968d954b09c63000fafec51fe3acbfef21d4ca2b9f124f66ce66424c409ba2",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "straight-pool-16x9.png",
+   "bytes": 1342316,
+   "sha256": "920f978e90a9b23ee8b7b5ac8fc2bbac73dc5392e757ea5e29864ef037abf735",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "straight-pool-9x19.5.png",
+   "bytes": 464943,
+   "sha256": "fcc50bc005c9ce31d5a9ec0947a93bba7dda029c601649809753bb4e9204850c",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  },
+  {
+   "path": "straight-start-16x9.png",
+   "bytes": 1040906,
+   "sha256": "1b1d479848d9c718ba7db3db815bddd9ef174ca2e869970e6e3162f044326120",
+   "rev": "b65b61110b1ccd55443927fe1f08728dd0e13745"
+  }
+ ]
+}

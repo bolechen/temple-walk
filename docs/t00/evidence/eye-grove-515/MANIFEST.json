@@ -1,0 +1,66 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-16x9.png",
+   "bytes": 1345217,
+   "sha256": "0feed85799c034a720a544f248c89350126c25f485cc810a90e20b9f06b73990",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "after-9x19.5.png",
+   "bytes": 463663,
+   "sha256": "44226fe19a0b29dcb6f602932b470e5d6c630f445bc11a20a9f586ecda2decc3",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "before-16x9.png",
+   "bytes": 1447534,
+   "sha256": "c2474701581ab5645d11e1bd91118c086af2cc25030698b09b4b7bf3e814fcf8",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "before-9x19.5.png",
+   "bytes": 517671,
+   "sha256": "6de25ac12c9006847fcf9bec100ee1fa1826844ceb1289d583da5a16ebc5e766",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "t05-after-arrive.png",
+   "bytes": 1011916,
+   "sha256": "cee6bd6b4f4bc2db9271e7748d157cade12794492150bf61ed0774724a8d4adc",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "t05-after-b.png",
+   "bytes": 1011850,
+   "sha256": "8070a0cb2ce951c927a2da907fba897c3acae6a81974b0e9471e55d61bda3d43",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "t05-after-d.png",
+   "bytes": 1017542,
+   "sha256": "8e1707459e00724c8882245fefe43519ed0df8b0df8187a0dc8586a1e8980b26",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "t05-before-arrive.png",
+   "bytes": 1010243,
+   "sha256": "b532ba58bdf69991eca6cdb340c0b0167b8c3facaf3a98ae8eaff4f69549d62c",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "t05-before-b.png",
+   "bytes": 1011136,
+   "sha256": "ba65de70fee03a8e32c22b72ed6e06949896527a0f2e4b4430190c3a27b446f1",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  },
+  {
+   "path": "t05-before-d.png",
+   "bytes": 1017493,
+   "sha256": "6d6faab776c5ad226ab3a73e12d3b1573bfcb4e314b83c45a5493062b8c185f7",
+   "rev": "52de8c5c059747f2a37c2613895989f0d7aa8eaf"
+  }
+ ]
+}

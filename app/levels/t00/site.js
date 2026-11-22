@@ -56,6 +56,15 @@ export const GROVE = {
     if (z > SITE.zS) return !(x < -7.5 && x > -17.5 && z > 45.5 && z < 55.5);                 // clear of the stele pavilion
     return true;
   },
+  /** Is a knee-high clump of the undergrowth taken out here? Round the ink-stone pool the eye that follows him stands up
+   *  to `EYE_EDGE` (0.5 m) into the grove's edge (#518), and the clumps there, a metre or two wide, stood between it and him
+   *  and across the pool and its stele. Only that stretch of the edge is cleared, of clumps whose middle is within 1.4 m of
+   *  it; everywhere else, the start included, the undergrowth is as it was, thickest near the path. */
+  underClear(x, z) {
+    const A = APPROACH; if (x < A.xB1 - 7.1 || x > A.xB1 + 5.9 || z < A.zMid - 9.5 || z > A.zMid + 4.5) return false;
+    for (let k = 0; k < 8; k++) if (!GROVE.grows(x + Math.cos((k * Math.PI) / 4) * 1.4, z + Math.sin((k * Math.PI) / 4) * 1.4)) return true;
+    return false;
+  },
   /** Is there bamboo at (x, z) (within an area, and not kept clear)? */
   grows(x, z) { return GROVE.areas.some((a) => x > a.x0 && x < a.x1 && z > a.z0 && z < a.z1) && GROVE.keep(x, z); },
 };

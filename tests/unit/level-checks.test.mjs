@@ -20,6 +20,6 @@ test("a level's checks.js, where it has one, says which checks it serves", async
     const f = new URL(`../../app/levels/${id}/checks.js`, import.meta.url);
     if (!fs.existsSync(f)) continue;
     const c = (await import(f.href)).default;
-    for (const k of Object.keys(c)) assert.ok(["cameras", "horizon", "follow", "springArm", "nearplane", "edges"].includes(k), `${id}: checks.js has an unknown table "${k}"`);
+    for (const k of Object.keys(c)) assert.ok(["cameras", "horizon", "follow", "springArm", "nearplane", "edges", "grove"].includes(k), `${id}: checks.js has an unknown table "${k}"`);
   }
 });
