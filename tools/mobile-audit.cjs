@@ -27,6 +27,8 @@ const HELPERS = () => {
 };
 // A surface that is only reached from another one's state.
 const NEEDS = { sitsay: "sit", clip: "clipping" };
+// A surface whose putting away is the way into the next one: the film being made is stopped, and its sheet is what comes up (the sheet is the next surface, `clip`).
+const LEADS_TO = { clipping: "clip" };
 // Each surface: how to bring it up, and how to put it away again.
 const SURFACES = [
   ["title", null, null],
@@ -177,7 +179,7 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
   let bad = 0, seen = 0;
   for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n))) {
     if (process.env.AUDIT_DEBUG) console.log("   [debug] before", name, JSON.stringify(await p.evaluate(() => window.__ui())));
-    if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
+    if (open) await p.evaluate(async (c) => { await (0, eval)(c); }, open);   // (awaited: an opening script that waits for a state holds the audit with it)
     await settle(p, name);
     // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
     if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => settle(p, name)).catch(() => {});
@@ -186,7 +188,7 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
     const n = badOf(m, vw); bad += n;
     if (!tag) report[`${shape}/${name}`] = m;
     console.log(`${shape}/${name}${tag}`.padEnd(22), `width ${m.w}`, n ? "" : "ok", m.w !== vw ? `PAGE IS ${m.w} WIDE, NOT ${vw}` : "", m.scrolls ? "SCROLLS" : "", ...LINES(m));
-    if (close) { await p.evaluate((c) => { (0, eval)(c); }, close); await settle(p, name, true); { const u = await p.evaluate(() => window.__ui()); if (u.modal) console.log(`   (a sheet is still open after "${name}" was put away: the surfaces after it are measured under it) ${JSON.stringify(u)}`); } }
+    if (close) { await p.evaluate(async (c) => { await (0, eval)(c); }, close); if (name in LEADS_TO) { await settle(p, name); continue; } await settle(p, name, true); { const u = await p.evaluate(() => window.__ui()); if (u.modal) console.log(`   (a sheet is still open after "${name}" was put away: the surfaces after it are measured under it) ${JSON.stringify(u)}`); } }
   }
   if (errs.length) { console.log("page errors:", errs); bad += errs.length; }
   await ctx.close();
