@@ -63,6 +63,11 @@ Refs #505（接 #544，那一个 PR 只过了第 3 条石块深浅）。审图�
 
 夜景近景、拍照模式成片、其余七座殿的台阶近看、手机（`q=low`）上的缝和棱（只在 T4 拍了一张 `phone-low_cam02`）；缝填平只有 33.1%、圆带中间/两头起伏 14%、逐像素差 5.5，这三项贴线或没到，写在上面；崩口个数画面上没有自动量。
 
+## 审图二留的两件，补在 #560 合了之后（运行号 `20261122-014028`，`ccc5df0`）
+
+- **T00 古道最后一段石阶的 T4 俯看一对**（审图二给的 A、B 两个眼位，1280×720，`r3/t00-topdown/t00_topdown{A,B}_{main,arris}.png`）：踏道中间一条（列 440–840）按有变化的行等分五段，比 main 的 L*：A +3.5/+5.2/+4.1/+4.7/+3.9（平均 +4.3，最高 +5.2），B +5.3/+4.8/+3.9/+3.8/+2.6（平均 +4.1，最高 +5.3）。审图二的线是平均超 +5 或单段超 +6 才收踏面前后那一路，没超，着色器没动。
+- **冬天 cam02 最近几级前沿的白线是积雪**：`r3/sheets/winter-cam02-nearest-steps-zoom.jpg`（上 main，下改后，T4 1920×1080 放大）：那条白带在两张里形状亮度一样，不是亮带透出来。
+
 ## 原图
 
 地址钉在数据集提交，清单见 `MANIFEST.json`；`node tools/evidence.mjs pull docs/t00/evidence/stair-seams-arris-505b` 取到 `tools/out/evidence/`。`r3/`（最终提交 `ccc5df0` 的 T4 图：`t4/` 两米近景、cam02 一人称和第三人称（含 1280×720）、cam01、art5、首院踏道、殿后台阶、手机；`moods/` cam02 十六种；`t05/` 改前 `_main`、改后 `_arris`；`sheets/` 十六种拼图）；根目录下 `t4/`、`moods/`、`t05/`、`software/`、`sheets/` 是前面几版（`ba9b326`、`5bdabfe` 之前）的图，原样留着。数字文件：`measure_near2m_summer-day*.json`、`tone_*_final.json`、`cost-alternating*.txt`。
