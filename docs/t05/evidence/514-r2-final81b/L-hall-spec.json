@@ -1,0 +1,168 @@
+{
+ "out": "tools/out/t05/varada-final81b",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/kasyapa-r3.60000.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/sikhin-r3.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/vipasyin-r7b.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/visvabhu-r3.60000.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/kanakamuni-r3.60000.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-v2b.60000.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-v2"
+  }
+ ],
+ "shots": [
+  {
+   "name": "shoulder34",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -21.8,
+      4.6,
+      -12.2
+     ],
+     "look": [
+      -17.6,
+      8.6,
+      -17.2
+     ],
+     "fov": 36,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "shoulder3-front",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -18.0,
+      10.0,
+      -14.3
+     ],
+     "look": [
+      -17.9,
+      9.4,
+      -17.4
+     ],
+     "fov": 46,
+     "exp": 4.5
+    }
+   }
+  }
+ ]
+}

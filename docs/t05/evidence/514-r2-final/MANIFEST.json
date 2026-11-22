@@ -1,0 +1,72 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "F-cam03.png",
+   "bytes": 834794,
+   "sha256": "9ac4bebb4c929405b92193b9acc88ac7d01730e0eaa515f201d444eaf74c25bb",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-cam04.png",
+   "bytes": 946279,
+   "sha256": "01e0c2999fcf851cfdeb16695570b06a1d769b138a963f3c98aa2e58502908b6",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-figure10.png",
+   "bytes": 712760,
+   "sha256": "0cba5845b31573385e03339f6ae556d8867b1a80d6cfe6a32fba12c372b5407c",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-hand-level.png",
+   "bytes": 802085,
+   "sha256": "6fb8ece8d31eb4c5c90c0e1a56b2500f8d3d2a484f4c68fc762b39665527e33f",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-hand10-diffuse.png",
+   "bytes": 790099,
+   "sha256": "0db7f4ccdda98755445bac9002b9855f7cc2de8e7900728328b346280838cc9e",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-hand10.png",
+   "bytes": 727107,
+   "sha256": "8686be3dd0ce81d66c37487fcd89b58768c65e96c9c17cc84b0f58483b65f2e9",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-hand34.png",
+   "bytes": 573883,
+   "sha256": "b274142cc4f0e109dfe49efd4a00562b83cf2d81ad5f20eb33d265ef20dd4547",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-knee34-close.png",
+   "bytes": 611342,
+   "sha256": "4f0a2b9fc4daa4638d2dfd92f0dba8854b55f3134c4470ae2b01422fb025d136",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-side-diffuse.png",
+   "bytes": 769037,
+   "sha256": "e47b1b7bfb7b15e8da395c977f69beeba385e48128ece384a04072343105c02e",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "F-side.png",
+   "bytes": 731008,
+   "sha256": "53954f348cd273ec17f29c315e9889beb0720c397858ad4530b7cafda7bfa496",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 117553,
+   "sha256": "3e23cb0ef578a1d92e97908299764d46270e28a26d51b27e3e6538f627b18923",
+   "rev": "641b82f88bc9844d21a4fd3b74a8b9991de41f47"
+  }
+ ]
+}

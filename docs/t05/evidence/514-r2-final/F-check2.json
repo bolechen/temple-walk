@@ -1,0 +1,55 @@
+{
+ "wrist_edge": {
+  "open_edge_points": 17,
+  "deepest_under_mm": 11.2,
+  "shallowest_under_mm": 7.9,
+  "median_under_mm": 8.8,
+  "nearest_surface_mm_max": 31.2,
+  "points_less_than_5mm_under": 0,
+  "limit_mm": 5
+ },
+ "seam": {
+  "open_edge_points_in_band": 1244,
+  "gap_mm_p50": 17.64,
+  "gap_mm_p95": 35.46,
+  "gap_mm_max": 67.97,
+  "gaps_over_2mm": 1244,
+  "small_pieces": 0,
+  "small_piece_faces": 0,
+  "normal_angle_max_deg": 176.7,
+  "edges_over_60deg": 506,
+  "edges_in_band": 59788
+ },
+ "knee_area_m2": 2.716,
+ "palm_pitch_deg": {
+  "value": 1.4,
+  "range": [
+   -25,
+   10
+  ],
+  "art_director": [
+   -20,
+   -15
+  ]
+ },
+ "finger_vs_down_deg": 10.1,
+ "hand_width_m": 0.685,
+ "hand_length_m": 1.18,
+ "sections": {
+  "forearm_long_short": 1.478,
+  "hand_wrist_long_short": 1.553,
+  "where": "forearm 0.3 m back from the wrist; hand 0.25-0.30 m down from it (below the part drawn onto the forearm)",
+  "forearm_long_dir": [
+   0.996,
+   0.093,
+   0.0
+  ],
+  "hand_long_dir": [
+   0.995,
+   -0.013,
+   0.094
+  ],
+  "flats_angle_deg": 8.1,
+  "limit": 1.25
+ }
+}
