@@ -1,0 +1,50 @@
+{
+ "run": "20261122-131315",
+ "flavor": "t4-small",
+ "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+ "site": {
+  "commit": "021b3ce31c3d1aaf973bbc31c0171b887432d7f1",
+  "entry": "assets/index-DoS1cPzz.js",
+  "files": 372,
+  "sha256": "b7455e35860b51fa9c2b84fc9ff134d2a1a169f0cc5b4c60bfe4f7452ce180a1"
+ },
+ "base": "main 6416462 (the main this branch last merged)",
+ "shots": [
+  {
+   "name": "E-after",
+   "file": "E-after.png",
+   "tris": 59146,
+   "calls": 37
+  },
+  {
+   "name": "E-before",
+   "file": "E-before.png",
+   "tris": 59146,
+   "calls": 37
+  },
+  {
+   "name": "ne-after",
+   "file": "ne-after.png",
+   "tris": 151432,
+   "calls": 58
+  },
+  {
+   "name": "ne-before",
+   "file": "ne-before.png",
+   "tris": 151432,
+   "calls": 58
+  },
+  {
+   "name": "cam03-after",
+   "file": "cam03-after.png",
+   "tris": 87770,
+   "calls": 45
+  },
+  {
+   "name": "cam03-before",
+   "file": "cam03-before.png",
+   "tris": 87770,
+   "calls": 45
+  }
+ ]
+}

@@ -3915,6 +3915,35 @@ const scenarios = {
 
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The button at the foot of the picture says what he may do next (stand up, ring the bell, offer incense…), and on a phone the jump ring lies lower right: the
+  // button must not lie on the ring, in any language, with the longest of its words, on any of the phone's screens (the English 「Stand up」 on a 360 px screen
+  // overlapped the ring by 11 × 18 px, seen by the phone audit once it waited for the seated state, #614). The words are laid in a copy of the button, which
+  // takes the same rules by its id, so that the game's own tick, which puts the button away and brings it back, cannot change what is measured.
+  "stand-up": { tier: 2, async run(b, base) {
+    const { pathToFileURL } = require("url"), path = require("path"), words = ["起身", "坐下", "撞钟", "上香", "吃茶", "合掌", "观看", "为人点灯", "登楼", "下楼", "静坐", "观水"];
+    const said = { zh: Object.fromEntries(words.map((w) => [w, w])) };
+    for (const l of ["en", "ja", "ko"]) { const m = (await import(pathToFileURL(path.join(__dirname, "../../app/locales", l + ".js")).href)).default; said[l] = Object.fromEntries(words.map((w) => [w, m[w] || w])); }
+    for (const lang of ["zh", "en", "ja", "ko"]) for (const [w, h] of [[360, 640], [390, 844], [844, 390], [430, 932]]) {
+      const t = await open(b, base, `q=low&lang=${lang}` + BARE, { viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
+      const mb = (await t.page.evaluate(() => window.__probe())).monkBox;
+      const r = await t.page.evaluate(([said, mb]) => {
+        const real = document.getElementById("act"), out = [], GAP = 8;
+        // how far apart two boxes are: the larger of the gaps along either axis (negative: they lie on each other, by that much)
+        const gap = (a, q) => Math.max(a.left - q.right, q.left - a.right, a.top - q.bottom, q.top - a.bottom);
+        const others = [["stick", "#stick"], ["jump ring", "#jumpBtn"], ["turn ring", "#turnBtn"]].map(([n, sel]) => [n, document.querySelector(sel)]).filter(([, e]) => e && getComputedStyle(e).display !== "none").map(([n, e]) => [n, e.getBoundingClientRect()]);
+        if (mb) others.push(["figure", { left: mb[0], top: mb[1], right: mb[0] + mb[2], bottom: mb[1] + mb[3] }]);
+        for (const [zh, label] of Object.entries(said)) {
+          const c = real.cloneNode(false); c.hidden = false; c.removeAttribute("data-word"); c.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${label}</span>`; real.after(c);
+          const a = c.getBoundingClientRect();
+          for (const [n, q] of others) { const g = gap(a, q); if (g < GAP) out.push(`「${label}」 (${Math.round(a.left)}..${Math.round(a.right)}, ${Math.round(a.top)}..${Math.round(a.bottom)}) is ${Math.round(g)} px from the ${n}`); }
+          if (a.left < 0 || a.right > innerWidth) out.push(`「${label}」 runs off the screen (${Math.round(a.left)}..${Math.round(a.right)} of ${innerWidth})`);
+          c.remove();
+        }
+        return out; }, [said[lang], mb]);
+      expect(r.length === 0, `in ${lang} at ${w}x${h}: ${r.join("; ")}`);
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&fast=1&cam=0,30,0,0&view=first" + BARE, { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
