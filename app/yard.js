@@ -27,7 +27,7 @@ import { createDrift } from "./src/drift.js";
 import { createTrail } from "./src/trail.js";
 import { bakeShelter, useShelter, shelterAt } from "./src/shelter.js";
 import { createMonk } from "./src/monk.js";
-import { loadNovice } from "./src/novice.js";
+import { loadNovice, bodyChoice, BODY_FILE } from "./src/novice.js";
 import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "./src/eye.js";
 import { createEyeSpace, eyeRadius } from "./src/eyespace.js";
 import { planRecenter, recenterYaw, createFollowTurn, yawBehind } from "./src/camturn.js";
@@ -266,10 +266,13 @@ const monk = createMonk(); part("monk", () => scene.add(monk.group));
 // His opacity, for the eye going into his own eyes or out of them (#102): faded on every material he wears, and given back.
 let faded = 1;
 const fade = (a) => (faded = a, monk.group.traverse((/** @type {any} */ o) => { if (!o.isMesh) return; for (const m of [o.material].flat()) { if (m.userData.baseOpacity === undefined) m.userData.baseOpacity = m.opacity, m.userData.baseTransparent = m.transparent; m.opacity = m.userData.baseOpacity * a; const t = a < 1 || m.userData.baseTransparent; if (m.transparent !== t) { m.transparent = t; m.needsUpdate = true; } } }));
-// He is the figure built in code. The sculpted body's cloth tears at its texture seams when he walks, climbs or sits,
-// so until its weights are mended it is fetched (after the first frames) only for ?body=sculpt; ?body=code asks for
-// what he already wears.
-if (Q.get("body") === "sculpt") loadNovice(monk).catch(() => {});
+// He wears the layered body made from Tripo's model (#163; src/novice.js), fetched while the place is built; the page is
+// not called ready until it has arrived or failed, so that no picture catches him half dressed. ?body=sculpt wears the
+// older body made with Meshy, ?body=code keeps the figure built in code. A body that fails to arrive or to fit leaves
+// him as built in code, with a warning. `body` is what he wears: "code" until a fetched body is on him.
+const bodyAsked = bodyChoice(Q);
+let body = "code", bodySettled = bodyAsked === "code";
+if (bodyAsked !== "code") loadNovice(monk, asset(BODY_FILE[bodyAsked])).then(() => { body = bodyAsked; }, (e) => console.warn(`the ${bodyAsked} body was not worn: ${e?.message || e}`)).finally(() => { bodySettled = true; });
 
 await loading.step(tr("行走"));
 // ---- The hour and the season ----------------------------------------------------
@@ -910,7 +913,7 @@ function frame(now) {
   } else post.render(t);
   // Ready when it has drawn a few frames and every scanned surface has arrived (or been given up on).
   loading.frame(frames + 1);
-  if (++frames >= 3 && !document.body.dataset.ready) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); if (crossing) crossingBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
+  if (++frames >= 3 && !document.body.dataset.ready && bodySettled) { const ts = textureState(); if (ts.loaded + ts.failed.length >= ts.total) { if (ts.loaded) renderer.shadowMap.needsUpdate = true; loading.finish(); document.body.dataset.ready = "1"; if (relang) relangBack(); if (crossing) crossingBack(); track("demo.ready", { tier: quality.name, lang_source: langSource, lang_from: takeSwitch(), failed: ts.failed.length, from: fromOf(location.search) || "" }); } }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1259,7 +1262,7 @@ window.__lofts = site.lofts;
 // the raised camera, the close or the opening has the picture, and never on a page that names its own view.
 const updates = Q.has("shot") ? null : watchVersion({ say: () => hints.say.update(), busy: () => !document.body.classList.contains("entered") || photo.on || !!cine || !!stage || ["far", "opening", "directing"].some((c) => document.body.classList.contains(c)) });
 window.__updates = (now) => (updates ? (now ? updates.ask().then(() => updates.state()) : updates.state()) : null);
-window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
+window.__yard = () => ({ shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 // For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
 window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;

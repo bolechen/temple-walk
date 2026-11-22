@@ -5,7 +5,7 @@ import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 const { createMonk } = await import("../../app/src/monk.js");
-const { readNovice, dressed } = await import("./novice-glb.mjs");
+const { readNovice, sculpted: dressed } = await import("./novice-glb.mjs");   // Meshy's body (?body=sculpt); Tripo's is novice-tripo.test.mjs
 const { geometries, extras, json } = readNovice();
 const PARTS = ["skin", "robe", "legs", "shoes"];
 const skinnedWorld = (mesh, i, v = new THREE.Vector3()) => mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld);

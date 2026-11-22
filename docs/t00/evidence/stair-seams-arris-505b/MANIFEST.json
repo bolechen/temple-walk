@@ -213,6 +213,36 @@
    "rev": "f026b8a1f61288e0f419e993113aa4500f7aac5a"
   },
   {
+   "path": "r3/sheets/winter-cam02-nearest-steps-zoom.jpg",
+   "bytes": 217744,
+   "sha256": "ac9a5bb4308e432fe7237c53defb3bb4874fb31f020f659999d1255af742d68e",
+   "rev": "e376e19ee2aa4e6039755fafe2a7a6805c3b2446"
+  },
+  {
+   "path": "r3/t00-topdown/t00_topdownA_arris.png",
+   "bytes": 1373442,
+   "sha256": "6b44644c61a0a591e54651563d9fb7a70e72125c2b278da7f5da7ec3234a3dda",
+   "rev": "e376e19ee2aa4e6039755fafe2a7a6805c3b2446"
+  },
+  {
+   "path": "r3/t00-topdown/t00_topdownA_main.png",
+   "bytes": 1367501,
+   "sha256": "471ddde4b1f456786e2afddac0bf505549d49c8d732e38daec62c87ddc40d346",
+   "rev": "e376e19ee2aa4e6039755fafe2a7a6805c3b2446"
+  },
+  {
+   "path": "r3/t00-topdown/t00_topdownB_arris.png",
+   "bytes": 1356643,
+   "sha256": "7d5f250b2398c3d92c1bd18e099d87c5f4c361e0e0bae0708e340bbba6936193",
+   "rev": "e376e19ee2aa4e6039755fafe2a7a6805c3b2446"
+  },
+  {
+   "path": "r3/t00-topdown/t00_topdownB_main.png",
+   "bytes": 1348088,
+   "sha256": "abfb79391d67c969dfe2985cf34912210755d4f391a3bbe5badec353747d0644",
+   "rev": "e376e19ee2aa4e6039755fafe2a7a6805c3b2446"
+  },
+  {
    "path": "r3/t05/t05_a-tall_arris.png",
    "bytes": 2545611,
    "sha256": "981dcc49c7c7270f859f8aea048cce7ba7a9416f970f022e38f421c5d3fd1224",
