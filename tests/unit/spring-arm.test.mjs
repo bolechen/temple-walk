@@ -13,7 +13,7 @@ const { levelPlan, need, isPrologue } = await import("./level-plan.mjs");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
-const { followEye, createFollow, FRAMES, frameArm, aimAt } = await import("../../app/src/eye.js");
+const { followEye, createFollow, FRAMES, frameArm, aimAt, FOLLOW } = await import("../../app/src/eye.js");
 const { createEyeSpace, eyeRadius } = await import("../../app/src/eyespace.js");
 const { buildDrawn } = await import("../../tools/walk/scene.mjs");
 const { gather } = await import("../../tools/walk/bake.mjs");
@@ -24,13 +24,35 @@ const grids = gridsByPlace(decode(ensure(prepare(L)).bytes, (b) => inflateRawSyn
 const walker = createGridWalker(written, grids, { doors: site.halls });
 const dt = 1 / 60, FOV = 50, ASPECT = 16 / 9, frame = FRAMES.b, arm = frameArm(frame, FOV, ASPECT);
 // what is drawn, gathered as the floor is baked from it, for the eye to ask (#295)
-const space = createEyeSpace(gather([buildDrawn(L).scene], springs.gather).bvh);
+const gathered = gather([buildDrawn(L).scene], springs.gather), bvh = gathered.bvh, space = createEyeSpace(bvh, null, { thickWalls: !!L.eyeThickWalls });
 space.radius = eyeRadius(FOV, ASPECT, 0.1);
 
 // How near the eye may come, from the point over his head it backs away from (`ty`, 1.3 m over the floor): a wall at his
 // back brings it in, but not into him. Two metres is the eye far enough back to see all of him and the floor round his
 // feet at the walk's 50°; it may come nearer for a moment (a corner turned, a column passed), never nearer than a metre.
 const NEAR = 2.0, NEAREST = 1.0, OFTEN = 0.9;
+
+
+/**
+ * Does the line a-b ([x, y, z] each) cross a solid thicker than `min` (#562)? A wall is drawn as skins, so thickness is read from the
+ * faces the line meets, in order: between two of them, more than `min` apart, the line is inside a solid if a line up from the middle
+ * of that stretch meets an odd number of faces (the hollow of a closed wall; a column is thinner than `min`, a gap between two things
+ * has an even number above it).
+ */
+const ray = new THREE.Ray(), up = new THREE.Vector3(0, 1, 0);
+function thickBetween(a, b, min = 0.95) {
+  const d = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]), len = d.length(); if (len < 1e-6) return false; d.divideScalar(len);
+  ray.origin.set(...a); ray.direction.copy(d);
+  const hits = bvh.raycast(ray, THREE.DoubleSide).map((h) => h.distance).filter((t) => t <= len).sort((p, q) => p - q);
+  ray.origin.set(...b); ray.direction.copy(up); if (bvh.raycast(ray, THREE.DoubleSide).length % 2 === 1) return true;   // (the eye itself in a wall's hollow)
+  ray.origin.set(...a); ray.direction.copy(d);
+  for (let i = 0; i + 1 < hits.length; i++) {
+    if (hits[i + 1] - hits[i] < min) continue;
+    const m = (hits[i] + hits[i + 1]) / 2; ray.origin.set(a[0] + d.x * m, a[1] + d.y * m, a[2] + d.z * m); ray.direction.copy(up);
+    if (bvh.raycast(ray, THREE.DoubleSide).length % 2 === 1) return true;
+  }
+  return false;
+}
 
 /** Walk `path` as follow.test walks it, on the baked floor; for every frame, how far the eye stands from him and whether he is in the picture. */
 function walk(path, { reach = 6.2, pitch = 0.04, clear = false } = {}) {
@@ -45,8 +67,8 @@ function walk(path, { reach = 6.2, pitch = 0.04, clear = false } = {}) {
       const foot = walker.heightAt(x, z);
       eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
       const at = { x, z, foot, eyeY, yaw, pitch, side: 1, reach, arm, space }, vy = (yaw - lastYaw) / dt; lastYaw = yaw;
-      const eye = followEye(walker, at);
-      const c = follow.step(dt, eye, Math.abs(vy) > 0.5 ? followEye(walker, { ...at, yaw: yaw + vy * 0.25 }) : null);   // (looking ahead while the view swings, as yard.js does)
+      const { eye, ahead } = follow.look(walker, at, vy, dt);   // (looking ahead while the view swings, as yard.js does)
+      const c = follow.step(dt, eye, ahead);
       // what the eye moved on its own, beyond following him and turning with the view (follow.test's measure)
       let flat = 0, up = 0;
       if (prev) { const dy = yaw - prev.yaw, ox = prev.c[0] - prev.x, oz = prev.c[2] - prev.z, ex = x + ox * Math.cos(dy) - oz * Math.sin(dy), ez = z + ox * Math.sin(dy) + oz * Math.cos(dy); flat = Math.hypot(c[0] - ex, c[2] - ez); up = Math.abs(c[1] - prev.c[1] - (eyeY - prev.eyeY)); }
@@ -58,7 +80,7 @@ function walk(path, { reach = 6.2, pitch = 0.04, clear = false } = {}) {
         cam.position.set(...c); cam.rotation.set(aim[1], -aim[0], 0, "YXZ"); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
         seen = [foot, foot + 1.22].every((y) => { const p = new THREE.Vector3(x, y, z).project(cam); return p.z < 1 && Math.abs(p.x) <= 1 && Math.abs(p.y) <= 1; });
       }
-      out.push({ x, z, back: Math.hypot(c[0] - x, c[1] - (eyeY + arm.h), c[2] - z), seen, flat, up, forced: follow.forced, cut: clear && follow.dist > 0.6 ? space.shut(c[0], c[1], c[2]) : false });
+      out.push({ x, z, head: [x, foot + 1.22, z], c, back: Math.hypot(c[0] - x, c[1] - (eyeY + arm.h), c[2] - z), seen, flat, up, forced: follow.forced, cut: clear && follow.dist > 0.6 ? space.shut(c[0], c[1], c[2]) : false });
     }
   }
   return out;
@@ -75,6 +97,10 @@ for (const [name, path] of Object.entries(routes)) {
     assert.ok(nearest.back >= NEAREST, `the eye came to ${nearest.back.toFixed(2)} m from him at (${nearest.x.toFixed(1)}, ${nearest.z.toFixed(1)})`);
     assert.ok(near <= n * (1 - OFTEN), `the eye stood nearer than ${NEAR} m in ${near} of ${n} frames`);
     assert.ok(!unseen.length, `he was out of the picture in ${unseen.length} of ${n} frames, first at (${unseen[0]?.x.toFixed(1)}, ${unseen[0]?.z.toFixed(1)})`);
+    // The eye does not stand beyond a wall: the line from his head to it meets no solid thicker than a column (#562: turned out of an
+    // aisle's end it was taken through a 1 m gable and stood outside the hall).
+    const through = L.eyeThickWalls ? frames.filter((f) => thickBetween(f.head, f.c)) : [];   // (a level asks for it, #562: the prologue's camera is walked as it was)
+    assert.ok(!through.length, `the eye stood beyond a thick solid in ${through.length} of ${n} frames, first at (${through[0]?.x.toFixed(1)}, ${through[0]?.z.toFixed(1)})`);
     holdsStill(frames);
   });
 }

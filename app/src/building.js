@@ -297,13 +297,32 @@ export function buildHall(M, opts) {
   if (lat.length) add(merge(lat), M.lattice, { cast: false });
   if (p.dark) {
     const d = Math.min(2.4, Z - ZB - 0.4);
-    const m = new THREE.Mesh(box(X * 2 - 0.3, topY - p.platH - 0.03, d, 0, p.platH + (topY - p.platH) / 2, Z - 0.1 - d / 2), M.interior(p.platH));
+    // (Without its front face: drawn from inside, BackSide, that face is never seen from the court; from in the doorway,
+    // where the eye that follows him out may stand, it would hide him. #396)
+    const dg = box(X * 2 - 0.3, topY - p.platH - 0.03, d, 0, p.platH + (topY - p.platH) / 2, Z - 0.1 - d / 2), di = Array.from(dg.index.array);
+    di.splice(24, 6); dg.setIndex(di); dg.clearGroups();   // (BoxGeometry's faces go +x, -x, +y, -y, +z, -z, six indices each)
+    const m = new THREE.Mesh(dg, M.interior(p.platH));
     m.userData.doorway = true; g.add(m);   // a hall that can be entered paints its own room here instead (doorway.js)
-    // To the eye that follows him out of the door, the dark is a wall: it is painted (a shader, which the eye's gathering
-    // passes over), and behind it the hall is hollow, so the eye backed in through the open leaves into the building
-    // (#391). Sheets a hand apart, never drawn nor stood on, as in the rooms' doorways (interior.js): one sheet with
-    // nothing behind it the eye would let pass for a moment, as it does a column.
-    const W = X * 2 - 0.3, H = topY - p.platH - 0.03, stop = new THREE.Mesh(merge(Array.from({ length: 11 }, (_, k) => new THREE.PlaneGeometry(W, H).translate(0, p.platH + H / 2, Z - 0.1 - k * 0.12))), new THREE.MeshBasicMaterial());
+    // The front face the box lost is put back for the baked floor alone: without it the box is not closed, and the bake takes the floor
+    // inside a closed solid for none, so the floor ran in at the door into the hollow hall (hall-funnel-349). Never drawn, and the eye's gathering skips it.
+    const front = new THREE.Mesh(new THREE.PlaneGeometry(X * 2 - 0.3, topY - p.platH - 0.03).translate(0, p.platH + (topY - p.platH) / 2, Z - 0.1), new THREE.MeshBasicMaterial({ visible: false }));
+    front.userData.eye = false; front.userData.keep = true; g.add(front);
+    // To the eye that follows him out of the door, the back of the dark is a wall: the dark is painted (a shader, which the
+    // eye's gathering passes over), and behind it the hall is hollow, so the eye backed in through the open leaves into the
+    // building (#391). It may stand in the dark, though, as far as its back: there it sees him framed in the door as he
+    // comes out, where held at the leaves it was half a metre off and he was not drawn (#396). Sheets a hand apart, never
+    // drawn nor stood on, as in the rooms' doorways (interior.js): one sheet with nothing behind it the eye would let pass
+    // for a moment, as it does a column.
+    const W = X * 2 - 0.3, H = topY - p.platH - 0.03, back = Z - 0.1 - d + 0.15, stop = new THREE.Mesh(merge(Array.from({ length: 11 }, (_, k) => new THREE.PlaneGeometry(W, H).translate(0, p.platH + H / 2, back - k * 0.12))), new THREE.MeshBasicMaterial());
+    // The dark runs the whole width of the front, behind the shut bays as well as the open door: turned aside, the eye went
+    // in through a shut leaf (a thin panel, which it lets pass as it does a column) and stood behind the leaves and the
+    // window bays with the wall between it and him (#411's art review, the tea house dragged round 65°). Behind the shut
+    // part of the front the dark is filled with sheets, and two stacks run front to back at the opening's edges, so the
+    // eye keeps to the dark straight behind the door.
+    const open = [xs[mid] + 0.25 + 1.05, xs[mid + 1] - 0.25 - 1.05], side = [];
+    for (const [ex, out] of [[open[0], -1], [open[1], 1]]) for (let k = 0; k < 11; k++) side.push(new THREE.PlaneGeometry(d, H).rotateY(Math.PI / 2).translate(ex + out * k * 0.12, p.platH + H / 2, Z - 0.1 - d / 2));
+    for (const [a, b] of [[-W / 2, open[0]], [open[1], W / 2]]) if (b - a > 0.05) for (let z = Z - 0.12; z > Z - 0.1 - d + 0.1; z -= 0.12) side.push(new THREE.PlaneGeometry(b - a, H).translate((a + b) / 2, p.platH + H / 2, z));
+    stop.geometry = merge([stop.geometry, ...side]);
     stop.visible = false; stop.userData.walk = false; stop.userData.eye = "stop"; g.add(stop);
     if (p.lamps) for (const sx of [-1, 1]) {
       const f = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), M.flame);

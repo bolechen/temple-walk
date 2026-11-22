@@ -1,0 +1,107 @@
+[
+ {
+  "name": "after-out-main-door-first",
+  "at": [
+   0,
+   -5.34
+  ],
+  "eye": [
+   0,
+   2.62,
+   -7.45
+  ],
+  "dist": 2.12,
+  "opacity": 1,
+  "box": [
+   488.7,
+   153.2,
+   302.6,
+   564.4
+  ],
+  "shutNow": false
+ },
+ {
+  "name": "after-out-main-door",
+  "at": [
+   0,
+   -5.34
+  ],
+  "eye": [
+   0,
+   2.56,
+   -8.08
+  ],
+  "dist": 2.75,
+  "opacity": 1,
+  "box": [
+   529.3,
+   213.1,
+   221.4,
+   433.6
+  ],
+  "shutNow": false
+ },
+ {
+  "name": "after-out-chan-door-first",
+  "at": [
+   13.6,
+   14
+  ],
+  "eye": [
+   15.81,
+   1.56,
+   14
+  ],
+  "dist": 2.22,
+  "opacity": 1,
+  "box": [
+   497.3,
+   165.3,
+   285.3,
+   538.2
+  ],
+  "shutNow": false
+ },
+ {
+  "name": "after-out-chan-door",
+  "at": [
+   13.6,
+   14
+  ],
+  "eye": [
+   16.34,
+   1.51,
+   14
+  ],
+  "dist": 2.75,
+  "opacity": 1,
+  "box": [
+   529.3,
+   213.1,
+   221.4,
+   433.6
+  ],
+  "shutNow": false
+ },
+ {
+  "name": "after-west-wall",
+  "at": [
+   -18.8,
+   -12
+  ],
+  "eye": [
+   -16.55,
+   2.61,
+   -12
+  ],
+  "dist": 2.25,
+  "opacity": 1,
+  "box": [
+   528.2,
+   213.3,
+   223.5,
+   390.6
+  ],
+  "shutNow": false
+ }
+]
