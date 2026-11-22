@@ -313,3 +313,27 @@ test("a shot made from the eye's own pose is that pose on any screen, and drifts
     }
   }
 });
+
+// The bamboo is a place the eye does not go (#515): the page's director asks the level's keep-out through its walker
+// (yard.js `eyeWalker`). At the observance nearest the grove, the bell (9 m from it, across the forecourt's east side),
+// every swing there and back from twelve directions stays out of it.
+test("at the bell, the place nearest the grove, no swing goes into the bamboo (#515)", async () => {
+  const level = (await import("../../app/levels/t00/level.js")).default, { GROVE } = await import("../../app/src/site.js");
+  const kept = Object.assign(Object.create(walker), { eyeShut: (x, y, z, foot) => (level.eyeKeepOut(x, y, z, 0.25) ? true : walker.eyeShut(x, y, z, foot)) });
+  const p = site.places.bell, foot = at(p), centre = centreOf(p, foot), bad = [];
+  let nearest = Infinity;
+  for (let k = 0; k < 12; k++) {
+    const cam = follower(p, foot, (k / 12) * Math.PI * 2), d = createDirector({ walker: kept, veil: () => {} });
+    assert.ok(d.go("bell", p, foot));
+    const check = (i, c) => {
+      const [x, , z] = c.position.toArray();
+      if (GROVE.grows(x, z)) bad.push(`from yaw ${k * 30}°: in the grove at (${x.toFixed(2)}, ${z.toFixed(2)})`);
+      for (let r = 0; r < 12; r += 0.5) if ([[r, 0], [-r, 0], [0, r], [0, -r]].some(([dx, dz]) => GROVE.grows(x + dx, z + dz))) { nearest = Math.min(nearest, r); break; }
+    };
+    planned(d, cam, centre, check); run(d, cam, centre, Math.ceil((d.state().in + 0.2) / DT), check);
+    d.back(); planned(d, cam, centre, check); run(d, cam, centre, Math.ceil((d.state().out + 0.2) / DT), check);
+    assert.equal(d.state().phase, "idle", `from yaw ${k * 30}°: not back with him`);
+  }
+  assert.deepEqual(bad, [], bad.slice(0, 6).join("\n"));
+  assert.ok(nearest > 0.5, `a swing came within ${nearest} m of the grove`);
+});
