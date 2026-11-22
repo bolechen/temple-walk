@@ -318,6 +318,15 @@ export function createFollow(T = FOLLOW) {
       if (eye.solid && eye.shut(cx, cy, cz)) { const was = lift; for (let k = lift + 0.05; k <= wantLift + 0.3 + 1e-6; k += 0.05) if (!eye.shut(cx, y + k, cz)) { lift = k; break; } if (lift !== was) { forced = Math.max(forced, lift - was); vl = 0; cy = y + lift; } }
       const floor = eye.floorAt(dist, side);
       if (cy < floor) { lift = floor - y; vl = 0; cy = floor; }   // nor down into the stone
+      // Last, whatever the rules above left it in: asked of what is drawn, an eye still inside something (risen to see him over a platform's edge and then
+      // let down past its balustrade by the eave rule above, #411's nightly run: 1.66 m, grazing the edge of the great hall's platform) is put clear by the
+      // smallest move up or down that has nothing drawn in it, never under the floor.
+      if (eye.solid && eye.shut(cx, cy, cz)) {
+        for (let k = 0.05; k <= 0.8 + 1e-6; k += 0.05) for (const dy of [k, -k]) {
+          if (cy + dy < floor || eye.shut(cx, cy + dy, cz)) continue;
+          lift += dy; cy += dy; vl = 0; forced = Math.max(forced, k); k = 9; break;
+        }
+      }
       return [cx, cy, cz];
     },
   };
