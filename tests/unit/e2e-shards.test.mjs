@@ -34,12 +34,15 @@ test("no machine runs much longer than another, and none runs longer than the ta
   assert.ok(Math.max(...turn) - Math.min(...turn) > Math.max(...four) - Math.min(...four), "taking them in turn was not more uneven than the plan on these times: the comparison says nothing");
 });
 
-test("the first machine, which also runs the quick checks, is given less of the list", () => {
-  const { loads } = plan(all, N), withoutExtra = plan(all, N, { ...data, extra: {} });
-  assert.ok(data.extra["1"] >= 300, "the extra of machine 1 was dropped from durations.json");
-  const first = (parts) => parts[0].reduce((n, x) => n + secsOf(data.scenarios)(x), 0);
-  assert.ok(first(plan(all, N).parts) < first(withoutExtra.parts), "machine 1 is given as much as the others although it has more to do");
+test("no machine carries the checks or the evidence reads: the first is given as much of the list as the others", () => {
+  // The nightly's first machine used to run the checks (17 minutes) and the evidence reads (12) after its scenarios: 36 minutes
+  // while the others ran 15 to 25 (2026-11-21). Both are jobs of their own now.
+  const { loads } = plan(all, N);
+  assert.deepEqual(data.extra || {}, {}, "a machine has something to do besides its scenarios again: say where it is run, or give it its own job");
   assert.ok(Math.abs(loads[0] - loads[1]) < 0.1 * loads[1]);
+  const full = e2e.slice(e2e.indexOf("\n  full:"), e2e.indexOf("\n  checks:"));
+  assert.doesNotMatch(full, /pnpm test|pnpm run edges|evidence\.mjs|matrix\.shard == 1/, "the first machine is given the checks or the evidence reads again");
+  for (const job of ["checks", "evidence"]) assert.match(e2e, new RegExp(`\\n  ${job}:\\n    if: [^\\n]*runner != 't4'`), `${job} is a job of its own`);
 });
 
 test("a scenario nobody has timed yet is counted as the median one, and still goes somewhere", () => {
@@ -88,7 +91,8 @@ test("e2e.yml: the machines are counted by the plan, the command shares by the s
   assert.match(e2e, /run: node tests\/e2e\/shards\.cjs matrix \$SCENARIOS >> "\$GITHUB_OUTPUT"/);
   const evidence = [...e2e.matchAll(/- name: [^\n]*(?:S3|public address|original store)[^\n]*\n\s+if: ([^\n]+)/g)].map((m) => m[1]);
   assert.equal(evidence.length, 3, "the three evidence reads were not found");
-  for (const cond of evidence) assert.match(cond, /matrix\.shard == 1\b/, `an evidence read on every machine: ${cond}`);
+  for (const cond of evidence) assert.doesNotMatch(cond, /matrix\.shard/, `an evidence read tied to a machine again: ${cond}`);
+  assert.match(e2e, /\n  evidence:\n    if: [^\n]*github\.event_name == 'schedule' \|\| github\.event\.inputs\.evidence == 'true'/, "the evidence reads run in the nightly and when asked, not in every run by hand");
   assert.match(e2e, /group: e2e-\$\{\{ github\.event_name == 'push' && 'regression' \|\| github\.event_name == 'workflow_dispatch' && format\('manual-\{0\}', github\.run_id\) \|\| format\('full-\{0\}', github\.ref\) \}\}/, "a full run on a branch is not the nightly run's group (a hand-started one is its own, e2e-concurrency.test.mjs)");
   assert.match(e2e, /cancel-in-progress: \$\{\{ github\.event_name != 'workflow_dispatch' \}\}/);
 });
