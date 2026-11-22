@@ -41,8 +41,9 @@ function segmentHitsBox(a, b, box) {
  * over, and was a solid the eye kept out of on the written plan; #515).
  * @param {any} bvh a MeshBVH
  * @param {((x: number, y: number, z: number, r: number) => boolean) | null} [keepOut]
+ * @param {{ thickWalls?: boolean }} [options] `thickWalls`: answer `thick` (a level asks for it, #562); off, `thick` is null and the eye behaves as it did
  */
-export function createEyeSpace(bvh, keepOut = null) {
+export function createEyeSpace(bvh, keepOut = null, { thickWalls = false } = {}) {
   let r = 0.25, near = [], seg = new THREE.Line3(), have = false;
   const box = new THREE.Box3(), p = new THREE.Vector3(), q = new THREE.Vector3(), s = new THREE.Sphere(new THREE.Vector3(), r), ray = new THREE.Ray(), dir = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
   const touches = (x, y, z) => { p.set(x, y, z); for (const t of near) { t.closestPointToPoint(p, q); if (q.distanceToSquared(p) <= r * r) return true; } return false; };
@@ -65,7 +66,7 @@ export function createEyeSpace(bvh, keepOut = null) {
      * hollow of a closed wall; a column is thinner than `min`, and the space between two things has an even number above it).
      * T05's side walls are 1 m thick and its inner columns 0.83 m, so `min` stands between them.
      */
-    thick(a, b, min = THICK) {
+    thick: !thickWalls ? null : (a, b, min = THICK) => {
       dir.set(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const len = dir.length(); if (len < 1e-6) return false; dir.divideScalar(len);
       ray.origin.set(a[0], a[1], a[2]); ray.direction.copy(dir);
       const hits = bvh.raycast(ray, THREE.DoubleSide).map((h) => h.distance).filter((t) => t <= len).sort((u, v) => u - v);

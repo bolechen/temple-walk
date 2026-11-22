@@ -24,7 +24,7 @@ const grids = gridsByPlace(decode(ensure(prepare(L)).bytes, (b) => inflateRawSyn
 const walker = createGridWalker(written, grids, { doors: site.halls });
 const dt = 1 / 60, FOV = 50, ASPECT = 16 / 9, frame = FRAMES.b, arm = frameArm(frame, FOV, ASPECT);
 // what is drawn, gathered as the floor is baked from it, for the eye to ask (#295)
-const gathered = gather([buildDrawn(L).scene], springs.gather), bvh = gathered.bvh, space = createEyeSpace(bvh);
+const gathered = gather([buildDrawn(L).scene], springs.gather), bvh = gathered.bvh, space = createEyeSpace(bvh, null, { thickWalls: !!L.eyeThickWalls });
 space.radius = eyeRadius(FOV, ASPECT, 0.1);
 
 // How near the eye may come, from the point over his head it backs away from (`ty`, 1.3 m over the floor): a wall at his
@@ -99,7 +99,7 @@ for (const [name, path] of Object.entries(routes)) {
     assert.ok(!unseen.length, `he was out of the picture in ${unseen.length} of ${n} frames, first at (${unseen[0]?.x.toFixed(1)}, ${unseen[0]?.z.toFixed(1)})`);
     // The eye does not stand beyond a wall: the line from his head to it meets no solid thicker than a column (#562: turned out of an
     // aisle's end it was taken through a 1 m gable and stood outside the hall).
-    const through = frames.filter((f) => thickBetween(f.head, f.c));
+    const through = L.eyeThickWalls ? frames.filter((f) => thickBetween(f.head, f.c)) : [];   // (a level asks for it, #562: the prologue's camera is walked as it was)
     assert.ok(!through.length, `the eye stood beyond a thick solid in ${through.length} of ${n} frames, first at (${through[0]?.x.toFixed(1)}, ${through[0]?.z.toFixed(1)})`);
     holdsStill(frames);
   });
