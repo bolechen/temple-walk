@@ -229,7 +229,7 @@ const backdrop = L.backdrop ? part("backdrop", () => createBackdrop(scene, M, L.
 await loading.step(tr("山林"));
 // Real bamboo where you come close to it: all round the zigzag you arrive by and the forecourt, and beyond the tea
 // (where it grows and where it is kept clear is the level's `grove`).
-const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow"), clearUnder: L.grove.clearUnder }));
+const bamboo = !L.grove ? NONE : part("bamboo", () => createBamboo(scene, L.grove.areas, L.land, L.grove.keep, { a2c: quality.msaa > 0, fine: quality.name !== "low", leafShadow: quality.leafShadow && !OFF.has("leafshadow"), clearUnder: L.grove.clearUnder, clearCulm: L.grove.clearCulm, extraCulms: L.grove.extraCulms }));
 await loading.step(tr("竹林"));
 const props = site.censer ? part("props", () => createProps(scene, M, site.censer, L.propsAt)) : { ...NONE, censer: () => ({ none: true }), setTraces: () => 0 };
 const post = createPost(renderer, scene, camera, quality, OFF);
@@ -260,6 +260,7 @@ const glows = []; let glowCloud = null;
 
 await loading.step(tr("树影"));
 // Nothing built so far will move again: draw it in as few pieces as the materials allow.
+if (trees?.pitStones) site.root.add(trees.pitStones);   // the ginkgoes' pit stones are static stone: they go into the stone batches with the buildings (#611)
 const merged = mergeStatic(site.root, [30, -32, -95, -1e9]);
 // The dragon well's drops and the rings they send across the water (well.js); the rite's drops ring it too.
 // A level with no well has none, and nothing asks it for drops (the same for the birds below).

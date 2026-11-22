@@ -43,6 +43,15 @@ APPROACH.xC = (APPROACH.xB0 + APPROACH.xB1) / 2; APPROACH.zC0 = APPROACH.zA1 + A
 // where it is kept clear, the path and the half-way pavilion. Culms stand 9 to 15 m over the land (`top`). Shared with the
 // opening (opening.js), whose way down keeps over their tops except where it comes down the clear way of the path.
 const nearRect = (x, z, x0, x1, z0, z1, m) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
+/** The strip behind the start of the walk, along the eye's line to him at the first picture after 入山, the title's picture and
+ *  the opening's last frame (#454): half its width, and how far back from the path's last step it reaches (the eye stands six
+ *  metres back). No culm stands in it, so that none crosses him or the stair's middle; the eye is not kept out of it either
+ *  (`eyeKeepOut` in level.js). */
+export const START_SIGHT = { hw: 0.95, back: 6.5 };
+/** The one near culm left in that strip to frame the first picture (#454, the art review): 2.8 m in front of the eye and 0.65 m to the
+ *  left, which on a phone held upright stands a tenth of the picture's width from its left edge, and on a wide screen beside the
+ *  stair, clear of him and of the stair's middle. */
+export const START_CULM = [APPROACH.xC - 0.65, APPROACH.zC1 + 2.0];   // (he stands at zC1 - 1.2, the eye 6 m behind him at zC1 + 4.8)
 export const GROVE = {
   top: 15,
   areas: [
@@ -66,6 +75,9 @@ export const GROVE = {
     for (let k = 0; k < 8; k++) if (!GROVE.grows(x + Math.cos((k * Math.PI) / 4) * 1.4, z + Math.sin((k * Math.PI) / 4) * 1.4)) return true;
     return false;
   },
+  /** Is a culm taken out here? Those in the strip behind the start (`START_SIGHT`), which would stand 1 to 6 m from the eye and
+   *  split the stair (#454). Taken out after it has drawn its numbers: the rest of the grove is as it was. */
+  cullSight(x, z) { return Math.abs(x - APPROACH.xC) < START_SIGHT.hw && z > APPROACH.zC1 && z < APPROACH.zC1 + START_SIGHT.back; },
   /** Is there bamboo at (x, z) (within an area, and not kept clear)? */
   grows(x, z) { return GROVE.areas.some((a) => x > a.x0 && x < a.x1 && z > a.z0 && z < a.z1) && GROVE.keep(x, z); },
 };
@@ -237,7 +249,7 @@ export function buildSite(M) {
   }
   // The trees that show the season: ginkgo and maple in the courts and on the terraces. They are in the way too.
   const seasonal = [[14.5, 0, 60.5, "ginkgo", 11], [-9.5, 0, 28, "maple", 7.5], [9.5, 0, 28, "ginkgo", 9.5], [-11.5, 0, 3.5, "maple", 7], [11.5, 0, 3.5, "maple", 7.5],
-    [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.8, TOP.y, TOP.zS - 4.5, "ginkgo", 8]];   // (the summit ginkgo kept 0.6 m off the pavilion's platform as it widened, #278)
+    [9, T1.y, T1.zS - 5.5, "maple", 7], [-9.5, T1.y, T1.zS - 6, "ginkgo", 9], [-10.2, TOP.y, TOP.zS - 3.0, "maple", 6.5], [9.8, TOP.y, TOP.zS - 4.5, "ginkgo", 8, false, "soft"]];   // ("soft": no stone pit, an earth ring with moss instead, the pavilion's platform being 0.6 m off; #611)   // (the summit ginkgo kept 0.6 m off the pavilion's platform as it widened, #278)
   for (const [x, , z, kind, h] of seasonal) walk.posts.push({ x, z, r: girth(kind, h) });
   // And outside the walls, on the hill, the old wood the temple was cut out of: a dark mass behind every roof.
   for (const [x, z, h] of [[-29, 60, 24], [30, 66, 22], [-34, 47, 26], [29, 44, 25], [-28, 30, 23], [30, 26, 26], [-31, 12, 25], [29, 6, 23], [-29, -8, 27], [32, -12, 24], [-36, 72, 22], [37, 54, 24],
