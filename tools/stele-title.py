@@ -28,18 +28,51 @@ def cut(name, page_jpg, page, width, box):
     src["crops"][name] = {"page": page, "thumbnail_width": width, "box": [x0, y0, x1, y1]}; json.dump(src, open(SRC, "w"), indent=1, ensure_ascii=False)
     print("cut", name, im.size)
 
+def components(mask, keep=0.04):
+    """Keep the connected parts of a 0/1 mask that are at least `keep` of the largest: the glyph, not the specks and ruling-line ends round it."""
+    H, W = mask.shape; lab = np.zeros((H, W), "int32"); sizes = [0]; n = 0
+    for y in range(H):
+        for x in range(W):
+            if mask[y, x] and not lab[y, x]:
+                n += 1; stack = [(y, x)]; lab[y, x] = n; c = 0
+                while stack:
+                    cy, cx = stack.pop(); c += 1
+                    for dy in (-1, 0, 1):
+                        for dx in (-1, 0, 1):
+                            ny, nx = cy + dy, cx + dx
+                            if 0 <= ny < H and 0 <= nx < W and mask[ny, nx] and not lab[ny, nx]: lab[ny, nx] = n; stack.append((ny, nx))
+                sizes.append(c)
+    big = max(sizes[1:]); good = [i for i in range(1, n + 1) if sizes[i] >= keep * big]
+    return np.isin(lab, good)
+
+def inside_distance(mask, reach):
+    """Distance from each pixel of the mask to the nearest pixel outside it (exact within `reach`, capped there)."""
+    H, W = mask.shape; out = np.full((H, W), float(reach)); pad = np.pad(~mask, reach, constant_values=True)
+    for dy in range(-reach, reach + 1):
+        for dx in range(-reach, reach + 1):
+            d = (dx * dx + dy * dy) ** 0.5
+            if d > reach: continue
+            shifted = pad[reach + dy:reach + dy + H, reach + dx:reach + dx + W]
+            out = np.where(shifted & (d < out), d, out)
+    return np.where(mask, out, 0.0)
+
 def bitmap(path):
+    """A character's depth field: the crop is made a clean black-and-white shape (the show-through of the printed page and the ruling lines taken out, the contour smoothed), and each pixel's
+    depth is how far it lies inside the stroke, so that a stroke reads as a V-shaped groove deepest along its middle, as the writing on the stele's body is cut."""
     g = np.asarray(Image.open(path).convert("L")).astype(float)
     paper, ink = np.percentile(g, 85), np.percentile(g, 3)           # the page's paper and the printed ink
     m = np.clip((paper - g) / max(1.0, paper - ink), 0, 1)           # 1 = ink
-    im = Image.fromarray((m * 255).astype("uint8")).resize((m.shape[1] * 3, m.shape[0] * 3), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.2))
-    a = np.asarray(im).astype(float) / 255
-    a = np.clip((a - 0.38) / 0.3, 0, 1); a = a * a * (3 - 2 * a)      # the edge made crisp again, a pixel soft
-    ys, xs = np.nonzero(a > 0.5); a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]   # the character's own box
-    k = min((BW - 8) / a.shape[1], (BH - 8) / a.shape[0]); w, h = max(1, round(a.shape[1] * k)), max(1, round(a.shape[0] * k))
-    s = np.asarray(Image.fromarray((a * 255).astype("uint8")).resize((w, h), Image.LANCZOS))
-    out = np.zeros((BH, BW), "uint8"); oy, ox = (BH - h) // 2, (BW - w) // 2; out[oy:oy + h, ox:ox + w] = s
-    return out
+    up = Image.fromarray((m * 255).astype("uint8")).resize((m.shape[1] * 4, m.shape[0] * 4), Image.LANCZOS).filter(ImageFilter.GaussianBlur(1.6))
+    hi = components(np.asarray(up) > 92)                              # the clean shape, at four times the crop
+    ys, xs = np.nonzero(hi); hi = hi[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    k = min((BW - 8) / hi.shape[1], (BH - 8) / hi.shape[0]) * 3        # the shape fitted to three times the bitmap's size, to take the distance there
+    w, h = max(1, round(hi.shape[1] * k)), max(1, round(hi.shape[0] * k))
+    mask = np.asarray(Image.fromarray((hi * 255).astype("uint8")).resize((w, h), Image.LANCZOS)) > 127
+    d = inside_distance(mask, 24)
+    depth = np.clip(d / 13.0, 0, 1)                                    # 13 px at three times the size: a stroke's half width, so the middle of a stroke is deepest
+    depth = np.asarray(Image.fromarray((depth * 255).astype("uint8")).filter(ImageFilter.GaussianBlur(1.0))).astype(float) / 255
+    canvas = np.zeros((BH * 3, BW * 3)); oy, ox = (BH * 3 - h) // 2, (BW * 3 - w) // 2; canvas[oy:oy + h, ox:ox + w] = depth
+    return np.asarray(Image.fromarray((canvas * 255).astype("uint8")).resize((BW, BH), Image.BOX))
 
 def build():
     src = json.load(open(SRC)); items = []
