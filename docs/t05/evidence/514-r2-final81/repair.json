@@ -126,5 +126,16 @@
   "ratio": 1.022,
   "limit": 1.1
  },
- "known_issues": "the opening behind the wrist seen from the west aisle, the steps on the knee's inner edge, the fills' knobs: the owner chose C on 2026-11-22 (accept build 81), see #578"
+ "known_issues": "the opening behind the wrist seen from the west aisle, the steps on the knee's inner edge, the fills' knobs: the owner chose C on 2026-11-22 (accept build 81), see #578",
+ "replay_acceptance": {
+  "reference_file_sha256": "36d4abc2e42d148b7d56764b8d0493c2b1e61ab1e73c53e6bdbc1b5d41e33afb",
+  "rule": "36d4abc2… 是所有者接受的参考文件；重放验收看坐标最大差 ≤ 0.01 mm，不看哈希是否相等。",
+  "rule_en": "36d4abc2… is the reference file the owner accepted; a replay is accepted when the largest coordinate difference from it is 0.01 mm or less, not by its hash",
+  "last_replay_largest_difference_mm": [
+   0.000489,
+   0.000855
+  ],
+  "set_by": "the 3D review on #529, 2026-11-22",
+  "check": "python3 tools/blender/varada-compare.py OUT/sakyamuni-varada.glb <reference 36d4abc2….glb>  (exit 0: accepted)"
+ }
 }

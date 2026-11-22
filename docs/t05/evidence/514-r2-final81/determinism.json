@@ -17,5 +17,6 @@
  },
  "where": "hand.glb and arm-moved.npy come out byte-identical; hand-final.npz differs by ~1e-8 m after the wrist wrap (mathutils BVHTree.find_nearest, single precision) and arm-lining.npy after the lining (Blender's vertex normals); pinning OpenBLAS/OpenMP to one thread did not change it",
  "why_not_fixed": "the owner accepted build 81 as it is (C, 2026-11-22); making those two steps double precision would move the geometry by about a micrometre and lose build 81's bytes",
- "trial_code": "varada-remesh.py and the fold (arm.skirt, arm.bridge) are off: the output matches build 81 face for face and within 0.7 micrometres; tidy logs lining 10975, fills 5120 faces as build 81 does"
+ "trial_code": "varada-remesh.py and the fold (arm.skirt, arm.bridge) are off: the output matches build 81 face for face and within 0.7 micrometres; tidy logs lining 10975, fills 5120 faces as build 81 does",
+ "replay_acceptance": "36d4abc2… 是所有者接受的参考文件；重放验收看坐标最大差 ≤ 0.01 mm，不看哈希是否相等。"
 }
