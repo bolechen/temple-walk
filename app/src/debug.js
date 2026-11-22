@@ -3,7 +3,6 @@
 // It reads and acts only through the page's own hooks (window.__yard, __show, __pose, __inside, __mood, __view,
 // __part, __cost, __census), the same the tests use, so it never reaches into the walk. ` (the key left of 1) shows
 // or hides it. The panel is lil-gui and the frame graph stats.js, both of which come with three.js.
-import { poseQuery } from "./link.js";
 
 export const KEY = "Backquote", STORE = "yunjing.debug.v1", EVERY = 250;
 export const SEASONS = ["spring", "summer", "autumn", "winter"], TIMES = ["dawn", "day", "dusk", "night"], TIERS = ["auto", "low", "medium", "high"];
@@ -90,9 +89,9 @@ export async function mountDebug({ link }) {
     await W.__inside(r.hall); W.__pose(...roomPose(r, W.__yard().x));
   });
   at.add({ copy() {
-    const y = W.__yard(), url = link() || location.origin + location.pathname + poseQuery(location.search, { x: y.x, z: y.z, yaw: y.yaw, pitch: y.pitch, view: y.view, season: y.season, time: y.time, room: y.room, up: y.up });
+    const url = W.__debugURL();   // where he stands and where the eye is (eye=, #623): what a tester saw opens as seen
     console.info("[debug]", url); navigator.clipboard?.writeText(url).catch(() => {});
-  } }, "copy").name("复制此处链接");
+  } }, "copy").name("复制反馈地址");
 
   const hour = gui.addFolder("时节");
   hour.add(s, "season", SEASONS).name("季节").listen().onChange((v) => W.__mood(v, s.time));
