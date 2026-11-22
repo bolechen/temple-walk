@@ -62,7 +62,8 @@ import { createCarryOut } from "./src/carry-page.js";
 import { mountVersion, watchVersion } from "./src/version.js";
 import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
-import { poseQuery } from "./src/link.js";
+import { poseQuery, readEye } from "./src/link.js";
+import { PRODUCTION } from "./src/deploy.js";
 import { findDrop, dropPose, findClimb, climbPose, seatHop, stepOff, stepPose } from "./src/drop.js";
 import { planSteps, clearLine, wayThrough } from "./src/route.js";
 import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settleAt } from "./src/gridwalker.js";
@@ -687,6 +688,9 @@ let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = fo
 // walk is the visitor's, sorted into a hierarchy by a worker, then asked with a sphere as big as the near plane's corners.
 // Until then (and with ?off=eyebvh) the eye asks the written plan, as it did.
 let eyeSpace = null, eyeGather = null, eyeHeld = null;
+// (#623) An address that names the eye (`eye=x,y,z,dist`, from __debugURL or ?devpose) stands it there and holds it until he
+// first walks or the view is dragged, so that what a tester saw is what opens. Production does not read it.
+let eyePin = null;
 const eyeInfo = { state: OFF.has("eyebvh") ? "off" : "waiting", tris: 0, gatherMs: 0, buildMs: 0, t0: 0, byPart: /** @type {Record<string, number>} */ ({}) };
 function growEyeSpace() {
   if (eyeInfo.state === "waiting") {
@@ -825,8 +829,14 @@ function frame(now) {
     const at = { x: pos.x, z: pos.z, foot: footY, eyeY, yaw: look.yaw, pitch: look.pitch, side: sideNow, reach: reachWant, arm: FRAME ? frameArm(FRAME, camera.fov, camera.aspect) : null, space: FRAME ? eyeSpace : null };
     // While the view is being swung round, the eye also looks where it is swinging to (eye.js, `ahead`).
     const ahead = Math.abs(look.vy) > 0.5 ? followEye(walker, { ...at, yaw: look.yaw + look.vy * FOLLOW.ahead }) : null;
-    if (eyeHeld && (eyeSpace || !/waiting|gathering|building/.test(eyeInfo.state) || Math.hypot(pos.x - eyeHeld.x, pos.z - eyeHeld.z) > 0.3)) eyeHeld = null;
-    if (eyeHeld) { follow.reset(eyeHeld.dist); camera.position.fromArray(followEye(walker, at).at(eyeHeld.dist)); }   // (held where it stood before the change of language, #368)
+    if (eyePin) {
+      eyePin.yaw ??= yaw; eyePin.pitch ??= pitch;
+      if (Math.hypot(pos.x - eyePin.x, pos.z - eyePin.z) > 0.02 || Math.abs(yaw - eyePin.yaw) > 1e-4 || Math.abs(pitch - eyePin.pitch) > 1e-4 || photo.on || cine || director.active()) eyePin = null;
+    }
+    if (eyePin) { follow.reset(eyePin.dist); camera.position.fromArray(eyePin.at); }
+    if (!eyePin && eyeHeld && (eyeSpace || !/waiting|gathering|building/.test(eyeInfo.state) || Math.hypot(pos.x - eyeHeld.x, pos.z - eyeHeld.z) > 0.3)) eyeHeld = null;
+    if (eyePin) { /* held above */ }
+    else if (eyeHeld) { follow.reset(eyeHeld.dist); camera.position.fromArray(followEye(walker, at).at(eyeHeld.dist)); }   // (held where it stood before the change of language, #368)
     else camera.position.fromArray(clearOfCenser(follow.step(dt, followEye(walker, at), ahead), [pos.x, footY + 1.15, pos.z], site.censer));   // never drawn from inside the censer (censer.js)
     // Backed against a wall, the eye is as good as his own. Hidden nearer than one distance and shown again only
     // beyond a farther one, so that he does not flicker in and out at the edge of it.
@@ -1256,6 +1266,7 @@ if (relang) {
   // there until the hierarchy can answer or he walks away from the spot.
   if (relang.view === "third" && relang.dist !== null && !relang.hall && !relang.up) eyeHeld = { dist: relang.dist, x: pos.x, z: pos.z };
 }
+if (!PRODUCTION && !relang && view === "third" && !Q.has("shot")) { const e = readEye(location.search); if (e) { eyePin = { at: e.at, dist: e.dist, x: pos.x, z: pos.z, yaw: null, pitch: null }; follow.reset(e.dist); } }
 // Choosing another language in the pause menu hands the walk across the reload that follows (lang.js calls this first).
 window.templeRelang = (to) => {
   if (!document.body.classList.contains("entered") || Q.has("shot")) return false;
@@ -1277,10 +1288,11 @@ window.__views = Object.keys(site.views); window.__merged = merged; window.__tex
 // in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and
 // sends nothing anywhere; everything else in the address (the language, the tier, the parts switched off) is kept, and
 // a tool's `shot` is dropped.
+const eyeNow = () => (view === "third" && follow.dist !== null ? [camera.position.x, camera.position.y, camera.position.z, follow.dist] : null);   // where the eye is and how long its arm (#623)
 window.__debugURL = () => {
   const q = new URLSearchParams(location.search); q.delete("shot");
   return location.origin + location.pathname + poseQuery("?" + q.toString(), { x: pos.x, z: pos.z, yaw, pitch, view,
-    season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, devpose: true,
+    season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, devpose: true, eye: eyeNow(),
     ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) + location.hash;
 };
 // A named view, without loading the place again: out of any room, then stood where the view stands.
@@ -1589,7 +1601,7 @@ if (Q.has("tour")) tour = createTour(Q.get("tour"), {
 if (DEVPOSE) {
   const { createDevPose } = await import("./src/devpose.js");
   devpose = createDevPose({ where: location, history,
-    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null,
+    read: () => (passing || hop || leap ? null : { x: pos.x, z: pos.z, yaw, pitch, view, season: state.season, time: state.time, room: inside ? hallIn.room.id : null, up: upIn ? upIn.id : null, eye: eyeNow(),
       ok: (x, z) => !walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - walker.heightAt(pos.x, pos.z)) < 0.02 }) });   // the written point stands where he stands
   addEventListener("keydown", (e) => {   // C: the address of this view, to the clipboard and the console
     if (e.key.toLowerCase() !== "c" || e.repeat || e.ctrlKey || e.metaKey || e.altKey || ui.modal() || /** @type {Element} */ (e.target)?.tagName === "INPUT") return;
