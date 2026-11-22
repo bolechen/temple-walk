@@ -15,6 +15,12 @@
    "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
   },
   {
+   "path": "collage-r3.jpg",
+   "bytes": 480877,
+   "sha256": "f0f552e252029f35067bfb4649a4058eee79a27b8b5a200d45920c3eff835d65",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
    "path": "r1/back_black_h0.48.png",
    "bytes": 1015633,
    "sha256": "251c19d06326c88b5ba52fc633eafbf8ffd91ec67ef7252860a64e1a335c6697",
@@ -373,6 +379,96 @@
    "bytes": 1198230,
    "sha256": "0a5f65b7573b82a02de3ac92b86d6e8a08f414a0149832e060cd98bb871503f8",
    "rev": "d02f6a20013570f8b282359a30fe0349bbcbcdb0"
+  },
+  {
+   "path": "r3/back_summer-day.png",
+   "bytes": 1335015,
+   "sha256": "301428249a2b4aae51652674ea0380b754cf39a7acb76f2bf4b9980c9c0ae8b4",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/front2m_autumn-dusk.png",
+   "bytes": 1511055,
+   "sha256": "b394d25ae70c14afc434abcfde51993b4e22bedfd9c1823779f6eeaa811cfa46",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/front2m_summer-day.png",
+   "bytes": 1346462,
+   "sha256": "3053dbf4d0fafe2ed9c539ace89da8390f7431f6eec98acf6d9eed3fbe3f9db0",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/front2m_summer-day_base.png",
+   "bytes": 1323002,
+   "sha256": "e0545bd9c680c5ae0358a5575c6781317cedbd58c155acc12a90553122faa845",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/front2m_winter-day.png",
+   "bytes": 1430991,
+   "sha256": "f06f6a133f9b73046d15778cb8aec58cb217355b5e209a5d3b218df7b019ee1e",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/north_summer-day.png",
+   "bytes": 1465227,
+   "sha256": "266fe82c86f65ecce0942f53d0866e76a5528cceb41ee834c87ad9f023b85a42",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/south_summer-day.png",
+   "bytes": 1227482,
+   "sha256": "7e58e96eade4e96361b730df9027355480ea033f0dcd6757419079a334f9a572",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/stele_autumn-dusk_third.png",
+   "bytes": 1316793,
+   "sha256": "9d176214f3b5eb3885938b5b0a51273e975d50d819d0f62325e44ad474ee83aa",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/stele_autumn-dusk_third_base.png",
+   "bytes": 1315865,
+   "sha256": "8de361c2d523490482df0fdfc0702f4acd4a7c4fc9c126e250d553d369e39ab5",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/stele_summer-day_third.png",
+   "bytes": 1287360,
+   "sha256": "f9c964be375ea2eb100498de229f386ab90062a7f6a7d97048f82df3b17745fd",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/stele_summer-day_third_base.png",
+   "bytes": 1286331,
+   "sha256": "b20d035013ee1987064af243c484f9c02ca9b58bc6625f9bd2d566d5b65e82fb",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/stele_winter-day_third.png",
+   "bytes": 1357954,
+   "sha256": "916dddd6f441b1925d678c9270df1ed947b70ce7fadb1c4e2c3bdcf64f581eda",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/stele_winter-day_third_base.png",
+   "bytes": 1356855,
+   "sha256": "3fcfcb16c753f66dcd4152c92e2608eb482c7d4c5defef80aa83d0ad62e84515",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/title_summer-day.png",
+   "bytes": 1329499,
+   "sha256": "a9ad75ef83eea9e266f17f201040b23a2030232c004985ee14c275df600e6377",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
+  },
+  {
+   "path": "r3/title_summer-day_base.png",
+   "bytes": 1324404,
+   "sha256": "1afb6b4fee01ea236138e8fc32a0e7d8b4ce2f1636a2c4620df41698a8cba6a8",
+   "rev": "76aae059e4e557bc4384d88cf1e74f6136f4f103"
   }
  ]
 }

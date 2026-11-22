@@ -35,7 +35,7 @@ const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
   for (const h of heights) {
     const p = await ctx.newPage();
     p.on("pageerror", (e) => errors.push(String(e))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errors.push(m.text()));
-    await p.goto(`${srv.base}?shot=1&q=high&season=summer&time=day&view=first&off=doorway&debug=0&cam=${C[0] + 1.6},${C[1]},-1.5708,0`, { waitUntil: "commit", timeout: 300000 });
+    await p.goto(`${srv.base}?shot=1&q=high&season=${arg("season", "summer")}&time=${arg("time", "day")}&view=first&off=doorway&debug=0&cam=${C[0] + 1.6},${C[1]},-1.5708,0`, { waitUntil: "commit", timeout: 300000 });
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 600000 });
     const info = await p.evaluate(() => ({ y: window.__yard(), st: window.__stele ? window.__stele() : null }));
     const floor = info.y.h != null ? info.y.h : info.y.y;
@@ -48,7 +48,7 @@ const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
         if (v.show) await p.evaluate((s) => { window.__look(); window.__show(s); }, v.show);
         else await p.evaluate(([e, a]) => window.__look(e, a), [[C[0] + e0(v.eye[0]), floor + v.eye[2], C[1] + v.eye[1]], [C[0] + v.at[0], floor + v.at[2], C[1] + v.at[1]]]);
         await p.waitForTimeout(900); await p.evaluate(() => window.__probe()); await p.waitForTimeout(500);
-        const f = path.join(out, `${id}_${mode}_h${h}.png`); await p.screenshot({ path: f, timeout: 240000 }); console.log(f);
+        const f = path.join(out, `${id}_${mode}_${arg("season", "summer")}-${arg("time", "day")}.png`); await p.screenshot({ path: f, timeout: 240000 }); console.log(f);
       }
     }
     await p.close();
