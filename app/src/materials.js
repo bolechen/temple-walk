@@ -7,6 +7,10 @@ import { TRI, declare, bind } from "./textures.js";
 import { STAIR, CHEEK_STONE } from "./geo.js";
 import { TRAIL } from "./trail.js";
 import { SHELTER } from "./shelter.js";
+import { PROBE, PROBE_ON, PROBE_GLSL } from "./probe.js";
+
+/** A one-pixel texture that stands in for a picture a material has not been given. */
+const BLANK = (() => { const t = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); t.needsUpdate = true; return t; })();
 
 // `body` may write: vec3 col, float rough_, float bump_ (metres), float ao_.
 // Every geometry drawn with these needs a float `ao` attribute (see geo.js): occlusion is baked per vertex
@@ -19,14 +23,14 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uWinNight = U.uWinNight; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uWinNight = U.uWinNight; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; if (PROBE_ON) Object.assign(sh.uniforms, PROBE); bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? "\nattribute vec4 stair; varying vec4 vSt;" : ""))
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;${stair ? " vSt=stair;" : ""}`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform float uWinNight; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? " varying vec4 vSt;" : "") + "\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : "") + glsl)
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform float uWinNight; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? " varying vec4 vSt;" : "") + "\n" + (PROBE_ON ? PROBE_GLSL : "") + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : "") + glsl)
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
@@ -35,7 +39,9 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
           col=mix(col,sc_,sn_*(1.-.25*tr_.x)); rough_=mix(rough_,.82-.12*tr_.x,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8)*(1.-.25*tr_.x),sn_); nd_=mix(nd_,vec3(sr.x*2.-1.,0.,sr.y*2.-1.)*.55*(1.-.6*tr_.x)+vec3(tr_.y,0.,tr_.z),sn_); }` : ""}
         diffuseColor.rgb=col;`)
       // What is tucked away is dark to the sky, and only a little to the sun.
-      .replace("#include <aomap_fragment>", `reflectedLight.indirectDiffuse*=ao_; reflectedLight.directDiffuse*=mix(1.,ao_,.3);
+      .replace("#include <aomap_fragment>", `${PROBE_ON ? `vec3 pb_=vec3(0.); float pv_=probeLight(vWP,normalize(vWN),pb_);   // the baked light (probe.js): the sky as this place sees it, and what the walls give back
+        reflectedLight.indirectDiffuse=reflectedLight.indirectDiffuse*pv_+material.diffuseColor*RECIPROCAL_PI*pb_; reflectedLight.indirectSpecular*=mix(1.,pv_,.7);` : ""}
+        reflectedLight.indirectDiffuse*=ao_; reflectedLight.directDiffuse*=mix(1.,ao_,.3);
         #if defined( USE_ENVMAP ) && defined( STANDARD )
           reflectedLight.indirectSpecular*=computeSpecularOcclusion(saturate(dot(geometryNormal,geometryViewDir)),ao_,material.roughness);
         #endif`)
@@ -419,6 +425,40 @@ export function createMaterials() {
       vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
       col=vec3(.3,.3,.28)*A; col=mix(col,vec3(.16,.2,.1),smoothstep(.5,.75,fbm3(vWP*1.3+4.))*.45);
       rough_=Nr.w; nd_=Nr.xyz*1.2;`, { tex: ["stone"] }),
+    // The imperial stele in the stele pavilion (#520): blue-grey stone, cooler and darker than the pavilion's platform, damp at the foot, worn bright where a hand
+    // passes the front arrises, mossy on the shaded side low down, its writing weathered into traces and its title still cut. Everything is read from the
+    // `stair` numbers stele.js writes (the point's place across the stone and up from the platform, which way the face looks, whether it is the base and whether
+    // it is a chamfer), and from two small pictures of the writing, so no triangle is added. Snow does not lie on it: it stands under a roof.
+    steleStone: procMat("steleStone", { roughness: 0.8, envMapIntensity: 0.4 }, `
+      float lx=vSt.x, ly=vSt.y, nzf=vSt.z, kb=mod(vSt.w,2.), cham=step(1.5,vSt.w);
+      float nearK=1.-smoothstep(5.,9.,length(vWP-cameraPosition));
+      vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
+      float big=n3(vWP*1.7+vec3(3.,1.,7.)), mid=.6*n3(vWP*5.+2.)+.4*n3(vWP*10.3+5.);
+      vec3 st_=vec3(4.4,1.6,4.4); float pat_=smoothstep(.3,.7,.6*n3(vWP*st_+vec3(5.,2.,1.))+.4*n3(vWP*st_*2.1+vec3(1.,9.,2.))); float fine=smoothstep(.3,.7,n3(vWP*vec3(8.,3.4,8.)+vec3(1.,6.,3.)));
+      col=vec3(.255,.265,.264)*A*(.84+.3*big)*(.8+.34*pat_)*(.92+.16*fine); col=mix(col,col*vec3(1.06,1.04,1.),smoothstep(.55,.8,n3(vWP*vec3(.9,.45,.9)+9.))*.4);
+      float up=smoothstep(.85,.97,vWN.y), side=1.-step(.5,abs(nzf));
+      float streak=smoothstep(.4,.8,.65*n3(vec3(lx*15.,ly*.35,2.))+.35*n3(vec3(lx*31.,ly*.7,4.))); float streak2=smoothstep(.5,.85,n3(vec3(lx*34.,ly*.6,5.))); col*=1.-(.2*streak+.1*streak2)*(1.-up)*(.35+.65*smoothstep(.4,2.6,ly));
+      float wet=(1.-smoothstep(.55,1.25+.25*(mid-.5),ly))*(1.-.85*up*kb); col*=(1.-.58*wet*(.7+.6*mid))*(1.+.12*smoothstep(1.2,2.3,ly)*(1.-kb)); rough_=mix(rough_,.5,wet*.5);
+      col=mix(col,vec3(dot(col,vec3(.33)))*1.3+.012,.5*up*kb+.3*up*(1.-kb)); col=mix(col,vec3(.5,.5,.48)*(.55+.45*pat_)*A,.6*up*kb);
+      float topw=smoothstep(2.35,2.95,ly)*(1.-kb); float corner=smoothstep(.2,.5,abs(lx))*topw;
+      col=mix(col,(col*1.3+.012)*vec3(1.04,1.02,.98),smoothstep(.6,.72,n3(vWP*vec3(7.,3.,7.)+4.))*(.3*topw+.5*corner)); col*=1.-.3*step(.64,n3(vWP*34.))*corner*nearK;
+      float band=smoothstep(.7,.86,ly)*(1.-smoothstep(1.34,1.5,ly))*(1.-kb); float worn=cham*(1.-kb)*step(.45,abs(lx))*band;
+      float hand=.35+.65*smoothstep(.2,.8,n3(vec3(ly*5.5,abs(lx)*30.,1.)));
+      float baseTop=cham*kb*smoothstep(.43,.46,ly)*(1.-smoothstep(.5,.54,ly))*(.3+.7*smoothstep(.2,.8,n3(vec3(lx*6.,1.,4.))));
+      float polish=max(worn*hand,baseTop*.8); col*=1.+.5*polish; col+=.015*polish; rough_=mix(rough_,.34,polish);
+      float mossy=(1.-smoothstep(.5,1.1,ly))*smoothstep(-.1,.5,lx)*smoothstep(.6,.78,n3(vWP*6.+5.))*(1.-up*.6);
+      col=mix(col,vec3(.09,.15,.07)*A,.6*mossy);
+      float dd=clamp((abs(lx)-.475)/.02,0.,1.); float petal=cham*(1.-kb)*step(.472,abs(lx))*exp(-(dd-.5)*(dd-.5)/.0196); col*=1.-.35*petal*nearK;
+      float inBody=step(.5,nzf)*(1.-kb); vec2 iuv=vec2((lx+.425)/.85,(ly-.58)/1.7); vec2 ie=step(vec2(0.),iuv)*step(iuv,vec2(1.));
+      vec2 ink=texture2D(uInk,iuv).rg*ie.x*ie.y*inBody; float back=step(nzf,-.5)*(1.-kb); vec2 ib=texture2D(uInk,vec2(1.-iuv.x,iuv.y)).rg*ie.x*ie.y*back; ink=ink+vec2(0.,ib.x*.3+ib.y);
+      vec2 tuv=vec2((lx+.23)/.46,(ly-2.34)/.4); vec2 te=step(vec2(0.),tuv)*step(tuv,vec2(1.)); float tk=texture2D(uTitle,tuv).r*te.x*te.y*inBody*step(2.3,ly);
+      float chip=smoothstep(.55,.8,n3(vec3(vWP.zy*22.,vWP.x*22.)))*.55; tk*=1.-chip;
+      float cutI=clamp(ink.x,0.,1.)*nearK*uInkOn, cutT=clamp(tk,0.,1.)*nearK*uInkOn;
+      float gy=(texture2D(uInk,iuv+vec2(0.,.0018)).r-texture2D(uInk,iuv-vec2(0.,.0018)).r)*ie.x*ie.y*inBody*uInkOn;
+      float gyT=(texture2D(uTitle,tuv+vec2(0.,.0075)).r-texture2D(uTitle,tuv-vec2(0.,.0075)).r)*te.x*te.y*inBody*step(2.3,ly)*uInkOn;
+      float gxT=(texture2D(uTitle,tuv+vec2(.0065,0.)).r-texture2D(uTitle,tuv-vec2(.0065,0.)).r)*te.x*te.y*inBody*step(2.3,ly)*uInkOn;
+      col*=(1.-.025*cutI-.1*cutT-.03*ink.y*nearK*uInkOn)*(1.+mix(.48,.45,step(0.,gy))*gy*nearK)*(1.+mix(1.3,.65,step(0.,gyT))*gyT*nearK)*(1.+.4*gxT*nearK); ao_=min(ao_,1.-.12*cutT);
+      rough_=Nr.w; nd_=Nr.xyz*1.2; bump_=-(cutI*.0005+cutT*.0016)-(petal*.0012*nearK)+(mid-.5)*.0012;`, { tex: ["stone"], stair: true, snow: false, uniforms: (m) => (m.userData.inkUniforms = { uInk: { value: m.userData.ink || BLANK }, uTitle: { value: m.userData.title || BLANK }, uInkOn: { value: 1 } }), glsl: "uniform sampler2D uInk, uTitle; uniform float uInkOn;" }),
     // Woven rush and straw: mats and cushions.
     straw: procMat("straw", { roughness: 0.8, envMapIntensity: 0.25 }, `
       vec3 q=vWP*1.5, w=triW(vWN); vec3 A=triA(tWeaveA,q,w)/mWeave; vec4 Nr=triN(tWeaveN,q,w);

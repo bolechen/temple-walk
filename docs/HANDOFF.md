@@ -23,6 +23,18 @@
 **用户的工作方式**：希望你自己拿主意、持续推进，不要每一步都问。验收只看画面。
 他在 Mac 上测，线上地址是 <https://bolechen.github.io/temple-walk/>，推 `main` 自动部署。
 
+## 2026-11-22：两项渲染试验，探针与按太阳算的天空（Issue #592，分支 feat/render-probe-sky-592，草稿 PR）
+
+- **做了**：对照 rewind02 帖子（没找到它的代码，`docs/REWIND02-TEARDOWN.md` 写明「只有正文前半和封面」），各做一项默认关的试验。
+  A `?trial=probe`：首院和大雄宝殿内烘焙的光探针（`tools/bake-probes.mjs` → `app/shared/probes/t00.bin`，106 KB，进 git；`app/src/probe.js`）。
+  B `?trial=sky`：天空、雾、天光、太阳色从太阳高度算出（`app/src/atmosphere.js`）；J01 和夜晚逐像素不变。
+- **T4**（`tools/gpu-render.sh t4-small`，同一个作业里开关交替，cam06 夏昼 `__cost`）：A 高档 +0.31 ms（中位，均值 +0.30；第一版四次取样是 +0.60），低档 −0.07；B 高档 +0.06，低档 +0.14（抖动内）。
+  只量了 cam06；两个作业共约 $0.3。
+- **画面**：证据 `docs/t00/evidence/rewind02-trial/`（探针 cam03/05/06 和殿内前后对照，十六个时辰天空对照）。美术总监判。
+- **结论**：A 值得调（山门洞偏暗，缺太阳反弹）；B 不建议整体采用（比手调的更蓝更冷），只取「雾、天光、太阳色同源」。
+- **还没做**：探针不进 `pnpm build`；没有 T05 的探针；B 没有量夏昼以外的帧耗；十六个时辰的天空没有烘成文件（运行时算，约 20 ms）。
+
+
 ## 2026-11-21：小沙弥默认穿 Tripo 分层身体（Issue #163 接入第一个 PR，分支 feat/novice-tripo-163）
 
 - **做了**：页面默认穿 `app/shared/models/novice-tripo.glb`（第六轮 r6 加收臂展 0.8 cm 重出，`tools/novice-tripo.mjs` 两次 SHA-256 一致；不花 Tripo 点数）；建场景时取，到了或失败才算载入完成，所以截图不会时而代码身体时而新身体；`?body=code` 回代码身体，`?body=sculpt` 穿 Meshy 身体；`__yard().body` 报穿的是哪个。`monk.dress()` 按文件的 `extras.helpers` 加两根腋下修正骨、穿上后把念珠推到布外 4 mm，并先把 glTF 的交错属性展平（**老 bug**：袍摆抬升 `setupHem/liftHem` 按平铺数组读，穿任何 glb 身体上台阶都读错位，单测用的是平铺数组所以没测出）。

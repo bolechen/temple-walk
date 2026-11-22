@@ -8,7 +8,9 @@
 // The address for `pose` = { x, z, yaw, pitch, view?, season?, time?, room?, up?, devpose?, ok? }, keeping every other
 // parameter of `search`. `show` gives way to the exact place; `in` and `up` are the hall he is inside and the balcony he
 // is up on, or nothing when he is out and down. `devpose` asks the address to be followed by a dev server. `ok(x, z)`
-// says whether a point stands where he stands (free, at his height).
+// says whether a point stands where he stands (free, at his height). `eye` = [x, y, z, dist] is where the eye stood and how
+// long the following arm was (#623); it is written to the centimetre as one parameter, `eye=x,y,z,dist`, and `readEye`
+// takes it back. Without it the address says nothing of the eye, and the eye follows him as it always did.
 export function poseQuery(search, pose) {
   const q = new URLSearchParams(search), yaw = Math.atan2(Math.sin(pose.yaw), Math.cos(pose.yaw));   // a turn of the head is kept within one round
   q.delete("show");
@@ -17,6 +19,16 @@ export function poseQuery(search, pose) {
   for (const k of ["view", "season", "time"]) if (pose[k]) q.set(k, pose[k]);
   if (pose.room) q.set("in", pose.room); else q.delete("in");
   if (pose.up) q.set("up", pose.up); else q.delete("up");
+  if (pose.eye && pose.eye.every(Number.isFinite)) q.set("eye", pose.eye.map((v) => +v.toFixed(2)).join(",")); else q.delete("eye");
   if (pose.devpose) q.set("devpose", "");
   return "?" + q.toString().replace(/%2C/g, ",").replace(/=(&|$)/g, "$1");   // commas as written; a bare flag stays bare
+}
+
+/** The eye an address names, `eye=x,y,z,dist` → `{ at: [x, y, z], dist }`, or null when it is absent or not four sane numbers
+ *  (a place is within a few kilometres, the arm within 20 m). @param {string} search */
+export function readEye(search) {
+  const raw = new URLSearchParams(search).get("eye"); if (!raw) return null;
+  const v = raw.split(",").map((t) => (t.trim() === "" ? NaN : Number(t)));
+  if (v.length !== 4 || !v.every(Number.isFinite) || v.slice(0, 3).some((c) => Math.abs(c) > 5000) || v[3] < 0 || v[3] > 20) return null;
+  return { at: [v[0], v[1], v[2]], dist: v[3] };
 }

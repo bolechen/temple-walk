@@ -6,6 +6,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createMonk } from "../../app/src/monk.js";
 import { bodyOf, skinMaterial, tintCloth } from "../../app/src/novice.js";
+import { lidShader, eyeSkin } from "../../app/src/blink.js";
 import { helpersOf, relayBeads } from "../novice-rig.mjs";
 import { teaBowl } from "../../app/src/rites.js";
 
@@ -66,7 +67,8 @@ function showFaces(m) {
     mat.customProgramCacheKey = () => 'faces'; o.material = mat; });
 }
 function dress(m) { if (!body) return; const extras = body.gltf.parser.json.extras;   // a body weighted to helper bones (#286) has monk.js add them
-  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; if (tintCloth(g, extras)) material.vertexColors = true; m.dress(g, material, robeColor, { helpers: helpersOf(extras), skinMaterial: skinMaterial(material) }); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }   // dressed as the page dresses him: beads and straps laid on the worn robe
+  const { geometries, material, robeColor } = bodyOf(body.gltf.scene, extras, m); const g = {}; for (const k in geometries) g[k] = geometries[k].clone(); material.envMapIntensity = 0.45; if (tintCloth(g, extras)) material.vertexColors = true; const eyes = !!extras.helpers?.length, skin = skinMaterial(material); if (eyes) lidShader(skin, m.lid, eyeSkin(g.skin));   // the Tripo body's lids (#607)
+  m.dress(g, material, robeColor, { helpers: helpersOf(extras), skinMaterial: skin, eyes }); if (stage.beads != null) relayBeads(m, { gap: stage.beads }); m.group.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } }); }   // dressed as the page dresses him: beads and straps laid on the worn robe
 
 // The poses, as tests/unit/novice.test.mjs and tools/novice-weld-trial.mjs run them: frames to settle, then the frame shown.
 const POSES = {
@@ -74,6 +76,12 @@ const POSES = {
   stand: (m) => { for (let i = 0; i < 40; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {}); },
   pray: (m) => { for (let i = 0; i < 90; i++) m.update(1 / 30, 0, "pray", i / 30, () => 0, {}); },
   walk: (m, f = 52) => { for (let i = 0; i <= f; i++) m.update(1 / 30, 2.1, false, i / 30, () => 0, {}); },
+  // #284: standing, told to go the other way: the page turns him at 9 a second of the angle left and raises his speed at 10
+  // (yard.js), and the cloth must keep over his thighs. `f` frames at 30 a second since the word.
+  turn: (m, f = 6) => {
+    for (let i = 0; i < 40; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {});
+    let h = 0, sp = 0; for (let i = 1; i <= f; i++) { const dt = 1 / 30; h += Math.atan2(Math.sin(Math.PI - h), Math.cos(Math.PI - h)) * Math.min(1, dt * 9); sp += (2.1 - sp) * Math.min(1, dt * 10); m.group.rotation.y = h; m.update(dt, sp, false, (40 + i) / 30, () => 0, {}); }
+  },
   chair: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "chair", i / 30, () => -0.44, {}); },
   sit: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },
   // Two of the observances' hand places, as rites.js sets them (issue #246: do the hands still meet the body?): the bowl
@@ -105,7 +113,7 @@ function hold(m, set, pose = false, floorY = 0) {
 }
 /** Pose him and look from `yaw` (0: before him) and `pitch`; returns a PNG data URL. */
 function shot(pose, yaw, pitch = 0.08, frame, near = 1) {
-  scene.remove(bowl); const m = fresh(); dress(m); showFaces(m); POSES[pose](m, frame); for (const n of stage.hide || []) if (m.parts[n]) m.parts[n].visible = false; m.group.updateMatrixWorld(true);
+  scene.remove(bowl); const m = fresh(); dress(m); showFaces(m); POSES[pose](m, frame); if (stage.lid != null) m.lid.value = stage.lid; for (const n of stage.hide || []) if (m.parts[n]) m.parts[n].visible = false; m.group.updateMatrixWorld(true);
   const seated = pose === "chair" || pose === "sit" || pose === "teaSeat";
   scene.remove(stool, cushion); if (pose !== "tea" && pose !== "teaSeat") scene.remove(bowl); if (pose === "chair" || pose === "teaSeat") scene.add(stool); if (pose === "sit") scene.add(cushion);
   floor.position.y = pose === "chair" || pose === "teaSeat" ? -0.44 : pose === "sit" ? -0.104 : 0;

@@ -134,7 +134,10 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   };
   const open = space && arm ? (dist, sd = s0) => !shutAt(dist, sd) : (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
   // The floor the eye must never be under, at a distance: whatever is there to stand on, and a hand's breadth.
-  const floorAt = (dist, sd = s0) => { const [cx, , cz] = base(dist, sd); return walker.landAt(cx, cz) + 0.12; };
+  // (#622) The floor is the drawn one where the baked grid has it, as the line of sight reads it (`groundAt`), not the written
+  // plan's `landAt`, which beside a platform can be the court below it; and with `space` the eye's whole sphere stays over it:
+  // a floor a hand's breadth under the sphere's lowest point is inside the drawn ground, and was taken for something in the way.
+  const floorAt = (dist, sd = s0) => { const [cx, , cz] = base(dist, sd); return groundAt(cx, cz) + Math.max(0.12, (space ? space.radius : 0.2) + 0.02); };
   const at = (dist) => {
     const [cx, y, cz] = base(dist), lifted = y + need(dist, s0, y);
     return [cx, lifted > y && shut(cx, lifted, cz) ? y : lifted, cz];   // never up into an eave
@@ -257,7 +260,7 @@ export function createFollow(T = FOLLOW) {
       // over, by as little as clears it: down under it there is nothing but the railing itself.
       if (eye.solid && eye.shut(cx, cy, cz)) { const was = lift; for (let k = lift + 0.05; k <= wantLift + 0.3 + 1e-6; k += 0.05) if (!eye.shut(cx, y + k, cz)) { lift = k; break; } if (lift !== was) { forced = Math.max(forced, lift - was); vl = 0; cy = y + lift; } }
       const floor = eye.floorAt(dist, side);
-      if (cy < floor && !eye.shut(cx, floor, cz)) { lift = floor - y; vl = 0; cy = floor; }   // nor down into the stone
+      if (cy < floor) { lift = floor - y; vl = 0; cy = floor; }   // nor down into the stone
       return [cx, cy, cz];
     },
   };

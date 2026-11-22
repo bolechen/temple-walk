@@ -1,6 +1,7 @@
 // The hour and the season, as numbers: where the sun stands and what colour it is, how thick the air,
 // how much cloud, whether there is snow, what falls through the air. Everything visible reads from one of these.
 import { IDENTITY } from "./lut.js";
+import { SKY_TRIAL, atmosphereMood } from "./atmosphere.js";
 
 export const SEASONS = ["spring", "summer", "autumn", "winter"], TIMES = ["dawn", "day", "dusk", "night"];
 export const NAMES = { spring: "春", summer: "夏", autumn: "秋", winter: "冬", dawn: "晨", day: "昼", dusk: "暮", night: "夜" };
@@ -68,6 +69,7 @@ export function moodOf(season, time, tune) {
   // A cloudy summer dusk after rain: the deck glows rose under an indigo sky and the lamps burn amber (prototype 05).
   if (season === "summer" && time === "dusk") Object.assign(m, { zen: [0.13, 0.15, 0.4], hor: [0.78, 0.47, 0.56], sunCol: [1, 0.55, 0.45], sunI: m.sunI * 0.6, win: [0.66, 0.34, 0.13] });
   if (s.snow && time !== "night") m.fog = t.fog.map((v, i) => v * 0.6 + [0.86, 0.88, 0.92][i] * 0.4);
+  if (SKY_TRIAL.on) { const air = atmosphereMood(m); if (air) Object.assign(m, air); }   // #592 trial B: the sky, mist, sky-light and sun's colour from one scattering model, at the table's own lightness; off, this line is not reached
   const own = tune ? tune(season, time, m) : null; if (own) Object.assign(m, own);   // the level's say, after the hours and the seasons have had theirs
   m.drift = s.drift === "none" && time === "night" ? "firefly" : s.drift;
   // The breeze (wind.js), m/s at its steadiest: a spring and autumn day the liveliest, still winter cold and the night

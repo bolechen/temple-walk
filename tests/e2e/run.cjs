@@ -3066,6 +3066,26 @@ const scenarios = {
     expect((await menu()) === false, "after the drag is let go, the browser's menu should be back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The address a tester sends back holds where the eye is (#623): opened again, the eye stands where it stood.
+  "eye-address": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&cam=-5.68,49.8,1.145,0.2&view=third&season=autumn&time=day", { viewport: { width: 960, height: 600 } });
+    await t.page.waitForSelector("#photoBtn", { timeout: 120000 }); await t.frames(20);
+    await t.page.mouse.move(480, 300); await t.page.mouse.down(); await t.page.mouse.move(480, 380, { steps: 8 }); await t.page.mouse.up(); await t.frames(30);
+    const link = await t.page.evaluate(() => window.__debugURL()), q = new URL(link).searchParams;
+    expect(/^-?[\d.]+,-?[\d.]+,-?[\d.]+,[\d.]+$/.test(q.get("eye") || ""), "the address should carry eye=x,y,z,dist: " + link);
+    const was = await t.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(480, 300).slice(0, 1).map((p) => [p.part, p.material]) }));
+    const u = await open(b, base, new URL(link).search.slice(1), { enter: false, viewport: { width: 960, height: 600 } });
+    await u.page.waitForSelector("#photoBtn", { timeout: 120000 }); await u.frames(20);
+    const now = await u.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(480, 300).slice(0, 1).map((p) => [p.part, p.material]) }));
+    expect(Math.hypot(...now.eye.map((v, i) => v - was.eye[i])) <= 0.02, "the eye opened off where it stood: " + JSON.stringify([was.eye, now.eye]));
+    expect(JSON.stringify(now.pick) === JSON.stringify(was.pick), "the middle of the picture shows something else: " + JSON.stringify([was.pick, now.pick]));
+    // Held until he first walks, then given back to the spring arm.
+    await u.page.keyboard.down("w"); await u.frames(20); await u.page.keyboard.up("w"); await u.frames(10);
+    const moved = await u.page.evaluate(() => window.__frame().eye);
+    expect(Math.hypot(...moved.map((v, i) => v - now.eye[i])) > 0.3, "after he walked, the eye should follow him again");
+    expect(u.errors.length === 0, u.errors.join("\n")); await u.close();
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // A quiet photo interface on desktop and touch: settings stay out of the scenery until requested.
   "photo-ui": { tier: 2, async run(b, base) {
     for (const touch of [false, true]) {
@@ -3924,6 +3944,35 @@ const scenarios = {
     expect(await t.page.isVisible("#tour") && (await t.page.textContent("#tour")).includes("p95"), "the numbers were not shown");
 
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The button at the foot of the picture says what he may do next (stand up, ring the bell, offer incense…), and on a phone the jump ring lies lower right: the
+  // button must not lie on the ring, in any language, with the longest of its words, on any of the phone's screens (the English 「Stand up」 on a 360 px screen
+  // overlapped the ring by 11 × 18 px, seen by the phone audit once it waited for the seated state, #614). The words are laid in a copy of the button, which
+  // takes the same rules by its id, so that the game's own tick, which puts the button away and brings it back, cannot change what is measured.
+  "stand-up": { tier: 2, async run(b, base) {
+    const { pathToFileURL } = require("url"), path = require("path"), words = ["起身", "坐下", "撞钟", "上香", "吃茶", "合掌", "观看", "为人点灯", "登楼", "下楼", "静坐", "观水"];
+    const said = { zh: Object.fromEntries(words.map((w) => [w, w])) };
+    for (const l of ["en", "ja", "ko"]) { const m = (await import(pathToFileURL(path.join(__dirname, "../../app/locales", l + ".js")).href)).default; said[l] = Object.fromEntries(words.map((w) => [w, m[w] || w])); }
+    for (const lang of ["zh", "en", "ja", "ko"]) for (const [w, h] of [[360, 640], [390, 844], [844, 390], [430, 932]]) {
+      const t = await open(b, base, `q=low&lang=${lang}` + BARE, { viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
+      const mb = (await t.page.evaluate(() => window.__probe())).monkBox;
+      const r = await t.page.evaluate(([said, mb]) => {
+        const real = document.getElementById("act"), out = [], GAP = 8;
+        // how far apart two boxes are: the larger of the gaps along either axis (negative: they lie on each other, by that much)
+        const gap = (a, q) => Math.max(a.left - q.right, q.left - a.right, a.top - q.bottom, q.top - a.bottom);
+        const others = [["stick", "#stick"], ["jump ring", "#jumpBtn"], ["turn ring", "#turnBtn"]].map(([n, sel]) => [n, document.querySelector(sel)]).filter(([, e]) => e && getComputedStyle(e).display !== "none").map(([n, e]) => [n, e.getBoundingClientRect()]);
+        if (mb) others.push(["figure", { left: mb[0], top: mb[1], right: mb[0] + mb[2], bottom: mb[1] + mb[3] }]);
+        for (const [zh, label] of Object.entries(said)) {
+          const c = real.cloneNode(false); c.hidden = false; c.removeAttribute("data-word"); c.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${label}</span>`; real.after(c);
+          const a = c.getBoundingClientRect();
+          for (const [n, q] of others) { const g = gap(a, q); if (g < GAP) out.push(`「${label}」 (${Math.round(a.left)}..${Math.round(a.right)}, ${Math.round(a.top)}..${Math.round(a.bottom)}) is ${Math.round(g)} px from the ${n}`); }
+          if (a.left < 0 || a.right > innerWidth) out.push(`「${label}」 runs off the screen (${Math.round(a.left)}..${Math.round(a.right)} of ${innerWidth})`);
+          c.remove();
+        }
+        return out; }, [said[lang], mb]);
+      expect(r.length === 0, `in ${lang} at ${w}x${h}: ${r.join("; ")}`);
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
   } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {

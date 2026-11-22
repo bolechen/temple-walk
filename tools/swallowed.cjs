@@ -2,18 +2,22 @@
 // on, after the comment's place, with another statement. The comment then swallows it, and nothing fails until what it
 // did is missed: twice in one change, the prologue's court paving was dropped from the ground's lamplit layers and every
 // seat in its halls stopped being a seat. A line is flagged when code ending a statement is followed by `//` and the
-// comment's own text ends in a call or an assignment closed by `;`, which prose does not. `pnpm run check` runs it over
+// comment's own text ends in a call or an assignment closed by `;`, or assigns a global hook, which prose does not. `pnpm run check` runs it over
 // app/; tests/unit/swallowed.test.mjs holds it to the two it was written for and to a clean app/.
 const fs = require("fs"), path = require("path");
 
 const STATEMENT = /(?:^|\s)[A-Za-z_$][\w$.]*(?:\[[^\]]*\])?\s*(?:\([^()]*(?:\([^()]*\)[^()]*)*\)|=\s*[^=;][^;]*)\s*;\s*$/;
+
+// An assignment to a global hook (`window.__view = …`) inside a comment's text: prose may name a hook but does not assign one. This
+// is the case the pattern above misses when the swallowed statement is an arrow function, whose body has semicolons of its own (#592).
+const HOOK = /(?:^|[\s;])(?:window|globalThis)\.[\w$]+\s*=[^=]/;
 
 /** The lines of `text` whose trailing comment ends in what reads as a statement. @returns {{ line: number, comment: string }[]} */
 function swallowed(text) {
   const out = [];
   text.split("\n").forEach((line, i) => {
     const m = line.match(/^(.*?[;})\]])\s+\/\/(.*)$/);
-    if (m && STATEMENT.test(m[2])) out.push({ line: i + 1, comment: m[2].trim() });
+    if (m && (STATEMENT.test(m[2]) || HOOK.test(m[2]))) out.push({ line: i + 1, comment: m[2].trim() });
   });
   return out;
 }
