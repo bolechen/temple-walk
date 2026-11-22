@@ -4,6 +4,8 @@
 // cushion he keeps his eyes shut, and opens them within 0.3 s of getting up. The times come from a seeded generator, so the
 // same seed gives the same blinks (tests, and a picture taken twice).
 
+import { Vector4 } from "three";
+
 /** A small seeded generator: at least 0 and under 1. */
 export function mulberry32(a) { return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
@@ -45,28 +47,61 @@ export function createBlink(seed = 607, B = BLINK) {
 
 // Where the eyes are in the body's bind pose (the head of novice-tripo.glb, metres, he faces +z) and the colour of the lid
 // (linear): an ellipse about each eye. The lid is drawn over the painted eye with a lash line along its lower edge.
-export const EYES = { y: 0.985, x: 0.067, rx: 0.054, ry: 0.036, zMin: 0.04, lid: [0.5, 0.33, 0.245], lash: [0.07, 0.035, 0.03] };
+export const EYES = { y: 0.985, x: 0.067, rx: 0.054, ry: 0.036, zMin: 0.04, plane: [0.23292, -0.08064, -0.58779], cheek: [0.075, 0.935], skin: 0.97, lash: [0.085, 0.045, 0.03], lashHalf: 0.0009 };
 
-/** Patches a MeshStandardMaterial so its eyes close by `lid.value` (an object with a `value`, shared with the figure). Idempotent. */
-export function lidShader(material, lid) {
-  const f = (n) => n.toFixed(4), v3 = (a) => `vec3(${a.map(f).join(",")})`;
-  const prev = material.onBeforeCompile;
+/**
+ * Where on the skin's texture the lid takes its colour from, one point to each side of the face: the cheek under each eye
+ * (the head's two sides lie on separate islands of the texture), found as the forward-most points of the geometry in
+ * EYES.cheek. A vec4: x, y for the side where the bind pose's x is positive, z, w for the other.
+ * @param {import("three").BufferGeometry} geometry
+ */
+export function eyeSkin(geometry) {
+  const p = geometry.attributes.position, uv = geometry.attributes.uv, out = new Vector4();
+  for (const side of [1, -1]) {
+    const hits = [];
+    for (let i = 0; i < p.count; i++) { const x = p.getX(i) * side, y = p.getY(i); if (Math.abs(x - EYES.cheek[0]) < 0.015 && Math.abs(y - EYES.cheek[1]) < 0.01 && p.getZ(i) > EYES.zMin) hits.push(i); }
+    hits.sort((a, b) => p.getZ(b) - p.getZ(a)); const top = hits.slice(0, 4); if (!top.length) continue;
+    const u = top.reduce((a, i) => a + uv.getX(i), 0) / top.length, v = top.reduce((a, i) => a + uv.getY(i), 0) / top.length;
+    if (side > 0) { out.x = u; out.y = v; } else { out.z = u; out.w = v; }
+  }
+  return out;
+}
+
+/**
+ * Patches a MeshStandardMaterial so its eyes close by `lid.value` (an object with a `value`, shared with the figure): the lid
+ * takes the colour of the cheek (`skinUV`, from `eyeSkin`) and the face's own roughness, the eyeball's relief is pressed flat
+ * to the plane of the face about the eye (in the vertex shader, only while the lid is down) and the normal turned to the
+ * viewer, and a fine arc is drawn for the lid's edge. Idempotent.
+ */
+export function lidShader(material, lid, skinUV = new Vector4(0.6, 0.274, 0.788, 0.417)) {
+  const f = (n) => n.toFixed(5), v3 = (a) => `vec3(${a.map(f).join(",")})`;
+  const prev = material.onBeforeCompile, uv4 = { value: skinUV };
   material.onBeforeCompile = (sh, renderer) => {
     prev?.call(material, sh, renderer);
-    sh.uniforms.uLid = lid;
-    sh.vertexShader = "varying vec3 vBind;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  vBind = position;");
-    sh.fragmentShader = "uniform float uLid;\nvarying vec3 vBind;\n" + sh.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
+    sh.uniforms.uLid = lid; sh.uniforms.uSkinUV = uv4;
+    const [pa, pb, pc] = EYES.plane;
+    sh.vertexShader = "uniform float uLid;\nvarying vec3 vBind;\n" + sh.vertexShader.replace("#include <begin_vertex>", `#include <begin_vertex>
+  vBind = position;
+  if (uLid > 0.001 && position.z > ${f(EYES.zMin)}) {
+    vec2 ev = vec2(abs(position.x) - ${f(EYES.x)}, position.y - ${f(EYES.y)});
+    float flat_ = smoothstep(1.2, 0.6, length(ev / vec2(${f(EYES.rx)}, ${f(EYES.ry)}))) * uLid;
+    transformed.z = mix(transformed.z, ${f(pa)} + ${f(pb)} * position.y + ${f(pc)} * abs(position.x), 0.85 * flat_);
+  }`);
+    sh.fragmentShader = "uniform float uLid;\nuniform vec4 uSkinUV;\nvarying vec3 vBind;\n" + sh.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
   float lidOver = 0.0;
   if (uLid > 0.001 && vBind.z > ${f(EYES.zMin)}) {
     vec2 e = vec2(abs(vBind.x) - ${f(EYES.x)}, vBind.y - ${f(EYES.y)});
     float d = length(e / vec2(${f(EYES.rx)}, ${f(EYES.ry)}));
     float over = smoothstep(1.0, 0.62, d) * uLid; lidOver = over;
+    vec2 cuv = vBind.x > 0.0 ? uSkinUV.xy : uSkinUV.zw;
+    vec3 skinTone = texture2D(map, cuv).rgb * ${f(EYES.skin)};
     float xn = clamp(e.x / ${f(EYES.rx)}, -1.0, 1.0);
     float curve = -0.004 - 0.009 * xn * xn;
-    float lash = smoothstep(0.0017, 0.0005, abs(e.y - curve)) * smoothstep(1.0, 0.7, abs(xn)) * uLid;
-    diffuseColor.rgb = mix(diffuseColor.rgb, ${v3(EYES.lid)}, over);
-    diffuseColor.rgb = mix(diffuseColor.rgb, ${v3(EYES.lash)}, lash * over * 0.9);
-  }`).replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, 1.0, lidOver);").replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  totalEmissiveRadiance *= 1.0 - lidOver;").replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n  normal = normalize(mix(normal, normalize(vViewPosition + vec3(0.0, 0.1, 0.0)), 0.9 * lidOver));");
+    float half_ = ${f(EYES.lashHalf)} * (1.0 - 0.85 * xn * xn);
+    float lash = smoothstep(half_, half_ * 0.35, abs(e.y - curve)) * smoothstep(1.0, 0.6, abs(xn)) * uLid;
+    diffuseColor.rgb = mix(diffuseColor.rgb, skinTone, over);
+    diffuseColor.rgb = mix(diffuseColor.rgb, ${v3(EYES.lash)}, lash * over);
+  }`).replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = mix(roughnessFactor, roughness, lidOver);").replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\n  totalEmissiveRadiance *= 1.0 - lidOver;").replace("#include <normal_fragment_maps>", "#include <normal_fragment_maps>\n  normal = normalize(mix(normal, normalize(vViewPosition + vec3(0.0, 0.1, 0.0)), 0.9 * lidOver));");
   };
   material.customProgramCacheKey = () => "lid";
   material.needsUpdate = true;
