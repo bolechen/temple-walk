@@ -73,15 +73,17 @@ test('merging flights and batching them with mergeStatic keep the numbers', () =
 // reaches the shader as uniforms when the program is first compiled, and what it leaves alone stays as the prologue has it.
 const { createMaterials, STAIR_STYLE } = await import('../../app/src/materials.js');
 const compiled = (steps) => { const sh = { uniforms: {}, vertexShader: '#include <common>\n#include <begin_vertex>', fragmentShader: '#include <common>\n#include <color_fragment>' }; steps.onBeforeCompile(sh); return sh; };
-const uniformsOf = (sh) => Object.fromEntries(['uStoneW', 'uCheekL', 'uLeaves', 'uMoss'].map((k) => [k, sh.uniforms[k].value]));
+const uniformsOf = (sh) => Object.fromEntries(['uStoneW', 'uCheekL', 'uLeaves', 'uMoss', 'uCrest', 'uCrestVary'].map((k) => [k, sh.uniforms[k].value]));
 
 test('the stone style starts as the prologue has it, and a level changes only what it names', () => {
-  assert.deepEqual(STAIR_STYLE, { stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true });
+  assert.deepEqual(STAIR_STYLE, { stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true, crest: 1, crestVary: 1 });
   const plain = compiled(createMaterials().steps);
-  assert.deepEqual(uniformsOf(plain), { uStoneW: 0.8, uCheekL: 0.95, uLeaves: 1, uMoss: 1 });
-  assert.match(plain.fragmentShader, /uniform float uStoneW, uCheekL, uLeaves, uMoss;/);
+  assert.deepEqual(uniformsOf(plain), { uStoneW: 0.8, uCheekL: 0.95, uLeaves: 1, uMoss: 1, uCrest: 1, uCrestVary: 1 });
+  assert.match(plain.fragmentShader, /uniform float uStoneW, uCheekL, uLeaves, uMoss, uCrest, uCrestVary;/);
   const M = createMaterials(); M.steps.userData.stairStyle = { leaves: false, stoneW: 1.2 };
-  assert.deepEqual(uniformsOf(compiled(M.steps)), { uStoneW: 1.2, uCheekL: 0.95, uLeaves: 0, uMoss: 1 });
+  assert.deepEqual(uniformsOf(compiled(M.steps)), { uStoneW: 1.2, uCheekL: 0.95, uLeaves: 0, uMoss: 1, uCrest: 1, uCrestVary: 1 });
+  const C = createMaterials(); C.steps.userData.stairStyle = { crest: 0.5, crestVary: 0 };
+  assert.deepEqual(uniformsOf(compiled(C.steps)), { uStoneW: 0.8, uCheekL: 0.95, uLeaves: 1, uMoss: 1, uCrest: 0.5, uCrestVary: 0 }, 'a level can turn the nose band down and make every slab\'s alike (T05\'s hard winter light)');
   const again = compiled(createMaterials().steps);
   assert.equal(again.uniforms.uLeaves.value, 1, 'one material\'s style is not another\'s');
 });

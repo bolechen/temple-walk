@@ -132,8 +132,12 @@ export function stairGeo(w, rise, { sides = [-1, 1], place } = /** @type {{ side
   // be read as steps from below, even on a day without shadows.
   for (let i = 0; i < N; i++) {
     const top = sh * (N - i), foot = sh * (N - i - 1);
-    for (const g of [box(w, top - 0.06, sd, 0, (top - 0.06) / 2, sd * (i + 0.5)), box(w, 0.06, sd + nosing, 0, top - 0.03, sd * (i + 0.5) + nosing / 2)])
-      parts.push(stamp(g, (x, y, z) => [x, i + clamp((z - sd * i) / (sd + nosing), 0.03, 0.97), y - foot, code]));
+    const front = sd * i + sd + nosing;
+    parts.push(stamp(box(w, top - 0.06, sd, 0, (top - 0.06) / 2, sd * (i + 0.5)), (x, y, z) => [x, i + clamp((z - sd * i) / (sd + nosing), 0.03, 0.97), y - foot, code]));
+    // The face of the nosing slab takes its depth below the tread in `a` (0.97 at the top, 0.93 at its foot), which is how the
+    // shader tells the top two or three centimetres of the lip, in the nose's shade, from the rest.
+    parts.push(stamp(box(w, 0.06, sd + nosing, 0, top - 0.03, sd * (i + 0.5) + nosing / 2),
+      (x, y, z) => [x, i + (z > front - 1e-6 ? 0.97 - 0.04 * clamp((top - y) / 0.06, 0, 1) : clamp((z - sd * i) / (sd + nosing), 0.03, 0.97)), y - foot, code]));
   }
   if (N > 2 && sides.length) {
     const c = cheekProfile(rise), flat = rise + c.lip, under = c.under(0), base = c.base, end = c.foot - 0.01, sq = c.foot - c.square;

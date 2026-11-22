@@ -1,0 +1,43 @@
+{
+ "wrist_edge": {
+  "open_edge_points": 17,
+  "deepest_under_mm": 11.2,
+  "shallowest_under_mm": 7.9,
+  "median_under_mm": 8.8,
+  "nearest_surface_mm_max": 30.8,
+  "points_less_than_5mm_under": 0,
+  "limit_mm": 5
+ },
+ "seam": {
+  "open_edge_points_in_band": 815,
+  "gap_mm_p50": 16.04,
+  "gap_mm_p95": 32.26,
+  "gap_mm_max": 77.77,
+  "gaps_over_2mm": 815,
+  "small_pieces": 7,
+  "small_piece_faces": 11,
+  "normal_angle_max_deg": 176.5,
+  "edges_over_60deg": 332,
+  "edges_in_band": 29383
+ },
+ "knee_area_m2": 2.462,
+ "palm_pitch_deg": {
+  "value": 2.3,
+  "range": [
+   -25,
+   10
+  ],
+  "art_director": [
+   -20,
+   -15
+  ]
+ },
+ "finger_vs_down_deg": 4.5,
+ "hand_width_m": 0.69,
+ "hand_length_m": 1.184,
+ "sections": {
+  "forearm_long_short": 1.722,
+  "hand_wrist_long_short": 3.128,
+  "limit": 1.25
+ }
+}
