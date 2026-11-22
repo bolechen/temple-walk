@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { urlOf, remoteOf, manifestProblems, checkTree, isText, push, verifyTmp, CONFIG } from "../../tools/evidence.mjs";
+import { urlOf, remoteOf, manifestProblems, checkTree, isText, push, verifyTmp, retryWait, CONFIG } from "../../tools/evidence.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const REV = "a".repeat(40);
@@ -129,4 +129,15 @@ test("verify-store reads two objects of the same bytes into two different files 
   const same = "c".repeat(64), a = verifyTmp({ key: "rev/t00/288-form/shots/gable-top-after.png", sha256: same }), b = verifyTmp({ key: "rev/t00/288-form/shots/gable-top-before.png", sha256: same });
   assert.notEqual(a, b, "two keys of one content share a file name");
   assert.equal(a, verifyTmp({ key: "rev/t00/288-form/shots/gable-top-after.png", sha256: same }), "one key keeps its name");
+});
+
+// A store that turns us away for asking too often is waited on, as it asks or for seconds that double, and never
+// longer than a minute; any other failure keeps its short pause (run 45060329278: 62 files met 429 from the original store).
+test("a busy store (429, 503) is waited on as it asks, or for doubling seconds, never over a minute", () => {
+  assert.equal(retryWait(429, "7", 0), 7000);
+  assert.equal(retryWait(503, "300", 0), 60000);
+  assert.equal(retryWait(429, null, 0), 4000);
+  assert.equal(retryWait(429, null, 2), 16000);
+  assert.equal(retryWait(429, "soon", 5), 60000);
+  assert.equal(retryWait(500, "7", 1), 600);
 });

@@ -3162,16 +3162,16 @@ const scenarios = {
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The address a tester sends back holds where the eye is (#623): opened again, the eye stands where it stood.
-  "eye-address": { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=-5.68,49.8,1.145,0.2&view=third&season=autumn&time=day", { viewport: { width: 960, height: 600 } });
+  "eye-address": { tier: 2, async run(b, base) {   // (a small picture: every frame is software-drawn, and at 960x600 the scenario took seven minutes and the nightly shards timed out waiting, 2026-11-22)
+    const t = await open(b, base, "q=low&cam=-5.68,49.8,1.145,0.2&view=third&season=autumn&time=day", { viewport: { width: 480, height: 300 } });
     await t.page.waitForSelector("#photoBtn", { timeout: 120000 }); await t.frames(20);
-    await t.page.mouse.move(480, 300); await t.page.mouse.down(); await t.page.mouse.move(480, 380, { steps: 8 }); await t.page.mouse.up(); await t.frames(30);
+    await t.page.mouse.move(240, 150); await t.page.mouse.down(); await t.page.mouse.move(240, 190, { steps: 8 }); await t.page.mouse.up(); await t.frames(30);
     const link = await t.page.evaluate(() => window.__debugURL()), q = new URL(link).searchParams;
     expect(/^-?[\d.]+,-?[\d.]+,-?[\d.]+,[\d.]+$/.test(q.get("eye") || ""), "the address should carry eye=x,y,z,dist: " + link);
-    const was = await t.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(480, 300).slice(0, 1).map((p) => [p.part, p.material]) }));
-    const u = await open(b, base, new URL(link).search.slice(1), { enter: false, viewport: { width: 960, height: 600 } });
+    const was = await t.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) }));
+    const u = await open(b, base, new URL(link).search.slice(1), { enter: false, viewport: { width: 480, height: 300 } });
     await u.page.waitForSelector("#photoBtn", { timeout: 120000 }); await u.frames(20);
-    const now = await u.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(480, 300).slice(0, 1).map((p) => [p.part, p.material]) }));
+    const now = await u.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) }));
     expect(Math.hypot(...now.eye.map((v, i) => v - was.eye[i])) <= 0.02, "the eye opened off where it stood: " + JSON.stringify([was.eye, now.eye]));
     expect(JSON.stringify(now.pick) === JSON.stringify(was.pick), "the middle of the picture shows something else: " + JSON.stringify([was.pick, now.pick]));
     // Held until he first walks, then given back to the spring arm.
