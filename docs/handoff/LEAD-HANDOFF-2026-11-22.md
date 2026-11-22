@@ -10,7 +10,9 @@
 - 本页；
 - #570（总表）、#572（T00）、#573（T05）三个 issue 的正文。
 
-## 一、0.7.0：可以发，等所有者自己合
+> **06:10 UTC 新总主创接手**（`session_01Cq65vJbggEfsVdQmyXzsVi`）：0.7.0 已由所有者合 #339 发布（v0.7.0，05:33 UTC，deploy-tag 成功）；#589（关 #555）、#591 已合；#469 交给 Sonnet 中档会话 `session_01Cq65vJECMDsJz6PN7rcWeg` 合 main、跑 CI；巡检、每晚复盘、T05 Sonnet 评估三个定时任务已改到新会话（见第六节）。
+
+## 一、0.7.0：已发布（2026-11-22 05:33 UTC）
 
 - 发版 PR **#339**（release-please）已经跟着 main 更新到 #590 之后。
 - 免费机全量在 main **6c66fca** 上跑完，全绿：run 44985975110，26 分钟。
@@ -110,8 +112,10 @@
 
 ## 六、定时任务
 
-- 主创巡检：`trig_01RZNDpDNgzuhCiNz9ShaaBq`，每两小时一次（:36），触发进本会话。新总主创接手后，把它改成触发进新会话，或者自己另建一个。
-- 每晚复盘：`trig_01GfK9XucnW3FLnU9hFS6GjK`，北京时间 21:43。
+- 主创巡检：`trig_01SswHebDstgETcucysLTZin`，每两小时一次（:36），触发进新总主创会话（旧的 `trig_01RZNDpDNgzuhCiNz9ShaaBq` 停用，不删：删会连带删掉旧会话）。
+- 每晚复盘：`trig_015XdjGNYkPRfQcngxHhpeMC`，北京时间 21:43，进新会话（旧 `trig_01GfK9XucnW3FLnU9hFS6GjK` 停用）。
+- T05 主创 Sonnet 试用评估：`trig_013p9novNoA2NbUB6vEpkCY3`，11-23 01:00 UTC，进新会话（旧 `trig_01U6cVE9CXoxEqwcTbyf4sGR` 停用）。
+- T00 每周数据分析的通知对象已改为新会话；T00 Git 独立评审的提示词仍通知旧会话，改它要所有者同意（提示词自己这样规定），待所有者定。
 - T00 Git 独立评审（每天）和 T00 每周数据分析，归 T00 主创。
 
 ## 合并闸门（不变）
