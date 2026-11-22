@@ -36,7 +36,8 @@ test('the head is a little wider than the body, the tortoise\'s head is out in f
   const t = new THREE.Box3().setFromObject(parts.turtle);
   assert.ok(t.max.z - S.bodyT / 2 >= 0.3, `the tortoise's head comes out ${(t.max.z - S.bodyT / 2).toFixed(2)} m from the face, 0.3 m at least`);
   const plinth = new THREE.Box3().setFromObject(parts.plinth);
-  assert.ok(plinth.max.z - t.max.z >= 0.0, 'the plinth reaches past the tortoise\'s snout');
+  assert.ok(plinth.max.z >= t.max.z && plinth.min.z <= t.min.z, 'the plinth reaches past the tortoise\'s snout and tail');
+  assert.ok(plinth.max.x >= t.max.x && plinth.min.x <= t.min.x, `the tortoise's feet stand inside the plinth (${t.max.x.toFixed(2)} against ${plinth.max.x.toFixed(2)})`);
 });
 
 test('what it adds costs under 2000 faces, split as the review asked: tortoise, head, body and plinth', () => {

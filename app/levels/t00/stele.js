@@ -30,7 +30,7 @@ export function buildStele(M, { turtleH = STELE.turtleH } = {}) {
   // The plinth: two slabs, end to end along the tortoise, a little wider than the tortoise.
   parts.plinth = [box(S.plinthW, S.plinthH, S.plinthLen / 2, 0, S.plinthH / 2, -S.plinthLen / 4), box(S.plinthW, S.plinthH, S.plinthLen / 2, 0, S.plinthH / 2, S.plinthLen / 4)];
   // The tortoise: a low dome of a shell over four blocks of feet, a thick neck and a head wider than it is high, held out level.
-  const shellH = S.turtleH - 0.06, shellR = 0.44, shellLen = S.turtleLen * 0.72;
+  const shellH = S.turtleH - 0.06, shellR = 0.4, shellLen = S.turtleLen * 0.72;
   const dome = (rx, ry, rz, x, y, z, w = 20, h = 8) => new THREE.SphereGeometry(1, w, h, 0, Math.PI * 2, 0, Math.PI / 2).scale(rx, ry, rz).translate(x, y, z);
   const blob = (rx, ry, rz, x, y, z, w = 12, h = 8) => new THREE.SphereGeometry(1, w, h).scale(rx, ry, rz).translate(x, y, z);
   const baseY = y0 + 0.06;
@@ -39,7 +39,7 @@ export function buildStele(M, { turtleH = STELE.turtleH } = {}) {
   const neckY = baseY + shellH * 0.34, headY = neckY - 0.01;
   turtle.push(blob(0.2, 0.17, 0.22, 0, neckY, shellLen / 2 - 0.05, 12, 8));                       // the neck, thick
   turtle.push(blob(0.25, 0.16, 0.28, 0, headY, shellLen / 2 + 0.2, 14, 8));                        // the head: broader than high, a blunt snout
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) turtle.push(box(0.2, 0.16, 0.34, sx * (shellR - 0.02), y0 + 0.08, sz * 0.36 - 0.04));   // the feet: blocks against the ground
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) turtle.push(box(0.2, 0.16, 0.34, sx * (shellR - 0.05), y0 + 0.08, sz * 0.36 - 0.04));   // the feet: blocks against the ground
   turtle.push(box(0.14, 0.1, 0.2, 0, y0 + 0.07, -shellLen / 2 - 0.04));                         // the short tail
   parts.turtle = turtle;
   // The stele: a plain slab, standing in the shell's hump.
