@@ -2897,6 +2897,32 @@ const scenarios = {
     console.log("    recenter", JSON.stringify({ rate: q.rate, pitch: q.pitch, move: q.move, driftRate: q.driftRate }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // 回到起点 and the other ways he is put down somewhere else (#588): the eye is cut to him at once, never flown there. After a
+  // change of view (V, or coming down from the balcony, which hands back the view he had) the picture's own push (#102) is still
+  // under way, and a move of metres under it left the eye 0.12 m a frame from a place hundreds of metres off.
+  "home-cut": { tier: 2, async run(b, base) {
+    // The frames after a move: how far the eye is from him on each, and the most it moved relative to him between two.
+    const watch = (t, act, n = 30) => t.page.evaluate(([f, n]) => new Promise((res) => {
+      new Function(f)();   // the move itself
+      const rec = []; const one = () => { const y = window.__yard(), e = window.__frame().eye; rec.push([e[0] - y.x, e[2] - y.z]); if (rec.length < n) requestAnimationFrame(one); else res(rec); }; requestAnimationFrame(one);
+    }), [act, n]).then((rec) => ({ first: Math.hypot(...rec[0]), second: Math.hypot(...rec[Math.min(1, rec.length - 1)]), step: Math.max(...rec.slice(1).map((r, i) => Math.hypot(r[0] - rec[i][0], r[1] - rec[i][1]))), rec }));
+    const HOME = "window.__menu(true); document.getElementById('menuHome').click();", ARM = 6.5, FLAT = 0.15;
+    const cases = {
+      "home from the court, third person": { q: "q=low&view=third", set: "window.__pose(0, 10, 0, 0.1);", move: HOME },
+      "home from the court, first person": { q: "q=low&view=first", set: "window.__pose(0, 10, 0, 0.1);", move: HOME },
+      "home from the summit balcony": { q: "q=low&up=lingxiao", set: "", move: HOME },
+      "a move straight after a change of view": { q: "q=low&view=third", set: "", move: "window.__view('first'); window.__pose(0, -60, 0, 0.1);" },
+    };
+    for (const [name, c] of Object.entries(cases)) {
+      const t = await open(b, base, c.q + BARE);
+      await t.frames(8); if (c.set) await t.page.evaluate(c.set); await t.frames(8);
+      const r = await watch(t, c.move);
+      console.log("    " + name, JSON.stringify({ first: +r.first.toFixed(2), second: +r.second.toFixed(2), step: +r.step.toFixed(3) }));
+      expect(r.second <= ARM, `${name}: two frames after, the eye was ${r.second.toFixed(1)} m from him (an arm is ${ARM} m)`);
+      expect(r.step <= FLAT, `${name}: within 30 frames the eye moved ${r.step.toFixed(3)} m on its own in one frame (at most ${FLAT})`);
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   push: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&view=third");
     await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(20);
