@@ -1,5 +1,5 @@
 // The old town's brick pagoda, seen far off to the west-south-west from the platform (T05, docs/t05/PLAN.md item 11, issue #548, step two).
-// The owner asked for it on 2026-11-22 (「加远处的广胜寺塔」): the 广胜寺塔 of Yixian, an octagonal solid brick tower of thirteen close eaves
+// The owner asked for it on 2026-11-22 ("add the Guangsheng Temple pagoda, far off"): the Guangsheng Temple pagoda of Yixian, an octagonal solid brick tower of thirteen close eaves
 // that stands in the old town where 奉明寺's real model, 奉国寺, stands too (docs/t05/SOURCES.md §16 has every number and how far it was checked).
 //
 // It is a part of its own: this file and one line in site.js. `?off=tower` leaves it out, and nothing else in the level reads it, moves with it or
@@ -16,11 +16,11 @@ import * as THREE from "three";
 
 /** The tower as the sources and the owner's brief give it. Metres. */
 export const TOWER = Object.freeze({
-  name: "广胜寺塔",
+  name: "Guangsheng Temple pagoda",
   at: Object.freeze({ x: -838, z: 460 }),   // from the encyclopaedia's 41.53889°N 121.23266°E and SITE.md §1's origin (SOURCES.md §16)
   from: Object.freeze({ x: 0, z: 8 }),      // the platform, where the line of sight to it is kept clear (surround.js LIMITS.tower)
-  height: 42.5,                             // 塔高 42.5 m (a travel blog; the encyclopaedia says 41 m before the repair): SOURCES.md §16
-  baseSide: 6.2,                            // 塔座边长 6.2 m (the encyclopaedia)
+  height: 42.5,                             // total height 42.5 m (a travel blog; the encyclopaedia says 41 m before the repair): SOURCES.md §16
+  baseSide: 6.2,                            // the base's side 6.2 m (the encyclopaedia)
   storeys: 13,
   far: 800,                                 // the camera's far plane (app/yard.js)
 });
@@ -30,7 +30,7 @@ export const BRING = 0.735;
 export const EYE = 4.6;
 /** The mist laid over the brick: the share of the scene's mist colour at the foot and at the top (1 is the mist itself, 0 is the brick). */
 export const HAZE = Object.freeze({ foot: 0.85, top: 0.42 });
-/** The brick's colour in the working space: a grey brick (SOURCES.md §16: 砖; the colour is ours). */
+/** The brick's colour in the working space: a grey brick (SOURCES.md §16: brick; the colour is ours). */
 export const BRICK = 0x4a4c4a;
 
 /** Where the drawn tower stands: the real one's place brought in along the line from the platform. */
