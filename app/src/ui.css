@@ -213,6 +213,8 @@ body.photo #way, body.bare #way, body:not(.entered) #way { display: none; }
   #act { left: calc((100vw + 36px) / 2); bottom: calc(64px + env(safe-area-inset-bottom, 0px)); flex-direction: column; gap: 4px; padding: 4px 8px; max-width: calc(100vw - 260px); text-align: center; }
   #act span { margin-right: 0; }
 }
+/* Sideways on a phone the screen is 390 px or less tall and the figure fills the middle of it; the button is lowered to the foot, below him (the stick and the rings are far to either side). */
+@media (max-height: 560px) and (pointer: coarse) { #act { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } }
 #act .enso { position: relative; display: grid; place-items: center; width: 52px; height: 52px; flex: none; background: var(--enso-light, radial-gradient(closest-side, transparent 86%, var(--on) 88%, transparent 95%)) center / 100% 100% no-repeat; transition: transform .6s var(--ease); }
 #act:hover .enso { transform: rotate(-8deg) scale(1.04); }
 #act .enso kbd { margin: 0; border: 0; padding: 0; font-size: 14px; color: var(--on-2); }
