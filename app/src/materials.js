@@ -7,6 +7,7 @@ import { TRI, declare, bind } from "./textures.js";
 import { STAIR, CHEEK_STONE } from "./geo.js";
 import { TRAIL } from "./trail.js";
 import { SHELTER } from "./shelter.js";
+import { PROBE, PROBE_ON, PROBE_GLSL } from "./probe.js";
 
 // `body` may write: vec3 col, float rough_, float bump_ (metres), float ao_.
 // Every geometry drawn with these needs a float `ao` attribute (see geo.js): occlusion is baked per vertex
@@ -19,14 +20,14 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
   const m = new THREE.MeshStandardMaterial(params);
   if (snow && !tex.includes("snow")) tex = [...tex, "snow"];
   m.onBeforeCompile = (sh) => {
-    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uWinNight = U.uWinNight; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
+    sh.uniforms.uSnow = U.uSnow; sh.uniforms.uLamp = U.uLamp; sh.uniforms.uWin = U.uWin; sh.uniforms.uWinNight = U.uWinNight; sh.uniforms.uAmb = U.uAmb; sh.uniforms.uT = U.uT; if (PROBE_ON) Object.assign(sh.uniforms, PROBE); bind(sh.uniforms, tex); if (uniforms) Object.assign(sh.uniforms, uniforms(m));
     if (snow) { sh.uniforms.tTrail = U.tTrail; sh.uniforms.uTrail = U.uTrail; sh.uniforms.tShelter = U.tShelter; sh.uniforms.uShelter = U.uShelter; }
     sh.vertexShader = sh.vertexShader
       .replace("#include <common>", "#include <common>\nattribute float ao; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? "\nattribute vec4 stair; varying vec4 vSt;" : ""))
       .replace("#include <begin_vertex>", `#include <begin_vertex>
         vWP=(modelMatrix*vec4(transformed,1.)).xyz; vWN=normalize(mat3(modelMatrix)*objectNormal); vUv2=uv; vAO=ao;${stair ? " vSt=stair;" : ""}`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform float uWinNight; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? " varying vec4 vSt;" : "") + "\n" + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : "") + glsl)
+      .replace("#include <common>", "#include <common>\nuniform float uSnow, uLamp, uT; uniform float uWinNight; uniform vec3 uAmb, uWin; varying float vAO; varying vec3 vWP; varying vec3 vWN; varying vec2 vUv2;" + (stair ? " varying vec4 vSt;" : "") + "\n" + (PROBE_ON ? PROBE_GLSL : "") + NOISE + WOOD + BUMP + (tex.length ? declare(tex) + TRI : "") + (snow ? TRAIL + SHELTER : "") + glsl)
       .replace("#include <color_fragment>", `#include <color_fragment>
         float rough_=roughness, bump_=0., ao_=vAO; vec3 col=diffuseColor.rgb, emit_=vec3(0.), nd_=vec3(0.);
         { ${body} }
@@ -35,7 +36,9 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
           col=mix(col,sc_,sn_*(1.-.25*tr_.x)); rough_=mix(rough_,.82-.12*tr_.x,sn_); bump_*=1.-sn_; ao_=mix(ao_,max(ao_,.8)*(1.-.25*tr_.x),sn_); nd_=mix(nd_,vec3(sr.x*2.-1.,0.,sr.y*2.-1.)*.55*(1.-.6*tr_.x)+vec3(tr_.y,0.,tr_.z),sn_); }` : ""}
         diffuseColor.rgb=col;`)
       // What is tucked away is dark to the sky, and only a little to the sun.
-      .replace("#include <aomap_fragment>", `reflectedLight.indirectDiffuse*=ao_; reflectedLight.directDiffuse*=mix(1.,ao_,.3);
+      .replace("#include <aomap_fragment>", `${PROBE_ON ? `vec3 pb_=vec3(0.); float pv_=probeLight(vWP,normalize(vWN),pb_);   // the baked light (probe.js): the sky as this place sees it, and what the walls give back
+        reflectedLight.indirectDiffuse=reflectedLight.indirectDiffuse*pv_+material.diffuseColor*RECIPROCAL_PI*pb_; reflectedLight.indirectSpecular*=mix(1.,pv_,.7);` : ""}
+        reflectedLight.indirectDiffuse*=ao_; reflectedLight.directDiffuse*=mix(1.,ao_,.3);
         #if defined( USE_ENVMAP ) && defined( STANDARD )
           reflectedLight.indirectSpecular*=computeSpecularOcclusion(saturate(dot(geometryNormal,geometryViewDir)),ao_,material.roughness);
         #endif`)

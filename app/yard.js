@@ -72,6 +72,7 @@ import { createOpening } from "./src/opening.js";
 import { takeRelang, keepRelang } from "./src/relang.js";
 import { takeCrossing } from "./src/pilgrimage.js";
 import { inkArrive, inkLift } from "./src/ink.js";
+import { createProbes, PROBE_ON } from "./src/probe.js";
 import { walkIsHis, heldUnder, viewKeyHeard } from "./src/walkgate.js";
 /** Whether the walk is his now: no title, opening, language line or crossing's ink over the picture (#462, walkgate.js). */
 const walkOpenNow = () => walkIsHis({ body: document.body.classList, html: document.documentElement.classList, openingActive: opening.active() });
@@ -205,6 +206,10 @@ site.seats.push(...rooms.seats);
 for (const [id, p] of [...INCENSE_HALLS.map((h) => [incenseId(h), site.places[incenseId(h)]]), ["main-box", rooms.spots["main-box"]]]) if (p) site.views[`shot-${id}`] = [p.at[0], p.at[1], Math.PI - p.face, 0.05];   // their shots are indoors (src/director.js)
 await loading.step(tr("殿堂"));
 let hallIn = null, upIn = null, viewBefore = null;   // the room he is in, or the balcony he is up on (and the view he had below)
+// Trial A (#592, `?trial=probe`): the baked light probes of the court and the great hall, loaded before the first frame so that no frame is drawn without them; a file that does not come leaves the page as it was.
+const probes = createProbes(L.id);
+if (PROBE_ON) await probes.load().catch((e) => { console.warn("probes: " + e.message); probes.strength(0); });
+window.__probes = (k) => { if (k !== undefined) probes.strength(+k); return { on: PROBE_ON, ready: probes.ready, grids: probes.grids }; };
 const sky = part("sky", () => createSky(renderer, scene, quality, site.sunFocus));
 // The sky's dome is 600 m round and the eye sees 800 m: it stands where the level says, so that every spot walked keeps
 // its far side in view (#409: T05 reaches 215 m south of its hall; the prologue's stays at the origin).
@@ -1179,7 +1184,7 @@ function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; lookOut(hall); hallIn.hang(); }
   inside = on; if (rooms) rooms.group.visible = on;   // the rooms under the courts are drawn only from inside one (and into a doorway's cube, doorway.js)
-  walker.setRoom(on ? hallIn.room : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
+  walker.setRoom(on ? hallIn.room : null); probes.setRoom(on ? hall.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
   for (const o of scene.children) if (COURTS.includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
   hideDrift(on);
