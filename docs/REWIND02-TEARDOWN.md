@@ -50,8 +50,11 @@
 见 PR 与 `docs/t00/evidence/rewind02-trial/`：
 
 - **试验 A（烘焙的环境光探针）**：`app/src/probe.js`，`tools/bake-probes.mjs`，`app/shared/probes/t00.bin`；
-  `?trial=probe` 打开，默认关。
-- **试验 B（按太阳算的天空）**：见下面的试验记录。
+  `?trial=probe` 打开，默认关。T4 高档 +0.3 ms（压在验收线上），低档不变；首院檐下的进深是好的，山门洞偏暗，殿内几乎看不出（+0.3% 亮度）。
+- **试验 B（按太阳算的天空）**：`app/src/atmosphere.js`，`?trial=sky` 打开，默认关。J01 和夜晚逐像素不变；
+  其余十二个时辰比手调的更蓝更冷，秋暮差最多；帧耗在抖动里。**不建议整体采用，只取「雾、天光、太阳色跟同一个太阳」这一条。**
+
+逐项的数、画面和复现命令在 `docs/t00/evidence/rewind02-trial/README.md`。
 
 ## 不搬的，和为什么
 
