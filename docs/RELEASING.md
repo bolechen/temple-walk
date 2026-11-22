@@ -43,7 +43,7 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 | `canary` | `pages.yml` 的 `site`，main 的推送 | Worker `temple-walk-canary` | 无 | `noindex` |
 | `preview` | `pages.yml` 的 `site`，PR | `temple-walk-preview` 的 PR 预览 | 无 | `noindex` |
 
-`pages.yml` 在站点改变时验证 `main`：`verify` 汇总 `unit`、`grid`、`site`（建站与 `boot`）和 `quick`（`stairs`、`drop`，各占一台机器，与 `site` 并行），`deploy`（canary）等 `verify` 和 `quick`。只改文档的推送什么都不建、不发。夜间全量仍测 `main`。
+`pages.yml` 在站点改变时验证 `main`：`verify` 汇总 `unit`、`grid`、`site`（建站与 `boot`）和 `quick`（`stairs`、`drop`，各占一台机器，与 `site` 并行），`deploy`（canary）等 `verify` 和 `quick`。只改文档的推送什么都不建、不发；新开的拉取请求第一次推送也一样（还没有预览评论时和 PR 的基准比，#601），评论写「只改文档，没有构建预览」。夜间全量仍测 `main`。
 
 **缓存头（#308）**：三种目标的 Worker 发同一份缓存规则，写在一处（`vite.config.mjs` 的 `HEADERS`，构建时写成 `dist/_headers`，Cloudflare 静态资源读它）。文件名由 Vite 按内容带哈希的（`assets/*`）和名字里带指纹的（`shared/doorways/<厅>.<指纹>.webp|png`）设 `public, max-age=31536000, immutable`；`/`、`index.html`、`version.json`（#310 写出）设 `no-cache`（每次确认）；其余按名字取的（`shared/` 的贴图、模型、`walk/t00.bin`，字体，画廊图片，`doorways/t00.json`）不加规则，保持平台默认的 `must-revalidate` 加 ETag。`deploy.test.mjs` 构建三种目标，断言规则相同、`assets/` 下每个文件都带哈希。
 
