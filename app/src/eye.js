@@ -21,6 +21,18 @@ export function frameArm(frame, fov, aspect, at = 6.2, h = 1.3) {
   const tv = Math.tan((fov * Math.PI) / 360);
   return { kx: -frame.nx * tv * aspect, ky: -frame.ny * tv - (h - frame.hold) / at, h };
 }
+// Whether the eye at `e` sees him standing at (x, foot, z): a fan of lines to his body, three heights across his shoulders'
+// width, seven of the nine clear. One line to his waist found the gap between two balusters and called him seen with
+// only the top of his head over the rail (#411's art review, below the great hall's platform looking down).
+// How much farther down than the visitor's own view the eye may come to look at him for having risen (#411's art review).
+export const TILT = (15 * Math.PI) / 180;
+const FAN = [0.25, 0.6, 0.95].flatMap((h) => [-0.15, 0, 0.15].map((s) => [h, s]));
+export function seesHim(space, e, x, foot, z) {
+  const dx = x - e[0], dz = z - e[2], l = Math.hypot(dx, dz) || 1, sx = -dz / l, sz = dx / l;
+  let n = 0;
+  for (const [h, s] of FAN) if (space.sees(e, [x + sx * s, foot + h, z + sz * s])) n++;
+  return n >= 7;
+}
 export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, arm = DEFAULT_ARM, space = null }) {
   const cp = Math.cos(pitch), lx = Math.sin(yaw) * cp, ly = Math.sin(pitch), lz = -Math.cos(yaw) * cp, rx = Math.cos(yaw), rz = Math.sin(yaw), ty = arm ? eyeY + arm.h : eyeY + 1.18;
   // The picture's own up, square to the way it looks (the arm's `ky` is along it).
@@ -70,7 +82,13 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
   const riseAt = (dist, sd = s0) => {
     const key = sd + ":" + dist; if (rises.has(key)) return rises.get(key);
     const p = base(dist, sd), n = sightNeed(dist, sd, p[1]); let r = null;
-    if (n <= MAXRISE) for (let k = Math.max(0, n); k <= MAXRISE + 1e-6; k += 0.15) if (!drawn(p[0], p[1] + k, p[2])) { r = k; break; }
+    // (risen over something, or standing over ground higher than his, the eye must also see him past it, his waist from
+    // where it stands (he is a child of 1.22 m: a line to his chest cleared a balustrade that hid all of him below the
+    // head): from on a platform behind him its balustrade hid him, #396; where no rise it may take sees him, that point is
+    // closed to it)
+    const over = groundAt(p[0], p[2]) > foot + 0.3;
+    const sees = (k) => (k < 0.01 && !over) || !space?.sees || seesHim(space, [p[0], p[1] + k, p[2]], x, foot, z);
+    if (n <= MAXRISE) for (let k = Math.max(0, n); k <= MAXRISE + 1e-6; k += 0.15) if (!drawn(p[0], p[1] + k, p[2]) && sees(k)) { r = k; break; }
     rises.set(key, r); return r;
   };
   const shutAt = (dist, sd = s0) => (riseAt(dist, sd) === null ? true : null);
@@ -132,6 +150,20 @@ export function followEye(walker, { x, z, foot, eyeY, yaw, pitch, side, reach, a
     for (let s = Math.max(0, dist - 0.5); s <= Math.min(dist + 1.0, Math.max(d, dist)) + 1e-6; s += 0.25) L = Math.max(L, need(s, sd, y));
     return Math.min(L, MAXRISE);
   };
+  // Where it will stand, risen by `liftAt` (more than `riseAt` asked at that one spot: it rises ahead of a platform's edge),
+  // over ground higher than his feet, it must still see him past what it rose over: else it comes in a quarter-metre at a
+  // time until it does (#396: on the platform behind him, risen, the balustrade hid all but the top of his head).
+  if (space?.sees && arm) {
+    const seen = (dd) => { const b = base(dd); return !(groundAt(b[0], b[2]) > foot + 0.3) || seesHim(space, [b[0], b[1] + liftAt(dd), b[2]], x, foot, z); };
+    while (d > 0.25 && !seen(d)) { d -= 0.25; stop = stop || true; }
+  }
+  // Nor may rising tip the view down far past what the visitor asked: below the great hall's platform, the view level, the
+  // risen eye looked down 34° to 44° and the picture was ground and the foot of a wall (#411's art review). Past `TILT`
+  // more than the same arm unrisen would look down at his middle, it comes in a quarter-metre at a time.
+  if (arm && !walker.onStairs?.(x, z)) {   // (down a flight the treads behind him rise as a slope, and the eye rides over them: #295)
+    const extra = (dd) => { const b = base(dd), h = Math.hypot(b[0] - x, b[2] - z) || 1e-3, mid = foot + 0.61, up = Math.max(liftAt(dd), need(dd, s0, b[1])); return Math.atan2(b[1] + up - mid, h) - Math.atan2(b[1] - mid, h); };
+    while (d > 0.25 && extra(d) > TILT) { d -= 0.25; stop = stop || true; }
+  }
   const open = space && arm ? (dist, sd = s0) => !shutAt(dist, sd) : (dist, sd = s0) => { const [cx, cy, cz] = base(dist, sd); return !shut(cx, cy, cz); };
   // The floor the eye must never be under, at a distance: whatever is there to stand on, and a hand's breadth.
   // (#622) The floor is the drawn one where the baked grid has it, as the line of sight reads it (`groundAt`), not the written
