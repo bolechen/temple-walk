@@ -326,6 +326,12 @@ export function createFollow(T = FOLLOW) {
           if (cy + dy < floor || eye.shut(cx, cy + dy, cz)) continue;
           lift += dy; cy += dy; vl = 0; forced = Math.max(forced, k); k = 9; break;
         }
+        // (and where no height clears it, as it hung over a platform's edge up under the eave: in along the arm toward him, at the same lift, until it does)
+        if (eye.shut(cx, cy, cz)) for (let dd = dist - 0.1; dd >= 0.25; dd -= 0.1) {
+          const [bx, by, bz] = eye.base(dd, side), ey = Math.max(by + lift, eye.floorAt(dd, side));
+          if (eye.shut(bx, ey, bz)) continue;
+          forced = Math.max(forced, dist - dd); dist = dd; vd = Math.min(vd, 0); return [bx, ey, bz];
+        }
       }
       return [cx, cy, cz];
     },
