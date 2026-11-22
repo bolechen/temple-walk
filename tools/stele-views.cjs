@@ -19,10 +19,10 @@ const VIEWS = {
   q1: { eye: [4.0, 4.0, 1.7], at: [0, 0, 1.75] }, q2: { eye: [4.0, -4.0, 1.7], at: [0, 0, 1.75] },
   q3: { eye: [-4.0, 4.0, 1.7], at: [0, 0, 1.75] }, q4: { eye: [-4.0, -4.0, 1.7], at: [0, 0, 1.75] },
   // 2 m out, a visitor's own eye (the main distance for the stone and its writing); and the tortoise's head and the dragon head from near.
-  front2m: { eye: [2.0, 0, 1.55], at: [0, 0, 1.7] },
+  front2m: { eye: [2.0, 0, 1.55], at: [0, 0, 1.7], ctx: true },
   turtle: { eye: [1.8, 0.9, 0.8], at: [0.6, 0, 0.5] },
   head: { eye: [1.6, 0.7, 2.9], at: [0, 0, 3.0] },
-  path: { show: "stele" },                                // from the old path, the named view
+  path: { show: "stele", ctx: true },                                // from the old path, the named view
 };
 const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
 (async () => {
@@ -36,10 +36,12 @@ const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
     await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 600000 });
     const info = await p.evaluate(() => ({ y: window.__yard(), st: window.__stele ? window.__stele() : null }));
     const floor = info.y.h != null ? info.y.h : info.y.y;
+    await p.evaluate(() => { window.__steleAlone(); window.__pose(0, 75, 0, 0); });   // the stone out of its pavilion, the novice out of the way
     for (const mode of modes) {
       await p.evaluate((m) => window.__stele(m === "black" ? "black" : "paint"), mode);
       for (const id of only) {
         const v = VIEWS[id];
+        await p.evaluate((ctx) => { window.__part("site", !!ctx); window.__part("bamboo", !!ctx); window.__part("props", !!ctx); window.__part("trees", !!ctx); }, !!v.ctx);   // (the pavilion is shown only where it is the setting: the 2 m eye and the old path)
         if (v.show) await p.evaluate((s) => { window.__look(); window.__show(s); }, v.show);
         else await p.evaluate(([e, a]) => window.__look(e, a), [[C[0] + e0(v.eye[0]), floor + v.eye[2], C[1] + v.eye[1]], [C[0] + v.at[0], floor + v.at[2], C[1] + v.at[1]]]);
         await p.waitForTimeout(900); await p.evaluate(() => window.__probe()); await p.waitForTimeout(500);

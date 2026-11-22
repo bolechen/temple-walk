@@ -295,6 +295,7 @@ export function buildSite(M) {
   stele.group.position.y = 0.45;   // (the platform's floor)
   sp.group.add(stele.group);
   if (typeof window === "object") window.__stele = (on) => { for (const m of Object.values(stele.parts)) { m.userData.paint ??= m.material; m.material = on === "black" ? (m.userData.black ??= new THREE.MeshBasicMaterial({ color: 0x000000 })) : m.userData.paint; } return { height: stele.height }; };   // (a view of its shape alone, black: tools/stele-views.cjs)
+  if (typeof window === "object") window.__steleAlone = () => { let r = stele.group; while (r.parent) r = r.parent; r.attach(stele.group); stele.group.userData.part = "stele"; return true; };   // (taken out of the pavilion, so that the pavilion can be switched off with __part and the stone seen whole)
   // Open floor on the written plan (`walkAll`) leaves no solid round the platform, so that his shoes could come down on its lip from the
   // ground beside it (`edges`): the platform's own solid is put back, as a hall's is; the floor laid over it, the stair, is unchanged.
   walk.solids.push({ ...place({ x0: -3.3, x1: 3.3, z0: -3.3, z1: 3.3 }, [-12.5, 50.5], 1), own: true });
