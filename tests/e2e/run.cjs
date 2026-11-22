@@ -1868,12 +1868,13 @@ const scenarios = {
         // house the ray met the porch 1.4 m short, and the terraces of the others hide more).
         const fo = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], lt = [-fo[1], fo[0]];
         // (the taps are on the court's ground straight out from the door and a few metres to either side, not at fixed fractions of the picture: since #411 the foot of the picture is his feet on the porch)
+        let unseen = 0;
         for (const side of [0, -2.5, 2.5]) {
           // (each tap from where he came out, as the main hall's are: the tap before has walked him and turned the eye, and the point is projected from the eye as it stands now)
           await t.page.evaluate(([x, z, yaw]) => { window.__walk([]); window.__pose(x, z, yaw, 0.04); }, [h.out[0], h.out[1], h.outYaw]); await t.frames(30);
           let court = null, cp = null;
           for (const d of [3, 4.5, 6, 8, 10, 13]) { const c = [h.door[0] + fo[0] * d + lt[0] * side, h.door[1] + fo[1] * d + lt[1] * side], q = await t.page.evaluate(([x, z]) => window.__project(x, z), c); if (q.on && q.clear) { court = c; cp = q; break; } }
-          if (!cp) continue;   // (none of this court is in sight from the doorway at that side)
+          if (!cp) { unseen++; continue; }   // (none of this court is in sight from the doorway at that side)
           await tap(cp.x, cp.y); await t.frames(1);
           let s1 = await t.state();
           for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
@@ -1886,7 +1887,8 @@ const scenarios = {
           if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap ${side} m aside from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
           await t.page.evaluate(() => window.__walk([]));
         }
-        expect(set >= 1, `${view}${touch ? " touch" : ""} ${h.name}: only ${set} taps on the court set a destination`);
+        // (the summit pavilion opens on the mountain's top, whose ground falls away from its door at a height the eye, 22 m up, sees none of past the porch: no tap is made there, and the others have all three)
+        expect(set >= 1 || unseen === 3 && h.id === "lingxiao", `${view}${touch ? " touch" : ""} ${h.name}: only ${set} taps on the court set a destination`);
       }
       if (view === "third") {
         // Main hall: out of the door, three taps toward the court; he walks down the steps and does not turn round.
