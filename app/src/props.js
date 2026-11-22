@@ -5,6 +5,10 @@ import { procMat } from "./materials.js";
 import { castTexture, censerGeometry, censerMaterial, createSmoke, traceStubsGeometry } from "./censer.js";
 import { U } from "./glsl.js";
 
+// The sun is low enough to stand in the mist as faint shafts below this height (its y component): the hours' own suns all sit under 0.2
+// or over 0.5; the prologue's autumn dusk (level.js) stands at 0.31 and keeps its shafts.
+export const SHAFT_SUN_Y = 0.35;
+
 export function createProps(scene, M, at, centre) {
   // The Wanli censer of Jingshan, in its three parts (censer.js).
   const iron = censerMaterial(procMat, castTexture(), at);
@@ -51,7 +55,7 @@ export function createProps(scene, M, at, centre) {
   for (let i = 0; i < 5; i++) for (let k = 0; k < 1; k++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shaftMat); m.visible = false; m.renderOrder = 3; m.userData = { i, k }; shafts.push(m); scene.add(m); }
   const Yax = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3(), from = new THREE.Vector3(), turn = new THREE.Quaternion();
   function setShafts(m) {
-    const low = m.sun[1] < 0.3 && m.time !== "night", k = low ? 0.075 * Math.max(0, 1 - m.cloud * 1.3) : 0;   // faint: light standing in mist, not a beam
+    const low = m.sun[1] < SHAFT_SUN_Y && m.time !== "night", k = low ? 0.075 * Math.max(0, 1 - m.cloud * 1.3) : 0;   // faint: light standing in mist, not a beam
     shaftMat.opacity = k; shaftMat.color.setRGB(m.sunCol[0], m.sunCol[1], m.sunCol[2]);
     dir.set(-m.sun[0], -m.sun[1], -m.sun[2]).normalize();
     for (const s of shafts) {

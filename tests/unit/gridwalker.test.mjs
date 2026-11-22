@@ -403,7 +403,10 @@ test("#294: from as far as 0.9 m either side of the middle of every hall's door,
 // never came in). From there, and from such a pocket at every hall's door, holding on at it takes him in.
 test("#294: from against the frame, just past the door's line 0.7 or 0.9 m off its middle, holding on at it, he comes in", () => {
   const step = 2.1 / 60, missed = [], main = site.halls.find((h) => h.id === "main");
-  const starts = [[main, 0.7, -5.699988], [main, 0.9, -5.699988]];
+  // the owner's address, put down as the page puts down an address (`settle`). Since the Tripo body's wider shoes (#163)
+  // the baked floor keeps them off the doorway's riser where what lies across it is shut, and the great hall's pocket
+  // past the door's line is shut through: the spot is moved back to the door's line beside the doorway (about 11 cm)
+  const starts = [[0.7, -5.699988], [0.9, -5.699988]].map(([x, z]) => { const p = settle(walker, x, z); assert.ok(p && Math.hypot(p.x - x, p.z - z) <= 0.15, `the owner's spot (${x}, ${z}) is put down ${p ? Math.hypot(p.x - x, p.z - z).toFixed(2) + " m" : "nowhere"} from where it was`); return [main, p.x, p.z]; });
   for (const h of site.halls) {
     const ix = h.door[0] - h.out[0], iz = h.door[1] - h.out[1], d = Math.hypot(ix, iz), ux = ix / d, uz = iz / d, lx = -uz, lz = ux;
     for (const off of [0.7, 0.9]) for (const side of [1, -1]) for (const past of [0, 0.06, 0.11]) {

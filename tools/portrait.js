@@ -1,6 +1,7 @@
 // Close views of the novice from the front, the side and behind, standing and with palms together (or, with `bind`,
 // in the A-pose he is bound in), found in the picture wherever the photograph's eye has him.
-// usage: node tools/portrait.js [season-time] [bind] [sculpt]   → tools/out/portrait.png
+// usage: node tools/portrait.js [season-time] [bind] [sculpt|code]   → tools/out/portrait.png
+// The body is the one the page wears by default (Tripo's, #163); `sculpt` is Meshy's (?body=sculpt), `code` the figure built in code.
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const root = require("./site.cjs").site(), out = path.join(__dirname, "out");
@@ -9,13 +10,13 @@ let srv;
 (async () => {
   srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const [season = "summer", time = "day"] = (process.argv[2] || "").split("-");
-  const sculpt = process.argv.includes("sculpt");   // the sculpted body, which the page wears only when asked (?body=sculpt)
+  const want = process.argv.includes("sculpt") ? "sculpt" : process.argv.includes("code") ? "code" : "tripo";
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
   const p = await b.newPage({ viewport: { width: 1500, height: 760 }, deviceScaleFactor: 2, locale: "zh-CN" });
   const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
-  await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05${sculpt ? "&body=sculpt" : ""}`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
-  await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 180000 });
-  if (sculpt) await p.waitForFunction(() => window.__yard().dressed === true, null, { timeout: 900000 }).catch(() => { throw new Error("the sculpted body did not arrive"); });   // fetched after the first frames, which software rendering draws slowly at this size; a portrait of the wrong body is worse than none
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?shot=1&q=high&view=third&season=${season}&time=${time}&cam=0,24,0,-0.05${want === "tripo" ? "" : "&body=" + want}`, { waitUntil: "commit", timeout: 180000 });   // the page builds the whole temple before it reports itself loaded
+  await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 600000 });
+  { const worn = await p.evaluate(() => window.__yard().body); if (worn !== want) throw new Error(`the novice wears ${worn}, not ${want}`); }   // the page is ready only once the body has arrived or failed; a portrait of the wrong body is worse than none
   // `bind` as a second argument shows him front, side and back in the A-pose he is bound in, to set beside the drawing.
   const bind = process.argv.includes("bind"), W = bind ? 225 : 150, H = 320;   // each view, in page pixels (drawn at twice that)
   const poses = bind ? [[Math.PI, "bind"], [Math.PI * 1.5, "bind"], [0, "bind"]] : [[Math.PI, false], [Math.PI + 0.9, false], [0, false], [Math.PI, true], [Math.PI - 0.7, true]];

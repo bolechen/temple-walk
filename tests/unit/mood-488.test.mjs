@@ -24,7 +24,7 @@ test("the prologue changes autumn dusk's sun (direction, strength) and the glow 
     if (s === "autumn" && t === "dusk") {
       const changed = Object.keys(now).filter((k) => JSON.stringify(now[k]) !== JSON.stringify(was[k]));
       assert.deepEqual(changed.sort(), ["bloom", "disk", "glow", "sun", "sunI"], "only the sun and the sky's own glow differ");
-      assert.ok(Math.abs(now.sunI / was.sunI - 1.25) < 1e-9, "a quarter brighter again, to part sun and shade by 1.4 to 2");
+      assert.ok(Math.abs(now.sunI / was.sunI - 0.8) < 1e-9, "a fifth dimmer, so that no sunlit wall is brighter than the sky (#564), to part sun and shade by 1.4 to 2");
     } else assert.deepEqual(now, was, `${s} ${t} must not move (J01 is summer by day; the other dusks are prototype 05's and the rest)`);
   }
 });
@@ -34,4 +34,10 @@ test("the new autumn sun stands low in the north-west of the plan: shadows come 
   assert.ok(elev >= 8 && elev <= 20, `elevation ${elev.toFixed(1)}° is low, not noon`);
   assert.ok(az > 0 && az <= 70, `${az.toFixed(1)}° west of north: low in the west, so the novice's shadow falls toward the camera and the lane (art review 2 widened the scan to 70°, #546)`);
   assert.ok(z < 0 && x < 0, "in front of the walker, to the west of the axis");
+});
+
+test("the prologue's autumn dusk keeps the faint shafts of light standing in the mist (#564)", async () => {
+  const { SHAFT_SUN_Y } = await import("../../app/src/props.js");
+  const sun = moodOf("autumn", "dusk", t00.moodFor).sun;
+  assert.ok(sun[1] < SHAFT_SUN_Y, `the sun at y ${sun[1].toFixed(3)} must stand under ${SHAFT_SUN_Y}, or the shafts go out and the mist before the hall with them`);
 });
