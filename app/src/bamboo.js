@@ -29,6 +29,9 @@ function culmTexture() {
 }
 
 // `areas`: [{x0, x1, z0, z1, n}], `heightAt(x, z)`: the land, `keep(x, z)`: false where nothing may grow.
+// `opts.clearUnder(x, z)`: true where a clump of the undergrowth would grow but is taken out, because it stands between the
+// eye that follows him and what it looks at (#518: round the ink-stone pool). It is asked only after the clump has drawn all
+// its own numbers, so taking one out moves no other clump or culm; `keep` would scatter all the rest anew.
 export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
   let s = 977; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
   const culms = [], leaves = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1), up = new THREE.Vector3(0, 1, 0);
@@ -61,6 +64,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
   for (const a of areas) for (let i = 0, n = Math.round(a.n * (opts.fine === false ? 0.35 : 1.5)); i < n; i++) {
     const x = a.x0 + rnd() * (a.x1 - a.x0), z = a.z0 + rnd() * (a.z1 - a.z0);
     if (!keep(x, z)) continue;
+    const l0 = leaves.length;
     const y = heightAt(x, z), hh = 0.5 + rnd() * 0.7, w = 0.9 + rnd() * 0.9, turn = rnd() * 3.14, tint = 0.55 + rnd() * 0.35;
     for (let k = 0; k < 2; k++) {
       const g = new THREE.PlaneGeometry(w, hh); g.translate(0, hh * 0.46, 0);
@@ -69,6 +73,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
       for (let i2 = 0; i2 < P.count; i2++) { const up2 = (P.getY(i2) - y) / hh, c = tint * (0.45 + 0.55 * up2); Nn.setXYZ(i2, (P.getX(i2) - x) * 0.4, 0.9, (P.getZ(i2) - z) * 0.4); col[i2 * 3] = c * 0.9; col[i2 * 3 + 1] = c; col[i2 * 3 + 2] = c * 0.8; }
       g.setAttribute("color", new THREE.BufferAttribute(col, 3)); leaves.push(g);
     }
+    if (opts.clearUnder?.(x, z)) leaves.length = l0;
   }
   if (!culms.length) return { setMood() {} };
   const cm = new THREE.Mesh(mergeGeometries(culms), new THREE.MeshStandardMaterial({ map: culmTexture(), roughness: 0.55, envMapIntensity: 0.4 }));
