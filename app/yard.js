@@ -1613,6 +1613,8 @@ window.__opening = () => ({ ...opening.state(), active: opening.active(), hint: 
 window.__openingAt = (secs) => { if (secs !== null && !opening.active()) { document.body.classList.add("opening"); follow.reset(); } opening.pin(secs); };
 window.__lampStrength = (v) => { if (v !== undefined) U.uLamp.value = v; return U.uLamp.value; };   // for tools/window-lit.cjs: the lamps' strength, until the next mood sets its own
 window.__frame = () => ({ frame: FRAME_KEY, ...(FRAME || {}), dist: follow.dist, side: follow.side, sideNow, monkBox: monkBox(), opacity: faded, hidden: monkHidden, w: innerWidth, h: innerHeight, eye: camera.position.toArray(), look: [camera.rotation.y, camera.rotation.x], at: [pos.x, footY, pos.z], frames });   // monkBox as __probe() has it, without drawing a frame
+// Where a point of the ground (x, z) is on the page, in CSS pixels, and whether it is in the picture (for the scenarios that tap a place, #411).
+window.__project = (x, z) => { const v = new THREE.Vector3(x, walker.heightAt(x, z), z).project(camera); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight, on: v.z < 1 && Math.abs(v.x) <= 0.98 && Math.abs(v.y) <= 0.98 }; };
 window.__director = () => ({ ...director.state(), warmed: director.warmed || 0 });
 // A way walked point by point (the scenarios and tools): a leg that something stands across is searched round as a tap is (#323).
 window.__walk = (pts) => { planning = null; route = wayThrough(walker, walker.drops, { x: pos.x, z: pos.z }, pts.map(([x, z]) => ({ x, z }))); target = route.shift() || null; };
