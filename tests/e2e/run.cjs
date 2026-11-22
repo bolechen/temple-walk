@@ -343,11 +343,24 @@ const scenarios = {
     await t.until(async () => { const h = await hud(); return !h.tip && !h.goal && !h.moodTag && !(await t.page.isVisible("#hint")) && !(await t.page.isVisible("#goal")) && !(await t.page.isVisible("#way")); }, 60000, "the words on the picture never left it");
     // A first visitor, before the first seal, is told once that a small thing done at a place is stamped (#445); the line
     // says nothing of how many.
+    // Four metres of walking is some twenty frames of the walk's own clock (a frame counts for at most 0.05 s), and a software
+    // renderer draws about one a second: the picture is put out while he walks, so that the frames are cheap, and brought back
+    // after. What is waited for, the line and how long it stays, is the page's own.
+    const parts = ["site", "bamboo", "backdrop", "trees", "props", "drift", "ground", "sky"];
+    const draw = (on) => t.page.evaluate(([names, on]) => { for (const n of names) window.__part(n, on); }, [parts, on]);
+    await draw(false);
     await t.page.keyboard.down("Shift"); await t.page.keyboard.down("w");
-    try { await t.until(async () => (await hud()).said.includes("stamp"), 90000, "a first visitor was never told that a walk can earn a seal: " + JSON.stringify(await hud()).slice(0, 300)); } finally { await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift"); }
+    try { await t.until(async () => (await hud()).said.includes("stamp"), 90000, "a first visitor was never told that a walk can earn a seal: " + JSON.stringify(await hud()).slice(0, 300)); } finally { await t.page.keyboard.up("w"); await t.page.keyboard.up("Shift"); await draw(true); }
     expect((await t.journey()).seals && !Object.keys((await t.journey()).seals).length, "the line about stamps should come before any seal");
     expect(/朱印/.test(await t.page.textContent("#hint")) && !/[七].*(处|枚)/.test(await t.page.textContent("#hint")), "the line should say a seal can be earned, not how many: " + (await t.page.textContent("#hint")));
     for (const id of ["moodPanel", "print", "photoBar", "frame", "book", "slip", "toast", "act"]) expect(!(await t.page.isVisible("#" + id)), `#${id} should start hidden`);
+    // The parts put out for the walk above are back, and the picture is whole again: drawn once more, with him in it and
+    // something on the screen that is not blank (putting them out and back must not have spoiled it).
+    { await t.frames(3); const q = await t.probe(), vp = t.page.viewportSize(), [x, y, w, h] = q.monkBox || [], all = await t.page.evaluate(() => window.__part());
+      expect(Object.entries(all).every(([n, on]) => on), "a part put out for the walk did not come back: " + JSON.stringify(all));
+      expect(q.lum > 12 && q.lum < 245, "the picture is blank after the parts came back: mean " + q.lum.toFixed(1));
+      expect(q.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture once the parts are back: " + JSON.stringify({ box: q.monkBox, vp }));
+      expect((await t.state()).tris > 50000, "almost nothing is drawn once the parts are back"); }
     const m = await t.page.evaluate(() => window.__merged); expect(m.after < m.before / 3 && m.after < 120, "static geometry was not merged: " + JSON.stringify(m));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
