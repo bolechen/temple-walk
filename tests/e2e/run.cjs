@@ -1999,6 +1999,12 @@ const scenarios = {
     await t.page.evaluate((p) => window.__walk([p]), foot); await t.until(async () => (await act()) === "登楼", 60000, "walking to the stair's foot did not offer 登楼");
     await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).up === "lingxiao", 30000, "E at the stair's foot did not take him up"); await clear();
     const L = await t.page.evaluate(() => window.__lofts.lingxiao); let s = await t.state();
+    // #587: up the stair the eye went up with him. Since the push into his own eyes (#102, #354) the eye set out from where it
+    // had stood in the room under the courts, 446 m off, and crept toward him at 0.12 m a frame: the visitor saw only a pale
+    // gradient and 下楼. Seen a few frames after the veil: the eye at his own eyes, a picture, and not the room's wall in it.
+    const sight = () => t.page.evaluate(() => { const q = window.__probe(), c = (window.__pick(innerWidth / 2, innerHeight / 2) || [])[0]; return { camDist: q.camDist, lum: Math.round(q.lum), pick: c ? c.part : null, cam: q.cam }; });
+    await t.frames(5); let v = await sight();
+    expect(v.camDist < 1 && v.lum > 12 && v.lum < 245 && v.pick !== "interior", "up the stair the eye should be at his own eyes on the balcony, not left in the room below: " + JSON.stringify(v));
     expect(!s.inside && s.view === "first" && Math.abs(s.h - L.floor) < 0.02 && Math.abs(s.yaw - L.face) < 0.05 && (await at(L.door, 0.1)), "up there he should stand at the top storey's door, facing south, with his own eyes: " + JSON.stringify(s));
     // A place counts as where he is only after two seconds of the audio clock (createZoneKeeper in score.js): a card that draws sixty frames a second has not let them pass by the time `clear()` returns.
     await t.until(async () => (await t.page.evaluate(() => window.__music().zone)) === "summit", 30000, "the music up there should be the summit's");
@@ -2032,6 +2038,8 @@ const scenarios = {
     await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).room === "lingxiao" && !(await t.state()).up, 30000, "E at the door did not take him down"); await clear();
     s = await t.state(); expect(Math.hypot(s.x - s.stair[0], s.z - s.stair[1]) < 0.1 && s.h < -50, "coming down he is not at the stair's foot: " + JSON.stringify(s));
     expect(s.view === "third", "coming down he should see as he did below (from behind him): " + s.view);
+    await t.frames(5); v = await sight();
+    expect(v.camDist < 12 && v.lum > 12 && v.lum < 245, "down the stair the eye should be behind him in the room, not left up on the balcony: " + JSON.stringify(v));
     await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the pavilion"); await clear();
     s = await t.state(); expect(!s.up && !s.inside && s.h > 19, "out of the door he should stand on the summit: " + JSON.stringify(s));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
