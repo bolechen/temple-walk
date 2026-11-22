@@ -432,7 +432,7 @@ export function createMaterials() {
       vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
       float big=n3(vWP*1.7+vec3(3.,1.,7.)), mid=.6*n3(vWP*5.+2.)+.4*n3(vWP*10.3+5.);
       vec3 st_=vec3(4.4,1.6,4.4); float pat_=smoothstep(.3,.7,.6*n3(vWP*st_+vec3(5.,2.,1.))+.4*n3(vWP*st_*2.1+vec3(1.,9.,2.))); float fine=smoothstep(.3,.7,n3(vWP*vec3(8.,3.4,8.)+vec3(1.,6.,3.)));
-      col=vec3(.25,.265,.27)*A*(.84+.3*big)*(.74+.52*pat_)*(.92+.16*fine); col=mix(col,col*vec3(1.1,1.07,1.),smoothstep(.55,.8,n3(vWP*vec3(.9,.45,.9)+9.))*.5);
+      col=vec3(.25,.265,.27)*A*(.84+.3*big)*(.78+.4*pat_)*(.92+.16*fine); col=mix(col,col*vec3(1.06,1.04,1.),smoothstep(.55,.8,n3(vWP*vec3(.9,.45,.9)+9.))*.4);
       float up=smoothstep(.85,.97,vWN.y), side=1.-step(.5,abs(nzf));
       float streak=smoothstep(.4,.8,.65*n3(vec3(lx*15.,ly*.35,2.))+.35*n3(vec3(lx*31.,ly*.7,4.))); float streak2=smoothstep(.5,.85,n3(vec3(lx*34.,ly*.6,5.))); col*=1.-(.2*streak+.1*streak2)*(1.-up)*(.35+.65*smoothstep(.4,2.6,ly));
       float wet=(1.-smoothstep(.55,1.25+.25*(mid-.5),ly))*(1.-.85*up*kb); col*=(1.-.58*wet*(.7+.6*mid))*(1.+.12*smoothstep(1.2,2.3,ly)*(1.-kb)); rough_=mix(rough_,.5,wet*.5);
