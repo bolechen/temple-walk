@@ -449,10 +449,10 @@ export function createMaterials() {
       float inBody=step(.5,nzf)*(1.-kb); vec2 iuv=vec2((lx+.425)/.85,(ly-.58)/1.7); vec2 ie=step(vec2(0.),iuv)*step(iuv,vec2(1.));
       vec2 ink=texture2D(uInk,iuv).rg*ie.x*ie.y*inBody; float back=step(nzf,-.5)*(1.-kb); vec2 ib=texture2D(uInk,vec2(1.-iuv.x,iuv.y)).rg*ie.x*ie.y*back; ink=ink+vec2(0.,ib.x*.3+ib.y);
       vec2 tuv=vec2((lx+.23)/.46,(ly-2.34)/.4); vec2 te=step(vec2(0.),tuv)*step(tuv,vec2(1.)); float tk=texture2D(uTitle,tuv).r*te.x*te.y*inBody*step(2.3,ly);
-      float chip=smoothstep(.55,.8,n3(vec3(vWP.zy*22.,vWP.x*22.)))*.35; tk*=1.-chip;
+      float chip=smoothstep(.55,.8,n3(vec3(vWP.zy*22.,vWP.x*22.)))*.55; tk*=1.-chip;
       float cutI=clamp(ink.x,0.,1.)*nearK*uInkOn, cutT=clamp(tk,0.,1.)*nearK*uInkOn;
       float gy=(texture2D(uInk,iuv+vec2(0.,.0018)).r-texture2D(uInk,iuv-vec2(0.,.0018)).r)*ie.x*ie.y*inBody*uInkOn;
-      col*=(1.-.025*cutI-.4*cutT-.03*ink.y*nearK*uInkOn)*(1.+mix(.48,.45,step(0.,gy))*gy*nearK); ao_=min(ao_,1.-.5*cutT);
+      col*=(1.-.025*cutI-.26*cutT-.03*ink.y*nearK*uInkOn)*(1.+mix(.48,.45,step(0.,gy))*gy*nearK); ao_=min(ao_,1.-.5*cutT);
       rough_=Nr.w; nd_=Nr.xyz*1.2; bump_=-(cutI*.0005+cutT*.0032)-(petal*.0012*nearK)+(mid-.5)*.0012;`, { tex: ["stone"], stair: true, snow: false, uniforms: (m) => (m.userData.inkUniforms = { uInk: { value: m.userData.ink || BLANK }, uTitle: { value: m.userData.title || BLANK }, uInkOn: { value: 1 } }), glsl: "uniform sampler2D uInk, uTitle; uniform float uInkOn;" }),
     // Woven rush and straw: mats and cushions.
     straw: procMat("straw", { roughness: 0.8, envMapIntensity: 0.25 }, `
