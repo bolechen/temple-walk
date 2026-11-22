@@ -16,7 +16,8 @@ const WALK = STAIR.tread * STAIR.steps, SKIRT = ["robeFront", "robeBack", "robeL
 // A walk of `n` treads (0: level) at `speed`, frame by frame as yard.js moves him; `each(m, frame)` sees every frame after
 // the first two metres, once the stride is under way.
 // `at`: where in the world the flight's foot is (the page's flights are far from the origin, and the novice's own frame is not the world's).
-function walk({ n = 0, dir = 1, speed = WALK, dt = 1 / 60, make = createMonk, at = [0, 0] }, each) {
+function walk({ n = 0, dir = 1, speed = WALK, dt = 1 / 60, make = createMonk, at = [0, 0], turnStart = false }, each) {
+  if (turnStart) return turnAround({ dt, make, at }, each);
   const m = make(), fl = n ? flight(n, dir) : { lead: 4, run: 0, surface: () => 0, eye: () => 0 }, [ox, oz] = at;
   let z = 0.2, t = 0, frame = 0;
   while (z < fl.lead + fl.run + 3) {
@@ -26,6 +27,21 @@ function walk({ n = 0, dir = 1, speed = WALK, dt = 1 / 60, make = createMonk, at
     m.group.updateMatrixWorld(true);
     if (z > 2) each(m, frame++);
   }
+}
+// #284, the turn on the level: he stands, is told to go the other way, and the page turns him at `dt * 9` of the angle left
+// while his speed rises at `dt * 10` of what is missing (yard.js, `heading` and `speedNow`). `each` sees every frame from the
+// word to go until the stride is under way, as `walk`'s does, with `frame` counted from the word (the first 0.6 s is what
+// the review looked at).
+function turnAround({ dt, make, at: [ox, oz] }, each) {
+  const m = make(); let t = 0, heading = 0, speed = 0, x = ox, z = oz;
+  const step = (want, goal, frame) => {
+    t += dt; heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
+    speed += (goal - speed) * Math.min(1, dt * 10); x += Math.sin(want) * speed * dt; z += Math.cos(want) * speed * dt;
+    m.group.position.set(x, 0, z); m.group.rotation.y = heading; m.update(dt, speed, false, t, () => 0, { heightAt: () => 0, stairs: false });
+    m.group.updateMatrixWorld(true); if (frame !== null) each(m, frame);
+  };
+  for (let k = 0; k < 90; k++) step(0, 0, null);
+  for (let k = 0; k < 60; k++) step(Math.PI, 2.1, k);
 }
 // The most each skirt bone turns, against the pelvis (x forward, z out) and from the vertical in the world, over a walk.
 function reach(opts) {
@@ -177,5 +193,72 @@ test("a step behind him draws the skirt up as one ring, never a flap to the wais
     assert.ok(min >= 0.7, `${name}: a skirt bone shortened to ${min} (${s})`);
     for (let b = 0; b < 4; b++) { const r = s[b] / Math.max(s[(b + 1) % 4], s[(b + 3) % 4]); assert.ok(r >= 0.85 - 1e-3, `${name}: bone ${b} hangs ${r.toFixed(2)} of the one beside it (${s})`); }
     console.log(`# ${name}: skirt bones ${s.join(" ")} with a 40 cm step behind his heels`);
+  }
+});
+
+// #541 item 5, the art review's own view: from in front and above (the eye at `[+0.9, 1.75, 1.7]` from his feet, looking at his
+// thighs, the page's `__look([x+0.9, h+1.75, z-1.7], [x, h+0.45, z])` for a flight that runs north) going up, the front of the
+// robe must not part over the trousers. Measured from the posed meshes: of the trouser points between the knee and the hip that
+// the eye sees (no robe triangle between it and them), the highest is the top of the opening; its height over the lowest
+// point of the robe's front half is how far the cloth is open, and it may not pass a third of the skirt's standing length
+// (the review's rule). `eye` is where the eye stands relative to him, `x` across (he faces +z here, so his right is -x).
+function opening({ n = 10, dir = 1, make = createMonk, at = [0, 0], eye = [-0.9, 1.75, 1.7], every = 2, sample = 3 }) {
+  const stand = make(); stand.group.updateMatrixWorld(true); stand.skeleton.update();
+  const v = new THREE.Vector3(), hips0 = stand.bones.hips.getWorldPosition(new THREE.Vector3());
+  const lowest = (m, front) => { const rb = m.parts.robe, P = rb.geometry.attributes.position, inv = m.group.matrixWorld.clone().invert(); let y = 9; for (let i = 0; i < P.count; i += 2) { rb.getVertexPosition(i, v).applyMatrix4(rb.matrixWorld); const wy = v.y; v.applyMatrix4(inv); if (!front || v.z > 0.02) y = Math.min(y, wy); } return y; };
+  const length = hips0.y - lowest(stand, true);
+  const ei = stand.parts.robe.geometry.index.array, A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), e1 = new THREE.Vector3(), e2 = new THREE.Vector3(), h = new THREE.Vector3(), s = new THREE.Vector3(), qv = new THREE.Vector3(), d = new THREE.Vector3(), cam = new THREE.Vector3(), lp = new THREE.Vector3();
+  const blocked = (o, p, P) => {   // is any robe triangle between o and p (Möller–Trumbore on the segment)
+    d.subVectors(p, o); const len = d.length(); d.divideScalar(len);
+    for (let i = 0; i < ei.length; i += 3) {
+      A.fromArray(P, ei[i] * 3); B.fromArray(P, ei[i + 1] * 3); C.fromArray(P, ei[i + 2] * 3); e1.subVectors(B, A); e2.subVectors(C, A); h.crossVectors(d, e2); const det = e1.dot(h); if (Math.abs(det) < 1e-12) continue;
+      const f = 1 / det; s.subVectors(o, A); const u = f * s.dot(h); if (u < 0 || u > 1) continue; qv.crossVectors(s, e1); const w = f * d.dot(qv); if (w < 0 || u + w > 1) continue; const tt = f * e2.dot(qv); if (tt > 1e-4 && tt < len - 0.004) return true;
+    }
+    return false;
+  };
+  let worst = 0, over = 0, frames = 0, at0 = -1;
+  walk({ n, dir, make, at }, (m, frame) => {
+    if (frame % sample) return; frames++;
+    m.skeleton.update(); const rb = m.parts.robe, P = new Float32Array(rb.geometry.attributes.position.count * 3);
+    for (let i = 0; i < rb.geometry.attributes.position.count; i++) { rb.getVertexPosition(i, v).applyMatrix4(rb.matrixWorld); P.set([v.x, v.y, v.z], i * 3); }
+    const g = m.group.position, hy = m.bones.hips.getWorldPosition(new THREE.Vector3()).y; cam.set(g.x + eye[0], g.y + eye[1], g.z + eye[2]);
+    const inv = m.group.matrixWorld.clone().invert(), floor = lowest(m, true), lg = m.parts.legs; let top = -9;
+    for (let i = 0; i < lg.geometry.attributes.position.count; i += every) {
+      lg.getVertexPosition(i, v).applyMatrix4(lg.matrixWorld); if (v.y > hy - 0.03 || v.y <= floor + 1e-3 || v.y < top) continue;
+      lp.copy(v).applyMatrix4(inv); if (lp.z < 0.02 || Math.abs(lp.x) > 0.1) continue;   // the middle of the front only
+      if (!blocked(cam, v, P)) top = v.y;
+    }
+    const open = top > -9 ? top - floor : 0; if (open > worst) { worst = open; at0 = frame; } if (open > length / 3) over++;
+  });
+  return { worst, over, frames, length, at: at0 };
+}
+for (const [name, make] of BODIES) {
+  // Reported, not held: #541 item 5 (the front parting over the trousers going up) is still open. Thigh and cloth are one
+  // linear skin, the cloth may not stand out as a board (the test above), and what the review's eye sees from above is the
+  // top of a thigh the cloth cannot lie over; it needs the trousers slimmed offline or cloth. These numbers are what to beat.
+  test(`${name}: going up, how far the front of the robe stands open over the trousers, seen from in front and above (reported)`, () => {
+    const r = opening({ make, sample: 6 }); assert.ok(r.frames > 20); console.log(`# ${name} up: opening at most ${(r.worst * 100).toFixed(1)} cm of a ${(r.length * 100).toFixed(1)} cm skirt, ${r.over} of ${r.frames} frames over a third (worst ${r.at})`);
+  });
+}
+
+// #541 item 2: the whole skirt, not a sector of it: on every frame of a flight, up or down, the lowest point of the robe's skirt
+// hangs at least 0.65 of its standing depth below the pelvis (the 3D review: a robe that reads as a short jacket on a flight).
+test("on a flight the lowest point of the skirt never comes above 0.65 of its standing depth below the pelvis", () => {
+  for (const [name, make] of BODIES) {
+    const depth = (m) => { m.group.updateMatrixWorld(true); m.skeleton.update(); const rb = m.parts.robe, P = rb.geometry.attributes.position, v = new THREE.Vector3(), hy = m.bones.hips.getWorldPosition(new THREE.Vector3()).y; let y = 9; for (let i = 0; i < P.count; i += 2) { rb.getVertexPosition(i, v).applyMatrix4(rb.matrixWorld); y = Math.min(y, v.y); } return hy - y; };
+    const stand = depth(make());
+    for (const dir of [1, -1]) {
+      let least = 9, frame0 = -1; walk({ n: 10, dir, make, at: [31.5, -47.2] }, (m, frame) => { if (frame % 3) return; const r = depth(m) / stand; if (r < least) { least = r; frame0 = frame; } });
+      console.log(`# ${name} ${dir > 0 ? "up" : "down"}: lowest skirt point at least ${least.toFixed(2)} of standing depth (frame ${frame0})`);
+      assert.ok(least >= 0.65, `${name} ${dir > 0 ? "up" : "down"}: the skirt's lowest point came to ${least.toFixed(2)} of its standing depth (frame ${frame0})`);
+    }
+  }
+});
+// #284, the turn at the start of a walk: told to go the other way he is turned about at once and his speed rises, and the
+// skirt must not swing aside and let a thigh out through its side. Both bodies, every frame of the first second.
+test("turning about to set off on the level, no trouser comes out through the skirt's cloth", () => {
+  for (const [name, make] of BODIES) {
+    const x = exposed({ turnStart: true, make }, 3, 1);
+    assert.equal(x.pierced, 0, `${name}: the leg came through the cloth in ${x.pierced} of ${x.frames} frames (at most ${x.mostThrough} points); before #284's fix 25 and 27 of 60`);
   }
 });

@@ -74,6 +74,12 @@ const POSES = {
   stand: (m) => { for (let i = 0; i < 40; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {}); },
   pray: (m) => { for (let i = 0; i < 90; i++) m.update(1 / 30, 0, "pray", i / 30, () => 0, {}); },
   walk: (m, f = 52) => { for (let i = 0; i <= f; i++) m.update(1 / 30, 2.1, false, i / 30, () => 0, {}); },
+  // #284: standing, told to go the other way: the page turns him at 9 a second of the angle left and raises his speed at 10
+  // (yard.js), and the cloth must keep over his thighs. `f` frames at 30 a second since the word.
+  turn: (m, f = 6) => {
+    for (let i = 0; i < 40; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {});
+    let h = 0, sp = 0; for (let i = 1; i <= f; i++) { const dt = 1 / 30; h += Math.atan2(Math.sin(Math.PI - h), Math.cos(Math.PI - h)) * Math.min(1, dt * 9); sp += (2.1 - sp) * Math.min(1, dt * 10); m.group.rotation.y = h; m.update(dt, sp, false, (40 + i) / 30, () => 0, {}); }
+  },
   chair: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "chair", i / 30, () => -0.44, {}); },
   sit: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },
   // Two of the observances' hand places, as rites.js sets them (issue #246: do the hands still meet the body?): the bowl

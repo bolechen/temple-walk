@@ -60,6 +60,9 @@ export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
 export const FRONT = Object.freeze(["wall", "window", "window", "door", "door", "door", "window", "window", "wall"]);
 
+/** The gongyan board between the bracket sets: its thickness (the Yingzao Fashi, chapter 7: 1.2 cun of 3.12 cm = 3.7 cm) and how far behind the wall's outer face it stands. */
+export const BOARD = Object.freeze({ t: 0.037, back: 0.35 });
+
 /** The column lines across (x, west to east) and front to back (z, front first). */
 export const XS = Object.freeze(BAYS.reduce((a, w) => [...a, a[a.length - 1] + w], [-BAYS.reduce((s, w) => s + w, 0) / 2]));
 export const ZS = Object.freeze(Array.from({ length: HALL.rows + 1 }, (_, i) => -(HALL.depth * i) / HALL.rows));
@@ -164,19 +167,17 @@ export function buildHall(M) {
     // The wall rises to the roof's underside over its inner face, which is higher than over its outer face (the roof
     // climbs inward): stopped at the outer face's height it left a slit along every wall's top that the sun came in by
     // (the hall's inside lit in diagonal bands). Its top above the outer face stays inside the roof's own thickness.
-    // (Over the front, where the hips come down to its ends, the wall above the cap board keeps the 0.9 m it had: a metre
-    // thick, its flat top over the inner face would stand out through the hipped corners.)
-    const T = ax && out > 0 ? 0.9 : H.wall;
-    const inside = at + out * (off - T), wallUp = ax ? underAt(0, inside) : underAt(inside, zm);
+    const T = H.wall, inside = at + out * (off - T), wallUp = ax ? underAt(0, inside) : underAt(inside, zm);
     const put = (list, w, h, d, u, y, v) => list.push(ax ? box(w, h, d, u, y, v) : box(d, h, w, v, y, u));
     const list = ax ? wood : woodZ;
     put(list, len, lt, 0.4, mid, top - lt / 2, face + out * 0.1);                       // the tie-beam, proud of the wall
     put(list, len + 0.8, 0.2, H.wall + 0.3, mid, top + 0.1, at + out * (off - H.wall / 2 + 0.15));   // the cap board
-    // the wall between the brackets, up to the roof: in two leaves, the inner up to the underside over the inner face, the
-    // outer to the underside over the wall's middle, so that over a wall a metre thick neither rises out through the roof
-    const midLine = at + out * (off - T / 2), midUp = ax ? underAt(0, midLine) : underAt(midLine, zm);
-    put(plaster, len, wallUp - cap, T / 2, mid, (cap + wallUp) / 2, at + out * (off - (3 * T) / 4));
-    put(plaster, len, midUp - cap, T / 2, mid, (cap + midUp) / 2, at + out * (off - T / 4));
+    // The wall between the bracket sets is a thin board, as the Yingzao Fashi's gongyan boards are (chapter 7: BOARD.t, SOURCES.md),
+    // set back behind the outer tiers so that the sets stand out from it; each set keeps a core of wood the wall's thickness deep, so
+    // that its out- and in-reaching blocks read as one member. The board rises to the roof's underside over its own line (over the
+    // hipped corners the roof is lower than that, and the board's top stays inside the roof's thickness).
+    const bLine = at + out * (off - BOARD.back), bUp = ax ? underAt(0, bLine) : underAt(bLine, zm);
+    put(plaster, len, bUp - cap, BOARD.t, mid, (cap + bUp) / 2, bLine);
     // Inside the back and end walls, their whole height, the dark ground the murals are painted on (ARCHITECTURE.md §7.2:
     // darker and greyer than the timber's colours), so that seen from the court through the doors the hall is dark.
     // (along an end wall it runs from the front wall's inner face to the back wall's, not on into the front wall)
@@ -190,6 +191,7 @@ export function buildHall(M) {
         const o = BR.out[k], w = BR.w + 0.3 * k;
         put(list, w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face + out * (o / 2 - 0.3 + 0.3));
       }
+      put(list, BR.w, BR.h * BR.tiers * 0.85, T, u, cap + (BR.h * BR.tiers) / 2, face - out * (T / 2));   // the set's core, through the wall's depth
       BR.inn.forEach((o, k) => put(list, BR.w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face - out * (T + o / 2)));   // and in over the floor
     }
     const eaveBeamOut = BR.out[BR.tiers - 1] + 0.15, yE = cap + BR.h * BR.tiers - 0.05;
