@@ -1843,7 +1843,9 @@ const scenarios = {
   } },
   // Issue #100: coming out of a hall, a tap on the court is a walk to the spot tapped, not back to the door. On the
   // main hall's porch and steps the tap rule "go to the hall's door" must not apply; from the court it still does.
+  // The halls whose court taps may be weaker than "bound for the point" (#411): the summit pavilion's doorway eye is 1.29 m above him and the ground falls away in front of it, so at 6 m the line of sight comes within 0.08 m of the ground's own slope. Names are added here by hand, never by the test.
   hallexit: { tier: 2, async run(b, base) {
+    const WEAK_COURT = ["lingxiao"];
     for (const [view, touch] of [["third", false], ["first", false], ["third", true]]) {
       // Only the third person has to draw the halls: where a tap on the ground lands is worked out from the eye, and the eye asks the drawn halls what stands in its way
       // (a hall switched off with ?off= is no wall to it, #391), so with the halls off it tests an eye no visitor has. From his own eyes the eye is his head: BARE is as true.
@@ -1874,8 +1876,9 @@ const scenarios = {
           await t.page.evaluate(([x, z, yaw]) => { window.__walk([]); window.__pose(x, z, yaw, 0.04); }, [h.out[0], h.out[1], h.outYaw]); await t.frames(30);
           let court = null, cp = null, weak = null;
           for (const d of [3, 4.5, 6, 8, 10, 13]) { const c = [h.door[0] + fo[0] * d + lt[0] * side, h.door[1] + fo[1] * d + lt[1] * side], q = await t.page.evaluate(([x, z]) => window.__project(x, z), c); if (q.on && q.clear) { court = c; cp = q; break; } if (q.on && !weak) weak = { c, q }; }
-          const strict = !!cp; if (!cp && weak) { court = weak.c; cp = weak.q; }   // (none clear: the summit pavilion's court falls away from its door, so no ground there is both in the picture and clear of its own slope by a hand's breadth: the first that is in the picture, and a weaker ask of it)
-          if (!cp) { unseen++; continue; }   // (no ground of this court is in the picture at that side)
+          const strict = !!cp; if (!cp && weak && WEAK_COURT.includes(h.id)) { court = weak.c; cp = weak.q; }   // (only the halls named in WEAK_COURT may fall back: any other hall with no clear court point fails below)
+          if (!cp && !WEAK_COURT.includes(h.id)) throw new Error(`${view}${touch ? " touch" : ""} ${h.name}: no court ground ${side} m aside is both in the picture and clear from the doorway eye; name the hall in WEAK_COURT only if that is the ground's own lie`);   // (none clear: the summit pavilion's court falls away from its door, so no ground there is both in the picture and clear of its own slope by a hand's breadth: the first that is in the picture, and a weaker ask of it)
+          if (!cp) { unseen++; continue; }   // (no ground of this court is in the picture at that side, in a hall that may fall back)
           await tap(cp.x, cp.y); await t.frames(1);
           let s1 = await t.state();
           for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
