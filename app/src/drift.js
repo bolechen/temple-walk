@@ -39,7 +39,8 @@ export const bambooOn = (kind) => kind !== "snow" && kind !== "firefly";
 
 // `opts`: `areas` (the grove's), `land` (the walker's landAt: the ground's height), `shelter` (shelter.js's map, for `report`).
 export function createDrift(scene, count, trees = [], opts = {}) {
-  const seed = new Float32Array(count * 4); for (let i = 0; i < seed.length; i++) seed[i] = Math.random();
+  // (`opts.rand` stands in for Math.random: the trailer gives it a seeded one, so that the air over a place is the same each time the page opens and a frame is a function of its number, #610.)
+  const rnd = opts.rand || Math.random, seed = new Float32Array(count * 4); for (let i = 0; i < seed.length; i++) seed[i] = rnd();
   const map = bakeFall(trees, opts.areas || [], opts.land || null);
   const tex = (data, W, H, fmt, type, filter) => { const x = new THREE.DataTexture(data, W, H, fmt, type); x.minFilter = x.magFilter = filter; x.unpackAlignment = 1; x.needsUpdate = true; return x; };
   const tMap = map ? tex(map.data, map.W, map.H, THREE.RGBAFormat, THREE.UnsignedByteType, THREE.LinearFilter) : tex(new Uint8Array([0, 0, 0, 255]), 1, 1, THREE.RGBAFormat, THREE.UnsignedByteType, THREE.NearestFilter);
