@@ -10,7 +10,7 @@
 // (800 m), and at that distance the scene's mist (a density of about 0.009 a metre) takes everything. So it is drawn as the same tower brought in along the
 // same line from the platform and made smaller by the same ratio (`BRING`): from the platform it has exactly the real angular size and bearing, and from
 // anywhere in the court or on the way within a few per cent of it. It is not enlarged and not moved nearer in the picture. The mist is replaced by one of its own,
-// the scene's mist colour laid over the brick by a share that is 1 at the foot and `HAZE.top` at the top, so that it stands out of the haze
+// the scene's mist colour laid over the brick by a share that is `HAZE.foot` at the foot and `HAZE.top` at the top, so that it stands out of the haze
 // and does not float on it; the share is a judgement of the art director's to make (DECISIONS.md).
 import * as THREE from "three";
 
@@ -29,7 +29,7 @@ export const BRING = 0.735;
 /** The eye the scaling is about: the platform's, 4.6 m over the plain's level (checks.js `horizon.places` for C and F), so that from there the foot and the top are seen at the real angles; the drawn foot is then 1.2 m above the plain, 700 m off and inside the haze. */
 export const EYE = 4.6;
 /** The mist laid over the brick: the share of the scene's mist colour at the foot and at the top (1 is the mist itself, 0 is the brick). */
-export const HAZE = Object.freeze({ foot: 1, top: 0.74 });
+export const HAZE = Object.freeze({ foot: 0.85, top: 0.42 });
 /** The brick's colour in the working space: a grey brick (SOURCES.md §16: 砖; the colour is ours). */
 export const BRICK = 0x4a4c4a;
 
@@ -93,6 +93,9 @@ export function buildTower() {
   geo.rotateY(Math.PI / 8);   // a flat, not a corner, to the south-west
   const mesh = new THREE.Mesh(geo, material());
   const at = placed(); mesh.position.set(at.x, at.y, at.z); mesh.scale.setScalar(at.scale);
+  // After everything else that is opaque: the sky's dome (600 m round, drawn without writing depth) lies nearer than the tower from most places, and an opaque thing
+  // is drawn in the order of its material, so without this the dome, made later, is drawn over the tower and takes it out of the picture (found on a T4 on 2026-11-22).
+  mesh.renderOrder = 1;
   mesh.name = "tower"; mesh.castShadow = false; mesh.receiveShadow = false;
   mesh.userData.tower = true; mesh.userData.walk = false; mesh.userData.keep = true;
   const group = new THREE.Group(); group.name = "tower-group"; group.userData.tower = true; group.add(mesh);
