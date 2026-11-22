@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run some end-to-end scenarios on a T4 in a Hugging Face Job and bring the result back (#335).
-#   HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/4 [-- more args for tests/e2e/run.cjs]
+#   HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/10 [-- more args for tests/e2e/run.cjs]
 #   HF_TOKEN=… tools/ci/t4-launch.sh boot photo
 # What it does: packs the checkout's tracked files and the built site (dist/, built first) into one archive, syncs it to
 # a private bucket under runs/<run>/, starts a Job on a T4 that runs tools/ci/t4-job.sh, waits for it, brings

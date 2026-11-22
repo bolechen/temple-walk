@@ -14,14 +14,14 @@ const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? 
 const site = L.build(M), walker = L.createWalker(site), EYE = 1.3, r = (v) => +v.toFixed(2);
 const what = spec.what;
 // A view whose still is taken in third person (a fourth entry { view: "third", eye, pitch }) is drawn from the following eye a few steps behind
-// him, at the fixed views' 44°: the manifest gives that eye, as measured in the page, and where he stands.
+// him, at the fixed views' 44°: the manifest gives that eye, as measured in the page, and where he stands. A view the level gives a lens of its own (`site.lens[key]`, app/yard.js) is written at that angle.
 const cameras = Object.entries(what).map(([key, [cid, label, composition, how]]) => {
   const [x, z, yaw, pitch] = site.views[key], y = walker.heightAt(x, z) + EYE, d = 10, third = how?.view === "third";
   const [ex, ey, ez] = third ? how.eye : [x, y, z], ep = third ? how.pitch : pitch;
   return { id: cid, label, composition, view: key, url: `?${id === "t00" ? "" : `level=${id}&`}show=${key}&season=summer&time=day&view=${third ? "third" : "first"}&q=high`, position: [r(ex), r(ey), r(ez)],
     target: [r(ex + Math.sin(yaw) * Math.cos(ep) * d), r(ey + Math.sin(ep) * d), r(ez - Math.cos(yaw) * Math.cos(ep) * d)], yaw_rad: r(yaw), pitch_rad: r(pitch),
     ...(third ? { stands_at: [r(x), r(y - EYE), r(z)], eye_pitch_rad: r(ep) } : {}),
-    fov_degrees: third ? 44 : 52, fov_axis: "vertical", eye_height_m: EYE, resolution: [1920, 1080], locked: true };
+    fov_degrees: site.lens?.[key]?.[third ? "third" : "first"] ?? (third ? 44 : 52), fov_axis: "vertical", eye_height_m: EYE, resolution: [1920, 1080], locked: true };
 });
 const first = Object.keys(what)[0], last = Object.keys(what).at(-1);
 fs.mkdirSync(new URL(`../docs/${id}/`, import.meta.url), { recursive: true });
