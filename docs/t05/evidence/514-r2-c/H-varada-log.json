@@ -1,0 +1,321 @@
+{
+ "donor": {
+  "file": "tools/out/t05/tripo-six/sikhin-r3.glb",
+  "sha256": "a1224ee73752a4c36eb75f1fc6b4cd932443a2a0293ee903293471281494f057",
+  "shells_whole": 5,
+  "shells_part": 2,
+  "faces_cut": 22840,
+  "holes_filled_faces": 366,
+  "welded_verts": 11609,
+  "open_edges": 37,
+  "nonmanifold_edges": 19,
+  "scrap_points": 382,
+  "holes_filled_after_scrap": 121,
+  "scrap_smoothed_points": 161,
+  "wrist": [
+   2.01,
+   4.436,
+   0.746
+  ],
+  "tip": [
+   2.128,
+   3.424,
+   1.406
+  ],
+  "length_m": 1.214,
+  "palm_normal": [
+   -0.468,
+   0.444,
+   0.764
+  ]
+ },
+ "target": {
+  "file": "tools/out/t05/tripo-370/sakyamuni-f1.glb",
+  "sha256": "61f5a1808e53ddec0edb2e253c2305270ae25bcb5ddbe95997ebd7fc2c8d16f8"
+ },
+ "pose": {
+  "wrist": [
+   -1.72,
+   3.96,
+   1.6832
+  ],
+  "pitch_deg": -5,
+  "bend_deg": -12.0,
+  "u0": 0.4,
+  "u1": 0.6,
+  "turn_deg": 5,
+  "scale": 0.97,
+  "palm_bend_deg": 0.0,
+  "finger_length_change": "none (the bend is laid along the middle line)",
+  "straight_finger_limit": {
+   "gap_m": 0.0573,
+   "hand_point": [
+    -1.762,
+    3.329,
+    1.446
+   ],
+   "u": 0.552,
+   "v": -0.059,
+   "w": -0.182,
+   "front_point": [
+    -1.763,
+    3.325,
+    1.389
+   ]
+  },
+  "tip_gap_m": 0.0128,
+  "wrist0": [
+   -1.72,
+   3.96,
+   1.38
+  ],
+  "solved_shift_m": 0.3032,
+  "gap_m": 0.0019,
+  "palm_least_gap_m": 0.0019,
+  "limit": {
+   "hand_point": [
+    -1.578,
+    3.457,
+    1.48
+   ],
+   "front_z": 1.478,
+   "front_point": [
+    -1.56,
+    3.445,
+    1.478
+   ]
+  },
+  "wrap": {
+   "length_m": 0.2,
+   "sink_m": 0.008,
+   "points_moved": 2538
+  },
+  "cap_top_faces": 0
+ },
+ "placed": {
+  "scale": 0.97,
+  "turn_deg": 5,
+  "wrist": [
+   -1.72,
+   3.96,
+   1.62
+  ],
+  "axis": [
+   0.0,
+   -0.996,
+   -0.087
+  ],
+  "palm": [
+   -0.087,
+   -0.087,
+   0.992
+  ]
+ },
+ "knee_inner_ray_rows": [
+  91,
+  91
+ ],
+ "knee_outer_ray_rows": [
+  88,
+  91
+ ],
+ "knee_inset_mask_cells": 3072,
+ "knee_skirt_pushed_under": 244,
+ "knee": {
+  "mode": "surface",
+  "box": [
+   [
+    -2.32,
+    2.38,
+    0.8
+   ],
+   [
+    -1.32,
+    3.62,
+    2.6
+   ]
+  ],
+  "ring_cells": 2501,
+  "faces_taken_out": 28686,
+  "scrap_faces_taken_out": 136,
+  "sheet_faces": 11133,
+  "sheet_spacing_m": 0.015,
+  "skirt_m": 0.06,
+  "tuck_m": 0.002,
+  "sheet_area_m2": 1.285,
+  "replaced_area_m2": 1.038,
+  "from": "Sakyamuni's own left knee mirrored across x, corrected (thin-plate spline) to meet the right knee round the box's sides and foot",
+  "cylinder": {
+   "x": -1.8,
+   "z": 0.95,
+   "r0": 0.7,
+   "deg": [
+    -48,
+    30
+   ]
+  }
+ },
+ "arm_cap": {
+  "runs": [
+   {
+    "edges": 16,
+    "middle": [
+     -1.622,
+     3.616,
+     1.243
+    ],
+    "min": [
+     -1.66,
+     3.602,
+     1.227
+    ],
+    "max": [
+     -1.583,
+     3.63,
+     1.255
+    ]
+   },
+   {
+    "edges": 24,
+    "middle": [
+     -1.561,
+     3.566,
+     1.423
+    ],
+    "min": [
+     -1.652,
+     3.543,
+     1.367
+    ],
+    "max": [
+     -1.466,
+     3.588,
+     1.48
+    ]
+   },
+   {
+    "edges": 9,
+    "middle": [
+     -1.568,
+     3.634,
+     1.299
+    ],
+    "min": [
+     -1.583,
+     3.63,
+     1.255
+    ],
+    "max": [
+     -1.554,
+     3.64,
+     1.36
+    ]
+   },
+   {
+    "edges": 57,
+    "middle": [
+     -1.459,
+     3.638,
+     1.594
+    ],
+    "min": [
+     -1.554,
+     3.625,
+     1.36
+    ],
+    "max": [
+     -1.403,
+     3.691,
+     1.847
+    ]
+   },
+   {
+    "edges": 4,
+    "middle": [
+     -1.533,
+     3.664,
+     1.334
+    ],
+    "min": [
+     -1.534,
+     3.66,
+     1.332
+    ],
+    "max": [
+     -1.529,
+     3.669,
+     1.339
+    ]
+   }
+  ],
+  "under_edges": 305,
+  "under_runs": 11,
+  "under_faces": 220,
+  "lining_faces": 12919
+ },
+ "arm": {
+  "pivot": [
+   -1.5,
+   5.95,
+   -0.85
+  ],
+  "elbow": [
+   -1.65,
+   4.15,
+   -0.45
+  ],
+  "angle_deg": 9.89,
+  "elbow_moves_m": [
+   0.0,
+   0.095,
+   0.303
+  ],
+  "forearm_shift_m": [
+   0.0,
+   0.0,
+   0.3032159417867661
+  ],
+  "upper_points": 14363,
+  "forearm_points": 14199,
+  "largest_move_m": 0.356,
+  "band": {
+   "points": 4235,
+   "largest_move_m": 0.313,
+   "shoulder_band_y": [
+    5.7,
+    5.2
+   ],
+   "inner_band_m": 0.08,
+   "inner_x": -1.27
+  },
+  "range": {
+   "min": [
+    -2.087,
+    3.52,
+    -1.308
+   ],
+   "max": [
+    -1.27,
+    5.7,
+    1.568
+   ]
+  },
+  "old_hand_faces_cut": 1719,
+  "stretched_faces_cut": 360,
+  "cap_faces": 0
+ },
+ "joined": {
+  "hand_points": 11227,
+  "hand_faces": 22429,
+  "how": "joined over the wrist, the hand's wrist sunk into the forearm (no boolean: the figure is many open shells)"
+ },
+ "out": {
+  "file": "<scratch>/r2/p81/sakyamuni-varada.glb",
+  "sha256": "36d4abc2e42d148b7d56764b8d0493c2b1e61ab1e73c53e6bdbc1b5d41e33afb"
+ },
+ "cleanup": {
+  "tidy_faces_taken_out": 233,
+  "lining_faces": 10975,
+  "fill_blob_faces": 5120
+ }
+}

@@ -8,7 +8,7 @@ export const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) /
 // Bring any geometry to one layout (non-indexed; position, normal, uv) so it can be merged with others.
 export function plain(g) {
   const n = g.index ? g.toNonIndexed() : g;
-  for (const k of Object.keys(n.attributes)) if (!["position", "normal", "uv"].includes(k)) n.deleteAttribute(k);
+  for (const k of Object.keys(n.attributes)) if (!["position", "normal", "uv", "stair"].includes(k)) n.deleteAttribute(k);   // (`stair`: what a flight's stone shader reads, see stairGeo)
   if (!n.attributes.uv) n.setAttribute("uv", new THREE.Float32BufferAttribute(new Array(n.attributes.position.count * 2).fill(0), 2));
   if (!n.attributes.normal) n.computeVertexNormals();   // a turned shape keeps its round normals; only what has none is given flat ones
   return n;
@@ -72,7 +72,7 @@ export function stairProfile(rise) {
 // the ground the plan's `walk.posts` close to the walker for every flight (a unit test holds it to that).
 // `base`: how far under the foot of the flight the pier, the panel and the stone's square foot go down into the ground;
 // `square`: how far the stone's foot stands square on it.
-const CHEEK_STONE = Object.freeze({ width: 0.42, over: 0.05, lip: 0.02, pier: 0.2, back: 0.035, band: 0.12, base: -0.4, square: 0.12 });
+export const CHEEK_STONE = Object.freeze({ width: 0.42, over: 0.05, lip: 0.02, pier: 0.2, back: 0.035, band: 0.12, base: -0.4, square: 0.12 });
 export function cheekProfile(rise) {
   const { height: sh, tread: sd, run, nosing } = stairProfile(rise), k = sh / sd, C = CHEEK_STONE;
   const top = (z) => Math.min(rise + C.lip, rise + C.over + k * (sd + nosing - z));   // level at the head, then the line of the noses and a little over
@@ -97,12 +97,48 @@ function slab(outline, x0, x1) {
   const sh = new THREE.Shape(outline.map(([z, y]) => new THREE.Vector2(z, y)));
   return new THREE.ExtrudeGeometry(sh, { depth: Math.abs(x1 - x0), bevelEnabled: false }).rotateY(-Math.PI / 2).translate(Math.max(x0, x1), 0, 0);
 }
+// What the stone shader (materials.js, `steps`) needs to lay stones on a flight, written into every vertex as the
+// attribute `stair`, so that a flight reads as courses of cut stone without one more triangle. Four numbers:
+//   x     a tread's part: metres across from the flight's axis. A cheek's part: metres outward from the tread's edge.
+//   a     a tread's part: its number from the head (0) plus how far along it the vertex lies (0.03 to 0.97), so that
+//         `floor(a)` is the tread and `fract(a)` the depth. A cheek's part: -1 minus the metres down from the head.
+//   h     a tread's part: the height over the foot of its riser. A cheek's part: the height over the ground at the foot.
+//   code  what is the same all over the flight, as one whole number (`stairCode`): treads, how little sun it sees
+//         (0 sunny, 1 side-on, 2 turned from the sun), a seed from where it stands, and its width in twentieths of a metre.
+// Everything is in the flight's own frame, so a flight turned any way (a hall's back stair, the approach's bend) is laid
+// the same. The same flight gives the same stones every time: nothing here is random.
+export const stairCode = (count, shade, seed, w) => count + 64 * (shade + 4 * (seed + 16 * Math.round(w * 20)));
+export const stairDecode = (c) => { const n = c % 64, r = Math.floor(c / 64), shade = r % 4, r2 = Math.floor(r / 4); return { count: n, shade, seed: r2 % 16, w: Math.floor(r2 / 16) / 20 }; };
+// How little sun a flight sees follows from which way it comes down: one that comes down toward the north has the building
+// or the slope at its back and the sun behind that; one that comes down toward the south faces it. `place` is the matrix
+// that stands the flight where it is (rotation only matters); a flight with none is taken side-on.
+function stairLight(place) {
+  if (!place) return { shade: 1, seed: 0 };
+  const e = place.elements, dz = e[10], x = e[12], z = e[14];   // (the flight's own +z, which is the way down, turned into the world)
+  return { shade: dz < -0.5 ? 2 : dz > 0.5 ? 0 : 1, seed: (Math.imul(Math.round(x * 4) | 0, 73856093) ^ Math.imul(Math.round(z * 4) | 0, 19349663)) >>> 28 };
+}
+function stamp(geo, fn) {
+  const p = geo.attributes.position, a = new Float32Array(p.count * 4);
+  for (let i = 0; i < p.count; i++) a.set(fn(p.getX(i), p.getY(i), p.getZ(i)), i * 4);
+  geo.setAttribute("stair", new THREE.BufferAttribute(a, 4));
+  return geo;
+}
 // `sides`: which sides have a cheek (-1 and +1 in x). A flight of one or two steps has none.
-export function stairGeo(w, rise, { sides = [-1, 1] } = {}) {
+// `place`: the matrix that stands the flight where it is; the geometry comes back already placed.
+export function stairGeo(w, rise, { sides = [-1, 1], place } = /** @type {{ sides?: number[], place?: THREE.Matrix4 }} */ ({})) {
   const { count: N, height: sh, tread: sd, run, nosing } = stairProfile(rise), parts = [];
+  const { shade, seed } = stairLight(place), code = stairCode(N, shade, seed, w), clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   // Each tread is a slab that oversails its riser by a thumb's length: the dark line under it is what lets a flight
   // be read as steps from below, even on a day without shadows.
-  for (let i = 0; i < N; i++) { const top = sh * (N - i); parts.push(box(w, top - 0.06, sd, 0, (top - 0.06) / 2, sd * (i + 0.5)), box(w, 0.06, sd + nosing, 0, top - 0.03, sd * (i + 0.5) + nosing / 2)); }
+  for (let i = 0; i < N; i++) {
+    const top = sh * (N - i), foot = sh * (N - i - 1);
+    const front = sd * i + sd + nosing;
+    parts.push(stamp(box(w, top - 0.06, sd, 0, (top - 0.06) / 2, sd * (i + 0.5)), (x, y, z) => [x, i + clamp((z - sd * i) / (sd + nosing), 0.03, 0.97), y - foot, code]));
+    // The face of the nosing slab takes its depth below the tread in `a` (0.97 at the top, 0.93 at its foot), which is how the
+    // shader tells the top two or three centimetres of the lip, in the nose's shade, from the rest.
+    parts.push(stamp(box(w, 0.06, sd + nosing, 0, top - 0.03, sd * (i + 0.5) + nosing / 2),
+      (x, y, z) => [x, i + (z > front - 1e-6 ? 0.97 - 0.04 * clamp((top - y) / 0.06, 0, 1) : clamp((z - sd * i) / (sd + nosing), 0.03, 0.97)), y - foot, code]));
+  }
   if (N > 2 && sides.length) {
     const c = cheekProfile(rise), flat = rise + c.lip, under = c.under(0), base = c.base, end = c.foot - 0.01, sq = c.foot - c.square;
     // The stone and the pier, one piece the full width. At its foot the stone is cut square and stands a hand's length
@@ -119,14 +155,16 @@ export function stairGeo(w, rise, { sides = [-1, 1] } = {}) {
       const seen = keep(q, [0, 0], [1, 0]), zs = seen.map(([z]) => z), ys = seen.map(([, y]) => y);   // what of it stands above the ground
       return i >= 0 && seen.length >= 3 && Math.max(...zs) - Math.min(...zs) > 0.3 && Math.max(...ys) > 0.2 ? [...q.slice(i), ...q.slice(0, i)] : null; };   // too small to read as a panel
     const cut1 = cut(c.band), cut2 = cut1 && cut(c.band * 2);
+    const side = (g) => stamp(g, (x, y, z) => [Math.abs(x) - w / 2, -1 - z, y, code]);
     for (const sx of sides) {
       const at = (d) => [sx * w / 2, sx * (w / 2 + c.width - d)];
-      parts.push(slab(stone, ...at(0)), slab(cut1 ? banded(panel, cut1) : panel, ...at(c.back)));
-      if (cut1) parts.push(slab(cut2 ? banded(cut1, cut2) : cut1, ...at(c.back * 2)));
-      if (cut2) parts.push(slab(cut2, ...at(c.back * 3)));
+      parts.push(side(slab(stone, ...at(0))), side(slab(cut1 ? banded(panel, cut1) : panel, ...at(c.back))));
+      if (cut1) parts.push(side(slab(cut2 ? banded(cut1, cut2) : cut1, ...at(c.back * 2))));
+      if (cut2) parts.push(side(slab(cut2, ...at(c.back * 3))));
     }
   }
-  return { geo: merge(parts), run };
+  const geo = merge(parts);
+  return { geo: place ? geo.applyMatrix4(place) : geo, run };
 }
 // Once the place is built, everything that never moves and shares a material becomes one mesh per stretch
 // of the axis: a few hundred draws become a few dozen, and what is behind you is still culled.
@@ -138,7 +176,7 @@ export function mergeStatic(root, zones, weld = true) {
     if (!o.isMesh || o.userData.keep || Array.isArray(o.material)) return;
     const a = o.geometry.attributes; if (!a.ao || !a.uv || !a.normal) return;
     const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(o.matrixWorld);
-    for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv", "ao"].includes(k)) g.deleteAttribute(k);
+    for (const k of Object.keys(g.attributes)) if (!["position", "normal", "uv", "ao", "stair"].includes(k)) g.deleteAttribute(k);
     g.computeBoundingBox(); g.boundingBox.getCenter(c);
     const zone = zones.findIndex((z) => c.z > z), key = `${o.material.uuid}|${o.castShadow}|${o.receiveShadow}|${zone}`;
     if (!groups.has(key)) groups.set(key, { mat: o.material, cast: o.castShadow, recv: o.receiveShadow, geos: [] });

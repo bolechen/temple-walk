@@ -1,0 +1,36 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "I-aisle-west-b.png",
+   "bytes": 520104,
+   "sha256": "72662880219d31d3f40b04bd885f36d944501d2a759825dd283595702375a1fa",
+   "rev": "04c6eee7e3c1ec8e4c5e2c755aea4e40a9c17e0c"
+  },
+  {
+   "path": "I-knee34-close.png",
+   "bytes": 554458,
+   "sha256": "d1f91a76c6da8c27d61d563b2e25e4b0e2506e1524ef1b435d636db666c1468a",
+   "rev": "04c6eee7e3c1ec8e4c5e2c755aea4e40a9c17e0c"
+  },
+  {
+   "path": "I-side3-left.png",
+   "bytes": 602547,
+   "sha256": "f16d37b290d729a8f55e8516cbb2410cabf5f4526539a7e96643cfdfca482f3a",
+   "rev": "04c6eee7e3c1ec8e4c5e2c755aea4e40a9c17e0c"
+  },
+  {
+   "path": "I-side3-right.png",
+   "bytes": 1020232,
+   "sha256": "6daf165964aabff3411aee43880d8051d6e71bf1940b6730b12cb1542cf7e0b9",
+   "rev": "04c6eee7e3c1ec8e4c5e2c755aea4e40a9c17e0c"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 156071,
+   "sha256": "f55c46531afc0f5d562257f1267626535669e78fbf4459356e85bb909e266591",
+   "rev": "04c6eee7e3c1ec8e4c5e2c755aea4e40a9c17e0c"
+  }
+ ]
+}

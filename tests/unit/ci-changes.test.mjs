@@ -88,15 +88,24 @@ const jobOf = (yml, name) => { const a = yml.indexOf(`\n  ${name}:\n`); assert.o
 
 test("pages.yml: the publication waits for both sets of unit tests, the build and boot, side by side", () => {
   const y = read("pages.yml");
-  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, grid, site, quick, worker\]/);
+  assert.match(jobOf(y, "verify"), /needs: \[changes, unit, floor, build, tests, grid, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
-  assert.match(jobOf(y, "unit"), /pnpm test\b/);
-  assert.match(jobOf(y, "grid"), /swap\.mjs --test tests\/unit/);
-  assert.ok(jobOf(y, "grid").indexOf("node tools/bake-walk.mjs") < jobOf(y, "grid").indexOf("swap.mjs"), "the grid job writes the floor before the swapped walker reads it");
-  const site = jobOf(y, "site");
-  assert.match(site, /pnpm run build/); assert.match(site, /run\.cjs boot/);
+  assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/3\n/);
+  assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/3 --import \.\/tools\/walk\/swap\.mjs/);
+  for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3\]/, `${j}: three machines, as SHARDS says`);
+  // the floor is baked once, by `floor`, and handed to every shard as an artifact before any test reads it (#442)
+  assert.match(jobOf(y, "floor"), /node tools\/bake-walk\.mjs/); assert.doesNotMatch(y, /floor-[^\n]*run_attempt/, "the floor's name has no run_attempt: re-running only the failed jobs must find it"); assert.match(jobOf(y, "floor"), /overwrite: true/); assert.match(jobOf(y, "floor"), /upload-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n/);
+  for (const j of ["tests", "grid"]) {
+    const body = jobOf(y, j);
+    assert.match(body, /needs: \[changes, floor\]/, `${j} waits for the floor`);
+    assert.match(body, /download-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n[\s\S]*path: app\/shared\/walk/, `${j} takes the floor as it is`);
+    assert.ok(body.indexOf("download-artifact") < body.indexOf("unit-shard.cjs"), `${j} has the floor before its tests run`);
+    assert.doesNotMatch(body, /node tools\/bake-walk\.mjs/, `${j} does not bake it again`);
+  }
+  assert.match(jobOf(y, "build"), /pnpm run build/); assert.match(jobOf(y, "quick"), /scenarios: "boot"/, "boot is one of the quick machines");
+  assert.ok(!/\n  site:\n/.test(y), "no job of its own for boot: it runs beside the other scenarios");
   // none waits for another (they are parallel); only `changes` comes first
-  for (const j of ["unit", "grid", "site"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
+  for (const j of ["unit", "floor", "build"]) assert.match(jobOf(y, j), /needs: changes\n/, j);
   assert.doesNotMatch(jobOf(y, "deploy"), /if: always\(\)/, "deploy keeps the implicit success()");
   assert.match(jobOf(y, "verify"), /if: \$\{\{ !cancelled\(\) \}\}/);
 });
@@ -110,10 +119,10 @@ test("no pull request reads the evidence over the network to compare hashes; the
   }
   const e2e = read("e2e.yml");
   assert.match(e2e, /cron: "17 19/);
-  for (const name of ["at the public address", "in the original store", "holds what the manifests say \\(S3\\)"]) {
-    const i = e2e.search(new RegExp(name)); assert.ok(i > 0, name);
-    assert.match(e2e.slice(i, i + 500), /github\.event_name == 'schedule'/, name);
-  }
+  // the three reads are the steps of the `evidence` job, which runs in the nightly and when a run by hand asks, and nowhere else
+  const job = /\n  evidence:\n([\s\S]*?)\n  [a-z0-9-]+:\n|\n  evidence:\n([\s\S]*)$/.exec(e2e), body = job ? (job[1] ?? job[2]) : "";
+  assert.match(body, /if: [^\n]*github\.event_name == 'schedule' \|\| github\.event\.inputs\.evidence == 'true'/, "the evidence job runs in a pull request's way");
+  for (const name of ["at the public address", "in the original store", "holds what the manifests say \\(S3\\)"]) assert.ok(new RegExp(name).test(body), name + " is not a step of the evidence job");
 });
 
 // #308: what stops a bad walk or camera before it is live, and the way back.
@@ -125,14 +134,21 @@ test("pages.yml: main goes to the canary, after the quick scenarios, and never t
   assert.match(deploy, /shell: bash\n\s*run: npx[^\n]*wrangler\.canary\.jsonc \| tee/, "a pipe to tee runs under pipefail (shell: bash), or a failed deploy shows green");
   assert.doesNotMatch(y, /wrangler\.production\.jsonc|CLOUDFLARE_PREVIEW_TOKEN.*deploy/, "pages.yml no longer touches the production Worker");
   const quick = jobOf(y, "quick");
-  assert.match(quick, /needs: changes\n/, "quick does not wait for another job");
+  assert.match(quick, /needs: \[changes, build\]\n/, "quick waits for the one build and for nothing else");
   assert.match(quick, /needs\.changes\.outputs\.site == 'true'/, "only when the site is built");
-  assert.match(quick, /scenario: \[stairs, drop\]/);
-  assert.match(quick, /run\.cjs \$\{\{ matrix\.scenario \}\}/);
+  // four machines, paired by what CI measured (boot 129 s, drop-touch 134, drop 107, stairs 91 + stairs-edge 32): the longest is 134 s
+  for (const sc of ["boot", "drop-touch", "drop", "stairs stairs-edge"]) assert.match(quick, new RegExp(`scenarios: "${sc}"`));
+  assert.match(quick, /run\.cjs \$\{\{ matrix\.scenarios \}\}/);
   assert.match(jobOf(y, "verify"), /needs: \[[^\]]*\bquick\b/, "a red scenario fails verify too");
-  const site = jobOf(y, "site");
-  assert.match(site, /\n    env:\n[\s\S]*?VITE_DEPLOY: \$\{\{ github\.event_name == 'pull_request' && 'preview' \|\| 'canary' \}\}/, "the build says where it goes, on the job: boot builds dist/ again");
+  const site = jobOf(y, "build");
+  assert.match(site, /\n    env:\n[\s\S]*?VITE_DEPLOY: \$\{\{ github\.event_name == 'pull_request' && 'preview' \|\| 'canary' \}\}/, "the one build says where it goes, on the job");
   assert.match(site, /VITE_COMMIT: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/, "and which commit");
+  // the site is built once (#442 step 3) and every job that drives or publishes it takes that artifact, named by the run only
+  assert.match(site, /upload-artifact@v4[\s\S]*name: built-site-\$\{\{ github\.run_id \}\}\n[\s\S]*overwrite: true[\s\S]*include-hidden-files: true/, "the build hands dist/ on, hidden stamp and all");
+  assert.doesNotMatch(y, /built-site-[^\n]*run_attempt/, "re-running only the failed jobs must find the built site");
+  for (const j of ["quick", "preview", "deploy"]) assert.match(jobOf(y, j), /download-artifact@v4[\s\S]*name: built-site-\$\{\{ github\.run_id \}\}\n\s*path: dist/, `${j} takes the site that was built`);
+  for (const j of ["quick"]) assert.match(jobOf(y, j), /touch dist\/\.built/, `${j} tells site.cjs the downloaded dist/ is current`);
+  for (const j of ["quick"]) assert.doesNotMatch(jobOf(y, j), /pnpm run build|bake-doorways/, `${j} does not build the site again`);
   assert.equal(JSON.parse(fs.readFileSync(new URL("../../wrangler.canary.jsonc", import.meta.url), "utf8").replace(/^\s*\/\/.*$/gm, "")).name, "temple-walk-canary");
 });
 
@@ -184,4 +200,39 @@ test("release-please.yml deploys production when, and only when, a version was m
   assert.match(job, /target: production/, "the release goes to production, nothing else");
   assert.match(job, /ref: \$\{\{ needs\.release\.outputs\.tag_name \}\}/);
   assert.match(job, /secrets: inherit/);
+});
+
+test("unit tests: every file runs on exactly one of the three machines, none over its budget, and `pnpm test` is the same set", async () => {
+  const { createRequire } = await import("node:module");
+  const sh = createRequire(import.meta.url)("../../tools/ci/unit-shard.cjs");
+  const all = sh.files(), { parts, loads } = sh.plan(all, sh.SHARDS), seen = parts.flat();
+  assert.equal(seen.length, all.length); assert.deepEqual([...seen].sort(), all);
+  for (const l of loads) assert.ok(l <= sh.BUDGET, `a machine's share is ${l.toFixed(0)} s, over ${sh.BUDGET}`);
+  for (const f of Object.keys(sh.durations())) assert.ok(all.includes(f), `durations.json names ${f}, which is not a test`);
+  assert.match(fs.readFileSync(new URL("../../.github/workflows/pages.yml", import.meta.url), "utf8"), new RegExp(`unit-shard\\.cjs run \\$\\{\\{ matrix\\.shard \\}\\}/${sh.SHARDS}`));
+});
+
+test("unit tests: a share with no file runs nothing, because `node --test` with no file would run the whole suite", async () => {
+  const { createRequire } = await import("node:module");
+  const sh = createRequire(import.meta.url)("../../tools/ci/unit-shard.cjs");
+  assert.equal(sh.testArgs([]), null);
+  assert.deepEqual(sh.testArgs(["a.test.mjs"], ["--import", "x"]), ["--import", "x", "--test", "tests/unit/a.test.mjs"]);
+  assert.equal(sh.shareOf("0/5"), null); assert.equal(sh.shareOf("6/5"), null);
+  // 200 machines for 123 files: the last ones are empty, and say so rather than run everything
+  const empty = sh.plan(sh.files(), 200).parts.filter((p) => p.length === 0);
+  assert.ok(empty.length > 0);
+  const { spawnSync } = await import("node:child_process");
+  const bad = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", "0/5"], { encoding: "utf8" });
+  assert.equal(bad.status, 2);
+  const none = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", "200/200"], { encoding: "utf8" });
+  assert.equal(none.status, 0); assert.match(none.stdout, /holds no test file/);
+});
+
+test("evidence-mirror: runs of different branches never queue in one group; each commit on main has its own", () => {
+  const y = read("evidence-mirror.yml");
+  const group = /concurrency:\n\s+group: (.+)\n\s+cancel-in-progress: false/.exec(y);
+  assert.ok(group, "a concurrency group that does not cancel a run in progress");
+  assert.match(group[1], /github\.ref/, "pull request runs are grouped by their own branch");
+  assert.match(group[1], /github\.event_name == 'push' && github\.sha/, "a push to main is its own group, so the next push cannot replace it");
+  assert.doesNotMatch(group[1].trim(), /^evidence-mirror$/, "not one group for everything");
 });

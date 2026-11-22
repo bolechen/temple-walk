@@ -11,3 +11,7 @@ export function debugGate({ dev, hostname, search }) {
   if (dev || preview) return q.get("debug") !== "0";
   return /\.workers\.dev$/.test(hostname) && q.get("debug") === "1";
 }
+
+/** Whether this page is the workbench's: the dev server or a pull request's preview (never the canary nor the public
+ *  page). The workbench addresses (?seals, ?at, ?play, ?terrain) are read only here. @param {{ dev: boolean, hostname: string }} o */
+export const onBench = ({ dev, hostname }) => !!dev || /-temple-walk-preview\./.test(hostname);

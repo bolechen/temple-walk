@@ -1,0 +1,95 @@
+{
+ "site": {
+  "commit": "f64b7363da556cbcb7f6862675d64b35dc3dce9e",
+  "entry": "assets/index-Jc_kGNmf.js",
+  "files": 367,
+  "sha256": "9eab0b395dfb78eb7fd4bcecb9ff46e736ed3c6eb0a0f61f6052dd1dadac3976"
+ },
+ "host": "Tesla T4, 620.70.06, 15360 MiB",
+ "shots": [
+  {
+   "name": "e@summer-day@first",
+   "file": "e_summer-day_first.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "e@summer-day@first",
+   "file": "e_summer-day_first_base.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "c@summer-day@third",
+   "file": "c_summer-day_third.png",
+   "tris": 55988,
+   "calls": 36
+  },
+  {
+   "name": "c@summer-day@third",
+   "file": "c_summer-day_third_base.png",
+   "tris": 55988,
+   "calls": 36
+  },
+  {
+   "name": "f@summer-day@first",
+   "file": "f_summer-day_first.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "f@summer-day@first",
+   "file": "f_summer-day_first_base.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "d@summer-day@first",
+   "file": "d_summer-day_first.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "d@summer-day@first",
+   "file": "d_summer-day_first_base.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "sakya@summer-day@first",
+   "file": "sakya_summer-day_first.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "sakya@summer-day@first",
+   "file": "sakya_summer-day_first_base.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "door-a",
+   "file": "door-a.png",
+   "tris": 37498,
+   "calls": 43
+  },
+  {
+   "name": "door-a_base",
+   "file": "door-a_base.png",
+   "tris": 37498,
+   "calls": 43
+  },
+  {
+   "name": "door-near",
+   "file": "door-near.png",
+   "tris": 18142,
+   "calls": 29
+  },
+  {
+   "name": "door-near_base",
+   "file": "door-near_base.png",
+   "tris": 18142,
+   "calls": 29
+  }
+ ]
+}

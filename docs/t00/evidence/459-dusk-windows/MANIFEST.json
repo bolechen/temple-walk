@@ -1,0 +1,72 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-art3_autumn-dusk_third.jpg",
+   "bytes": 318145,
+   "sha256": "8c35f832184f4ff9db9cae9189d5e98a9f7a9ce5fbb9920bed2796315ee10745",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "after-art3_autumn-night_third.jpg",
+   "bytes": 245917,
+   "sha256": "1eaa23e7a6bdba522a252444994fbf8cc329aa4f27d12b5baf7141a3bc663c39",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "after-art4_autumn-dusk_first.jpg",
+   "bytes": 243816,
+   "sha256": "742537d1ca84f4a1b1c21c9941175f5bc78282dae31a7e7033e934b81d48bdc1",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "after-art5_summer-dusk_first.jpg",
+   "bytes": 284356,
+   "sha256": "415a6943bbee7b176f8038d548b2bb2cc7a4193a5fa67ce238260ade57810ed6",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "after-art5_summer-night_first.jpg",
+   "bytes": 243283,
+   "sha256": "0f2d0b03c051b93e974204186fb944de5924046126cb7e0498b388b9b490a898",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "before-art3_autumn-dusk_third.jpg",
+   "bytes": 326603,
+   "sha256": "70b1460efb522eac16c33829aa08782ed7f64c6cd32a7d549d3e4cfd3dd34ba8",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "before-art3_autumn-night_third.jpg",
+   "bytes": 260437,
+   "sha256": "e4fef8fbf6a171bb2b65dfe5423c8eb52941d92efc62dad704962acc3d881c0f",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "before-art4_autumn-dusk_first.jpg",
+   "bytes": 259590,
+   "sha256": "550ddfc5171ead81a3a3faf6a92c18b6e516fa07a589a8e0377b3de84e3ec429",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "before-art5_summer-dusk_first.jpg",
+   "bytes": 276481,
+   "sha256": "d5eae7c377ffa837475c242d09af678411d18b1a19b828ae1a356cf731c01af5",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "before-art5_summer-night_first.jpg",
+   "bytes": 248459,
+   "sha256": "0ba48ae875c78d83473d005acbc6df5171a7cece9722232fd20c0ab38fc920e2",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 477316,
+   "sha256": "0c70ce380ceeb587d6eac92df1f8dda8dce0ca13b7e9439b487bc66e07b6d013",
+   "rev": "bce287a94bb4e1573ca6449cfaa1abc39c47a403"
+  }
+ ]
+}

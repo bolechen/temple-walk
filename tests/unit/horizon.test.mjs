@@ -6,22 +6,37 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-import { L, LEVEL_ID, need } from "./level-plan.mjs";
+import { L, LEVEL_ID, need, checks } from "./level-plan.mjs";
+import fs from "node:fs";
 import { createBackdrop } from "../../app/src/backdrop.js";
+import { parseHeightmap } from "../../app/src/terrain-far.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (t[k] ||= named(k)) });
 const scene = new THREE.Scene();
 // A level with no far hills has no horizon to hold: its `backdrop` is null, and these tests have nothing to look at.
-if (L.backdrop) createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land);
+// #183's spike: TERRAIN=dem|made holds the same horizon over the far land drawn from that heightmap instead of the rings.
+const TERRAIN = process.env.TERRAIN || "";
+const file = (ext) => new URL(`../../app/shared/terrain/${TERRAIN}.${ext}`, import.meta.url);
+const far = TERRAIN ? parseHeightmap(JSON.parse(fs.readFileSync(file("json"), "utf8")), new Uint8Array(fs.readFileSync(file("bin"))).buffer) : null;
+// A level with no far hills (a flat county, T05) holds its horizon with what it builds itself: the plain outside its walls, the walls. Its
+// plan is built and cast against instead, from its own list of places.
+if (L.backdrop) createBackdrop(scene, M, L.backdrop.site, L.backdrop.terraces, L.land, far);
+else if (checks?.horizon) {
+  const site = L.build(new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) }));
+  scene.add(site.root);
+  // The paving is ground.js's, not the plan's: the court's sheet as it lays it, and each stretch of paving the plan names.
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(460, 300).rotateX(-Math.PI / 2).translate(0, 0, -86), M.paving));
+  for (const p of site.paving || []) scene.add(new THREE.Mesh(new THREE.PlaneGeometry(p.x * 2, p.zS - p.zN).rotateX(-Math.PI / 2).translate(0, p.y, (p.zS + p.zN) / 2), M.paving));
+}
 scene.updateMatrixWorld(true);
 // The bamboo bands are the only ShaderMaterials with a transparent-by-discard fragment: they carry uSeed.
 const solid = []; scene.traverse((o) => { if (o.isMesh && !(o.material.uniforms && o.material.uniforms.uSeed)) solid.push(o); });
 
 // Where the horizon is held from is the level's own list (app/levels/<id>/checks.js): name, x, z, and the eye's height where it is not the land's plus 1.6.
-const places = L.backdrop ? need("horizon").places : [];
+const places = L.backdrop || checks?.horizon ? need("horizon").places : [];
 
-const skip = !L.backdrop && `${LEVEL_ID} draws no far hills`;
+const skip = !L.backdrop && !checks?.horizon && `${LEVEL_ID} draws no far hills and names no places to hold the horizon from`;
 test("below the horizon, from every sampled place, the first opaque thing is land or hill", { skip }, () => {
   const ray = new THREE.Raycaster(), bad = [];
   for (const [name, x, z, eyeY] of places) {
@@ -38,7 +53,7 @@ test("below the horizon, from every sampled place, the first opaque thing is lan
   assert.deepEqual(bad, []);
 });
 
-test("the hills have no seam: height and colour inputs are continuous where the angle wraps", { skip }, () => {
+test("the hills have no seam: height and colour inputs are continuous where the angle wraps", { skip: skip || (!L.backdrop ? `${LEVEL_ID} draws no far hills` : false) || (TERRAIN ? "no rings over a heightmap" : false) }, () => {
   // Every range is a cylinder whose shader reads the angle atan(z, x); a noise sampled on that raw angle jumps at -x.
   // The shader must therefore wrap it (the `ang` helper), or the nearest range shows a vertical hard edge.
   const src = scene.children.filter((o) => o.isMesh && o.material.fragmentShader && o.material.fragmentShader.includes("uTop")).map((o) => o.material.fragmentShader);

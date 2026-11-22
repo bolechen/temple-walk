@@ -11,16 +11,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "../unit/dom-stub.mjs";
 import * as THREE from "three";
-import { levelPlan, need, isPrologue } from "../unit/level-plan.mjs";
+import { levelPlan, need, isPrologue, needWalkedPlan, LEVEL_ID } from "../unit/level-plan.mjs";
 import { followEye, createFollow } from "../../app/src/eye.js";
 import { FOV_RANGE } from "../../app/src/settings.js";
 import { censerGeometry } from "../../app/src/censer.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), { name: String(k) });   // both faces: from inside a wall its back faces are what would show
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
+await needWalkedPlan("nearplane", `WALK_LEVEL=${LEVEL_ID} pnpm run nearplane:grid`);
 const { site, walker } = await levelPlan(M);
-// The censer on the axis of the first court is drawn by props.js (censer.js), not by the plan: stood in with the rest.
-site.root.add(new THREE.Mesh(censerGeometry().translate(site.censer.x, site.censer.y, site.censer.z), named("censer")));
+// The censer on the axis of the first court is drawn by props.js (censer.js), not by the plan: stood in with the rest (a level with none has none).
+if (site.censer) site.root.add(new THREE.Mesh(censerGeometry().translate(site.censer.x, site.censer.y, site.censer.z), named("censer")));
 site.root.updateMatrixWorld(true);
 const meshes = []; site.root.traverse((o) => { if (o.isMesh && o.visible && !o.userData.soft && !o.material.transparent) { o.geometry.computeBoundingBox(); meshes.push({ o, box: o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld) }); } });
 const NEAR = 0.1, EYE = 1.3, dt = 1 / 60;   // yard.js: PerspectiveCamera(…, 0.1, 800); a child's eye at 1.3 m
@@ -63,7 +64,9 @@ for (const h of site.halls) {
   if (best) routes[`along the porch of ${h.name}`] = [[ox + f[0] * best.d + s[0] * best.a, oz + f[1] * best.d + s[1] * best.a], [ox + f[0] * best.d + s[0] * best.b, oz + f[1] * best.d + s[1] * best.b], [ox + f[0] * best.d + s[0] * best.a, oz + f[1] * best.d + s[1] * best.a]];
 }
 
-test("the check sees a column the eye is put up against", () => {
+// (The two checks that stand at the prologue's halls and its summit pavilion run on the prologue only: another level has neither, until it has its own.)
+const prologueOnly = isPrologue ? test : test.skip;
+prologueOnly("the check sees a column the eye is put up against", () => {
   // Face a column from just outside it, at the height of a child's eye above its own porch: the near plane is in it.
   const hall = site.halls.find((h) => site.walk.posts.some((q) => q.r !== undefined && Math.hypot(q.x - h.out[0], q.z - h.out[1]) < 4)), col = site.walk.posts.find((q) => q.r !== undefined && Math.hypot(q.x - hall.out[0], q.z - hall.out[1]) < 4);
   const floor = walker.heightAt(hall.out[0], hall.out[1]), toward = Math.atan2(col.x - hall.out[0], -(col.z - hall.out[1]));
@@ -88,7 +91,7 @@ for (const [name, path] of Object.entries(routes)) test(`the near plane cuts int
 
 // Up on the summit pavilion's top storey he sees with his own eyes only (issue #101): round the balcony, at the depth
 // nearest its columns that still lets him by and along its middle, looking ahead, to either side and out over the railing.
-test("the near plane cuts into nothing: round the top storey of the summit pavilion, from his eyes", () => {
+prologueOnly("the near plane cuts into nothing: round the top storey of the summit pavilion, from his eyes", () => {
   const L = site.lofts.lingxiao, [cx, cz] = L.at, bad = []; let looks = 0;
   walker.setLoft("lingxiao");
   try {

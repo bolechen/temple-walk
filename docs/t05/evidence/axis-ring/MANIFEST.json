@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 85933,
+   "sha256": "9993618ad71246b7c70a4f66bad700017148f46dbbf5b67cef2f99de60938f5d",
+   "rev": "3b781381af7ce96e396e4b5544d3dec50d3bc12e"
+  },
+  {
+   "path": "views/inner-gate-flank-E.png",
+   "bytes": 478970,
+   "sha256": "44d585c7e7e524c1714cc7ea2c375b0213d0dca7e4e1f25b6579a7526f0ec856",
+   "rev": "3b781381af7ce96e396e4b5544d3dec50d3bc12e"
+  },
+  {
+   "path": "views/inner-gate-flank-S.png",
+   "bytes": 505933,
+   "sha256": "c0c9d501f473c09fa3c83a06e46e121075a4386fdfc02fac7addfaf78d3aa95d",
+   "rev": "3b781381af7ce96e396e4b5544d3dec50d3bc12e"
+  },
+  {
+   "path": "views/walk-diff-vs-main.png",
+   "bytes": 59340,
+   "sha256": "dd321a7cbf7d4dad81873836f52ab7620d14e309600d6dfbfb34a441d61db27b",
+   "rev": "3b781381af7ce96e396e4b5544d3dec50d3bc12e"
+  }
+ ]
+}

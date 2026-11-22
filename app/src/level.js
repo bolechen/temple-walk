@@ -24,9 +24,12 @@ import t00 from "../levels/t00/level.js";
  * @property {(x: number, z: number) => number} groveSound how deep in the bamboo the place is heard, 0 to 1
  * @property {{ x0: number, x1: number, y0: number, y1: number, z0: number, z1: number }} eyeBox what the eye's space gathers
  * @property {number} hallTapZ a tap on the great hall from south of this line is not a walk to its door
+ * @property {boolean} [writtenPlan] false: its written plan (site.walk) is not kept up to what is drawn, so `?walker=old` is refused and it is walked on the baked floor (T05; its plan serves only the eye before its hierarchy is built and the sound of his steps)
  * @property {boolean} [keepsPlace] keeps where he was under yunjing.place.v1 (the prologue only, until each level keeps its own; #385)
  * @property {boolean} [opening] plays the opening after 入山 (opening.js, which knows only the prologue's way)
  * @property {boolean} [title] raises the prologue's title at its gate
+ * @property {{ place: string, line: string }} [how] the line at the foot of the title page: "region · road" (a region's name, never a real city's) and one sentence of this temple's own (#445); none, none shown
+ * @property {(season: string, time: string, mood: Record<string, any>) => (Record<string, any> | null | undefined)} [moodFor] fields of mood.js's table this level replaces for a season and hour (given the table so far), or nothing: the hours' own numbers stand for a level that gives none (#488)
  * @property {[number, number]} [skyAt] where the sky's dome stands (x, z), so that its far side stays within the eye's 800 m from everywhere walked (#409; the origin by default)
  *
  * What the floor's bake needs beyond what a level builds is in app/levels/<id>/bake.js, which only the Node tools read
@@ -59,6 +62,17 @@ export const LEVELS = {
   ...(WORKBENCH ? { _probe: () => import("../levels/_probe/level.js").then((m) => m.default) } : {}),
 };
 export const DEFAULT_LEVEL = "t00";
+
+/**
+ * How the map of temples walked (行脚图, #449) names a temple: the region and nothing finer, never a town (the owner's rule
+ * of 2026-11-21, as the title's line says where in #445), and the two characters its seal is cut with. Behind the same test
+ * of the build as LEVELS, so that the public page neither names nor carries a temple it does not list.
+ * @type {Record<string, { region: string, seal: string }>}
+ */
+export const PLACES = {
+  t00: { region: "江南", seal: "云径" },
+  ...(TESTING ? { t05: { region: "关外", seal: "奉明" } } : {}),
+};
 
 /**
  * The level an address asks for. A name not in the list falls back to the prologue, saying what was asked.

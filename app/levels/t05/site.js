@@ -1,7 +1,7 @@
-// 奉明寺 (T05, the first chapter after the prologue), as a white box (#409, docs/t05/PLAN.md item 5): the court between the
-// Wuliang hall and the great hall, the great hall's 3 m platform, the terrace before it and the flight up, walled round,
-// and a paved way from the outer gate's place far to the south. The great hall itself, its seven Buddhas and the axis of
-// gates and halls come in later items (6 to 10). Every size here, and whether it is a published measurement, a summary
+// 奉明寺 (T05, the first chapter after the prologue), as a white box (#409, #422; docs/t05/PLAN.md items 5 and 6): the
+// court between the Wuliang hall and the great hall, the great hall's 3 m platform, the terrace before it and the flight
+// up, the hall's shell on the platform (./hall.js), walled round, and a paved way from the outer gate's place far to the
+// south. The hall's seven Buddhas and the axis of gates and halls come in later items (7 to 10). Every size here, and whether it is a published measurement, a summary
 // or our own proposal, is in docs/t05/SITE.md and docs/t05/SOURCES.md.
 //
 // Heights are taken from the court's paving (y = 0; SITE.md §4.2), so the platform, the terrace and the hall's floor are
@@ -9,24 +9,52 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
+import { buildHall, OUTER, FILL } from "./hall.js";
+import { buildAltar } from "./altar.js";
+import { buildAxis, HALL_HALF, LANE } from "./axis.js";
+import { buildTower } from "./tower.js";
+import { buildSurround } from "./surround.js";
 
-/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. */
-export const PLATFORM = Object.freeze({ w: 55.8, d: 25.91, h: 3.0, zS: 0.4 });
+/** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
+ * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
+ * round, stand on it (#493). */
+export const PLATFORM = Object.freeze({ w: 55.8, d: 26.21, h: 3.0, zS: 0.5 });
 /** The terrace before it (SITE.md §3.1, S10/S22, a summary: about 37 × 15 m), from the platform's south edge. */
-export const TERRACE = Object.freeze({ w: 37, d: 15, zN: 0.4, zS: 15.4 });
+export const TERRACE = Object.freeze({ w: 37, d: 14.9, zN: 0.5, zS: 15.4 });   // (its north edge on the platform's south edge, #493)
 /** The flight up the terrace's middle (SITE.md §6: proposed 8–10 m wide, about 18 steps; stairGeo lays 0.18 m steps, so 17). */
 export const FLIGHT = Object.freeze({ w: 9, rise: PLATFORM.h });
-/** The compound's walls (our proposal: OSM gives no outline for them, SITE.md §2), and the gap in the south one. */
-export const COMPOUND = Object.freeze({ x: 42, zN: -40, zS: 62, h: 3.2, t: 0.8, gate: 4 });
-/** The way from the outer gate's place (PLAN item 5: the arrival stays where it will be once the axis is built, 0, +215). */
-export const WAY = Object.freeze({ x: 6, zS: 221, wallH: 1.2, t: 0.5 });
-/** Where he arrives, and the two stations of SITE.md §5 this item reaches: A in the court, B on the terrace. */
+/** The compound's walls (our proposal: OSM gives no outline for them, SITE.md §2); the south one stops at the Wuliang hall's platform, `gate` either side of the axis (./axis.js). */
+export const COMPOUND = Object.freeze({ x: 42, zN: -40, zS: 62, h: 3.2, t: 0.8, gate: HALL_HALF });
+/** The way from the outer gate's place (PLAN item 5: the arrival stays where it is, 0, +215), between the walls of ./axis.js: x is the walls' centre, wallH the forecourt's, south of the outer gate. */
+export const WAY = Object.freeze({ x: LANE.hw, zS: 221, wallH: 1.2, t: LANE.t });
 export const ARRIVE = [0, 215];
-export const STATION = Object.freeze({ A: [0, 55], B: [0, TERRACE.zS - 1] });   // SITE.md puts B at z = +17, past the terrace's 15 m; it stands 1 m inside the edge
+// Where each station stands. A (cam01) is 44 m out, where the nine bays fill about four fifths of a wide picture with the
+// ridge whole, as the reference picture has them, and B (cam02) on the court's paving 12 m out from the flight's foot,
+// the platform over his head and the eave columns and doors still in sight over the terrace's parapet (the lead's calls
+// of 2026-11-21 on the art reviews of #425; DECISIONS.md, ART.md §5).
+export const STATION = Object.freeze({ A: [0, 44], B: [0, 27], C: [0, 0.6], D: [19, -8], E: [0, -9], F: [0, -2] });
 /** The parapet round the platform and the terrace (SITE.md §6: a railing or a low wall; a low wall here). */
 const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
 
+/**
+ * How this level's stairs are laid (STAIR_STYLE in src/materials.js lists what can be changed and what it starts as). T05 has
+ * no bamboo (docs/t05/ART.md §4.2: the court's trees drop leaves, there is "no T00 bamboo or cedar"), so no bamboo leaf lies on
+ * a tread, and no moss grows (the art director, #486: an early-winter clear cold day, the south-facing flight is dry); the
+ * stones' size (about 1.8 m a slab on the 9 m flight, none to be made smaller) and the cheek's run stay the prologue's until the
+ * structure review has checked the Liao numbers.
+ */
+export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false });
+
+/**
+ * The lens a named view is seen through where it is not the fixed views' 52° from his eyes and 44° from behind him (app/yard.js `baseFov`: `?show=<name>` reads this table;
+ * tools/cameras.mjs writes it into the manifest). cam06, back on the axis, is 65° from his eyes, as docs/t05/PRD.md §3 has it: the middle five of the seven and half of the one at
+ * each end are in the picture (the reference picture's), where 52° holds three and a half either side, almost cam03's. From behind him it is 50°, the angle the walk is seen at
+ * from there: 65° from his eyes is the walk's own angle, and the same reason makes 50° the walk's from behind (the T05 lead, after the art director's ruling, 2026-11-21).
+ */
+export const LENS = Object.freeze({ cam06: Object.freeze({ first: 65, third: 50 }) });
+
 export function buildSite(M) {
+  Object.assign((M.steps.userData.stairStyle ||= {}), STAIR_STYLE);   // (one page walks one level, so the material is this level's for good)
   const root = new THREE.Group();
   const walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], []];
   const stone = [], plaster = [], steps = [], earth = [];
@@ -39,18 +67,20 @@ export function buildSite(M) {
   shade[0].push({ x0: -pX, x1: pX, z0: pN, z1: P.zS }, { x0: -tX, x1: tX, z0: T.zN, z1: T.zS });
 
   // The flight down the terrace's south face, its head at the terrace's edge.
-  const flight = stairGeo(F.w, F.rise), run = flight.run ?? stairProfile(F.rise).run;
   const at = new THREE.Matrix4().makeTranslation(0, 0, T.zS);
-  steps.push(flight.geo.applyMatrix4(at)); (root.userData.flights ||= []).push({ w: F.w, rise: F.rise, sides: [-1, 1], m: at });
+  const flight = stairGeo(F.w, F.rise, { place: at }), run = flight.run ?? stairProfile(F.rise).run;
+  steps.push(flight.geo); (root.userData.flights ||= []).push({ w: F.w, rise: F.rise, sides: [-1, 1], m: at });
   const pad = BODY + 0.02;   // the treads are walked clear of the cheek stones by his own width
   walk.ramps.push({ x0: -F.w / 2 + pad, x1: F.w / 2 - pad, z0: T.zS - 0.8, z1: T.zS + run + 0.3, base: 0, h: F.rise, low: [0, T.zS + run], high: [0, T.zS], floor: "stone" });
   for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? F.w / 2 - BODY - 0.021 : -F.w / 2 - CHEEK - BODY, x1: sx > 0 ? F.w / 2 + CHEEK + BODY : -F.w / 2 + BODY + 0.021, z0: T.zS + 0.02, z1: T.zS + run + BODY + 0.06, h: top });
 
-  // The parapet along every outer edge of the platform and the terrace, open where the flight comes up.
-  const open = F.w / 2 + CHEEK;
+  // The parapet along every outer edge of the platform and the terrace, open where the flight comes up. Where the
+  // hall's walls stand at the platform's edge (its back, its front between the terrace and the hall's ends) the wall is
+  // the edge; the parapet runs only beside the hall's ends, where a walk goes round.
+  const open = F.w / 2 + CHEEK, hX = OUTER.x;
   const runs = [
-    [-pX, pN, pX, pN], [-pX, pN, -pX, P.zS], [pX, pN, pX, P.zS],          // the platform's back and its two ends
-    [-pX, P.zS, -tX, P.zS], [tX, P.zS, pX, P.zS],                         // its front either side of the terrace
+    [-pX, pN, -hX, pN], [hX, pN, pX, pN], [-pX, pN, -pX, P.zS], [pX, pN, pX, P.zS],   // the platform's back beside the hall, and its two ends
+    [-pX, P.zS, -hX, P.zS], [hX, P.zS, pX, P.zS],                         // its front beside the hall
     [-tX, T.zN, -tX, T.zS], [tX, T.zN, tX, T.zS],                         // the terrace's sides
     [-tX, T.zS, -open, T.zS], [open, T.zS, tX, T.zS],                     // its front either side of the flight
   ];
@@ -77,33 +107,96 @@ export function buildSite(M) {
   };
   wall(-C.x, C.zN, C.x, C.zN, C.h, C.t); wall(-C.x, C.zN, -C.x, C.zS, C.h, C.t); wall(C.x, C.zN, C.x, C.zS, C.h, C.t);
   wall(-C.x, C.zS, -C.gate, C.zS, C.h, C.t); wall(C.gate, C.zS, C.x, C.zS, C.h, C.t);
-  // The way from the outer gate's place: a paved strip between two low walls, closed at its far end.
-  wall(-W.x, C.zS + C.t / 2, -W.x, W.zS, W.wallH, W.t); wall(W.x, C.zS + C.t / 2, W.x, W.zS, W.wallH, W.t); wall(-W.x, W.zS, W.x, W.zS, W.wallH, W.t);
-  walk.decks.push({ x0: -C.x, x1: C.x, z0: C.zN, z1: C.zS + 0.2, h: 0, floor: "paving" }, { x0: -W.x, x1: W.x, z0: C.zS - 0.2, z1: W.zS, h: 0, floor: "paving" });
-  const paving = [{ level: 1, y: 0.012, x: W.x, zS: W.zS, zN: C.zS }];
+  walk.decks.push({ x0: -C.x, x1: C.x, z0: C.zN, z1: C.zS + 0.2, h: 0, floor: "paving" });
+
+  // The axis before the court (./axis.js): the way from the outer gate's place, the second terrace that the inner gate, the
+  // archway and the Wuliang hall stand on, the walls round both, and the places held for the monument pavilion and the lamp.
+  const ax = buildAxis(M, { C, W });
+  stone.push(...ax.stone); plaster.push(...ax.plaster);
+  for (const k of ["solids", "decks", "ramps", "posts", "roofs"]) walk[k].push(...ax.walk[k]);
+  shade[0].push(...ax.shade[0]); shade[1].push(...ax.shade[1]);
+  const paving = ax.paving;
 
   // The town's plain round the walls (the county is flat, SITE.md §4.1), laid outside the walls only: inside them is the paving.
-  const far = 3000, lift = 0.06, flat = (x0, x1, z0, z1) => earth.push(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(-Math.PI / 2).translate((x0 + x1) / 2, lift, (z0 + z1) / 2));
-  const cx = C.x + C.t / 2, cn = C.zN - C.t / 2, cs = C.zS + C.t / 2, wx = W.x + W.t / 2, ws = W.zS + W.t / 2;
-  flat(-far, far, -far, cn); flat(-far, -cx, cn, far); flat(cx, far, cn, far);
-  flat(-cx, -wx, cs, far); flat(wx, cx, cs, far); flat(-wx, wx, ws, far);
+  const lift = 0.06, flat = (x0, x1, z0, z1) => earth.push(new THREE.PlaneGeometry(x1 - x0, z1 - z0).rotateX(-Math.PI / 2).translate((x0 + x1) / 2, lift, (z0 + z1) / 2));
+  for (const r of ax.outside) flat(...r);
 
+  // The great hall's shell (./hall.js): its walls, timber, columns and roof, and what the written plan's walker is told of it.
+  const hall = buildHall(M), hp = hall.parts;
+  for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
+  const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
+  const shT = { ao: hall.timberShut };   // the timber overhead takes more of it (hall.js, TIMBER)
+  root.add(mesh(merge(hp.wood), M.woodX, shT), mesh(merge(hp.woodZ), M.woodZ, shT), mesh(merge(hp.frame), M.woodZ, shT), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
+    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shT), mesh(merge(hp.ridge), M.ridge));
+  shade[0].push(hall.box);
+  // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
+  // walls are painted (ART.md, phase two).
+  root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
+  // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
+  // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
+  // faces read eight to ten times the back wall, the art review of #481); their outer faces lie outside the shut box.
+  root.add(mesh(merge(hp.plaster), M.plaster(), sh));
+  // The altar, the seven on it with their attendants, and the two kings at its ends (./altar.js), all in the hall's shut-out sky.
+  const altar = buildAltar(), ap = altar.parts;
+  walk.posts.push(...altar.walk.posts);
+  // `?off=altar` leaves the altar, the figures, their halos and the kings undrawn (they are merged with the hall's own stone,
+  // plaster and wood, so the page's `?off=` cannot reach them): what they cost a frame, measured apart (#493). Still walked round.
+  const offAltar = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("altar");
+  if (!offAltar) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
+  const fills = hall.fill.map((/** @type {any[]} */ f) => {
+    const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
+    const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
+    l.position.set(x, y, z); l.userData.full = i; root.add(l);
+    if (l instanceof THREE.SpotLight && aim) { l.target.position.set(aim[0], aim[1], aim[2]); root.add(l.target); }
+    return l;
+  });
+  // Each frame (yard.js): the fill follows how far inside the eye is, eased, so that from the court the doorway stays dark
+  // and walking in the hall's timber comes up out of the dark over two or three seconds. A still picture takes it settled.
+  // (A jump of the eye, a door or a tool's pose, is a cut: it takes the light of where it lands at once.)
+  const lit = { k: 0, at: /** @type {number[] | null} */ (null) };
+  const tick = (dt, eye, still) => {
+    const want = hall.within(eye.x, eye.y, eye.z), cut = !lit.at || Math.hypot(eye.x - lit.at[0], eye.y - lit.at[1], eye.z - lit.at[2]) > 1.5;
+    lit.at = [eye.x, eye.y, eye.z];
+    lit.k = still || cut ? want : lit.k + (want - lit.k) * (1 - Math.exp(-dt / FILL.ease));
+    if (Math.abs(lit.k - want) < 1e-3) lit.k = want;
+    for (const l of fills) l.intensity = l.userData.full * lit.k;
+    return lit.k;
+  };
+
+  root.add(ax.group);
+  root.add(buildSurround(M, C));   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
+  // The old town's pagoda far to the west-south-west (./tower.js, #548 step two): a part of its own, left out by ?off=tower, nothing else reads it.
+  const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
+  if (!offTower) root.add(buildTower());
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
 
-  const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }];
+  const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }, { name: "大雄殿", ...hall.box, y: top }, ...ax.buildings];
   // Named views (shots.js draws each): the arrival, the two stations, and the court seen from the terrace.
   const views = {
     arrive: [ARRIVE[0], ARRIVE[1], 0, 0.05],
-    a: [STATION.A[0], STATION.A[1], 0, 0.19],          // SITE.md §5.1: a 50° lens raised 11° holds the platform to the ridge
-    b: [STATION.B[0], STATION.B[1], 0, 0.3],
+    a: [STATION.A[0], STATION.A[1], 0, 0.1],           // cam01: the whole front with its ridge, raised 6°
+    "a-tall": [0, 30, 0, 0.17],                        // cam01 for a picture held upright: nearer, the middle bays from the platform's foot to the ridge, raised 10° (ART-SPEC.md: an upright picture has its own camera, not a crop)
+    b: [STATION.B[0], STATION.B[1], 0, 0.244],         // cam02: out from the flight's foot, raised 14°: the steps, the platform over his head, the eave columns and the doors' dark
+    c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3). Its still is taken in third person (&view=third): the following eye, a few steps behind him, has the door's jambs at the picture's edges; from his own eyes in the doorway they are beside him (DECISIONS.md, 2026-11-21)
+    d: [STATION.D[0], STATION.D[1], -0.96, 0.09],      // down the east side, looking west across the hall (cam04's 305°)
+    e: [STATION.E[0], STATION.E[1], 0, 1.15],          // under the roof, raised 66° (cam05; the art director, #549: from 3 m further south the heads of the three keep to the picture's lowest 18%)
+    f: [STATION.F[0], STATION.F[1], 0, 0.17],
+    ...ax.views,
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
+    // Shakyamuni at the west end, from the worship band 9.9 m before him and a little east of his middle, raised to his lap: his left hand
+    // and his lotus seat are in view, which from the west aisle within 4.4 m of his middle his own right knee and arm hide (#370, #547).
+    // Nothing (an attendant, a king, a column) stands between the eye and his seat or his lap (t05-plan.test).
+    sakya: [-14.5, -7, -0.181, 0.4],
   };
+  // The seven fixed views of the handoff (docs/t05/PRD.md §3, docs/t05/camera-manifest.json written by tools/cameras.mjs): cam01–cam06 are the six
+  // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.
+  Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
-    root, walk, shade, closed: [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {},
-    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10],
+    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
+    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }
 

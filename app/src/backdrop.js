@@ -2,6 +2,7 @@
 import * as THREE from "three";
 import { NOISE, FOGLAYER, fogMix, U } from "./glsl.js";
 import { FOG } from "./sky.js";
+import { createFarTerrain } from "./terrain-far.js";
 
 const bambooMat = (seed, tone) => new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
@@ -46,7 +47,8 @@ function createEarth(scene, M, terrain) {
   const m = new THREE.Mesh(g, M.earth); m.receiveShadow = true; scene.add(m);
 }
 
-export function createBackdrop(scene, M, bounds, levels, terrain) {
+/** `far`: a heightmap to draw the far land from instead of the hill rings (#183's spike, ?terrain=dem|made); null keeps the rings. */
+export function createBackdrop(scene, M, bounds, levels, terrain, far = null) {
   createEarth(scene, M, terrain);
   const mats = [], hills = [], H = 17, FOOT = 10,   // the grove stands on the slope, so its foot goes ten metres under the lowest ground it meets
      X = bounds.x, zS = bounds.apron;
@@ -63,7 +65,9 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   const steps = [[zS + 14, bounds.fore, -13], [bounds.fore, L1.zS + 6, 0], [L1.zS + 6, L1.zN, L1.y - 0.4], [L1.zN, (L1.zN + L2.zS) / 2, L1.y + 1.2], [(L1.zN + L2.zS) / 2, L2.zS, L2.y - 2.2], [L2.zS, L2.zN - 16, L2.y + 0.6]];
   [[2.2, 1.0], [5.5, 0.82], [10, 0.62]].forEach(([o, tone], i) => {
     steps.forEach(([za, zb, base], k) => {
-      const x = (k >= 3 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
+      // The picture-cards are flat, and flat things do not bear looking at close: the wall hides them from the court, but from a hall's platform the
+      // eye is over the wall and a card 2 to 5 m beyond it shows its torn edge (#288). So the side bands stand 9 m out all along the courts.
+      const x = (k >= 1 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
       // Neighbouring runs of the grove overlap by a stride and each thins out over it, so no run ends in a cut and the two make one stand.
       const north = k < steps.length - 1 ? 11 : 0, south = k > 0 ? 11 : 0;
       band(x, zb - north, x, za + south, i + k * 3 + 1, tone, base + o * 0.09, [1, k === 0 ? 0 : 1]); band(-x, za + south, -x, zb - north, i + k * 3 + 20, tone, base + o * 0.09, [k === 0 ? 0 : 1, 1]);   // the south corner is closed by the band across it
@@ -71,9 +75,10 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
     band(X + o + 28, zS + o + 2, -X - o - 28, zS + o + 2, i + 40, tone, -19);
     band(-X - o - 14, L2.zN - 3 - o, X + o + 14, L2.zN - 3 - o, i + 50, tone, L2.y + 1.5 + o * 0.3, [1, 1]);
   });
+  const land = far && createFarTerrain(scene, far, terrain);
   // Five peaks stand round the temple, each range fainter than the one before.
   // The fourth ring, R190, is the skirt: it stands behind the grove's southern bands and goes down into the mist, so that an eye under the hills' feet sees wood and haze, not sky.
-  [[150, 54, 0.5, 0.5, -4], [190, 34, 3.3, 0.62, -140], [215, 78, 2.1, 0.74, -4], [300, 112, 4.4, 0.88, -4]].forEach(([R, Hm, ph, k, foot]) => {   // the nearest is the wooded hill the temple sits in
+  (far ? [] : [[150, 54, 0.5, 0.5, -4], [190, 34, 3.3, 0.62, -140], [215, 78, 2.1, 0.74, -4], [300, 112, 4.4, 0.88, -4]]).forEach(([R, Hm, ph, k, foot]) => {   // the nearest is the wooded hill the temple sits in
     const g = new THREE.CylinderGeometry(R, R, 1, foot < -4 ? 180 : 360, 1, true), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
       const a = Math.atan2(p.getZ(i), p.getX(i));
@@ -103,6 +108,7 @@ export function createBackdrop(scene, M, bounds, levels, terrain) {
   });
   return {
     update: (t) => { for (const m of mats) m.uniforms.uT.value = t; },
-    setMood(m) { hills.forEach((h) => { const k = h.uniforms.uK.value * (m.haze ?? 1), L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.uniforms.uTop.value.setRGB(c[0], c[1], c[2]); h.uniforms.uMist.value.setRGB(m.fog[0], m.fog[1], m.fog[2]); }); },
+    far: land || null,
+    setMood(m) { land?.setMood(m); hills.forEach((h) => { const k = h.uniforms.uK.value * (m.haze ?? 1), L = U.uLight.value, c = [L.r, L.g, L.b].map((l, j) => m.hills[j] * l * (1 - k) + m.fog[j] * k); h.uniforms.uTop.value.setRGB(c[0], c[1], c[2]); h.uniforms.uMist.value.setRGB(m.fog[0], m.fog[1], m.fog[2]); }); },
   };
 }

@@ -1,0 +1,578 @@
+{
+  "started": "2026-11-21T22:58:54.653Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "a",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 59.8,
+      "ms": 16.72,
+      "cost": 7.49,
+      "loadMs": 9113,
+      "tris": 197898,
+      "calls": 73,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 572,
+        "decodeMs": 137,
+        "prepareMs": 852,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 5039.4,
+        "spikes": [
+          5039,
+          118
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        44
+      ]
+    },
+    {
+      "view": "a",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "fps": 59.5,
+      "ms": 16.81,
+      "cost": 7.49,
+      "loadMs": 4810,
+      "tris": 197898,
+      "calls": 73,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 527,
+        "decodeMs": 145,
+        "prepareMs": 883,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 878.2,
+        "spikes": [
+          878
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        44
+      ]
+    },
+    {
+      "view": "cam07",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 54.5,
+      "ms": 18.35,
+      "cost": 8.35,
+      "loadMs": 8345,
+      "tris": 396086,
+      "calls": 127,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 540,
+        "decodeMs": 145,
+        "prepareMs": 882,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 1.6608428294915247,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 4372.2,
+        "spikes": [
+          4372,
+          115
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "cam07",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "fps": 54.3,
+      "ms": 18.42,
+      "cost": 8.63,
+      "loadMs": 5062,
+      "tris": 396086,
+      "calls": 127,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 587,
+        "decodeMs": 139,
+        "prepareMs": 855,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 1.6608428294915247,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1141,
+        "spikes": [
+          1141
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "a",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 59.4,
+      "ms": 16.84,
+      "cost": 8.22,
+      "loadMs": 4829,
+      "tris": 197898,
+      "calls": 73,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 544,
+        "decodeMs": 190,
+        "prepareMs": 885,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 843.7,
+        "spikes": [
+          844
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        44
+      ]
+    },
+    {
+      "view": "a",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "fps": 59.9,
+      "ms": 16.69,
+      "cost": 7.81,
+      "loadMs": 4773,
+      "tris": 197898,
+      "calls": 73,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 515,
+        "decodeMs": 168,
+        "prepareMs": 905,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 861.7,
+        "spikes": [
+          862
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        44
+      ]
+    },
+    {
+      "view": "cam07",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 53.4,
+      "ms": 18.73,
+      "cost": 8.19,
+      "loadMs": 5122,
+      "tris": 396086,
+      "calls": 127,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 551,
+        "decodeMs": 203,
+        "prepareMs": 911,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 1.6608428294915247,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1089.4,
+        "spikes": [
+          1089
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "cam07",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "as": "third",
+      "season": "summer",
+      "time": "day",
+      "fps": 55.2,
+      "ms": 18.12,
+      "cost": 8.29,
+      "loadMs": 5184,
+      "tris": 396086,
+      "calls": 127,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 123497,
+        "inflated": 29150000,
+        "fetchMs": 547,
+        "decodeMs": 207,
+        "prepareMs": 876,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 1.6608428294915247,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1194.7,
+        "spikes": [
+          1195
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "arrive-E-before.jpg",
+      "file": "arrive-E-before.jpg.png",
+      "tris": 268262,
+      "calls": 79
+    },
+    {
+      "name": "arrive-E-after.jpg",
+      "file": "arrive-E-after.jpg.png",
+      "tris": 268262,
+      "calls": 79
+    },
+    {
+      "name": "arrive-W-before.jpg",
+      "file": "arrive-W-before.jpg.png",
+      "tris": 268262,
+      "calls": 79
+    },
+    {
+      "name": "arrive-W-after.jpg",
+      "file": "arrive-W-after.jpg.png",
+      "tris": 268262,
+      "calls": 79
+    },
+    {
+      "name": "A-W-before.jpg",
+      "file": "A-W-before.jpg.png",
+      "tris": 264930,
+      "calls": 73
+    },
+    {
+      "name": "A-W-after.jpg",
+      "file": "A-W-after.jpg.png",
+      "tris": 264930,
+      "calls": 73
+    },
+    {
+      "name": "B-W-before.jpg",
+      "file": "B-W-before.jpg.png",
+      "tris": 116038,
+      "calls": 53
+    },
+    {
+      "name": "B-W-after.jpg",
+      "file": "B-W-after.jpg.png",
+      "tris": 116038,
+      "calls": 53
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "86b8a36ab71997a0dca305e4e8a1e8069c2971f4",
+    "entry": "assets/index-TaXAD8Hk.js",
+    "files": 368,
+    "sha256": "12f5558ae32c3f7e9dc421dc8254d0f409dae0f621d1d046730dcb7da80b5b08"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-21T23:02:04.960Z"
+}

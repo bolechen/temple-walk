@@ -1,0 +1,6 @@
+{
+ "how": "for each view, 31 x 31 rays (every 4 px) round the corner where the knee's head meets the wrist on the inner side (stage point (-1.5, 3.6, 1.5) projected), cast from the hall's camera (tools/out/pick-px.cjs) against the model; a ray whose first hit is a back face sees into the figure",
+ "drawn_60k_baked_build69": {"knee34-close": 63, "side3-left": 62, "side3-right": 0, "hand10": 2, "hand-level": 0, "rays_each": 961},
+ "full_resolution": {"knee34-close": {"build41": 106, "build59": 61, "build65": 31, "build69": 74}, "side3-left": {"build65": 41, "build66": 69, "build69": 69}},
+ "limit": 0
+}

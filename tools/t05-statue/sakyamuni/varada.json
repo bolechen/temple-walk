@@ -1,0 +1,462 @@
+{
+ "about": "Sakyamuni's right hand turned to the boon-granting gesture (与愿印) by grafting Sikhin's left hand, mirrored (issue #514; the 3D review's comment of 2026-11-21 and the T05 lead's four conditions). Stage frame of each figure: metres, x across (the figure's left at +x), y up from its seat, z toward the viewer; each figure stood at its height on its seat. tools/blender/varada.py reads this.",
+ "donor": {
+  "file": "tools/out/t05/tripo-six/sikhin-r3.glb",
+  "sha256": "a1224ee73752a4c36eb75f1fc6b4cd932443a2a0293ee903293471281494f057",
+  "height": 8.5,
+  "cut": {
+   "point": [
+    1.8,
+    4.45,
+    1.0
+   ],
+   "normal": [
+    0,
+    -1,
+    0
+   ],
+   "note": "just under the sleeve's edge, on the bare wrist (the sleeve is not carried over: Sakyamuni's right arm is bare)"
+  },
+  "keep": {
+   "min": [
+    1.63,
+    3.4,
+    0.4
+   ],
+   "max": [
+    2.55,
+    4.8,
+    1.42
+   ],
+   "whole": 0.8,
+   "part": 0.25,
+   "drop": [
+    [
+     [
+      1.6,
+      3.45,
+      0.3
+     ],
+     [
+      1.74,
+      3.85,
+      1.5
+     ]
+    ]
+   ],
+   "note": "drop: a scrap of the sleeve's lower edge beside the little finger (a scrap of the knee's robe under the fingertips is still on: it shares its place and a shell with the fingers)"
+  },
+  "weld": 0.002,
+  "note_sheet": "a test for single open sheets (to drop the robe scrap at the fingertips) was tried and left out: the palm itself is an open sheet on these shells, and went with it",
+  "scrap": [
+   [
+    [
+     0.64,
+     0.9
+    ],
+    [
+     -1,
+     1
+    ],
+    [
+     0.17,
+     1
+    ]
+   ],
+   [
+    [
+     0.6,
+     0.95
+    ],
+    [
+     0.2,
+     1
+    ],
+    [
+     -1,
+     1
+    ]
+   ]
+  ],
+  "note_scrap": "the robe scrap at the fingertips, read off the donor hand in its own frame (u 0.66-0.88 of its length, 0.13-0.30 m out on the palm side; and past the little finger's edge, v over 0.2)",
+  "fill_holes": 200,
+  "scrap_smooth": {
+   "r": 0.02,
+   "iterations": 6
+  }
+ },
+ "target": {
+  "file": "tools/out/t05/tripo-370/sakyamuni-f1.glb",
+  "sha256": "61f5a1808e53ddec0edb2e253c2305270ae25bcb5ddbe95997ebd7fc2c8d16f8",
+  "height": 8.2,
+  "wrist": [
+   -1.72,
+   3.92,
+   1.38
+  ],
+  "fingertips": [
+   -1.77,
+   3.02,
+   1.99
+  ],
+  "palm": [
+   0,
+   0,
+   1
+  ],
+  "scale": 0.97,
+  "turn_deg": 5,
+  "lift": 0.0,
+  "overlap": 0.09,
+  "note": "the forearm lies almost level along the thigh to the wrist at about (−1.72, 3.93, 1.2); the hand hangs from it over the knee, angled forward as Sikhin's is",
+  "note_face": "the face-processed Sakyamuni (f1: closed eyes, lips forward -0.072, head bowed 10 degrees; #463), so the hand goes onto the face the hall will show",
+  "taper": {
+   "length": 0.05,
+   "to": 0.87
+  },
+  "pose": {
+   "wrist": [
+    -1.72,
+    3.96,
+    1.62
+   ],
+   "pitch_deg": -5,
+   "bend_deg": 0,
+   "u0": 0.4,
+   "u1": 0.6,
+   "turn_deg": 5,
+   "scale": 0.97,
+   "note": "the wrist stands at wrist0 carried forward by as much as lays the back of the hand 2 mm off the knee (solved in the run, the arm carried the same); pitch 0 here measures about +10° on the palm's plane (wrist, index root, little root), fingers about 15° from vertical",
+   "wrist0": [
+    -1.72,
+    3.96,
+    1.38
+   ],
+   "solve": {
+    "gap": 0.002,
+    "below": 3.5,
+    "palm_only": true,
+    "bend_range": [
+     -25,
+     35
+    ],
+    "tip_gap": 0.01,
+    "palm_u": 0.55
+   },
+   "note_bend": "the fingers bend from the knuckles toward the back of the hand (negative), following the knee down past its fullest point (the 3D review's 2026-11-21 correction: knuckles ≤ 25° toward the back); the palm (wrist to knuckles, the first 40%) is not bent",
+   "note_section": "the hand's wrist and the forearm's end are both wider across (x) than deep: their flat sides are met at 0°, not turned 180° (the 3D review)",
+   "trim": 0.0,
+   "wrap": {
+    "length": 0.2,
+    "sink": 0.008,
+    "reach": 0.6
+   },
+   "note_wrist": "the forearm lies level and the hand hangs from it, so at the wrist the forearm's end stands upright and the hand's opening lies level: the forearm is kept on to the palm's face (cut 0.18 m past the wrist) and the hand's top, which stands above the forearm, is drawn down onto it (wrap)",
+   "cap_top": 0.1
+  }
+ },
+ "knee": {
+  "mode": "surface",
+  "box": [
+   [
+    -2.32,
+    2.38,
+    0.8
+   ],
+   [
+    -1.32,
+    3.62,
+    2.6
+   ]
+  ],
+  "zmin": 0.3,
+  "cell": 0.008,
+  "head": 0.35,
+  "ringW": 0.12,
+  "smooth": 50.0,
+  "note": "round 2: the old hand pressed into the knee it lay on (the box seen from the front; its head stops under the old wrist, which the new hand covers); the knee's front is the left knee's mirrored front corrected to meet the right knee round the box's sides and foot",
+  "behind": 0.08,
+  "skirt": 0.06,
+  "tuck": 0.002,
+  "grid": 0.015,
+  "island": 50,
+  "neighbors": 200,
+  "slope": 3.0,
+  "cylinder": {
+   "x": -1.8,
+   "z": 0.95,
+   "r0": 0.7,
+   "deg": [
+    -48,
+    30
+   ]
+  },
+  "front": 0.004,
+  "useLeft": false,
+  "poly": 2,
+  "clamp": false,
+  "blur": 0.25,
+  "inset": 0.3,
+  "ease": 0.15,
+  "edgeBlur": 0.025,
+  "note_inset": "the knee's front under the old hand set back to where the left knee's front stands mirrored (z about 1.42 at y 3.4, as the reviewed round 1 had it): the old hand's back blurred stands about 0.3 m before it there",
+  "note_edges": "inner edge at 30 degrees (22 left the old hand's right strip standing and the hand was solved 0.47 m out); foot at y 2.38 so the old fingertips on the lotus's rim go with the old hand",
+  "note_ease": "the setting back eases in over 15 cm from the box's sides and foot (6 cm left a steep lit wall at the inner edge, read as a bright strip beside the little finger)",
+  "innerToOutside": true,
+  "innerOut": 0.004,
+  "innerRay": true,
+  "outerRay": true,
+  "insetMask": {
+   "blur": 0.3,
+   "thr": 0.06,
+   "soft": 0.05
+  },
+  "skirtUnder": 0.004
+ },
+ "knee_r1": {
+  "box": [
+   [
+    -2.25,
+    2.42,
+    1.25
+   ],
+   [
+    -1.38,
+    3.98,
+    2.4
+   ]
+  ],
+  "ease": 0.12,
+  "margin": 0.1,
+  "note": "the old hand's place on the right knee: from the wrist down to the lotus, in front of the knee",
+  "relax": 40,
+  "weld": 0.002,
+  "island": 50,
+  "seamSmooth": 20
+ },
+ "arm": {
+  "pivot": [
+   -1.5,
+   5.95,
+   -0.85
+  ],
+  "elbow": [
+   -1.65,
+   4.15,
+   -0.45
+  ],
+  "shift": 0.24,
+  "axis_pts": [
+   [
+    -1.65,
+    4.1,
+    -0.3
+   ],
+   [
+    -1.85,
+    3.97,
+    0.6
+   ],
+   [
+    -1.72,
+    3.83,
+    1.3
+   ],
+   [
+    -1.74,
+    3.8,
+    1.65
+   ]
+  ],
+  "tube": [
+   0.3,
+   0.25
+  ],
+  "inner_x": -1.27,
+  "inner_band": 0.08,
+  "shoulder": [
+   5.7,
+   5.2
+  ],
+  "elbow_blend": [
+   -0.5,
+   -0.2
+  ],
+  "cut_ymax": 4.1,
+  "note": "the shoulder's centre and the elbow read from sections of f1 (y 5.9: x -1.58..-1.25, z -1.25..-0.46; the forearm a round tube 0.2-0.25 m across lying on the thigh from z -0.3 to 1.45)",
+  "upper_axis": [
+   [
+    -1.5,
+    5.95,
+    -0.85
+   ],
+   [
+    -1.65,
+    4.15,
+    -0.45
+   ]
+  ],
+  "upper_tube": [
+   0.36,
+   0.55
+  ],
+  "slack": 1.4,
+  "facing": 0.2,
+  "stretch": 3.0,
+  "cut_dz": 0.18,
+  "cut_below_y": 3.64,
+  "cap": false,
+  "stretch_below_y": -9.0,
+  "note_round2": "stretched faces under the forearm kept (deleting them opened a 3-5 cm seam on the thigh); the shoulder's band lowered to 5.7-5.2 m so its top in the front outline keeps within 1 cm",
+  "stretch_near_wrist": 0.3,
+  "ylock": [
+   5.35,
+   4.85
+  ],
+  "cap_under": true,
+  "cap_under_x": [
+   -1.65,
+   -1.3
+  ],
+  "lining": {
+   "min": [
+    -2.25,
+    3.45,
+    0.3
+   ],
+   "max": [
+    -1.25,
+    4.05,
+    1.9
+   ],
+   "depth": 0.005
+  }
+ },
+ "cleanup": {
+  "island": 50,
+  "pad": 0.0,
+  "weld": 1e-05,
+  "note": "done on the exported file by tools/blender/varada-tidy.py, read as the measure reads it; the Blender pass took scraps of the hand's own surface (black specks in the views) and is off. The face-processed figure already has four two-face pieces in the knee box from the generator",
+  "hand": false,
+  "zmin": 1.0,
+  "blender": false,
+  "lining_box": [
+   [
+    -1.7,
+    3.4,
+    1.0
+   ],
+   [
+    -1.25,
+    3.85,
+    1.75
+   ]
+  ],
+  "lining_depth": 0.005,
+  "lining_face": [
+   0.6,
+   -0.2,
+   0.77
+  ],
+  "fill_blobs": [
+   [
+    [
+     -1.48,
+     3.595,
+     1.46
+    ],
+    [
+     0.075,
+     0.045,
+     0.07
+    ]
+   ],
+   [
+    [
+     -1.41,
+     3.595,
+     1.4
+    ],
+    [
+     0.03,
+     0.03,
+     0.03
+    ]
+   ],
+   [
+    [
+     -1.55,
+     3.565,
+     1.43
+    ],
+    [
+     0.03,
+     0.025,
+     0.03
+    ]
+   ],
+   [
+    [
+     -1.42,
+     3.64,
+     1.67
+    ],
+    [
+     0.025,
+     0.025,
+     0.025
+    ]
+   ]
+  ]
+ },
+ "remesh_trial": {
+  "box": [
+   [
+    -2.12,
+    3.45,
+    1.15
+   ],
+   [
+    -1.36,
+    3.72,
+    1.75
+   ]
+  ],
+  "margin": 0.015,
+  "voxel": 0.0015,
+  "shell": 0.003,
+  "close": 0.012,
+  "hand_clear": 0.0015,
+  "snap": 0.006,
+  "note": "trial of 2026-11-21 (the T05 lead's ruling: local remesh, one attempt), not part of the build: tools/blender/varada-remesh.py run after varada-tidy.py on build 81's geometry without its linings, fans and fills; it failed (docs/t05/evidence/514-r2-d/), so the build stays build 81"
+ },
+ "fold_trial": {
+  "note": "the fold of #514's planned next step, tried once on 2026-11-22 (the T05 lead and the overall lead, option A), not part of the build: on build 81 without its fills, a skirt from the forearm's open edge to the thigh (arm.skirt) and then one piece hung across the forearm's open underside (arm.bridge); neither closed the opening (docs/t05/evidence/514-r2-e/), so the build stays build 81",
+  "skirt": {
+   "x": [
+    -2.25,
+    -1.3
+   ],
+   "band": 0.15,
+   "max_drop": 0.5,
+   "tuck": 0.004,
+   "rows": 12,
+   "bulge": 0.4,
+   "down": 0.6,
+   "out": 0.01,
+   "min_run": 6
+  },
+  "bridge": {
+   "z": [
+    0.6,
+    null
+   ],
+   "band": 0.15,
+   "step": 0.015,
+   "segs": 12,
+   "sag": 0.25,
+   "tuck": 0.005,
+   "hang": "top"
+  }
+ }
+}

@@ -4,7 +4,8 @@ import "./dom-stub.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { LEVELS as KNOWN, DEFAULT_LEVEL, levelOf, loadLevel } from "../../app/src/level.js";
+import { LEVELS as KNOWN, DEFAULT_LEVEL, PLACES, levelOf, loadLevel } from "../../app/src/level.js";
+import { WORKBENCH_LEVELS } from "../../app/src/bench.js";
 import { SITE, LEVELS, APPROACH, SCREEN, GROVE, terrain, buildSite, createWalker } from "../../app/src/site.js";
 import { zoneBounds } from "../../app/src/score.js";
 
@@ -45,4 +46,31 @@ test("the prologue's level says what its plan says", async () => {
   // The bamboo's sound, as yard.js worked it out before (#369): deepest on the way up, a little beyond the tea, faint in the courts.
   const before = (z) => (z > SITE.fore - 6 ? Math.min(1, (z - SITE.fore + 6) / 10) : z < LEVELS[1].zN ? 0.55 : 0.12);
   for (let z = SITE.zN - 10; z <= APPROACH.end + 10; z += 0.5) assert.equal(L.groveSound(0, z), before(z), `z = ${z}`);
+});
+
+// 行脚图 (#449): the map names a level by its region only, and cuts its seal with two characters.
+test("every level the page lists has a name on the map: a region, never a town, and a seal of two characters", () => {
+  // (every level but the workbench's own: the probe level, S7, is no temple and has no name on the map)
+  assert.deepEqual(Object.keys(PLACES).sort(), Object.keys(KNOWN).filter((id) => !WORKBENCH_LEVELS.includes(id)).sort());
+  for (const [id, p] of Object.entries(PLACES)) {
+    assert.match(p.region, /^[\u4e00-\u9fff]{2,4}$/, `${id}: a region in a few characters`);
+    assert.doesNotMatch(p.region, /杭州|余杭|径山|径山镇|义县|锦州|[市县区镇乡村寺]/, `${id}: a region, not a town or a temple: ${p.region}`);
+    assert.match(p.seal, /^[\u4e00-\u9fff]{2}$/, `${id}: a seal of two characters`);
+  }
+});
+
+// T05's written plan is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): edges on it finds the novice up to 38 cm inside
+// the gate's iron and the Wuliang passage's jambs, which the baked floor keeps him clear of. So that plan is no floor to walk on.
+test("T05 says it keeps no written plan to walk on; the prologue keeps its own", async () => {
+  assert.equal((await loadLevel("t05")).writtenPlan, false);
+  assert.notEqual((await loadLevel(DEFAULT_LEVEL)).writtenPlan, false);
+});
+
+test("?walker=old is refused for a level that keeps no written plan, and still taken for one that does", async () => {
+  const { walkerMode } = await import("../../app/src/gridwalker.js");
+  const t05 = await loadLevel("t05"), t00 = await loadLevel(DEFAULT_LEVEL);
+  assert.equal(walkerMode("old", t05), "mesh");
+  assert.equal(walkerMode(null, t05), "mesh");
+  assert.equal(walkerMode("old", t00), "old");
+  assert.equal(walkerMode("old"), "old");
 });

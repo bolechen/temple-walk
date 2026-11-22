@@ -54,11 +54,12 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 发版前要看全量时：Actions → **End to end, every scenario** → Run workflow，选 `runner`。
 
 - `github`（默认，夜间也是它）：十二台免费机器，软件渲染，按各场景上次实测的时间分片（`tests/e2e/shards.cjs`）。
-- `t4`：四个 Hugging Face Job，每个一块 T4，Chromium 经 Vulkan 用显卡画。流程：`t4-pack` 建站并连检出一起打成一个包；`t4` 四片各把包传到私有桶 `<账号>/temple-walk-e2e` 的 `runs/<运行>/`，起 Job 跑 `tools/ci/t4-job.sh`（解包、`pnpm install`、`tests/e2e/run.cjs --shard=i/4`），等它结束，把报告、截图、Job 日志取回作为 artifact `e2e-t4-<片>-…`，再从桶里删掉这一次的文件；`t4-checks` 在免费机器上并行跑 shard 1 通常先跑的解析、类型、单测和 `edges`。运行摘要里有每片的显卡型号和各场景耗时。
+- `t4`：十个 Hugging Face Job，每个一块 T4，Chromium 经 Vulkan 用显卡画。流程：`t4-pack` 建站并连检出一起打成一个包；`t4` 十片各把包传到私有桶 `<账号>/temple-walk-e2e` 的 `runs/<运行>/`，起 Job 跑 `tools/ci/t4-job.sh`（解包、`pnpm install`、`tests/e2e/run.cjs --shard=i/10`），等它结束，把报告、截图、Job 日志取回作为 artifact `e2e-t4-<片>-…`，再从桶里删掉这一次的文件；`t4-checks` 在免费机器上并行跑 shard 1 通常先跑的解析、类型、单测和 `edges`。运行摘要里有每片的显卡型号和各场景耗时。
 - 红的情况都是真红：没有 `HF_TOKEN`、Job 起不来、报错、超时、被取消、没带回报告、场景不过，都让那一片失败，日志第一行附近有 Job 的地址（`https://huggingface.co/jobs/<账号>/<id>`）。浏览器若退回软件渲染（`SwiftShader`/`llvmpipe`），`run.cjs` 直接退出码 3：T4 的运行不会是披着 T4 名字的免费机器运行。取消这次运行会取消 Job，不会留着显卡计费。
 - 密钥：仓库 secret `HF_TOKEN`（只给这个 workflow，需要有建桶和跑 Job 的权限；Settings → Secrets and variables → Actions 里加，值不进任何日志或文件）。只在 `t4` 的启动那一步读取。这个 workflow 没有 `pull_request` 触发，所以 PR（包括外部 fork 的 PR）碰不到它；手动触发只有有写权限的人能做。
-- 费用：T4 约 0.4 美元每小时，四个 Job 各按墙钟计，一次全量按每片约 15 分钟算，约 0.4 美元。夜间默认用哪个，等 T4 与免费机器的对比（结果是否一致、墙钟时间）出来后由所有者定。
-- 本地试一片：`HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/4`（或直接写场景名）；没有显卡的 CPU 规格上试流程：`T4_GPU=0 T4_FLAVOR=cpu-performance tools/ci/t4-launch.sh boot`。`tests/unit/t4-run.test.mjs` 守着触发条件、密钥只在一处读取、启动器的各种失败。
+- 费用：T4 约 0.4 美元每小时，十个 Job 各按墙钟计（含启动），一次全量约 13 分钟墙钟、约 0.8 美元（所有者 2026-11-22：「分 10 片可以接受」；四片时实测 30.9 分钟、约 0.58 美元）。只在手动触发时用，夜间照旧走免费机器；单次超过 1 美元先问所有者。
+- 等 Job 结束用自己的慢轮询（每 30 秒问一次 `hf jobs inspect`，各片错开几秒；答不出阶段，比如 429，就再问，不当成结束），不用 `hf jobs wait`：它约每秒问一次接口，十片一起等就用完账号每五分钟 2500 次的额度，十个启动器全死在 429 上，而 Job 自己都跑完了（2026-11-22，run 44967166241）。
+- 本地试一片：`HF_TOKEN=… tools/ci/t4-launch.sh --shard=2/10`（或直接写场景名）；没有显卡的 CPU 规格上试流程：`T4_GPU=0 T4_FLAVOR=cpu-performance tools/ci/t4-launch.sh boot`。`tests/unit/t4-run.test.mjs` 守着触发条件、密钥只在一处读取、启动器的各种失败。
 
 ## 出事先回滚，再修
 
@@ -83,7 +84,7 @@ workflow将`contents: write`、`issues: write`、`pull-requests: write`限制在
 | 发布 | 只经 CI：`pages.yml` 的 `deploy`（canary）和 `deploy-tag.yml` 照旧执行 `wrangler deploy -c wrangler.<target>.jsonc`，两处的稀疏检出加了 `worker/`；`pages.yml` 多一个 `worker` 作业（上面的本地冒烟），列入 `verify` |
 | 首次部署要注意 | 迁移 `v1` 会在第一次 `wrangler deploy` 时创建 Durable Object；`CLOUDFLARE_API_TOKEN` 要有 Workers Scripts 编辑权限（Durable Object 迁移随脚本一起提交，不另需权限；这一点未在本账号上实测，第一次发 canary 时看 `deploy` 作业的输出）；账号要是 Workers Paid（免费档每天 10 万请求，见下） |
 | 回滚 | 回滚某个标签会把脚本也回到那个标签的版本；计数表不随版本变，旧页面读不到接口时静默。要整个关掉：把页面的 `presenceOn` 返回 false（下一版），或在 Cloudflare 里给 `/api/*` 加一条自定义规则拦截，页面静默 |
-| 可选的边缘限流 | 脚本里的限流是按地点的总量桶加每日上限，不认人（trace-core.js 注释）。想要按来源地址的限流，在 Cloudflare 控制台给 `/api/trace` 加一条速率限制规则（它在边缘自己计数，我们的代码和库里不存任何地址），这要账号权限，CI 做不了，所以只作为可选项 |
+| 边缘限流（已配，2026-11-21） | 脚本里的限流按地点的总量桶加每日上限，不认人（见 trace-core.js 的注释）。按来源地址的限流放在 Cloudflare 边缘：免费档只能有一条速率限制规则，已经用掉了，所有者 2026-11-21 把 `/api/trace` 加进了这条规则的路径列表，阈值同为**每个 IP 每 10 秒 10 次**。计数在边缘做，我们的代码和数据库都不存地址。页面上每一处、每一种只报一次（`presence.js` 的 `report`），一次访问最多十几次，分散在几分钟里，远低于阈值；风险是同一个出口 IP 背后的许多人（公司网络、运营商 NAT）可能被一起限住，被限的请求页面静默处理。规则由所有者在控制台维护，CI 和会话都不碰 Cloudflare；要改阈值或删规则，先在这里记下。独立评审 SEC-01 的验收（同一来源连发 200 次后被边缘拦下）由评审在正式站上复测 规则在 `http_ratelimit` 入口规则集里，名为 “Rate limit /api/book-view, /api/md, /mcp and /api/trace per IP”，按 IP 加机房计数，超限拦 10 秒回 429；它与主站的 `/api/book-view`、`/api/md`、`/mcp` 共用阈值，改它会影响主站。只限写，不限读（`/api/traces` 有边缘缓存）。canary 在 workers.dev 上，不在这个 zone，没有这条规则。**尚未验证**：配好当天正式站还是 v0.6.0，没有这段脚本，`/api/trace` 是静态 404，连发 15 次没有 429（主站的 `/api/md` 照常 429）；规则设了 `requests_to_origin`，只数到达源站的请求，静态资源的 404 可能不算。带 #346 的版本发到正式站后，用不计数的 GET 先验一次：`for i in $(seq 1 15); do curl -s -o /dev/null -w '%{http_code} ' https://temple.rushiwowen.co/api/trace; done`，前 10 次应是 405，之后应是 429；仍全是 405 就要由所有者在控制台看这条规则的事件 |
 
 **成本，按每日 10 万次访问估一次**（单价取自 2026-11-20 读到的 developers.cloudflare.com 的 Workers 与 Durable Objects 定价页，三个月后重读）：每次访问约 1 次读（页面进入时读当日）加平均 4 次报告（钟、香、茶、句、井、灯、坐、印，每处每页一次，多数访客做不到一半）≈ 50 万次脚本请求一天 ≈ 1500 万一月。
 - Workers 请求：含 1000 万/月，超出 $0.30/百万 → (1500−1000)/100 × 0.30 ≈ **$1.5**；CPU 每次几毫秒，在含 3000 万 CPU 毫秒以内。

@@ -46,18 +46,18 @@ test("the bell's log is drawn back, touches the bronze and goes no further, and 
 test("every cushion and every stool is a seat, and he can come within a step or two of each", () => {
   const all = [...site.seats, ...rooms.seats]; assert.ok(all.length >= 30, `only ${all.length} seats`);
   for (const id of ["main", "chan", "tea", "library", "yaoshi", "guanyin", "dahui", "lingxiao"]) assert.ok(rooms.seats.some((s) => s.room === id), `nothing to sit on in ${id}`);
-  assert.equal(site.seats.filter((s) => s.room === null).length, 8, "out of doors: three stools, the summit mat and the four cushions of the tea house porch");
+  assert.equal(site.seats.filter((s) => s.room === null).length, 12, "out of doors: three stools, the summit mat, the four cushions of the tea house porch and the four seats of the path pavilions' benches (#479)");
   for (const [x, z] of site.drawnSeats) assert.ok(site.seats.some((q) => q.room === null && Math.hypot(q.at[0] - x, q.at[1] - z) < 0.05), `a cushion or stool is drawn at (${x.toFixed(2)}, ${z.toFixed(2)}) and is no seat`);   // #144: drawn and walked round, but nothing to sit on
   // How he sits follows what the seat is: on a stool as on a chair, on a cushion cross-legged. A stool stands at a grown
   // man's sitting height, a cushion low.
-  assert.deepEqual(site.seats.filter((s) => s.room === null).map((s) => s.kind), ["stool", "stool", "stool", "cushion", "cushion", "cushion", "cushion", "cushion"]);
+  assert.deepEqual(site.seats.filter((s) => s.room === null).map((s) => s.kind), ["stool", "stool", "stool", "cushion", "stool", "stool", "stool", "stool", "cushion", "cushion", "cushion", "cushion"]);
   assert.ok(rooms.seats.some((s) => s.kind === "stool") && rooms.seats.some((s) => s.kind === "cushion"), "the rooms have stools and cushions");
   for (const s of all) {
     assert.ok(s.kind === "stool" || s.kind === "cushion", `a seat in ${s.room || "the open"} of no kind (${s.kind})`);
     walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
     const floor = s.room ? rooms.rooms[s.room].room.y : walker.heightAt(s.at[0] + 0.45, s.at[1]), h = s.top - floor;   // beside it: the summit mat is itself a floor, walked onto
     const onBench = s.room === "chan" && Math.abs(h - 0.104 - 0.42) < 0.02;   // the meditation hall's cushions lie on its long platforms
-    assert.ok(s.kind === "stool" ? h > 0.4 && h < 0.5 : (h > 0.08 && h < 0.13) || onBench, `a ${s.kind} ${h.toFixed(2)} m high in ${s.room || "the open"}`);
+    assert.ok(s.kind === "stool" ? (s.pavilion ? h > 0.55 && h < 0.62 : h > 0.4 && h < 0.5) : (h > 0.08 && h < 0.13) || onBench, `a ${s.kind} ${h.toFixed(2)} m high in ${s.room || "the open"}`);
   }
   for (const s of all) {
     walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
