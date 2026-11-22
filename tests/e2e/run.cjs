@@ -2963,7 +2963,8 @@ const scenarios = {
   // next frames, not crawling there from where it stood at PUSH.move a frame. (Up and down the stair itself: `loft`. The
   // menu's 回到起点 is #588's.) It asks only where the eye is, so the place is not drawn.
   "eye-jumps": { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&view=third&up=lingxiao&seals=all" + BARE);
+    // (?seals= is the workbench's, which a page on 127.0.0.1 is not: the bell's seal is written into the book before the page opens)
+    const t = await open(b, base, "q=low&view=third&up=lingxiao" + BARE, { init: () => { try { const now = Date.now(); localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: now - 6e5, seals: { bell: now - 3e5 }, strikes: 3, rings: 0, seen: [] })); } catch {} } });
     const eye = async (what, near) => { await t.frames(3); const p = await t.probe(); expect(p.camDist < near && !p.pushing, `${what}: the eye should be with him (within ${near} m), not on its way from where it stood: ${JSON.stringify({ camDist: p.camDist, pushing: p.pushing, view: p.view, cam: p.cam })}`); return p.camDist; };
     const seen = {};
     await t.frames(10); seen.start = await eye("begun up on the balcony", 1);
