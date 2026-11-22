@@ -2929,6 +2929,29 @@ const scenarios = {
     console.log("    push", JSON.stringify({ into, out }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // #587: wherever he is moved while the view changes (up and down the summit pavilion's stair, off the balcony by a seal
+  // in the book or a named view, a move while the eye is still being pushed into his eyes), the eye is with him the
+  // next frames, not crawling there from where it stood at PUSH.move a frame. (Up and down the stair itself: `loft`. The
+  // menu's 回到起点 is #588's.) It asks only where the eye is, so the place is not drawn.
+  "eye-jumps": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&view=third&up=lingxiao&seals=all" + BARE);
+    const eye = async (what, near) => { await t.frames(3); const p = await t.probe(); expect(p.camDist < near && !p.pushing, `${what}: the eye should be with him (within ${near} m), not on its way from where it stood: ${JSON.stringify({ camDist: p.camDist, pushing: p.pushing, view: p.view, cam: p.cam })}`); return p.camDist; };
+    const seen = {};
+    await t.frames(10); seen.start = await eye("begun up on the balcony", 1);
+    // Off the balcony by a seal in the book (travel): down to the bell, behind him again.
+    await t.page.evaluate(() => window.__goBack("bell")); await t.until(async () => !(await t.state()).up && !(await t.page.evaluate(() => document.getElementById("veil").className)), 60000, "the seal never took him off the balcony");
+    seen.travel = await eye("off the balcony to the bell", 12);
+    // Up again by a named view (__show), and off it again by another.
+    await t.page.evaluate(() => window.__show("loft")); await t.until(async () => (await t.state()).up === "lingxiao", 30000, "the named view did not take him up");
+    seen.showUp = await eye("up to the balcony by its named view", 1);
+    await t.page.evaluate(() => window.__show("court")); await t.until(async () => !(await t.state()).up, 30000, "the named view did not take him down");
+    seen.showDown = await eye("down to the court by a named view", 12);
+    // Into his own eyes (V) and, while the eye is still on its way, moved two hundred metres off: there, not crawling.
+    await t.page.keyboard.press("v"); await t.frames(1); await t.page.evaluate(() => window.__pose(0, -110, 0, 0));
+    seen.poseMidPush = await eye("moved while going into his eyes", 1);
+    console.log("    eye-jumps", JSON.stringify(seen));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   views: { tier: 2, async run(b, base) {
     // `devpose` and `debug` are working aids (src/devpose.js, src/debug.js): the published site must neither show them
     // nor touch the address (the panel opens only on the dev server and a pull request's preview).
