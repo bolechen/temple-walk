@@ -3905,16 +3905,21 @@ const scenarios = {
     for (const l of ["en", "ja", "ko"]) { const m = (await import(pathToFileURL(path.join(__dirname, "../../app/locales", l + ".js")).href)).default; said[l] = Object.fromEntries(words.map((w) => [w, m[w] || w])); }
     for (const lang of ["zh", "en", "ja", "ko"]) for (const [w, h] of [[360, 640], [390, 844], [844, 390], [430, 932]]) {
       const t = await open(b, base, `q=low&lang=${lang}` + BARE, { viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
-      const r = await t.page.evaluate((said) => {
-        const real = document.getElementById("act"), out = [];
+      const mb = (await t.page.evaluate(() => window.__probe())).monkBox;
+      const r = await t.page.evaluate(([said, mb]) => {
+        const real = document.getElementById("act"), out = [], GAP = 8;
+        // how far apart two boxes are: the larger of the gaps along either axis (negative: they lie on each other, by that much)
+        const gap = (a, q) => Math.max(a.left - q.right, q.left - a.right, a.top - q.bottom, q.top - a.bottom);
+        const others = [["stick", "#stick"], ["jump ring", "#jumpBtn"], ["turn ring", "#turnBtn"]].map(([n, sel]) => [n, document.querySelector(sel)]).filter(([, e]) => e && getComputedStyle(e).display !== "none").map(([n, e]) => [n, e.getBoundingClientRect()]);
+        if (mb) others.push(["figure", { left: mb[0], top: mb[1], right: mb[0] + mb[2], bottom: mb[1] + mb[3] }]);
         for (const [zh, label] of Object.entries(said)) {
           const c = real.cloneNode(false); c.hidden = false; c.removeAttribute("data-word"); c.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${label}</span>`; real.after(c);
           const a = c.getBoundingClientRect();
-          for (const id of ["jumpBtn", "turnBtn"]) { const e = document.getElementById(id); if (!e || getComputedStyle(e).display === "none") continue; const q = e.getBoundingClientRect(), ww = Math.min(a.right, q.right) - Math.max(a.left, q.left), hh = Math.min(a.bottom, q.bottom) - Math.max(a.top, q.top); if (ww > 1 && hh > 1) out.push(`「${label}」 (${Math.round(a.left)}..${Math.round(a.right)}) lies on ${id} by ${Math.round(ww)}x${Math.round(hh)}`); }
+          for (const [n, q] of others) { const g = gap(a, q); if (g < GAP) out.push(`「${label}」 (${Math.round(a.left)}..${Math.round(a.right)}, ${Math.round(a.top)}..${Math.round(a.bottom)}) is ${Math.round(g)} px from the ${n}`); }
           if (a.left < 0 || a.right > innerWidth) out.push(`「${label}」 runs off the screen (${Math.round(a.left)}..${Math.round(a.right)} of ${innerWidth})`);
           c.remove();
         }
-        return out; }, said[lang]);
+        return out; }, [said[lang], mb]);
       expect(r.length === 0, `in ${lang} at ${w}x${h}: ${r.join("; ")}`);
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
