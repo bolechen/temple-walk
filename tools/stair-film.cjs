@@ -4,11 +4,13 @@
 // following camera and, from his right, a side view are saved. TEMPLE_SITE names the built site: main's for `before`.
 //
 //   TEMPLE_SITE=<main dist> node tools/stair-film.cjs --label=before --out=tools/out/stair-film
-//   node tools/stair-film.cjs --label=after --out=tools/out/stair-film [--places=hill,hall,summit] [--secs=6]
+//   node tools/stair-film.cjs --label=after --out=tools/out/stair-film [--places=hill,hall,summit] [--secs=6] [--body=code|sculpt] [--views=side,top,back,low] [--w=400 --h=260]   (the default body is Tripo's, #163)
+// Views besides the following camera (#163, the third art review's): `side` from his right; `top` from before him and
+// above, looking down at his hips; `back` from behind and above; `low` from before him at knee height.
 const { serve, launch } = require("../tests/e2e/lib.cjs");
 const fs = require("fs"), path = require("path");
 const arg = (k, d) => { const a = process.argv.find((s) => s.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
-const label = arg("label", "after"), out = path.resolve(arg("out", "tools/out/stair-film")), secs = +arg("secs", 6), only = arg("places", "hill,hall,summit").split(",");
+const views = arg("views", "side").split(","), body = arg("body", ""), label = arg("label", "after"), out = path.resolve(arg("out", "tools/out/stair-film")), secs = +arg("secs", 6), only = arg("places", "hill,hall,summit").split(",");
 // The three flights, from the plan's ramps (tools/…: low and high ends, north is -z): the first of the mountain path,
 // the steps before the great hall, the long flight under the summit pavilion.
 const PLACES = {
@@ -19,7 +21,7 @@ const PLACES = {
 const STEP = 1000 / 30, EVERY = 4;
 (async () => {
   const { base, close } = await serve(), b = await launch();
-  const ctx = await b.newContext({ viewport: { width: 400, height: 260 }, deviceScaleFactor: 1, locale: "zh-CN" }), p = await ctx.newPage(), errors = [];
+  const ctx = await b.newContext({ viewport: { width: +arg("w", 400), height: +arg("h", 260) }, deviceScaleFactor: 1, locale: "zh-CN" }), p = await ctx.newPage(), errors = [];
   p.on("pageerror", (e) => errors.push(String(e))); p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errors.push(m.text()));
   await p.addInitScript(() => {
     let now = 0, cbs = []; performance.now = () => now;
@@ -27,7 +29,7 @@ const STEP = 1000 / 30, EVERY = 4;
     window.__step = (ms) => { now += ms; const c = cbs; cbs = []; for (const f of c) f(now); };
     window.__auto = setInterval(() => window.__step(33.3), 40);   // until the place is up; then the script steps it
   });
-  await p.goto(`${base}?enter&q=low&season=summer&time=day&view=third&debug=0`, { waitUntil: "commit", timeout: 120000 });
+  await p.goto(`${base}?enter&q=low&season=summer&time=day&view=third&debug=0${body ? "&body=" + body : ""}`, { waitUntil: "commit", timeout: 120000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 });
   await p.evaluate(() => clearInterval(window.__auto));
   const step = (n = 1, ms = STEP) => p.evaluate(([n, ms]) => { for (let i = 0; i < n; i++) window.__step(ms); }, [n, ms]);
@@ -45,10 +47,13 @@ const STEP = 1000 / 30, EVERY = 4;
     const trace = [];
     for (let f = 0; f < frames; f += EVERY) {
       await step(EVERY);
-      const y = await p.evaluate(() => window.__yard()); trace.push([f / 30, y.x, y.z, y.h, y.bodyY, y.footY]);
+      const y = await p.evaluate(() => window.__yard()); trace.push([f / 30, y.x, y.z, y.h, y.bodyY, y.footY, y.skirt]);
       await p.screenshot({ path: path.join(out, dirName, `follow-${String(f / EVERY).padStart(3, "0")}.png`) });
-      await p.evaluate(([x, h, z]) => { window.__look([x + 1.5, h + 0.62, z], [x, h + 0.42, z]); window.__step(1); }, [y.x, y.h, y.z]);
-      await p.screenshot({ path: path.join(out, dirName, `side-${String(f / EVERY).padStart(3, "0")}.png`) });
+      for (const v of views) {
+        const eye = { side: [1.5, 0.62, 0], top: [0.9, 1.75, 1.7], back: [0.5, 1.7, -1.9], low: [0.4, 0.35, 1.8] }[v], aim = v === "side" ? 0.42 : 0.45;
+        await p.evaluate(([x, h, z, e, d, aim]) => { window.__look([x + e[0], h + e[1], z + d * e[2]], [x, h + aim, z]); window.__step(1); }, [y.x, y.h, y.z, eye, dz, aim]);
+        await p.screenshot({ path: path.join(out, dirName, `${v}-${String(f / EVERY).padStart(3, "0")}.png`) });
+      }
       await p.evaluate(() => { window.__look(); });
     }
     await p.keyboard.up("KeyW"); await step(20);
