@@ -1,0 +1,62 @@
+{
+ "v060 pool-y32-16x9": {
+  "nearLeafCover": 1.5,
+  "nearLeafOutsideCorners": 0.8,
+  "nearLeafInBoxPlus5": 0.5,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "v060 pool-y32-9x19.5": {
+  "nearLeafCover": 1.7,
+  "nearLeafOutsideCorners": 0.8,
+  "nearLeafInBoxPlus5": 0.8,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "main pool-y32-16x9": {
+  "nearLeafCover": 19.9,
+  "nearLeafOutsideCorners": 15.7,
+  "nearLeafInBoxPlus5": 1.2,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "leaf"
+ },
+ "main pool-y32-9x19.5": {
+  "nearLeafCover": 15.2,
+  "nearLeafOutsideCorners": 11.9,
+  "nearLeafInBoxPlus5": 1.2,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "head pool-y32-16x9": {
+  "nearLeafCover": 0,
+  "nearLeafOutsideCorners": 0,
+  "nearLeafInBoxPlus5": 0,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ },
+ "head pool-y32-9x19.5": {
+  "nearLeafCover": 0,
+  "nearLeafOutsideCorners": 0,
+  "nearLeafInBoxPlus5": 0,
+  "toHead": "clear",
+  "toWaist": "clear",
+  "toFeet": "clear",
+  "toPool": "clear",
+  "toStele": "clear"
+ }
+}

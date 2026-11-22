@@ -1,0 +1,40 @@
+{
+ "path-fp-east": {
+  "eye": [
+   19,
+   -9.2,
+   76.5
+  ],
+  "at": [
+   19,
+   -10.5,
+   76.5
+  ],
+  "arm": 0,
+  "cameraPitch": 0,
+  "visitorPitch": 0,
+  "box": null,
+  "boxY": null,
+  "boxX": null,
+  "eyeSpace": "ready"
+ },
+ "path-fp-west": {
+  "eye": [
+   22.5,
+   -9.2,
+   78.5
+  ],
+  "at": [
+   22.5,
+   -10.5,
+   78.5
+  ],
+  "arm": 0,
+  "cameraPitch": 0,
+  "visitorPitch": 0,
+  "box": null,
+  "boxY": null,
+  "boxX": null,
+  "eyeSpace": "ready"
+ }
+}

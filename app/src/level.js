@@ -18,7 +18,8 @@ import t00 from "../levels/t00/level.js";
  * @property {(site: any) => any} createWalker the walker of the written plan, which the baked floor's walker wraps
  * @property {(x: number, z: number) => number} land the height of the land outside the walls (the plan's terrain)
  * @property {{ site: any, terraces: any[] } | null} backdrop the frame the far hills are laid round, or null for none (#409: T05 stands in a flat town)
- * @property {{ areas: any, keep: any } | null} grove where bamboo grows and where it is kept clear, or null for none
+ * @property {{ areas: any, keep: any, clearUnder?: (x: number, z: number) => boolean } | null} grove where bamboo grows and where it is kept clear (and, `clearUnder`, where only its undergrowth is), or null for none
+ * @property {(x: number, y: number, z: number, r: number) => boolean} [eyeKeepOut] where the eye that follows him may not stand though nothing drawn there stops it (the prologue's bamboo, #515): asked with the eye's sphere's radius
  * @property {number} propsAt where along the axis the mist and props are gathered
  * @property {any} zones the bounds score.js's zoneOf divides the walk by, or null: the prologue's music is not played there
  * @property {(x: number, z: number) => number} groveSound how deep in the bamboo the place is heard, 0 to 1
