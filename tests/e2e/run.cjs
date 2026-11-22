@@ -484,6 +484,23 @@ const scenarios = {
     for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} byte for byte: ${kept[k]}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // A named view's own lens (`site.lens`, app/yard.js `baseFov`; T05's cam06 is 65° from his eyes, 50° from behind him): `?show=<name>` takes it, a view with no
+  // entry and the prologue's views keep the fixed views' 52° and 44°, `?cam=` is a pose, not a view, so it never takes one, and a picture held upright is the fixed
+  // views' few degrees wider (+16° from his eyes, +14° from behind him, as 52 and 44 become 68 and 58). Built, not drawn.
+  "view-lens": { tier: 2, async run(b, base) {
+    const LAND = { viewport: { width: 1280, height: 720 } }, TALL = { viewport: { width: 420, height: 800 } };
+    const fov = async (query, size) => { const t = await open(b, base, query + BARE, size); const f = await t.page.evaluate(() => window.__yard().fov); expect(t.errors.length === 0, t.errors.join("\n")); await t.close(); return f; };
+    const rows = [
+      ["T05 cam06 from his eyes", "level=t05&q=low&show=cam06&view=first", 65, 81], ["T05 cam06 from behind him", "level=t05&q=low&show=cam06&view=third", 50, 64],
+      ["T05 cam03 from his eyes", "level=t05&q=low&show=cam03&view=first", 52, 68], ["T05 at cam06's pose, by ?cam", "level=t05&q=low&cam=0,-2,0,0.17&view=first", 52, 68],
+      ["T00 cam06 from his eyes", "q=low&show=cam06&view=first", 52, 68], ["T00 court from behind him", "q=low&show=court&view=third", 44, 58],
+    ];
+    for (const [what, query, land, tall] of rows) {
+      const a = await fov(query, LAND), c = await fov(query, TALL);
+      expect(Math.abs(a - land) < 0.05, `${what}, a wide window: the lens should be ${land}°, it is ${a}°`);
+      expect(Math.abs(c - tall) < 0.05, `${what}, an upright window: the lens should be ${tall}°, it is ${c}°`);
+    }
+  } },
   // Which builds list T05 (#409; the owner, 2026-11-21: 「t05 改成 canary 可以测」): the canary as a preview does, and
   // production not at all, where ?level=t05 walks the prologue and says what was asked. Each is built here as it is
   // published (VITE_DEPLOY), with nothing fetched from outside. On the canary he walks T05 a little with the prologue's
