@@ -79,6 +79,30 @@
    "bytes": 401344,
    "sha256": "6272822069a81bebc5b807b1f9b0196fb63b2e06bd3fb7bbeb8d16480e3758b0",
    "rev": "89396701601d0226eab204304e32d1c7b9dc495e"
+  },
+  {
+   "path": "dusk2-dahui-base-1920x1080.jpg",
+   "bytes": 248168,
+   "sha256": "48a45a31fe8cb188cd054eb9b616ca13cc054df635be74d62aa383abd715c69b",
+   "rev": "f2a029fd3e0108fcc1a716fd078c2d715306ddd5"
+  },
+  {
+   "path": "dusk2-dahui-new-1920x1080.jpg",
+   "bytes": 248598,
+   "sha256": "413fb00d3d0deb2795a6e9ae3679a591c1b9bd38d40adab3fd722a6b6c0b308d",
+   "rev": "f2a029fd3e0108fcc1a716fd078c2d715306ddd5"
+  },
+  {
+   "path": "dusk2-yaoshi-base-1920x1080.jpg",
+   "bytes": 323650,
+   "sha256": "58ba8294defa1fa275aab18f4b94bf9836567b71bb5dade5d8529b31d7e5ea9d",
+   "rev": "f2a029fd3e0108fcc1a716fd078c2d715306ddd5"
+  },
+  {
+   "path": "dusk2-yaoshi-new-1920x1080.jpg",
+   "bytes": 323725,
+   "sha256": "68810e0bf3254262684016e1bfb601f3133a60e737a6aca498e7e143ec9aba69",
+   "rev": "f2a029fd3e0108fcc1a716fd078c2d715306ddd5"
   }
  ]
 }

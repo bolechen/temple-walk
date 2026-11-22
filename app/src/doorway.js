@@ -154,7 +154,7 @@ export function createDoorways({ renderer, scene, site, rooms, U, steps = 12, ke
     u.uDoor.value.set(xs[mid] + 1.3 - 0.02, xs[mid + 1] - 1.3 + 0.02, 0.1, 3.1);
     // How much of its room shows through the door at dusk: the plan's level for the middle bay, never quite none.
     const lv = Math.max(0, ...(site.litWindows || []).filter((w) => w.building === h.id && w.face === "front" && w.bay === mid).map((w) => w.dusk));
-    u.uDusk.value = 0.12 + 0.88 * (lv / 7);
+    u.uDusk.value = 0.05 + 0.95 * (lv / 7);
     d.mesh.material = mat;
     const o = { hall: h, d, r, mat, zs, door: new THREE.Vector3(), want: false, taken: 0, fade: 0, tex: null, pending: null, source: null };
     place(o); d.mesh.geometry.computeBoundingSphere();
