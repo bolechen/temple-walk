@@ -165,12 +165,13 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
   const p = await ctx.newPage(), errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
   await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
-  let bad = 0;
+  let bad = 0, seen = 0;
   for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n))) {
     if (open) await p.evaluate((c) => { (0, eval)(c); }, open);
     await settle(p, name);
     // On the way in, the first line about the controls is measured too: it comes once the eye is down with him.
     if (name === "walk") await p.waitForFunction(() => document.getElementById("hint").classList.contains("on"), null, { timeout: 30000 }).then(() => settle(p, name)).catch(() => {});
+    if (errs.length > seen) { console.log(`   page error while "${name}" was up:`, errs.slice(seen)); seen = errs.length; }
     const m = await p.evaluate(measure); await p.screenshot({ path: path.join(out, `${shape}-${name}${tag}.png`) });
     const n = badOf(m, vw); bad += n;
     if (!tag) report[`${shape}/${name}`] = m;
