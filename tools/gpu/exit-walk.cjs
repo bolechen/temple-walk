@@ -16,30 +16,41 @@ exports.run = async ({ open, log, halls = ["main"], q = "high", secs = 5 }) => {
       await page.waitForTimeout(1000);
       await page.evaluate(() => window.__inside(null));
       await page.waitForFunction(() => !window.__yard().inside, null, { timeout: 120000, polling: 10 });
-      // __pick is slow (about half a second of a frame), so it is asked at a few moments only and every frame is logged cheaply beside it:
-      // the frames' own clock stays true, and the hidden time is given as a bound: surely hidden (two asks in a row low) and perhaps (one low).
+      // Two passes, because __pick takes about half a second and asked in the walk it stretches the frames it is timing.
+      // Pass 1: W held, every frame logged cheaply (the page's own clock, the eye, where he stands). Pass 2: for every fourth frame he is set
+      // down where he stood (`__pose`), the eye put where it was (`__look`) and turned at his legs, waist and head in turn; a point counts as
+      // seen when the first solid thing at the middle of the picture is him. Hidden is fewer than two of those three.
       await page.evaluate(() => {
-        window.__exit = []; const t0 = performance.now(); let on = true, next = 0;
+        window.__exit = []; const t0 = performance.now(); let on = true;
         window.__exitStop = () => { on = false; };
         const go = (t) => {
           if (!on) return;
-          const f = window.__frame(), b = f.monkBox, r = { t: +(t - t0).toFixed(1), h: b ? +b[3].toFixed(3) : 0, dist: +f.dist.toFixed(2), op: +f.opacity.toFixed(2) };
-          if (b && t - t0 >= next) {
-            const p0 = performance.now();
-            r.seen = [0.1, 0.3, 0.5, 0.7, 0.9].filter((k) => (window.__pick(b[0] + b[2] / 2, b[1] + b[3] * k).find((h) => !h.transparent) || {}).part === "monk").length;
-            r.pickMs = +(performance.now() - p0).toFixed(0); next = t - t0 + 60;
-          }
-          window.__exit.push(r);
+          const f = window.__frame(), y = window.__yard(), b = f.monkBox;
+          window.__exit.push({ t: +(t - t0).toFixed(1), eye: f.eye.map((v) => +v.toFixed(3)), at: f.at.map((v) => +v.toFixed(3)), yaw: y.yaw, h: b ? +b[3].toFixed(3) : 0, dist: +f.dist.toFixed(2), op: +f.opacity.toFixed(2) });
           requestAnimationFrame(go);
         };
         requestAnimationFrame(go);
       });
       await page.keyboard.down("w"); await page.waitForTimeout(secs * 1000); await page.keyboard.up("w");
       const rows = await page.evaluate(() => { window.__exitStop(); return window.__exit; });
-      const asks = rows.filter((r) => r.seen !== undefined), ft = rows.slice(1).map((r, i) => r.t - rows[i].t);
-      let sure = 0, maybe = 0;
-      for (let i = 1; i < asks.length; i++) { const d = asks[i].t - asks[i - 1].t, lo = [asks[i - 1].seen < 3, asks[i].seen < 3]; if (lo[0] && lo[1]) sure += d; else if (lo[0] || lo[1]) maybe += d; }
-      Object.assign(row, { frames: rows.length, meanFrameMs: Math.round(ft.reduce((a, b) => a + b, 0) / Math.max(1, ft.length)), asks: asks.length, pickMs: asks.map((r) => r.pickMs), sureHiddenMs: Math.round(sure), maybeHiddenMs: Math.round(maybe), seen: asks.map((r) => r.seen), lowest: Math.min(...asks.map((r) => r.seen)), trace: rows.filter((_, i) => i % 4 === 0).slice(0, 80) });
+      const ft = rows.slice(1).map((r, i) => r.t - rows[i].t), asks = [];
+      for (let i = 0; i < rows.length; i += 4) {
+        const r = rows[i];
+        const seen = await page.evaluate(async (r) => {
+          const fr = () => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
+          window.__pose(r.at[0], r.at[2], r.yaw, 0); let n = 0;
+          for (const up of [0.25, 0.6, 1.05]) {
+            window.__look(r.eye, [r.at[0], r.at[1] + up, r.at[2]]); await fr();
+            if ((window.__pick(window.innerWidth / 2, window.innerHeight / 2).find((h) => !h.transparent) || {}).part === "monk") n++;
+          }
+          return n;
+        }, r);
+        asks.push({ t: r.t, seen });
+      }
+      await page.evaluate(() => window.__look());
+      let hidden = 0, run = 0, longest = 0;
+      for (let i = 1; i < asks.length; i++) { const d = asks[i].t - asks[i - 1].t; if (asks[i].seen < 2) { hidden += d; run += d; longest = Math.max(longest, run); } else run = 0; }
+      Object.assign(row, { frames: rows.length, meanFrameMs: +(ft.reduce((a, b) => a + b, 0) / Math.max(1, ft.length)).toFixed(1), asks: asks.length, hiddenMs: Math.round(hidden), longestMs: Math.round(longest), seen: asks.map((r) => r.seen).join(""), firstHiddenAt: (asks.find((r) => r.seen < 2) || {}).t, eyeDist: rows.filter((_, i) => i % 20 === 0).map((r) => r.dist) });
       await ctx.close();
     } catch (e) { row.error = String(e.message || e).slice(0, 300); }
     log("exit-walk", JSON.stringify({ ...row, trace: undefined }));
