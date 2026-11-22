@@ -52,3 +52,14 @@ test("a failed commit keeps what the earlier preview was, so that the next push 
   assert.deepEqual(markers(text), previous);
   assert.deepEqual(markers(body({ state: "failure", sha, run: "r", previous: null, files: [] })), { deployed: undefined, fixed: undefined, latest: undefined });
 });
+
+test("a pull request with no preview yet that only changes papers says so, with no address and no marker (#601)", () => {
+  const sha = "a".repeat(40), text = body({ state: "same", sha, run: "https://run.example", previous: null, manifest: "none.json", files: ["docs/x.md"] });
+  assert.match(text, /只改文档，没有构建预览/);
+  assert.match(text, /temple-walk-canary/);
+  assert.deepEqual(markers(text), { deployed: undefined, fixed: undefined, latest: undefined }, "nothing for the next run to be compared with but the base");
+  const withEmpty = body({ state: "same", sha, run: "r", previous: { deployed: undefined, fixed: undefined, latest: undefined }, manifest: "none.json", files: [] });
+  assert.match(withEmpty, /只改文档，没有构建预览/, "a comment that carries no markers is the same case");
+  const shown = { deployed: "d".repeat(40), fixed: "https://f.example", latest: "https://l.example" };
+  assert.match(body({ state: "same", sha, run: "r", previous: shown, manifest: "none.json", files: [] }), /预览仍是 `ddddddd` 的版本/, "with a preview, the old wording stands");
+});
