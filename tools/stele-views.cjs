@@ -14,13 +14,14 @@ const SIZE = [1280, 720], C = [-12.5, 50.5];   // the stele's place
 // Each view: where the eye is, in metres along the face (fx, +x in the world) and along the stele's side (fz, +z in the world), and
 // how high above the platform; and the point it looks at (above the platform).
 const VIEWS = {
-  front: { eye: [2.0, 0, 1.55], at: [0, 0, 1.7] },        // the main one: 2 m out, a visitor's own eye
-  side: { eye: [0, 2.0, 1.55], at: [0, 0, 1.5] },
-  back: { eye: [-2.0, 0, 1.55], at: [0, 0, 1.7] },
-  q1: { eye: [1.9, 1.9, 1.6], at: [0, 0, 1.3] }, q2: { eye: [1.9, -1.9, 1.6], at: [0, 0, 1.3] },
-  q3: { eye: [-1.9, 1.9, 1.6], at: [0, 0, 1.3] }, q4: { eye: [-1.9, -1.9, 1.6], at: [0, 0, 1.3] },
-  turtle: { eye: [1.8, 0.9, 0.8], at: [0.6, 0, 0.5] },    // the tortoise's head from near
-  head: { eye: [1.6, 0.7, 2.9], at: [0, 0, 3.0] },        // the dragon head from under the eaves
+  // The whole stone, from outside the columns (the pavilion is open on every side), at a visitor's height.
+  front: { eye: [5.2, 0, 1.7], at: [0, 0, 1.75] }, side: { eye: [0, 5.2, 1.7], at: [0, 0, 1.75] }, back: { eye: [-5.2, 0, 1.7], at: [0, 0, 1.75] },
+  q1: { eye: [4.0, 4.0, 1.7], at: [0, 0, 1.75] }, q2: { eye: [4.0, -4.0, 1.7], at: [0, 0, 1.75] },
+  q3: { eye: [-4.0, 4.0, 1.7], at: [0, 0, 1.75] }, q4: { eye: [-4.0, -4.0, 1.7], at: [0, 0, 1.75] },
+  // 2 m out, a visitor's own eye (the main distance for the stone and its writing); and the tortoise's head and the dragon head from near.
+  front2m: { eye: [2.0, 0, 1.55], at: [0, 0, 1.7] },
+  turtle: { eye: [1.8, 0.9, 0.8], at: [0.6, 0, 0.5] },
+  head: { eye: [1.6, 0.7, 2.9], at: [0, 0, 3.0] },
   path: { show: "stele" },                                // from the old path, the named view
 };
 const only = arg("views", Object.keys(VIEWS).join(",")).split(",");
