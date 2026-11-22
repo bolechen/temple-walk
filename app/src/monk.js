@@ -13,6 +13,7 @@
 // off him swings on small springs driven by his speed and his turning.
 import * as THREE from "three";
 import { STAIR } from "./geo.js";
+import { createBlink } from "./blink.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -52,6 +53,11 @@ const SKIRT_FREE = 0.5, SKIRT_REACH = 0.7, SKIRT_SIDE = 0.8;
 // The back of the skirt swings lightly: what walking turns it by (the trail and the trailing knee together) is free up to
 // the first and eased to the second, whatever the stride. Level walking turns it by no more than 0.14.
 const SKIRT_BACK_FREE = 0.25, SKIRT_BACK_REACH = 0.4;
+// The turn at the start of a walk (#284): the page turns him about at once and his speed rises, which would swing the whole
+// skirt sideways by 0.2 rad and push the trail back by 0.25, opening the cloth over a thigh (the trousers came out of the robe's
+// side for the first half second). The sideways swing is cut to SKIRT_SWING and the side panels, which lie over the thighs,
+// take only SKIRT_SIDE_SWING of it; the trail's acceleration part is held to SKIRT_TRAIL.
+const SKIRT_SWING = 0.05, SKIRT_SIDE_SWING = 0.25, SKIRT_TRAIL = 0.15;
 const SKIRT = ["robeFront", "robeLeft", "robeBack", "robeRight"];
 // Under each sole, the points that must clear the ground (in the foot's own frame, on the floor).
 const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.114], [0, 0.117], [0, -0.056]].map(([x, z]) => V3(x, 0, z));
@@ -59,7 +65,7 @@ const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.11
 const PAL = {
   skin: col(0xf0c6a4), crown: col(0xf3d0b2), blush: col(0xe9958a), lip: col(0x9a5244), brow: col(0x5e3b29), lash: col(0x3a271d), earIn: col(0xe4a58c),
   robe: col(0xb2633f), robeIn: col(0x6c3720), band: col(0x9c5232), sash: col(0xa2583a), collar: col(0xdcd1bb),
-  trousers: col(0x6f6155), wrap: col(0xddd2bc), shoe: col(0x48423f), sole: col(0xc6b9a1), strap: col(0x523a2a), tie: col(0x7a5c38),
+  trousers: col(0x6f6155), wrap: col(0xddd2bc), shoe: col(0x48423f), sole: col(0xc6b9a1), strap: col(0xcdbba0), tie: col(0x7a5c38),
 };
 
 // ---- Cloth and straw, painted once ----
@@ -361,12 +367,12 @@ export function createMonk() {
   }
   // The straps that hold the hat: over each shoulder and down his front, tucked under the sash. They are part of this
   // robe, and are also kept on their own: the sculpted body (`dress`) has no straps, and the hat needs them.
-  const strapParts = [];
+  const strapParts = [], strapLine = [];   // strapLine: each strap's centre line on the robe built here, and which way is out there
   for (const s of [1, -1]) {
     const c = [s * 0.05, 0.78, 0];
     const g = [Bk(s * 0.05, 0.74), Bk(s * 0.058, 0.8), [s * 0.064, 0.95, -0.2, ...c], [s * 0.068, 1.0, 0, ...c], [s * 0.074, 0.95, 0.2, ...c], F(s * 0.082, 0.79), F(s * 0.086, 0.72), F(s * 0.088, 0.655)];
-    const strap = band(onBody(g, 40, 0.0042), flat(0.0075, 0.0028), PAL.strap);
-    robeParts.push(strap); strapParts.push(strap.clone());
+    const line = onBody(g, 40, 0.0042), strap = band(line, flat(0.0075, 0.0028), PAL.strap);
+    robeParts.push(strap); strapParts.push(strap.clone()); strapLine.push(line.map(({ p, n }) => ({ p: p.clone(), n: n.clone() })));
   }
 
   // ---- Trousers and leg wraps: full below the hem, slim where the robe always covers them ----
@@ -416,6 +422,7 @@ export function createMonk() {
   const rigid = (geo, mat, parent) => { const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; parent.add(m); return m; };
 
   // The beads: thirty-two turned beads on a loop that lies over his shoulders and hangs to his chest.
+  let beadMesh; const beadAt = [];
   {
     const F = (x, y) => [x, y, 0.3, x, y, 0], Bk = (x, y) => [x, y, -0.3, x, y, 0];
     const guess = [Bk(0, 0.872), Bk(0.035, 0.869), [0.062, 0.95, -0.12, 0.05, 0.8, 0], [0.072, 1.0, 0.02, 0.05, 0.8, 0], [0.08, 0.95, 0.15, 0.05, 0.8, 0], F(0.08, 0.8), F(0.072, 0.745), F(0.045, 0.705), F(0, 0.69)];
@@ -423,7 +430,9 @@ export function createMonk() {
     const pts = onBody(loop, 32, 0.0152, true), chest = at("chest"), beads = [];
     pts.forEach(({ p }, i) => { const nx = pts[(i + 1) % pts.length].p.clone().sub(pts[(i - 1 + pts.length) % pts.length].p).normalize(), r = 0.0122 * (0.96 + 0.08 * Math.abs(Math.sin(i * 7.3)));
       beads.push(new THREE.SphereGeometry(r, 9, 6).scale(1, 0.84, 1).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UPV, nx)).translate(p.x - chest.x, p.y - chest.y, p.z - chest.z)); });
-    rigid(mergeGeometries(beads), beadM, B.chest);
+    beadMesh = rigid(mergeGeometries(beads), beadM, B.chest);
+    // where each bead sits in the bind pose (his own frame) and how big it is, so that a body worn later can lay them again
+    for (const [i, { p }] of pts.entries()) beadAt.push({ c: p.clone(), r: 0.0122 * (0.96 + 0.08 * Math.abs(Math.sin(i * 7.3))) });
   }
   // The hat: a shallow cone of plaited bamboo with a bound rim and a small finial, carried on his back, hollow to him.
   let hat;
@@ -449,6 +458,7 @@ export function createMonk() {
   // ---- What the pose is computed from ----
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
+  const blink = createBlink(), lid = { value: 0 }; let eyed = false, blinking = true;
   let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
   const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
@@ -485,14 +495,21 @@ export function createMonk() {
   // body (in the robe built here, the sleeves, collar and sash come after them; a sculpted robe is all body).
   function setupHem(count) {
     rp = robe.geometry.attributes.position.array; rsi = robe.geometry.attributes.skinIndex.array; rsw = robe.geometry.attributes.skinWeight.array; hem.length = 0;
+    // every bone a hem point hangs from, the thighs included, is posed when the hem is skinned
+    const used = new Set([IDX.hips, ...SK]);
     for (let i = 0; i < count; i++) {
       const y = rp[i * 3 + 1]; if (y > 0.5) continue;
       const w = []; let W = 0; for (let k = 0; k < 4; k++) { const b = SK.indexOf(rsi[i * 4 + k]); if (b >= 0 && rsw[i * 4 + k] > 0) { w.push([b, rsw[i * 4 + k]]); W += rsw[i * 4 + k]; } }
-      if (W > 0.05) hem.push({ i, drop: Math.max(0.05, 0.6 - y), w, W });
+      if (W > HEM_SHARE) { hem.push({ i, drop: Math.max(0.05, 0.6 - y), w, W }); for (let k = 0; k < 4; k++) if (rsw[i * 4 + k] > 0) used.add(rsi[i * 4 + k]); }
     }
+    hemBones.length = 0; hemBones.push(...used);
   }
+  // A bone is never shortened below HEM_FLOOR of its length (the robe of the drawing ends above the knee: drawn up further
+  // it shows the trousers' seat). A point is lifted only if the skirt's bones carry a fair share of it (#163): a made body's skirt front is weighted to
+  // the thighs as well (tools/novice-tripo.mjs), and a point a thigh carries is carried off the step by that thigh;
+  // shortening the skirt's bones for it would only pull the whole skirt up to the waist without moving it.
+  const HEM_SHARE = 0.3, HEM_FLOOR = 0.7, HEM_NEXT = 0.85, hemBones = [], mats = [];
   setupHem(torsoCount);
-  const mats = bones.map(() => new THREE.Matrix4()), hemBones = [IDX.hips, ...SK];
   const skinPoint = (i, out) => {
     const x = rp[i * 3], y = rp[i * 3 + 1], z = rp[i * 3 + 2]; out.set(0, 0, 0);
     for (let k = 0; k < 4; k++) { const w = rsw[i * 4 + k]; if (!w) continue; const e = mats[rsi[i * 4 + k]].elements; out.x += w * (e[0] * x + e[4] * y + e[8] * z + e[12]); out.y += w * (e[1] * x + e[5] * y + e[9] * z + e[13]); out.z += w * (e[2] * x + e[6] * y + e[10] * z + e[14]); }
@@ -504,13 +521,108 @@ export function createMonk() {
     let high = -Infinity; for (let k = 0; k < 16; k++) { tv.set(Math.sin((k * TAU) / 16) * 0.21, 0, Math.cos((k * TAU) / 16) * 0.21); group.localToWorld(tv); high = Math.max(high, surfaceAt(tv.x, tv.z)); }
     if (high < B.robeFront.getWorldPosition(tv).y - 0.42) return;   // nothing near the hem to clear
     for (let it = 0; it < 3; it++) {
-      B.hips.updateMatrixWorld(true); for (const b of hemBones) mats[b].multiplyMatrices(bones[b].matrixWorld, skeleton.boneInverses[b]);
+      B.hips.updateMatrixWorld(true); for (const b of hemBones) (mats[b] ||= new THREE.Matrix4()).multiplyMatrices(skeleton.bones[b].matrixWorld, skeleton.boneInverses[b]);
       const need = [0, 0, 0, 0]; let any = false;
       for (const h of hem) { skinPoint(h.i, tv); const L = surfaceAt(tv.x, tv.z) + 0.007 - tv.y; if (L <= 0) continue; any = true; for (const [b] of h.w) need[b] = Math.max(need[b], L / (h.drop * h.W)); }
       if (!any) break;
-      for (let b = 0; b < 4; b++) if (need[b] > 0) { const sc = B[SKIRT[b]].scale, y = Math.max(0.3, sc.y - need[b] * 1.05); hemScale[b] *= y / sc.y; sc.y = y; }
+      for (let b = 0; b < 4; b++) if (need[b] > 0) { const sc = B[SKIRT[b]].scale, y = Math.max(HEM_FLOOR, sc.y - need[b] * 1.05); hemScale[b] *= y / sc.y; sc.y = y; }
+    }
+    // One skirt, not four flaps: no bone hangs shorter than HEM_NEXT of either bone beside it (front, left, back, right go
+    // round him), so the cloth is drawn up as a ring and never as a panel gone to the waist beside a full one (#163, the 3D
+    // review). A centimetre of hem on a step is a smaller fault than that.
+    for (let pass = 0; pass < 2; pass++) for (let b = 0; b < 4; b++) {
+      const sc = B[SKIRT[b]].scale, most = Math.max(B[SKIRT[(b + 1) % 4]].scale.y, B[SKIRT[(b + 3) % 4]].scale.y), y = Math.max(sc.y, HEM_NEXT * most);
+      if (y > sc.y) { hemScale[b] *= y / sc.y; sc.y = y; }
     }
     B.hips.updateMatrixWorld(true);
+  }
+
+  // ---- Helper bones and the beads, for a body that asks for them (#163, #286) ----
+  // Under a raised arm: a body made from a sculpted or generated model (tools/novice-tripo.mjs) may weigh the cloth of the
+  // armpit against a helper bone of its own on each side, carried by the chest at the shoulder's ball and turned each
+  // frame through a share (`k`) of the way the upper arm has swung from where it hangs (its swing, not its twist about
+  // its own length): the corrective or "half" joint game rigs use there, so that holding incense at the brow the cloth
+  // goes a third of the way, then two thirds, rather than all at once from the chest to the arm. The figure built here
+  // has sleeves of their own and needs none; the bones are added after his own, so their numbers follow his bones'.
+  const helpers = [];
+  function addHelpers(list) {
+    if (!list.length || helpers.length) return;
+    bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
+    group.updateMatrixWorld(true);
+    const toGroup = group.matrixWorld.clone().invert(), m = new THREE.Matrix4();
+    for (const h of list) {
+      const parent = B[h.parent], follow = B[h.follow]; if (!parent || !follow || B[h.name]) throw new Error(`the helper bone ${h.name} cannot be put on this skeleton`);
+      const bone = new THREE.Bone(); bone.name = h.name; parent.add(bone);
+      bone.position.copy(parent.worldToLocal(follow.getWorldPosition(V3()))); bone.updateMatrixWorld(true);
+      // the arm's way in the parent's frame at rest, and the direction it hangs (its own -y)
+      const restQ = parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(follow.getWorldQuaternion(new THREE.Quaternion()));
+      // bound as his own bones were, with him standing at the origin
+      skeleton.bones.push(bone); skeleton.boneInverses.push(m.multiplyMatrices(toGroup, bone.matrixWorld).clone().invert()); B[h.name] = bone;
+      helpers.push({ name: h.name, k: h.k, bone, parent, follow, restInv: restQ.clone().invert(), axis: V3(0, -1, 0).applyQuaternion(restQ).normalize() });
+    }
+    skeleton.boneMatrices = new Float32Array(skeleton.bones.length * 16);
+    if (skeleton.boneTexture) { skeleton.boneTexture.dispose(); skeleton.boneTexture = null; }
+  }
+  const hq = new THREE.Quaternion(), ha = new THREE.Quaternion(), hd = new THREE.Quaternion(), ht = new THREE.Quaternion(), hs = new THREE.Quaternion(), hI = new THREE.Quaternion(), hv = V3();
+  function driveHelpers(bind) {
+    for (const h of helpers) {
+      h.parent.updateWorldMatrix(true, false); h.follow.updateWorldMatrix(true, false);
+      if (bind) h.bone.quaternion.identity();
+      else {
+        // how the arm has turned since the bind pose, in the chest's frame; its swing is what is left once the turn about
+        // the way it hung (its twist) is taken out
+        hq.copy(h.parent.getWorldQuaternion(hq)).invert(); ha.copy(h.follow.getWorldQuaternion(ha));
+        hd.copy(hq).multiply(ha).multiply(h.restInv);
+        const p = hv.set(hd.x, hd.y, hd.z).projectOnVector(h.axis); ht.set(p.x, p.y, p.z, hd.w).normalize();
+        hs.copy(hd).multiply(ht.invert());
+        h.bone.quaternion.slerpQuaternions(hI, hs, h.k);
+      }
+      h.bone.position.copy(h.parent.worldToLocal(h.follow.getWorldPosition(hv)));
+      h.bone.updateMatrixWorld(true);
+    }
+  }
+  // The beads are laid 1.5 cm proud of the robe built here (onBody). A worn body's robe may stand further out (Tripo's,
+  // some 3 cm on the chest and 2 cm on the back), and they would sink into it. So once a body is worn, each bead is
+  // moved out along the line from his middle (the upright axis at its own height) through its centre until it sits `gap`
+  // off the outermost cloth there, in the pose he is bound in; a bead already clear by more than that stays where it is.
+  function layBeads(gap = 0.004) {
+    const P = beadMesh.geometry.attributes.position, per = P.count / beadAt.length;
+    const cloth = [robe, skin].map((s) => { const m = new THREE.Mesh(s.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); m.updateMatrixWorld(true); return m; });
+    const ray = new THREE.Raycaster(), o = V3(), d = V3();
+    let moved = 0, most = 0;
+    beadAt.forEach(({ c, r }, b) => {
+      o.set(0, c.y, 0); d.set(c.x, 0, c.z); const len = d.length(); if (len < 0.02) return; d.normalize();
+      ray.set(o, d); const hits = ray.intersectObjects(cloth, false); if (!hits.length) return;
+      const want = hits[hits.length - 1].distance + r + gap; if (want <= len) return;
+      // the chest bone is not turned in the bind pose, so a shift in his frame is the same in the beads' own
+      const sx = d.x * (want - len), sz = d.z * (want - len);
+      for (let k = b * per; k < (b + 1) * per; k++) P.setXYZ(k, P.getX(k) + sx, P.getY(k), P.getZ(k) + sz);
+      c.x += sx; c.z += sz; moved++; most = Math.max(most, want - len);
+    });
+    P.needsUpdate = true; beadMesh.geometry.computeBoundingSphere();
+    return { beads: beadAt.length, moved, most };
+  }
+
+  // The hat's straps are laid on the robe built here too; a worn body's robe stands further out at the shoulders and over
+  // the chest, and they sank out of sight in it (#163, the three-column sheet). Each point of a strap's centre line is
+  // looked at along its own way out, from 15 cm inside: if the worn cloth there lies further out than `gap` under the
+  // strap, that cross-section of the strap is moved out until it is `gap` off (smoothed along the strap, so that it
+  // lies as a ribbon and does not kink).
+  function layStraps(gap = 0.003) {
+    const g = straps.geometry, P = g.attributes.position, cloth = [robe, skin].map((m) => { const c = new THREE.Mesh(m.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); c.updateMatrixWorld(true); return c; });
+    const ray = new THREE.Raycaster(), o = V3(), IN = 0.15;
+    const shifts = strapLine.map((line) => {
+      const raw = line.map(({ p, n }) => { ray.set(o.copy(p).addScaledVector(n, -IN), n); ray.far = IN + 0.08; const hits = ray.intersectObjects(cloth, false); const d = hits.length ? hits[hits.length - 1].distance - IN : -Infinity; return Math.max(0, d + gap); });
+      return raw.map((_, i) => { let m = 0; for (let k = -3; k <= 3; k++) m = Math.max(m, raw[Math.min(raw.length - 1, Math.max(0, i + k))] * (1 - Math.abs(k) / 4)); return m; });
+    });
+    const v = V3(); let most = 0;
+    for (let i = 0; i < P.count; i++) {
+      v.fromBufferAttribute(P, i); let best = Infinity, at = null, sh = 0;
+      strapLine.forEach((line, L) => line.forEach((q, k) => { const d = q.p.distanceToSquared(v); if (d < best) { best = d; at = q; sh = shifts[L][k]; } }));
+      if (sh > 0) { v.addScaledVector(at.n, sh); P.setXYZ(i, v.x, v.y, v.z); most = Math.max(most, sh); }
+    }
+    P.needsUpdate = true; g.computeBoundingSphere();
+    return most;
   }
 
   let dressed = false;
@@ -521,14 +633,36 @@ export function createMonk() {
     // `geometries` holds a skinned geometry for each of skin, robe, legs and shoes, its joints numbered as `skeleton.bones`
     // are, `material` is what they are drawn with, `robeColor` the robe's own colour (no longer used: it coloured a lap of cloth that seated legs have replaced). The skeleton,
     // its bind pose and everything `update` does are unchanged; what was built here is let go.
-    dress(geometries, material, robeColor) {
-      for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) {
-        const g = geometries[name]; if (!g?.attributes.skinIndex || !g.attributes.skinWeight) throw new Error(`the sculpted ${name} is not skinned`);
-        mesh.geometry.dispose(); mesh.geometry = g; mesh.material = material;
+    // `o.helpers`: the helper bones the body is weighted to besides these (its glTF's extras.helpers: name, the bone that
+    // carries it, the arm it follows and the share of that arm's swing it takes), added before it is put on; `o.beads`
+    // or `o.straps` false leaves the beads or the hat's straps where they were laid for the robe built here; `o.skinMaterial`
+    // draws the skin with a material of its own.
+    get helpers() { return helpers.map((h) => h.name); },
+    /** How long each skirt bone hangs this frame (front, left, back, right; 1 is its full length): the hem's lift shortens them. */
+    /** The eyelid uniform the skin's material reads (0 open, 1 shut), shared by reference; always 0 unless the body has eyes to close (`dress` with `o.eyes`). */
+    get lid() { return lid; },
+    /** Whether he blinks: off for a held picture (`?shot`); sitting on a cushion still shuts his eyes. */
+    get blinking() { return blinking; }, set blinking(v) { blinking = !!v; },
+    get skirt() { return SKIRT.map((n) => +B[n].scale.y.toFixed(3)); },
+    get helperRig() { return helpers; },   // each helper's bone, the bone carrying it, the arm it follows, its share and the way the arm hung (for the tests)
+    dress(geometries, material, robeColor, o = {}) {
+      for (const name of ["skin", "robe", "legs", "shoes"]) { const g = geometries[name]; if (!g?.attributes.skinIndex || !g.attributes.skinWeight) throw new Error(`the sculpted ${name} is not skinned`); }
+      const joints = skeleton.bones.length + (helpers.length ? 0 : (o.helpers?.length || 0));
+      for (const name of ["skin", "robe", "legs", "shoes"]) { const si = geometries[name].attributes.skinIndex, sw = geometries[name].attributes.skinWeight; for (let i = 0; i < si.count; i++) for (let k = 0; k < si.itemSize; k++) if (si.getComponent(i, k) >= joints && sw.getComponent(i, k) > 0) throw new Error(`the sculpted ${name} is weighted to a bone this skeleton has not got (joint ${si.getComponent(i, k)} of ${joints})`); }
+      addHelpers(o.helpers || []);
+      // A glTF's vertices come interleaved (position, normal, uv, joints and weights side by side in one buffer), and the
+      // hem's lifting reads the robe's arrays three and four to a vertex: each attribute is laid out on its own first.
+      for (const g of Object.values(geometries)) for (const [k, a] of Object.entries(g.attributes)) if (/** @type {any} */ (a).isInterleavedBufferAttribute) {
+        const flat = new /** @type {any} */ (a.array.constructor)(a.count * a.itemSize);
+        for (let i = 0; i < a.count; i++) for (let c = 0; c < a.itemSize; c++) flat[i * a.itemSize + c] = a.getComponent(i, c);
+        g.setAttribute(k, new THREE.BufferAttribute(flat, a.itemSize, a.normalized));
       }
+      for (const [name, mesh] of Object.entries({ skin, robe, legs, shoes })) { mesh.geometry.dispose(); mesh.geometry = geometries[name]; mesh.material = name === "skin" && o.skinMaterial ? o.skinMaterial : material; }
       setupHem(robe.geometry.attributes.position.count);
       straps.visible = true;
-      dressed = true;
+      dressed = true; eyed = !!o.eyes;
+      const laid = o.beads === false ? { beads: beadAt.length, moved: 0, most: 0 } : layBeads();
+      laid.straps = o.straps === false ? 0 : layStraps(); return laid;
     },
     // Where the light comes from (a direction toward it) and how strong it is, 0..1: his shadow lies away from it,
     // long when it is low.
@@ -543,11 +677,12 @@ export function createMonk() {
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
       dt = Math.min(Math.max(dt || 0, 0), 0.1); speed = Math.max(0, speed || 0);
       bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
-      if (pose === "bind") { legs.visible = shoes.visible = true; group.updateMatrixWorld(true); return; }
+      if (pose === "bind") { legs.visible = shoes.visible = true; group.updateMatrixWorld(true); driveHelpers(true); return; }
       const pray = pose === true || pose === "pray", sit = pose === "sit", chair = pose === "chair", hop = pose === "hop", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       // `seat`: cross-legged on a cushion; `perch`: on a stool, as on a chair.
       seat += ((sit ? 1 : 0) - seat) * ease(3.5); perch += ((chair ? 1 : 0) - perch) * ease(3.5);
+      lid.value = eyed ? blink.step(dt, sit && seat > 0.4, blinking) : 0;   // the Tripo body's eyelids (#607): shut once he is mostly down on the cushion, open as he rises
       // His legs fold into the seat as slowly as he sits down, but come out of it at once when he gets up: off a stool
       // a child slips down onto his feet, and the body (`seat`, `perch`) rises from that crouch over the next second.
       // Sent from one kind of seat to the other, he gets up from the first as above and folds into the second.
@@ -738,8 +873,8 @@ export function createMonk() {
 
       // What hangs off him swings: the skirt trails his walk and is pushed by his knees, flares as he turns; the sash's
       // ends and the hat lag on their springs.
-      const tr = springs.trail.step(clamp(0.05 * speed + 0.03 * accel, -0.15, 0.25) * (1 - seat), dt);
-      const sd = springs.side.step(clamp(-0.07 * turn * Math.min(1, speed + 0.3), -0.2, 0.2) + 0.02 * Math.sin(phase) * gait, dt);
+      const tr = springs.trail.step(clamp(0.05 * speed + 0.03 * accel, -0.15, SKIRT_TRAIL) * (1 - seat), dt);
+      const sd = springs.side.step(clamp(-0.07 * turn * Math.min(1, speed + 0.3), -SKIRT_SWING, SKIRT_SWING) + 0.02 * Math.sin(phase) * gait, dt);
       // A thigh comes up a long way on a stair; cloth does not follow it into a board. The skirt follows the knee as it
       // always did up to SKIRT_FREE and eases to SKIRT_REACH, past which no bone turns on the knee's account.
       const reachOf = (x, to = SKIRT_REACH, free = SKIRT_FREE) => x <= free ? x : free + (to - free) * Math.tanh((x - free) / (to - free));
@@ -749,8 +884,8 @@ export function createMonk() {
       B.robeFront.rotation.set(tr - 0.9 * fwd - 0.85 * seat - 1.22 * perch, 0, sd);
       B.robeBack.rotation.set(back + 0.35 * seat + 0.9 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
-      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd + 0.015 + 0.2 * lf + 0.5 * seat + 0.16 * perch);
-      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd - 0.015 - 0.2 * rt - 0.5 * seat - 0.16 * perch);
+      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.5 * seat + 0.16 * perch);
+      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.5 * seat - 0.16 * perch);
       B.robeFront.scale.y = 1 - 0.25 * seat - 0.38 * perch; B.robeBack.scale.y = 1 - 0.35 * seat - 0.7 * perch;   // on a stool the back of the skirt is gathered on the seat
       B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.2 * seat - 0.15 * perch;
       // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
@@ -767,6 +902,7 @@ export function createMonk() {
       const up = free > 0 && Number.isFinite(under) ? Math.max(0, group.position.y - under) * free : 0, jumpAir = Math.min(1, up / 0.46);
       patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
       group.updateMatrixWorld(true);
+      if (helpers.length) driveHelpers(false);
     },
   };
 }

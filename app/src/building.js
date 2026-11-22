@@ -603,7 +603,12 @@ export function buildHall(M, opts) {
   const plat = { x0: -PX, x1: PX, z0: zB, z1: zF };
   // Every column on the outside is round and in the way wherever a floor comes up to it: the walker keeps his
   // whole width off its shaft (a little fatter than the shaft at its swell).
-  for (const c of perimeter) walk.posts.push({ x: c.x, z: c.z, r: COL_R * 1.03 });
+  // At its foot the stone drum stands out to 1.56 times the shaft, and his shoes reach 0.255 m from his middle below
+  // 10 cm (tools/walk/outline.json, the Tripo body's shoes, #163): where the drum and his shoes need more room than
+  // the shaft and his width (the great columns), the post is drawn that much larger. The baked floor finds the drum
+  // from the mesh; this is only the written plan's.
+  const SHOE = 0.255, postR = Math.max(COL_R * 1.03, COL_R * 1.56 + SHOE - BODY);
+  for (const c of perimeter) walk.posts.push({ x: c.x, z: c.z, r: postR });
   // ---- A sitting bench between the columns of an open pavilion (#479) ----
   // `bench` lists the sides of an open pavilion that carry one ("f", "b", "l", "r": front, back, left, right): the sides that
   // look out over the view, never the one the way in comes by (that bay stays open from column to column). A board on the column

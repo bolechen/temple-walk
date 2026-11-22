@@ -1,9 +1,11 @@
-// Reads the geometry of the sculpted body (app/shared/models/novice.glb) in Node, with no textures and no loader: the
-// tests need positions, joints and weights, not pictures. Returns what monk.dress() takes.
+// Reads the geometry of a worn body (app/shared/models/novice-tripo.glb, which the page wears by default since #163, or
+// novice.glb, Meshy's, for ?body=sculpt) in Node, with no textures and no loader: the tests need positions, joints and
+// weights, not pictures. Returns what monk.dress() takes.
 import fs from "node:fs";
 import * as THREE from "three";
 
 const FILE = new URL("../../app/shared/models/novice.glb", import.meta.url);
+export const TRIPO = new URL("../../app/shared/models/novice-tripo.glb", import.meta.url);
 const COMPONENT = { 5121: [Uint8Array, 1], 5123: [Uint16Array, 2], 5125: [Uint32Array, 4], 5126: [Float32Array, 4] };
 const WIDTH = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
 
@@ -28,9 +30,11 @@ export function readNovice(file = FILE) {
   return { geometries, extras: json.extras, json };
 }
 
-/** A monk wearing the sculpted body, as the page makes him once the file has arrived. */
-export function dressed(createMonk) {
-  const monk = createMonk(), { geometries, extras } = readNovice();
-  monk.dress(geometries, new THREE.MeshStandardMaterial(), extras.robeColor);
+/** A monk wearing a body (by default the one the page wears, Tripo's), as the page dresses him once the file has arrived: its helper bones added, the beads laid on it. */
+export function dressed(createMonk, file = TRIPO) {
+  const monk = createMonk(), { geometries, extras } = readNovice(file);
+  monk.dress(geometries, new THREE.MeshStandardMaterial(), extras.robeColor, { helpers: extras.helpers || [], eyes: file === TRIPO });
   return monk;
 }
+/** A monk wearing Meshy's body (?body=sculpt). */
+export const sculpted = (createMonk) => dressed(createMonk, FILE);

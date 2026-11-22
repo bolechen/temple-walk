@@ -5,6 +5,7 @@ import { FOG, SUN_DIR } from "./sky.js";
 import { declare, bind } from "./textures.js";
 import { TRAIL } from "./trail.js";
 import { LITTER_MEM } from "./litter.js";
+import { PROBE, PROBE_ON, PROBE_GLSL } from "./probe.js";
 
 const MAX_LAMPS = 14;
 // A step into standing water sends two rings across it, the second a moment behind the first, as the well's drop
@@ -54,7 +55,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
     lights: true,
     uniforms: bind(Object.assign(THREE.UniformsUtils.clone(THREE.UniformsLib.lights), {
       tRefl: { value: mirror ? rt.texture : blank }, uReflOn: { value: mirror ? 1 : 0 }, uTexM: { value: texM }, uFog: { value: FOG }, uSun: { value: SUN_DIR },
-      tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uFogShut: U.uFogShut, uFogShutY: U.uFogShutY, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC,
+      tShade: { value: lm.tex }, uShadeBox: { value: lm.box }, uCenser: { value: censerAt }, uFogD: U.uFogD, uFogLayer: U.uFogLayer, uFogShut: U.uFogShut, uFogShutY: U.uFogShutY, uSnow: U.uSnow, uWet: U.uWet, uAmb: U.uAmb, uSunC: U.uSunC, ...(PROBE_ON ? PROBE : {}),
       uLamp: U.uLamp, uCrownLeaf: { value: 1 }, tFallMap: U.tFallMap, uFallBox: U.uFallBox, uLitter: U.uLitter, uLitterCh: U.uLitterCh, uLitterCol: U.uLitterCol, tLitMem: U.tLitMem, tLitCover: U.tLitCover, uLitMem: U.uLitMem, uLitOn: U.uLitOn, uLitBase: U.uLitBase, uLitMode: U.uLitMode, tTrail: U.tTrail, uTrail: U.uTrail, uRip: rip, uLamps: { value: Array.from({ length: MAX_LAMPS }, () => new THREE.Vector4(0, 0, 1, 0)) },
     }), ["stone", "snow"]),
     vertexShader: /* glsl */`
@@ -77,7 +78,7 @@ export function createGround(scene, shade, censer, paving, trees = []) {
       #include <shadowmap_pars_fragment>
       #include <shadowmask_pars_fragment>
       ` + NOISE + FOGLAYER + (shut ? FOGSHUT : "") + declare(["stone", "snow"]) + TRAIL + /* glsl */`
-      varying vec3 vWP; uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
+      varying vec3 vWP; ${PROBE_ON ? PROBE_GLSL : ""} uniform sampler2D tRefl; uniform mat4 uTexM; uniform vec3 uFog, uSun, uAmb, uSunC; uniform float uReflOn, uFogD, uSnow, uWet; uniform vec4 uFogLayer;
       uniform sampler2D tShade; uniform vec4 uShadeBox; uniform vec2 uCenser; uniform float uCrownLeaf; uniform vec4 uLamps[${MAX_LAMPS}]; uniform float uLamp;
       uniform vec4 uRip[${RIPPLE.max}];
       // Leaves and petals lie where the trees let them fall (fall.js's map, the same one the falling ones read): two layers of
@@ -235,7 +236,8 @@ export function createGround(scene, shade, censer, paving, trees = []) {
         // A low sun, which is what lights the court at dawn and dusk, is a hundred times the sky at the stone's face, and the paving lit
         // by cosine alone gives its flecks and long shadows too little to read: lift the grazing light (none by day).
         float nl=max(dot(N,uSun),0.); nl=mix(nl,min(1.,1.15*sqrt(max(nl,0.))),1.-smoothstep(.15,.45,uSun.y));
-        vec3 lit=alb*(uAmb*ao*mix(.86,1.,sun)+uSunC*1.5*nl*ao*sun);
+        ${PROBE_ON ? `vec3 pb_=vec3(0.); float pv_=probeLight(vWP,vec3(0.,1.,0.),pb_); vec3 amb_=uAmb*pv_+pb_;` : `vec3 amb_=uAmb;`}
+        vec3 lit=alb*(amb_*ao*mix(.86,1.,sun)+uSunC*1.5*nl*ao*sun);
         // After dark every lamp lays a warm pool on the stone round its foot.
         if(uLamp>.01){ float pool=0.; for(int i=0;i<${MAX_LAMPS};i++){ vec4 L=uLamps[i]; if(L.w<=0.) break; vec2 dl=p-L.xy; pool+=L.w*exp(-dot(dl,dl)/(L.z*L.z)); } lit+=(alb*.55+.03)*vec3(1.,.56,.25)*min(pool,1.2)*uLamp*.85; }
         // Mirror in puddles; on damp stone only a stretched, blurred sheen. Without the mirror pass: the sky alone.

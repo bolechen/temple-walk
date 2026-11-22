@@ -375,7 +375,7 @@ const scenarios = {
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
-    expect((await t.state()).dressed === false, "a visitor should meet the novice built in code: the sculpted body is worn only with ?body=sculpt until its cloth stops tearing");
+    { const st = await t.state(); expect(st.dressed === true && st.body === "tripo", "a visitor should meet the novice in the layered body made from Tripo's model (#163; app/shared/models/novice-tripo.glb), on him before the page is ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
     { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
       expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
@@ -2057,6 +2057,12 @@ const scenarios = {
     await t.page.evaluate((p) => window.__walk([p]), foot); await t.until(async () => (await act()) === "登楼", 60000, "walking to the stair's foot did not offer 登楼");
     await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).up === "lingxiao", 30000, "E at the stair's foot did not take him up"); await clear();
     const L = await t.page.evaluate(() => window.__lofts.lingxiao); let s = await t.state();
+    // #587: up the stair the eye went up with him. Since the push into his own eyes (#102, #354) the eye set out from where it
+    // had stood in the room under the courts, 446 m off, and crept toward him at 0.12 m a frame: the visitor saw only a pale
+    // gradient and 下楼. Seen a few frames after the veil: the eye at his own eyes, a picture, and not the room's wall in it.
+    const sight = () => t.page.evaluate(() => { const q = window.__probe(), c = (window.__pick(innerWidth / 2, innerHeight / 2) || [])[0]; return { camDist: q.camDist, lum: Math.round(q.lum), pick: c ? c.part : null, cam: q.cam }; });
+    await t.frames(5); let v = await sight();
+    expect(v.camDist < 1 && v.lum > 12 && v.lum < 245 && v.pick !== "interior", "up the stair the eye should be at his own eyes on the balcony, not left in the room below: " + JSON.stringify(v));
     expect(!s.inside && s.view === "first" && Math.abs(s.h - L.floor) < 0.02 && Math.abs(s.yaw - L.face) < 0.05 && (await at(L.door, 0.1)), "up there he should stand at the top storey's door, facing south, with his own eyes: " + JSON.stringify(s));
     // A place counts as where he is only after two seconds of the audio clock (createZoneKeeper in score.js): a card that draws sixty frames a second has not let them pass by the time `clear()` returns.
     await t.until(async () => (await t.page.evaluate(() => window.__music().zone)) === "summit", 30000, "the music up there should be the summit's");
@@ -2084,12 +2090,17 @@ const scenarios = {
     expect((await t.page.textContent("#titleSeals")).includes("凌霄阁上"), "the title should say he was up on the pavilion: " + (await t.page.textContent("#titleSeals")) + " " + JSON.stringify(await t.page.evaluate(() => [window.__left(), localStorage.getItem("yunjing.place.v1")])));
     await t.page.click("#enterBtn"); await t.frames(3); s = await t.state();
     expect(s.up === "lingxiao" && Math.abs(s.h - L.floor) < 0.02 && s.view === "first", "coming back he is not up on the balcony: " + JSON.stringify(s));
+    // (#587) Stood up there again by the title's 接着走 (`place`), the eye is at his own eyes, not on its way from the title's.
+    await t.frames(5); v = await sight();
+    expect(v.camDist < 1 && v.pick !== "interior", "coming back up there the eye should be at his own eyes: " + JSON.stringify(v));
     await t.shot("e2e-loft");
     // Down from the door, to the stair's foot, the view he had below; and out of the hall.
     await t.page.evaluate((p) => window.__walk([p]), L.door); await t.until(async () => (await act()) === "下楼", 60000, "the door up there did not offer 下楼");
     await t.page.keyboard.press("e"); await t.until(async () => (await t.state()).room === "lingxiao" && !(await t.state()).up, 30000, "E at the door did not take him down"); await clear();
     s = await t.state(); expect(Math.hypot(s.x - s.stair[0], s.z - s.stair[1]) < 0.1 && s.h < -50, "coming down he is not at the stair's foot: " + JSON.stringify(s));
     expect(s.view === "third", "coming down he should see as he did below (from behind him): " + s.view);
+    await t.frames(5); v = await sight();
+    expect(v.camDist < 12 && v.lum > 12 && v.lum < 245, "down the stair the eye should be behind him in the room, not left up on the balcony: " + JSON.stringify(v));
     await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside, 30000, "could not leave the pavilion"); await clear();
     s = await t.state(); expect(!s.up && !s.inside && s.h > 19, "out of the door he should stand on the summit: " + JSON.stringify(s));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
@@ -2955,6 +2966,32 @@ const scenarios = {
     console.log("    recenter", JSON.stringify({ rate: q.rate, pitch: q.pitch, move: q.move, driftRate: q.driftRate }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // 回到起点 and the other ways he is put down somewhere else (#588): the eye is cut to him at once, never flown there. After a
+  // change of view (V, or coming down from the balcony, which hands back the view he had) the picture's own push (#102) is still
+  // under way, and a move of metres under it left the eye 0.12 m a frame from a place hundreds of metres off.
+  "home-cut": { tier: 2, async run(b, base) {
+    // The frames after a move: how far the eye is from him on each, and the most it moved relative to him between two.
+    const watch = (t, act, n = 30) => t.page.evaluate(([f, n]) => new Promise((res) => {
+      new Function(f)();   // the move itself
+      const rec = []; const one = () => { const y = window.__yard(), e = window.__frame().eye; rec.push([e[0] - y.x, e[2] - y.z]); if (rec.length < n) requestAnimationFrame(one); else res(rec); }; requestAnimationFrame(one);
+    }), [act, n]).then((rec) => ({ first: Math.hypot(...rec[0]), second: Math.hypot(...rec[Math.min(1, rec.length - 1)]), step: Math.max(...rec.slice(1).map((r, i) => Math.hypot(r[0] - rec[i][0], r[1] - rec[i][1]))), rec }));
+    const HOME = "window.__menu(true); document.getElementById('menuHome').click();", ARM = 6.5, FLAT = 0.15;
+    const cases = {
+      "home from the court, third person": { q: "q=low&view=third", set: "window.__pose(0, 10, 0, 0.1);", move: HOME },
+      "home from the court, first person": { q: "q=low&view=first", set: "window.__pose(0, 10, 0, 0.1);", move: HOME },
+      "home from the summit balcony": { q: "q=low&up=lingxiao", set: "", move: HOME },
+      "a move straight after a change of view": { q: "q=low&view=third", set: "", move: "window.__view('first'); window.__pose(0, -60, 0, 0.1);" },
+    };
+    for (const [name, c] of Object.entries(cases)) {
+      const t = await open(b, base, c.q + BARE);
+      await t.frames(8); if (c.set) await t.page.evaluate(c.set); await t.frames(8);
+      const r = await watch(t, c.move);
+      console.log("    " + name, JSON.stringify({ first: +r.first.toFixed(2), second: +r.second.toFixed(2), step: +r.step.toFixed(3) }));
+      expect(r.second <= ARM, `${name}: two frames after, the eye was ${r.second.toFixed(1)} m from him (an arm is ${ARM} m)`);
+      expect(r.step <= FLAT, `${name}: within 30 frames the eye moved ${r.step.toFixed(3)} m on its own in one frame (at most ${FLAT})`);
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   push: { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&view=third");
     await t.page.evaluate(() => window.__pose(0, 24, 0, -0.05)); await t.frames(20);
@@ -2979,12 +3016,41 @@ const scenarios = {
     console.log("    push", JSON.stringify({ into, out }));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // #587: wherever he is moved while the view changes (up and down the summit pavilion's stair, off the balcony by a seal
+  // in the book or a named view, a move while the eye is still being pushed into his eyes), the eye is with him the
+  // next frames, not crawling there from where it stood at PUSH.move a frame. (Up and down the stair itself: `loft`. The
+  // menu's 回到起点 is #588's.) It asks only where the eye is, so the place is not drawn.
+  "eye-jumps": { tier: 2, async run(b, base) {
+    // (?seals= is the workbench's, which a page on 127.0.0.1 is not: the bell's seal is written into the book before the page opens)
+    const t = await open(b, base, "q=low&view=third&up=lingxiao" + BARE, { init: () => { try { const now = Date.now(); localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: now - 6e5, seals: { bell: now - 3e5 }, strikes: 3, rings: 0, seen: [] })); } catch {} } });
+    const eye = async (what, near) => { await t.frames(3); const p = await t.probe(); expect(p.camDist < near && !p.pushing, `${what}: the eye should be with him (within ${near} m), not on its way from where it stood: ${JSON.stringify({ camDist: p.camDist, pushing: p.pushing, view: p.view, cam: p.cam })}`); return p.camDist; };
+    const seen = {};
+    await t.frames(10); seen.start = await eye("begun up on the balcony", 1);
+    // Off the balcony by a seal in the book (travel): down to the bell, behind him again.
+    await t.page.evaluate(() => window.__goBack("bell")); await t.until(async () => !(await t.state()).up && !(await t.page.evaluate(() => document.getElementById("veil").className)), 60000, "the seal never took him off the balcony");
+    seen.travel = await eye("off the balcony to the bell", 12);
+    // Up again by a named view (__show), and off it again by another.
+    await t.page.evaluate(() => window.__show("loft")); await t.until(async () => (await t.state()).up === "lingxiao", 30000, "the named view did not take him up");
+    seen.showUp = await eye("up to the balcony by its named view", 1);
+    await t.page.evaluate(() => window.__show("court")); await t.until(async () => !(await t.state()).up, 30000, "the named view did not take him down");
+    seen.showDown = await eye("down to the court by a named view", 12);
+    // Through a hall's door and out again (the room is sixty metres under the courts): the eye goes with him.
+    await t.page.evaluate(() => window.__inside("main")); await t.until(async () => (await t.state()).room === "main" && !(await t.page.evaluate(() => document.getElementById("veil").className)), 60000, "could not go into the great hall");
+    seen.doorIn = await eye("in through the great hall's door", 12);
+    await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.state()).inside && !(await t.page.evaluate(() => document.getElementById("veil").className)), 60000, "could not come out of the great hall");
+    seen.doorOut = await eye("out through the great hall's door", 12);
+    // Into his own eyes (V) and, while the eye is still on its way, moved two hundred metres off: there, not crawling.
+    await t.page.keyboard.press("v"); await t.frames(1); await t.page.evaluate(() => window.__pose(0, -110, 0, 0));
+    seen.poseMidPush = await eye("moved while going into his eyes", 1);
+    console.log("    eye-jumps", JSON.stringify(seen));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   views: { tier: 2, async run(b, base) {
     // `devpose` and `debug` are working aids (src/devpose.js, src/debug.js): the published site must neither show them
     // nor touch the address (the panel opens only on the dev server and a pull request's preview).
-    // `body=sculpt` asks for the sculpted body, which the page no longer wears unasked: this is where it is seen to arrive.
+    // `body=sculpt` asks for Meshy's body, which the page no longer wears unasked (Tripo's is the default, #163): this is where it is seen to arrive.
     const t = await open(b, base, "q=low&shot=1&cam=0,24,0,-0.05&view=third&devpose&debug&body=sculpt");
-    await t.until(async () => (await t.state()).dressed === true, 90000, "the sculpted body never arrived on the novice (app/shared/models/novice.glb)");   // fetched after the first frames; a missing or ill-fitting file leaves him as built in code, and this fails
+    { const st = await t.state(); expect(st.dressed === true && st.body === "sculpt", "the sculpted body (Meshy's, app/shared/models/novice.glb) was not on the novice when the page was ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }   // fetched while the place is built; a missing or ill-fitting file leaves him as built in code, and this fails
     let p = await t.probe(); expect(p.view === "third" && p.monk && p.camDist > 2.5, "third person: the eye should stand behind him: " + JSON.stringify(p));
     await t.page.evaluate(() => document.body.classList.remove("bare"));
     await t.page.keyboard.press("v"); await t.page.waitForTimeout(600);
@@ -3886,6 +3952,35 @@ const scenarios = {
     expect(await t.page.isVisible("#tour") && (await t.page.textContent("#tour")).includes("p95"), "the numbers were not shown");
 
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // The button at the foot of the picture says what he may do next (stand up, ring the bell, offer incense…), and on a phone the jump ring lies lower right: the
+  // button must not lie on the ring, in any language, with the longest of its words, on any of the phone's screens (the English 「Stand up」 on a 360 px screen
+  // overlapped the ring by 11 × 18 px, seen by the phone audit once it waited for the seated state, #614). The words are laid in a copy of the button, which
+  // takes the same rules by its id, so that the game's own tick, which puts the button away and brings it back, cannot change what is measured.
+  "stand-up": { tier: 2, async run(b, base) {
+    const { pathToFileURL } = require("url"), path = require("path"), words = ["起身", "坐下", "撞钟", "上香", "吃茶", "合掌", "观看", "为人点灯", "登楼", "下楼", "静坐", "观水"];
+    const said = { zh: Object.fromEntries(words.map((w) => [w, w])) };
+    for (const l of ["en", "ja", "ko"]) { const m = (await import(pathToFileURL(path.join(__dirname, "../../app/locales", l + ".js")).href)).default; said[l] = Object.fromEntries(words.map((w) => [w, m[w] || w])); }
+    for (const lang of ["zh", "en", "ja", "ko"]) for (const [w, h] of [[360, 640], [390, 844], [844, 390], [430, 932]]) {
+      const t = await open(b, base, `q=low&lang=${lang}` + BARE, { viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
+      const mb = (await t.page.evaluate(() => window.__probe())).monkBox;
+      const r = await t.page.evaluate(([said, mb]) => {
+        const real = document.getElementById("act"), out = [], GAP = 8;
+        // how far apart two boxes are: the larger of the gaps along either axis (negative: they lie on each other, by that much)
+        const gap = (a, q) => Math.max(a.left - q.right, q.left - a.right, a.top - q.bottom, q.top - a.bottom);
+        const others = [["stick", "#stick"], ["jump ring", "#jumpBtn"], ["turn ring", "#turnBtn"]].map(([n, sel]) => [n, document.querySelector(sel)]).filter(([, e]) => e && getComputedStyle(e).display !== "none").map(([n, e]) => [n, e.getBoundingClientRect()]);
+        if (mb) others.push(["figure", { left: mb[0], top: mb[1], right: mb[0] + mb[2], bottom: mb[1] + mb[3] }]);
+        for (const [zh, label] of Object.entries(said)) {
+          const c = real.cloneNode(false); c.hidden = false; c.removeAttribute("data-word"); c.innerHTML = `<i class="enso"><kbd>E</kbd></i><span>${label}</span>`; real.after(c);
+          const a = c.getBoundingClientRect();
+          for (const [n, q] of others) { const g = gap(a, q); if (g < GAP) out.push(`「${label}」 (${Math.round(a.left)}..${Math.round(a.right)}, ${Math.round(a.top)}..${Math.round(a.bottom)}) is ${Math.round(g)} px from the ${n}`); }
+          if (a.left < 0 || a.right > innerWidth) out.push(`「${label}」 runs off the screen (${Math.round(a.left)}..${Math.round(a.right)} of ${innerWidth})`);
+          c.remove();
+        }
+        return out; }, [said[lang], mb]);
+      expect(r.length === 0, `in ${lang} at ${w}x${h}: ${r.join("; ")}`);
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
   } },
   // On a phone: touch to look, a tap to walk, controls inside the screen and large enough for a thumb.
   phone: { tier: 2, async run(b, base) {

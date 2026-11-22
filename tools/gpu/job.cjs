@@ -1,7 +1,7 @@
 // Runs inside a Hugging Face Job that has a real graphics card: opens the temple in Chromium with the GPU,
 // measures how many frames a second each quality tier really draws, and takes the pictures asked for.
 //   node job.cjs <app dir> <out dir> '<json spec>'
-// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, level, before, after }], seconds: 6 }
+// spec: { opening: { runs: [{ q, size, scale }] }, director: { size, q, places }, rites: { size, q }, tour: { runs, size, q, film, filmSize }, shots: ["court@autumn-dusk@third", { name, size, q }, { file, query, size, js, wait }, ...], size: [w, h], scale: 1, bench: [{ view, q, size, season, time, off, in, cam, level, body, trial, before, after }], seconds: 6 }
 // `level` names the level every page is opened on (?level=, docs/t05/LEVEL-SPLIT.md S6; the prologue when it is left out).
 // A bench row may name its own `level`, so that two temples are measured turn about in one job (docs/t05/PLAN.md item 13).
 // `off` switches parts of the scene off (see ?off= in app/yard.js), to learn what each costs.
@@ -84,7 +84,7 @@ function fingerprint(dir) {
   for (const b of spec.bench || []) {
     const size = b.size || [1920, 1080], secs = spec.seconds || 6;
     try {
-      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync, terrain: b.terrain, level: b.level }), size, b.scale || 1, { path: b.path || "" });
+      const { ctx, page, loadMs } = await open(q({ q: b.q, show: b.view, view: b.as || "third", season: b.season, time: b.time, off: b.off, in: b.in, cam: b.cam, walker: b.walker, enter: b.enter, doorsync: b.doorsync, terrain: b.terrain, body: b.body, trial: b.trial, level: b.level }), size, b.scale || 1, { path: b.path || "" });
       await page.waitForTimeout(b.warm || 1500);   // `warm`: longer, for what is taken in its first seconds (the doorways, #218)
       if (b.before) await page.evaluate(`(async () => { ${b.before} })()`);   // `before`: a script run before the frames are counted (the ground filled with what has fallen, #267)
       // (#161) `walk`: he walks these points while the frames are counted, so that the walker is asked what it is asked in play
@@ -93,7 +93,7 @@ function fingerprint(dir) {
       const z = await page.evaluate(() => ({ f: window.__yard().frames, t: performance.now(), y: window.__yard(), buf: [document.getElementById("yardGl").width, document.getElementById("yardGl").height], walker: window.__walker ? window.__walker() : null, doors: window.__doorways ? window.__doorways() : null }));
       if (z.walker) z.walker.msPerFrame = +(z.walker.ms / Math.max(1, z.f - a.f)).toFixed(4);
       const cost = await page.evaluate(() => (window.__cost ? window.__cost(40) : null));   // drawing alone, without the browser's presenting
-      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, walker: z.walker, doors: z.doors, at: [z.y.x, z.y.z] };   // doors: the rooms seen through the doors (#218)
+      const fps = +(((z.f - a.f) * 1000) / (z.t - a.t)).toFixed(1), row = { ...b, size, fps, ms: +(1000 / Math.max(fps, 0.01)).toFixed(2), cost, loadMs, tris: z.y.tris, calls: z.y.calls, buffer: z.buf, tier: z.y.tier, body: z.y.body, walker: z.walker, doors: z.doors, at: [z.y.x, z.y.z] };   // doors: the rooms seen through the doors (#218)
       if (b.after) row.after = await page.evaluate(`(async () => { ${b.after} })()`).catch((e) => ({ error: String(e.message).slice(0, 200) }));   // `after`: a script run once the frames are counted, its answer kept (the doorways' retake on a change of hour, #218)
       report.bench.push(row); console.log("bench", JSON.stringify(row)); await ctx.close();
     } catch (e) { report.bench.push({ ...b, error: String(e.message).slice(0, 200) }); console.log("bench failed", b, String(e.message).slice(0, 200)); }

@@ -17,6 +17,18 @@ import * as THREE from "three";
 const { buildSite, createWalker, placeLift } = await import("../../app/src/site.js");
 const { createMonk } = await import("../../app/src/monk.js");
 const { createRites } = await import("../../app/src/rites.js");
+const { readNovice, dressed, TRIPO } = await import("./novice-glb.mjs");
+import fs from "node:fs";
+import sharp from "sharp";
+// The body the page wears by default (#163): its eyes are in its texture, not in vertex colours.
+const tripo = readNovice(TRIPO);
+async function textureOf(file, json) {
+  const bytes = fs.readFileSync(file), binAt = 20 + bytes.readUInt32LE(12), bin = bytes.subarray(binAt + 8), t = json.textures[json.materials[0].pbrMetallicRoughness.baseColorTexture.index];
+  const view = json.bufferViews[json.images[t.source ?? t.extensions.EXT_texture_webp.source].bufferView];
+  return sharp(bin.subarray(view.byteOffset || 0, (view.byteOffset || 0) + view.byteLength)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+}
+const tripoTexture = await textureOf(TRIPO, tripo.json);
+const BODIES = [["built in code", createMonk, null], ["Tripo's, worn by default", () => dressed(createMonk), tripoTexture]];
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), walker = createWalker(site);
 
@@ -24,8 +36,8 @@ const site = buildSite(M), walker = createWalker(site);
 let now = 0; performance.now = () => now;
 
 /** The whole drink, frame by frame; `each(monk, rites, bowl)` after every frame from the moment he begins it. */
-async function drink(each) {
-  const monk = createMonk(), G = monk.group, scene = new THREE.Scene(), ticks = [];
+async function drink(each, make = createMonk) {
+  const monk = make(), G = monk.group, scene = new THREE.Scene(), ticks = [];
   scene.add(G);
   // sat on his stool as the walk sits him there (yard.js: drawn at the seat, lifted by placeLift, turned to the place's face)
   const p = site.places.tea, s = p.seat || p.at, floor = walker.heightAt(p.at[0], p.at[1]);
@@ -41,14 +53,19 @@ async function drink(each) {
   return monk;
 }
 
-/** The eyes' strokes and the hands' vertices on the figure built in code. */
-function parts(monk) {
-  const g = monk.parts.skin.geometry, p = g.attributes.position, col = g.attributes.color, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, names = monk.skeleton.bones.map((b) => b.name);
+/** The eyes' strokes (or, on a body with a texture, the dark of its irises there) and the hands' vertices. */
+function parts(monk, texture = null) {
+  const g = monk.parts.skin.geometry, p = g.attributes.position, uv = g.attributes.uv, col = g.attributes.color, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, names = monk.skeleton.bones.map((b) => b.name);
   let top = 0, front = -1; for (let i = 0; i < p.count; i++) { top = Math.max(top, p.getY(i)); if (p.getY(i) > 0.9) front = Math.max(front, p.getZ(i)); }
   const eyes = { left: [], right: [] }, hands = [];
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), yv = p.getY(i), z = p.getZ(i);
-    if (yv > top - 0.3 && z > front - 0.05 && Math.abs(x) > 0.02 && Math.abs(x) < 0.1 && Math.max(col.getX(i), col.getY(i), col.getZ(i)) < 0.3) eyes[x > 0 ? "left" : "right"].push(i);
+    if (yv > top - 0.3 && z > front - 0.05 && Math.abs(x) > 0.02 && Math.abs(x) < 0.1) {
+      let c;
+      if (texture) { const { data, info } = texture, u = Math.min(info.width - 1, Math.round(uv.getX(i) * (info.width - 1))), w = Math.min(info.height - 1, Math.round(uv.getY(i) * (info.height - 1))), o = (w * info.width + u) * 3; c = [data[o], data[o + 1], data[o + 2]].map((k) => k / 255); }
+      else c = [col.getX(i), col.getY(i), col.getZ(i)];
+      if (Math.max(...c) < 0.3) eyes[x > 0 ? "left" : "right"].push(i);
+    }
     let w = 0; for (let k = 0; k < 4; k++) if (/Hand$/.test(names[si.getComponent(i, k)])) w += sw.getComponent(i, k);
     if (w > 0.5) hands.push(i);
   }
@@ -66,14 +83,15 @@ function margin(monk, { eyes, hands }) {
   return least;
 }
 
-test("drinking his tea, his hands stay at least 1 cm below his eyes from the lifting of the bowl to its setting down", async () => {
+for (const [which, make, texture] of BODIES) test(`drinking his tea, his hands stay at least 1 cm below his eyes from the lifting of the bowl to its setting down (${which})`, async () => {
   let pp = null, least = Infinity, at = null, frames = 0, sips = 0;
   await drink((monk, rites) => {
-    pp ||= parts(monk); frames++; sips = rites.state().tea.sips;
+    pp ||= parts(monk, texture); frames++; sips = rites.state().tea.sips;
     const m = margin(monk, pp); if (m < least) { least = m; at = frames; }
-  });
-  assert.ok(pp.eyes.left.length > 10 && pp.eyes.right.length > 10 && pp.hands.length > 100, "the eyes' strokes and the hands are found");
+  }, make);
+  assert.ok(pp.eyes.left.length > 3 && pp.eyes.right.length > 3 && pp.hands.length > 100, `the eyes' strokes and the hands are found: ${pp.eyes.left.length}, ${pp.eyes.right.length}, ${pp.hands.length}`);
   assert.ok(frames > 300 && sips === 3, `the drink ran ${frames} frames, ${sips} sips`);
+  console.log(`# ${which}: hands at least ${(least * 100).toFixed(1)} cm below the eyes' lower edge (frame ${at})`);
   assert.ok(least >= 0.01, `at frame ${at} of the drink a hand comes ${least >= 0 ? (least * 100).toFixed(1) + " cm below" : (-least * 100).toFixed(1) + " cm over"} the lower edge of an eye`);
 });
 

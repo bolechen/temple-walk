@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { createRequire } from "node:module";
-const { siteChanged, walkChanged, codeChanged, lastDeployed, DOC_TESTS, LIMIT } = createRequire(import.meta.url)("../../tools/ci/changes.cjs");
+const { siteChanged, walkChanged, codeChanged, prCompare, lastDeployed, DOC_TESTS, LIMIT } = createRequire(import.meta.url)("../../tools/ci/changes.cjs");
 
 test("a change under app/ builds; so do the files the build or the browser tests are made of", () => {
   for (const f of ["app/yard.js", "app/src/interior.js", "app/shared/fonts/kai.woff2", "tests/e2e/run.cjs", "package.json", "pnpm-lock.yaml", "vite.config.mjs", "wrangler.production.jsonc", "wrangler.canary.jsonc", "worker/index.js", "worker/trace-core.js", "tools/worker-smoke.mjs", "tools/setup.mjs", "tools/site.cjs", ".github/workflows/pages.yml", "tools/ci/changes.cjs"]) {
@@ -235,4 +235,30 @@ test("evidence-mirror: runs of different branches never queue in one group; each
   assert.match(group[1], /github\.ref/, "pull request runs are grouped by their own branch");
   assert.match(group[1], /github\.event_name == 'push' && github\.sha/, "a push to main is its own group, so the next push cannot replace it");
   assert.doesNotMatch(group[1].trim(), /^evidence-mirror$/, "not one group for everything");
+});
+
+// #601: a pull request with no preview yet used to be compared with nothing, and so was built whole, though it only changed papers
+// (#597, #598 and #600). It is now compared with its base, and what that says is decided by the same lists as every other push.
+test("a pull request with a preview is compared with the commit the preview shows; without one, with its base", () => {
+  const shown = { deployed: "d".repeat(40), fixed: "https://f.example", latest: "https://l.example" }, base = "b".repeat(40);
+  assert.deepEqual(prCompare(shown, base), { sha: "d".repeat(40), deployed: true }, "what the preview shows, not the base");
+  for (const none of [null, undefined, {}, { fixed: "https://f.example", latest: "https://l.example" }, { deployed: "d".repeat(40) }]) assert.deepEqual(prCompare(none, base), { sha: base, deployed: false }, JSON.stringify(none));
+  assert.equal(prCompare(null, undefined), null, "no preview and no base: nothing to compare, so it builds");
+});
+
+test("a new pull request that only changes papers builds and tests nothing; one that changes code builds as before", () => {
+  const papers = ["docs/t00/decisions.md", "README.md", "skills/ci/SKILL.md"], code = [...papers, "app/src/mood.js"];
+  assert.equal(siteChanged(papers), false);
+  assert.equal(walkChanged(papers), false);
+  assert.equal(codeChanged(papers), false, "papers alone: only the tests that read papers");
+  assert.equal(siteChanged(code), true);
+  assert.equal(walkChanged(code), true);
+  assert.equal(codeChanged(code), true);
+  assert.equal(siteChanged(null), true, "a comparison that could not be made builds");
+});
+
+test("pages.yml tells changes.cjs the pull request's base commit", () => {
+  const y = fs.readFileSync(new URL("../../.github/workflows/pages.yml", import.meta.url), "utf8");
+  const step = /- name: Did this push touch the site\n([\s\S]*?)run: node tools\/ci\/changes\.cjs/.exec(y)?.[1] || "";
+  assert.match(step, /BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/);
 });

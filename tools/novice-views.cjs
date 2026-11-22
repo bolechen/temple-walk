@@ -11,8 +11,8 @@
 // move him (monk.update, frame by frame from his rest pose). `--code` shows the body built in code; `--glb` a sculpted one
 // from any file in novice.glb's format, so the shipped file and a rebuilt one can be set beside each other without
 // touching app/. Given more than one of them (issue #246), each pose's row holds every body's views in the order given,
-// with a gap between bodies. `--near=<k>` comes k times closer, looking at height `--focus=<m>` (and `--focusx=<m>` across); `--faces` paints back faces magenta on a green ground (a hole shows green); `--hide=legs,skin` leaves parts out; `--beads[=gap]` lays the beads on the body worn, gap metres off its cloth (#286, tools/novice-rig.mjs); `--brow=y,z` puts the incense hands elsewhere in the head's frame (rites.js has 0.15,0.15), to try an offset without touching app/. `--poses` (stand, pray, walk, chair, sit; and, only when named, tea and incense: the bowl at his lips and the sticks at his brow) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
-// quick look while a body is being adjusted. The walking row is frame 52 of a stride from standing (`--walk` for another).
+// with a gap between bodies. `--near=<k>` comes k times closer, looking at height `--focus=<m>` (and `--focusx=<m>` across); `--faces` paints back faces magenta on a green ground (a hole shows green); `--lid=<0..1>` holds the Tripo body's eyelids (#607); `--hide=legs,skin` leaves parts out; `--beads[=gap]` lays the beads on the body worn, gap metres off its cloth (#286, tools/novice-rig.mjs); `--brow=y,z` puts the incense hands elsewhere in the head's frame (rites.js has 0.15,0.15), to try an offset without touching app/. `--poses` (stand, pray, walk, chair, sit; and, only when named, tea and incense: the bowl at his lips and the sticks at his brow) and `--sides` (正, 侧, 背, 斜俯) pick a few, for a
+// quick look while a body is being adjusted. The walking row is frame 52 of a stride from standing (`--walk` for another). `--poses=turn` is the turn about to set off (#284), the frame being those since the word to go (6, 0.2 s, by default with `--walk=6`).
 // The page itself, the light and the paving are portrait.js's job; this is for the shape and the seams.
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
@@ -58,6 +58,7 @@ async function sleeveCount(img, ids) {
   const urls = bodies.map((g) => (g ? `body${files.indexOf(g)}.glb` : null));
   for (const u of urls) if (u) await p.evaluate((u) => window.stage.load(u), u);
   if (process.argv.includes("--faces")) await p.evaluate(() => { window.stage.faces = true; });
+  if (arg("lid", null)) await p.evaluate((v) => { window.stage.lid = v; }, +arg("lid"));   // eyelids held at 0 (open) to 1 (shut), #607
   if (arg("hide", null)) await p.evaluate((h) => { window.stage.hide = h.split(","); }, arg("hide"));
   if (process.argv.some((a) => a.startsWith("--beads"))) await p.evaluate((g) => { window.stage.beads = g; }, +(arg("beads", "0.004")) || 0.004);   // #286: the beads laid on the body worn (tools/novice-rig.mjs relayBeads)
   // #286: `--cam=x,y,z:lx,ly,lz:fov` an observance's shot in the place's frame (site.js SHOTS), `--size=w,h` its picture,
@@ -77,7 +78,7 @@ async function sleeveCount(img, ids) {
   if (focus) await p.evaluate(([f, x]) => { window.stage.focus = f; window.stage.focusX = x; }, [+focus, +arg("focusx", 0)]);
   const F = 0, S = Math.PI / 2, B = Math.PI, A = Math.PI / 4;   // front, his left side, behind, front-left from above
   const SIDES = [["正", F], ["侧", S], ["背", B], ["斜俯", A, 0.6]].filter(([n]) => !onlySides || onlySides.includes(n));
-  const ROWS = [["站立", "stand"], ["合掌", "pray"], ["走路", "walk"], ["坐凳", "chair"], ["盘坐", "sit"], ["吃茶", "tea"], ["举香", "incense"], ["坐着吃茶", "teaSeat"], ["绑定", "bind"]].filter(([, k]) => onlyPoses || (k !== "tea" && k !== "incense" && k !== "bind" && k !== "teaSeat")).filter(([, k]) => !onlyPoses || onlyPoses.includes(k));
+  const ROWS = [["站立", "stand"], ["合掌", "pray"], ["走路", "walk"], ["坐凳", "chair"], ["盘坐", "sit"], ["吃茶", "tea"], ["举香", "incense"], ["坐着吃茶", "teaSeat"], ["绑定", "bind"], ["掉头起步", "turn"]].filter(([, k]) => onlyPoses || (k !== "tea" && k !== "incense" && k !== "bind" && k !== "teaSeat" && k !== "turn")).filter(([, k]) => !onlyPoses || onlyPoses.includes(k));
   const sheet = [], report = [];
   for (const [label, pose] of ROWS) {
     const groups = [];
