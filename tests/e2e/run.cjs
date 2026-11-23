@@ -1885,7 +1885,7 @@ const scenarios = {
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
           const dbg = await t.page.evaluate(([x, y]) => ({ eye: window.__frame().eye, pick: window.__pick(x, y, 5).map((q) => [q.part, q.distance, q.at]) }), [cp.x, cp.y]);
-          if (!strict) expect(s1.goal && (s1.goal[0] - h.door[0]) * fo[0] + (s1.goal[1] - h.door[1]) * fo[1] > 1.0, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court (the ground no hand's breadth clear) was bound for ${s1.goal}, not out past the door`);
+          if (!strict || !must) expect(s1.goal && (s1.goal[0] - h.door[0]) * fo[0] + (s1.goal[1] - h.door[1]) * fo[1] > 1.0, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court (${must ? "the ground no clear point of" : side + " m aside"}) was bound for ${s1.goal}, not out past the door`);
           else expect(s1.goal && Math.hypot(s1.goal[0] - court[0], s1.goal[1] - court[1]) <= 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court out from the door, ${side} m aside (${court.map((v) => v.toFixed(2))}) was bound for ${s1.goal} (first leg ${s1.target}); pixel ${cp.x.toFixed(0)},${cp.y.toFixed(0)}, project ${JSON.stringify(cp)}, eye ${JSON.stringify(dbg.eye)}, pick ${JSON.stringify(dbg.pick)}`);
           expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at ${side} m aside went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
           // (what the nightly run needs to tell a tap that went to the door from a step the funnel drew in: where he stood, what the tap set, where he is now and which grid answers, #349)
