@@ -13,7 +13,6 @@ const { levelPlan, need, isPrologue } = await import("./level-plan.mjs");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
-const { wayThrough } = await import("../../app/src/route.js");
 const { followEye, createFollow, FRAMES, frameArm, aimAt, FOLLOW } = await import("../../app/src/eye.js");
 const { createEyeSpace, eyeRadius } = await import("../../app/src/eyespace.js");
 const { buildDrawn } = await import("../../tools/walk/scene.mjs");
@@ -56,14 +55,14 @@ function thickBetween(a, b, min = 0.95) {
 }
 
 /** Walk `path` as follow.test walks it, on the baked floor; for every frame, how far the eye stands from him and whether he is in the picture. */
-function walk(path, { reach = 6.2, pitch = 0.04, clear = false, speed = 2.1, lax = false } = {}) {
+function walk(path, { reach = 6.2, pitch = 0.04, clear = false } = {}) {
   const follow = createFollow(), out = [], cam = new THREE.PerspectiveCamera(FOV, ASPECT, 0.1, 500);
   let x = path[0][0], z = path[0][1], yaw = Math.atan2(path[1][0] - x, -(path[1][1] - z)), eyeY = walker.eyeAt(x, z), prev = null, lastYaw = yaw;
   for (const [tx, tz] of path.slice(1)) {
     for (let n = 0; n < 20000; n++) {
       const vx = tx - x, vz = tz - z, l = Math.hypot(vx, vz); if (l < 0.02) break;
-      const step = Math.min(l, (walker.onStairs(x, z) ? 1.25 : speed) * dt); x += (vx / l) * step; z += (vz / l) * step;
-      assert.ok(lax || !walker.blocked(x, z), `the route passes through (${x.toFixed(2)}, ${z.toFixed(2)}), where he cannot walk`);
+      const step = Math.min(l, (walker.onStairs(x, z) ? 1.25 : 2.1) * dt); x += (vx / l) * step; z += (vz / l) * step;
+      assert.ok(!walker.blocked(x, z), `the route passes through (${x.toFixed(2)}, ${z.toFixed(2)}), where he cannot walk`);
       const want = Math.atan2(vx, -vz); yaw += Math.atan2(Math.sin(want - yaw), Math.cos(want - yaw)) * (1 - Math.exp(-3 * dt));
       const foot = walker.heightAt(x, z);
       eyeY += (walker.eyeAt(x, z) - eyeY) * (1 - Math.exp(-dt / 0.14));
@@ -186,18 +185,5 @@ test("#295: the eye's sphere covers the near plane at the widest lenses the page
       for (const route of springs.lensRoutes) { const cut = walk(routes[route], { clear: true }).filter((f) => f.cut); if (cut.length) bad.push(`${name} (r ${space.radius.toFixed(3)} m), ${route}: ${cut.length} frames, first at (${cut[0].x.toFixed(1)}, ${cut[0].z.toFixed(1)})`); if (process.env.ARM_REPORT && cut.length) console.log(name, route, cut.map((f) => `${f.x.toFixed(1)},${f.z.toFixed(1)}`).join(' ')); }
     }
   } finally { space.radius = eyeRadius(FOV, ASPECT, 0.1); }
-  assert.deepEqual(bad, []);
-});
-
-// #411 (eyeroom, nightly run 45060329278): round the great hall's platform at ?fast=1's 14 m/s the eye, risen over the platform's edge to see him and
-// lowered again at FOLLOW.liftSpeed, grazed the edge on its way down (eye (-16.44, 1.66, -8.4), him at (-18.99, -8.9)): never in something drawn.
-test("#411: round the great hall's platform at a run, the eye never stands in something drawn", { skip: "WIP: repro of #411 eyeroom, not yet faithful (lax walk); not a gate" }, () => {
-  const bad = [];
-  for (const speed of [2.1, 14]) for (const route of [[[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 0], [0, 1.5]], [[0, 1], [-19.5, 1], [-19.5, -29]]]) {
-    // (the way the page walks it: a leg something stands across is searched round, as __walk does)
-    const way = wayThrough(walker, walker.drops, { x: route[0][0], z: route[0][1] }, route.slice(1).map(([x, z]) => ({ x, z })));
-    const cut = walk([route[0], ...way.filter((p) => !walker.blocked(p.x, p.z)).map((p) => [p.x, p.z])], { clear: true, speed, lax: true }).filter((f) => f.cut);
-    if (cut.length) bad.push(`${speed} m/s: ${cut.length} frames, first with him at (${cut[0].x.toFixed(2)}, ${cut[0].z.toFixed(2)}), eye (${cut[0].c.map((v) => v.toFixed(2))})`);
-  }
   assert.deepEqual(bad, []);
 });
