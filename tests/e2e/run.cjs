@@ -1846,7 +1846,7 @@ const scenarios = {
   // The halls whose court taps may be weaker than "bound for the point" (#411): the summit pavilion's doorway eye is 1.29 m above him and the ground falls away in front of it, so at 6 m the line of sight comes within 0.08 m of the ground's own slope. Names are added here by hand, never by the test.
   hallexit: { tier: 2, async run(b, base) {
     const WEAK_COURT = ["lingxiao"];
-    for (const [view, touch] of [["third", false], ["first", false], ["third", true]]) {
+    for (const [view, touch] of [["third", false], ["first", false], ["third", true]].filter((v) => !process.env.HV || process.env.HV === v.join())) {   // (HV=first,false: one of the three passes, to look at it alone)
       // Only the third person has to draw the halls: where a tap on the ground lands is worked out from the eye, and the eye asks the drawn halls what stands in its way
       // (a hall switched off with ?off= is no wall to it, #391), so with the halls off it tests an eye no visitor has. From his own eyes the eye is his head: BARE is as true.
       const t = await open(b, base, `q=low&enter&view=${view}&season=summer&time=day` + (view === "third" ? "" : BARE), { hasTouch: touch });
