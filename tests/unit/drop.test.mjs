@@ -57,3 +57,16 @@ test("too short to step onto a stool, he hops up onto it with his own jump and c
   assert.ok(plan.lift >= 3.0 && plan.lift < 3.15, `a stool at a grown man's height takes about his own jump (${plan.lift.toFixed(2)} m/s)`);
   assert.ok(seatHop(from, [0.6, 0.6, 0], 3.0, 9.8).lift > 3.0, "a higher seat asks a harder jump");
 });
+
+test("getting up from a stool or bench, he hops lightly down onto the floor instead of dropping in one frame", async () => {
+  const { seatHopOff, dropPose } = await import("../../app/src/drop.js");
+  const from = [0.6, 0.44, 0.1], to = [0, 0, 0], plan = seatHopOff(from, to);
+  const start = dropPose(plan, 0), end = dropPose(plan, plan.duration);
+  assert.deepEqual([start.x, start.y, start.z], from, "he leaves from the seat's top");
+  assert.ok(end.done && Math.abs(end.x - to[0]) < 1e-9 && Math.abs(end.y - to[1]) < 1e-9 && Math.abs(end.z - to[2]) < 1e-9, "he lands cleanly on the floor beside it");
+  let apex = -Infinity, low = Infinity;
+  for (let t = 0; t <= plan.duration; t += plan.duration / 50) { const p = dropPose(plan, t); apex = Math.max(apex, p.y); low = Math.min(low, p.y); }
+  assert.ok(apex > from[1] && apex < from[1] + 0.08, `a light push off the edge, not a high bounce (apex ${apex.toFixed(3)} m)`);
+  assert.ok(low >= -1e-9, "never dips below the floor");
+  assert.ok(plan.duration > 0.25 && plan.duration < 0.5, `snappy dismount (${plan.duration.toFixed(2)} s)`);
+});

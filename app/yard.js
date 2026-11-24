@@ -66,7 +66,7 @@ import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { poseQuery, readEye } from "./src/link.js";
 import { PRODUCTION } from "./src/deploy.js";
-import { findDrop, dropPose, findClimb, climbPose, seatHop, stepOff, stepPose } from "./src/drop.js";
+import { findDrop, dropPose, findClimb, climbPose, seatHop, seatHopOff, stepOff, stepPose } from "./src/drop.js";
 import { planSteps, clearLine, wayThrough } from "./src/route.js";
 import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settleAt } from "./src/gridwalker.js";
 import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
@@ -799,18 +799,25 @@ function frame(now) {
   heading += Math.atan2(Math.sin(want - heading), Math.cos(want - heading)) * Math.min(1, dt * 9);
   // Seated on something that stands in the way (a stool): he came to stand behind it, and is drawn on it while he sits.
   const sat = stage && stage.seat ? stage.seat : null;
-  // He is drawn going over to a seat and down onto it; a seat higher than he can step onto (a stool) he hops up onto,
-  // with his own jump, from where he stood beside it, tucking his legs under him as he comes down on its top.
-  if (stage !== climbFor) { climbFor = stage; climb = null; if (stage && sat && (stage.lift || 0) > 0.25 && drawn) { climb = { plan: seatHop([drawn[0], footY, drawn[2]], [sat[0], footY + stage.lift, sat[1]], JUMP.speed, JUMP.gravity), t: 0 }; climbs++; } }
-  if (climb) { climb.t += dt; const p = dropPose(climb.plan, climb.t); drawn = [p.x, p.y, p.z]; if (p.done) climb = null; }
+  // He is drawn going over to a seat and down onto it; a seat higher than he can step onto (a stool, sill-bench or
+  // platform) he hops up onto, and hops lightly back down from when he gets up, instead of dropping straight onto the floor.
+  if (stage !== climbFor) {
+    const prev = climbFor; climbFor = stage; climb = null;
+    if (stage && sat && (stage.lift || 0) > 0.25 && drawn) { climb = { plan: seatHop([drawn[0], footY, drawn[2]], [sat[0], footY + stage.lift, sat[1]], JUMP.speed, JUMP.gravity), t: 0 }; climbs++; }
+    else if (!stage && prev && prev.seat && drawn && ((prev.lift || 0) > 0.25 || drawn[1] - footY > 0.25)) { climb = { plan: seatHopOff(drawn, [pos.x, footY, pos.z]), t: 0, down: true }; }
+  }
+  if (climb) {
+    if (climb.down) { climb.plan.to[0] = pos.x; climb.plan.to[1] = footY; climb.plan.to[2] = pos.z; }
+    climb.t += dt; const p = dropPose(climb.plan, climb.t); drawn = [p.x, p.y, p.z]; if (p.done) climb = null;
+  }
   else if (!stage || !drawn) drawn = [sat ? sat[0] : pos.x, footY, sat ? sat[1] : pos.z];
   else { const k = Math.min(1, dt * 7); drawn[0] += ((sat ? sat[0] : pos.x) - drawn[0]) * k; drawn[2] += ((sat ? sat[1] : pos.z) - drawn[2]) * k; drawn[1] += (footY + (stage.lift || 0) - drawn[1]) * k; }
-  monk.group.position.set(drawn[0], stage ? drawn[1] : footY, drawn[2]); monk.group.rotation.y = heading;
+  monk.group.position.set(drawn[0], stage || climb ? drawn[1] : footY, drawn[2]); monk.group.rotation.y = heading;
   monk.group.visible = photo.on ? photo.monk : view === "third";
   if (walkViz) walkViz.update(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
   // (`posed`: a tool may have him walk, hurry, climb, hop or sit on the spot, to be looked at closely: `__act`.)
   if (posed) monk.update(dt || 1 / 30, posed.speed || 0, posed.pose || false, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: !!posed.stairs, act: posed.act || null });
-  else { monk.blinking = !Q.has("shot") && !photo.on; monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) ? 0 : speedNow, (aloft && !stepping) || (climb && climb.t < climb.plan.duration * 0.5) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null }); }
+  else { monk.blinking = !Q.has("shot") && !photo.on; monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) || climb ? 0 : speedNow, (aloft && !stepping) || (climb && climb.t < climb.plan.duration * (climb.down ? 0.72 : 0.5)) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null }); }
   // Where he steps outdoors in the snow he leaves his prints (a room's floor keeps none, and the square stays outside),
   // and every step is heard, as what it comes down on sounds: snow, dry stone, stone wet after rain, a puddle in the
   // paving, a hall's floor. A little to the side of the foot that made it (his left is the listener's left, from
@@ -1223,7 +1230,7 @@ function indoors(hall) {
   if (hall) { if (hall.up) hints.say.stair(); else hints.say.indoors(); }
   const on = !!hall; if (on) { lastHall = hall; hallIn = rooms.rooms[hall.id]; lookOut(hall); hallIn.hang(); }
   inside = on; if (rooms) rooms.group.visible = on;   // the rooms under the courts are drawn only from inside one (and into a doorway's cube, doorway.js)
-  walker.setRoom(on ? hallIn.room : null); probes.setRoom(on ? hall.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
+  walker.setRoom(on ? hallIn.room : null); probes.setRoom(on ? hall.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = climb = climbFor = drawn = null;
   for (const r of Object.values(rooms.rooms)) for (const l of r.lights) l.visible = on && r === hallIn;
   for (const o of scene.children) if (COURTS.includes(o.userData.part)) o.visible = !on && !OFF.has(o.userData.part);   // nothing of the courts is drawn from indoors
   hideDrift(on);
@@ -1249,7 +1256,7 @@ async function pass(hall) {
 // own floor only, and sees with his own eyes: the view he had below comes back when he comes down.
 function upstairs(L, at = null, turn = null) {
   if (inside) indoors(null);
-  upIn = L || null; walker.setLoft(L ? L.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = null;
+  upIn = L || null; walker.setLoft(L ? L.id : null); interrupt(); director.drop(); target = null; route = []; hop = leap = climb = climbFor = drawn = null;
   if (L) { if (viewBefore === null) viewBefore = view; setView("first"); const p = at ? settleAt(walker, at[0], at[1]) : null; pos.set(p ? p.x : L.door[0], EYE, p ? p.z : L.door[1]); yaw = turn ?? L.face; pitch = -0.12; }   // (a kept place or an address that falls in the railing, or off the balcony: the nearest open floor up there, or its door)
   else if (viewBefore !== null) { const v = viewBefore; viewBefore = null; setView(v); }
   footY = eyeY = walker.heightAt(pos.x, pos.z); heading = Math.atan2(Math.sin(yaw), -Math.cos(yaw)); follow.reset(0.6);
@@ -1438,7 +1445,7 @@ window.__level = () => ({ ...LV, keepsPlace: !!L.keepsPlace });   // which templ
 window.__walker = () => ({ ...walker.stats, grid: walker.grid ? walker.grid()?.id || null : null, answers: walker.answers ? walker.answers(pos.x, pos.z) : false, drops: walker.drops.length, start: site.start.slice(0, 2), blockedHere: walker.blocked(pos.x, pos.z), floor: walker.heightAt(pos.x, pos.z), eye: camera.position.y });   // (asked where he is, not at __yard()'s centimetres: on a 5 cm grid those can fall in the next cell)
 window.__drops = () => walker.drops.map((e) => ({ a: e.a, b: e.b, normal: e.normal, top: e.top }));   // the porch edges as this walker has them
 window.__act = (o) => { posed = o || null; };   // { speed, pose, stairs }: how he is shown, whatever he is doing; null to let him be
-window.__pose = (x, z, y, p) => { interrupt(); director.drop(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); follow.reset(); };
+window.__pose = (x, z, y, p) => { interrupt(); director.drop(); pos.x = x; pos.z = z; yaw = y; pitch = p; footY = eyeY = walker.heightAt(x, z); hop = leap = climb = climbFor = drawn = null; follow.reset(); };
 window.__listen = listen; window.__strike = strike; window.__bells = bellsRinging; window.__steps = (play) => { if (play) footstep(play === true ? "snow" : play); return stepState(); };
 window.__knock = (go) => { if (go) knock(1); return ambienceState(); };   // two culms knocking now, if asked, and how many have
 window.__bird = (go) => { if (go) bird(1); return ambienceState(); };   // a bird now, if asked, and how many have sung
@@ -1491,7 +1498,7 @@ function openMenu(open, quiet = false) {
   on("menuFull", () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.()?.catch?.(() => {}); });
   on("titleSet", () => openMenu(true));
   // Lost, or wedged somewhere he should not be: back to where the path begins.
-  on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); });
+  on("menuHome", () => { director.drop(); if (inside) indoors(null); comeDown(); /* straight out, not through the door: the walk back to the porch would undo this */ openMenu(false); const [x, z, y] = site.start; pos.x = x; pos.z = z; yaw = y; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = climb = climbFor = drawn = null; follow.reset(); });
 }
 // Back after a change of language (#140): the menu open again as it was, the language just chosen in hand, so that Esc
 // puts it away and he walks on. Not counted as the visitor opening the menu (docs/t00/ANALYTICS.md). Sound waits, as
@@ -1540,7 +1547,7 @@ createGame({
   // Stood where a kept place says: on a balcony, in a hall's room (#375: indoors first, so that the room's floor is the one
   // asked, as a change of language does), or on the ground; a spot that falls in something moves to the nearest open floor,
   // in a room else its door, out of doors else the foot of the path.
-  place(x, z, turn, up = null, hallId = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } const hall = hallId ? site.halls.find((h) => h.id === hallId) : null; if (hall) indoors(hall); { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else if (hall) { x = pos.x; z = pos.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); },
+  place(x, z, turn, up = null, hallId = null) { interrupt(); director.drop(); if (inside) indoors(null); comeDown(); if (up && site.lofts[up]) { upstairs(site.lofts[up], [x, z], turn); return; } const hall = hallId ? site.halls.find((h) => h.id === hallId) : null; if (hall) indoors(hall); { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } else if (hall) { x = pos.x; z = pos.z; } else { [x, z] = site.start; } } pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.1; footY = eyeY = walker.heightAt(x, z); hop = leap = climb = climbFor = drawn = null; follow.reset(); },
   start: site.start,
   // Go somewhere at once behind the veil, as through a door: to a place out of doors, or to one inside a hall.
   async travel(x, z, turn, hallId) {
@@ -1551,7 +1558,7 @@ createGame({
     if (inside && (!hall || hallIn.room.id !== hallId)) indoors(null);
     if (hall && !inside) indoors(hall);
     { const p = settleAt(walker, x, z); if (p) { x = p.x; z = p.z; } }   // (where a seal was earned may be shut on the baked floor, #274: the nearest open spot within half a metre)
-    pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.06; footY = eyeY = walker.heightAt(x, z); hop = leap = null; follow.reset(); await pause(250);
+    pos.x = x; pos.z = z; if (Number.isFinite(turn)) yaw = turn; pitch = 0.06; footY = eyeY = walker.heightAt(x, z); hop = leap = climb = climbFor = drawn = null; follow.reset(); await pause(250);
     if (veil) veil.className = ""; passing = false; return true;
   },
   // Send him along `points` ([x, z] each); `then(true)` when he arrives, `then(false)` if he is stopped or sent elsewhere.

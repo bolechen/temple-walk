@@ -45,6 +45,13 @@ export function seatHop(from, to, speed = 3.0, gravity = 9.8) {
   const duration = (lift + Math.sqrt(Math.max(0, lift * lift - 2 * gravity * rise))) / gravity;
   return { from: [...from], to: [...to], lift, gravity, duration };
 }
+// A light hop down off a raised seat (a stool, sill-bench or meditation platform) onto the floor beside it: a gentle
+// push up and forward so he clears the seat's edge and lands softly on his feet. `dropPose` walks it.
+export function seatHopOff(from, to, speed = 0.55, gravity = 9.8) {
+  const fall = Math.max(0, from[1] - to[1]), lift = Math.max(0.4, speed);
+  const duration = (lift + Math.sqrt(lift * lift + 2 * gravity * fall)) / gravity;
+  return { from: [...from], to: [...to], lift, gravity, duration };
+}
 
 // The way up: from the ground below an unrailed porch edge, facing it, a jump onto a platform no higher than his own jump
 // reaches. How high that is comes from JUMP (the top of the arc, v²/2g), not from a number of its own.

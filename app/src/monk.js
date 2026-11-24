@@ -596,7 +596,7 @@ export function createMonk(opts = {}) {
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
   const blink = createBlink(), lid = { value: 0 }; let eyed = false, blinking = true;
-  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
+  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, hopW = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
   const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
   // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
@@ -829,12 +829,14 @@ export function createMonk(opts = {}) {
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       // `seat`: cross-legged on a cushion; `perch`: on a stool, as on a chair.
       seat += ((sit ? 1 : 0) - seat) * ease(3.5); perch += ((chair ? 1 : 0) - perch) * ease(3.5);
+      hopW += ((hop ? 1 : 0) - hopW) * ease(14);
       lid.value = eyed ? blink.step(dt, sit && seat > 0.4, blinking) : 0;   // the Tripo body's eyelids (#607): shut once he is mostly down on the cushion, open as he rises
-      // His legs fold into the seat as slowly as he sits down, but come out of it at once when he gets up: off a stool
-      // a child slips down onto his feet, and the body (`seat`, `perch`) rises from that crouch over the next second.
-      // Sent from one kind of seat to the other, he gets up from the first as above and folds into the second.
+      // His legs fold into the seat as slowly as he sits down; hopping off a raised stool they unfold smoothly into the hop,
+      // while stepping straight onto the floor (or from a low cushion) releases them at once so his shoes never dip underground.
       const kind = sit ? "sit" : chair ? "chair" : null;
-      legSit = kind && kind === legKind ? legSit + (1 - legSit) * ease(3.5) : kind ? ease(3.5) : 0; legKind = kind;
+      if (kind) { legSit = kind === legKind ? legSit + (1 - legSit) * ease(3.5) : ease(3.5); legKind = kind; }
+      else if (hop && legSit > 0.02) { legSit *= 1 - ease(14); if (legSit <= 0.02) { legSit = 0; legKind = null; } }
+      else { legSit = 0; legKind = null; }
       gait += ((speed > 0.05 && !sit && !chair ? 1 : 0) - gait) * ease(8);
       palms += ((pray ? 1 : 0) - palms) * ease(4);
       // How fast he turns and speeds up: what swings the cloth.
@@ -873,9 +875,7 @@ export function createMonk(opts = {}) {
       // The legs reach for the ground under each shoe.
       const sitW = Math.max(seat, perch), legsShown = legSit < 0.9, thigh = [0, 0];
       legs.visible = shoes.visible = true;
-      if (hop) {
-        SIDES.forEach(([n], i) => { B[n + "UpperLeg"].rotation.x = -0.55 - 0.1 * i; B[n + "LowerLeg"].rotation.x = 1.0; B[n + "Foot"].rotation.x = -0.4; thigh[i] = 0.6 + 0.1 * i; });
-      } else if (legsShown) {
+      if (legsShown && hopW < 0.99) {
         group.updateMatrixWorld(true);
         SIDES.forEach(([, s], i) => {
           tv.set(s * FOOT_X, 0, FOOT_Z + step[i].off * gait);
@@ -946,17 +946,29 @@ export function createMonk(opts = {}) {
           steps.push({ x: tv.x, z: tv.z, y: footY[i], yaw: group.rotation.y + s * TOE_OUT, side: s, late });
         });
       } else lastN[0] = lastN[1] = null;
+      // In the air (`hop`), blend smoothly into tucked hop legs so takeoff and landing never snap.
+      if (hopW > 0.01) {
+        SIDES.forEach(([n], i) => {
+          const up = B[n + "UpperLeg"], lo = B[n + "LowerLeg"], ft = B[n + "Foot"];
+          if (hopW >= 0.99 || !legsShown) { up.rotation.set(-0.55 - 0.1 * i, 0, 0); lo.rotation.set(1.0, 0, 0); ft.rotation.set(-0.4, 0, 0); }
+          else {
+            qa.setFromAxisAngle(XV, -0.55 - 0.1 * i); qb.setFromAxisAngle(XV, 1.0); qc.setFromAxisAngle(XV, -0.4);
+            up.quaternion.slerp(qa, hopW); lo.quaternion.slerp(qb, hopW); ft.quaternion.slerp(qc, hopW);
+          }
+          thigh[i] = thigh[i] * (1 - hopW) + (0.6 + 0.1 * i) * hopW;
+        });
+      }
       // Seated, the legs are put where the seat has them, in his own frame, whose floor is the seat's top. On a stool, as
       // on a chair: the thighs level and the shins hanging, a little forward of the stool's swell (a stool is a grown
       // man's height, and a child's feet do not reach the floor). On a cushion, cross-legged upon it: the knees out on
       // its edge, the shins folded before him, the left in front.
-      // Sitting down, the seated legs are blended in over the ground-reaching ones until they have them wholly.
-      if (!hop && legSit > 0.02) {
+      // Sitting down (or unfolding off a stool into a hop), the seated legs are blended smoothly with the current legs.
+      if (legSit > 0.02) {
         const onStool = legKind === "chair", w = smooth(0.02, 0.9, legSit);
         group.updateMatrixWorld(true);
         SIDES.forEach(([n, s], i) => {
           const up = B[n + "UpperLeg"], lo = B[n + "LowerLeg"], ft = B[n + "Foot"];
-          q2.copy(ft.quaternion);
+          q0.copy(up.quaternion); q1.copy(lo.quaternion); q2.copy(ft.quaternion);
           group.worldToLocal(up.getWorldPosition(hipL));
           if (onStool) {
             kneeL.copy(hipL).addScaledVector(tv.set(s * 0.12, -0.05, 1).normalize(), THIGH);
@@ -968,11 +980,16 @@ export function createMonk(opts = {}) {
           }
           group.localToWorld(kneeW.copy(kneeL)); group.localToWorld(ankW.copy(ankL)); group.localToWorld(hipW.copy(hipL));
           const pole = tv2.copy(kneeW).sub(hipW.add(ankW).multiplyScalar(0.5));   // (hipW is not needed after this)
-          // While he folds in (or the ground-reaching legs are still his), the ankle is moved from where it stood on the
-          // floor to where the seat has it, and the leg solved for that point: blending the joints' turns instead can
-          // carry the shoe through the floor halfway.
-          if (legsShown && w < 1) { ankW.lerpVectors(targets[i], ankW, w); pole.lerp(tv.set(s * 0.15, 0, 1).applyQuaternion(gq), 1 - w); }
-          reach(up, lo, THIGH, SHIN, ankW, pole, 1);
+          if (hop) {
+            reach(up, lo, THIGH, SHIN, ankW, pole, 1);
+            up.quaternion.slerpQuaternions(q0, up.quaternion, w); lo.quaternion.slerpQuaternions(q1, lo.quaternion, w);
+          } else {
+            // While he folds in (or the ground-reaching legs are still his), the ankle is moved from where it stood on the
+            // floor to where the seat has it, and the leg solved for that point: blending the joints' turns instead can
+            // carry the shoe through the floor halfway.
+            if (legsShown && w < 1) { ankW.lerpVectors(targets[i], ankW, w); pole.lerp(tv.set(s * 0.15, 0, 1).applyQuaternion(gq), 1 - w); }
+            reach(up, lo, THIGH, SHIN, ankW, pole, 1);
+          }
           ft.quaternion.setFromAxisAngle(XV, onStool ? 0.45 : 1.0);   // the feet hang, toes a little down; folded, they lie along the shin
           qc.copy(ft.quaternion); ft.quaternion.slerpQuaternions(q2, qc, w);
         });
@@ -981,8 +998,9 @@ export function createMonk(opts = {}) {
       // The arms hang a little out from his sides and swing against the legs; to pray, or seated, they reach.
       SIDES.forEach(([n, s], i) => {
         const ua = B[n + "UpperArm"], la = B[n + "LowerArm"], hd = B[n + "Hand"], swing = -lead[i] * 0.32;
-        ua.rotation.set(-swing, 0, s * (0.42 - 0.03 * gait)); la.rotation.set(-(0.22 + 0.35 * Math.max(0, swing)), -s * 1.15, 0); hd.rotation.set(-0.1, 0, s * 0.05);
-        if (hop) { ua.rotation.set(-0.3, 0, s * 0.58); la.rotation.set(-0.5, -s * 1.15, 0); }
+        ua.rotation.set(-swing * (1 - hopW) - 0.3 * hopW, 0, s * ((0.42 - 0.03 * gait) * (1 - hopW) + 0.58 * hopW));
+        la.rotation.set(-(0.22 + 0.35 * Math.max(0, swing)) * (1 - hopW) - 0.5 * hopW, -s * 1.15, 0);
+        hd.rotation.set(-0.1 * (1 - hopW), 0, s * 0.05 * (1 - hopW));
         const w = Math.max(palms, seat, perch);
         if (w < 0.001) return;
         q0.copy(ua.quaternion); q1.copy(la.quaternion); q2.copy(hd.quaternion);
@@ -1029,7 +1047,7 @@ export function createMonk(opts = {}) {
       const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt drapes smoothly over his lap and thighs, the sides open over his knees, the back rests on the seat.
       // Climbing stairs: a high knee pushes the code robe's cloth over it forward without lifting the whole hem into a flat board (#615, #642).
-      const kneePush = (k) => (dressed ? 0 : 0.105 * smooth(0.48, 1.48, k) * (1 - sitW));
+      const kneePush = (k) => (dressed || sitW > 0.05 ? 0 : 0.105 * smooth(0.48, 1.48, k));
       const pushF = kneePush(Math.max(thigh[0], thigh[1])), pushL = kneePush(thigh[0]), pushR = kneePush(thigh[1]);
       B.robeFront.position.z += pushF; B.robeFront.position.y -= 0.25 * pushF;
       B.robeLeft.position.z += 0.65 * pushL; B.robeLeft.position.x += 0.14 * pushL;
