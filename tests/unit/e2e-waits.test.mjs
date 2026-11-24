@@ -17,3 +17,12 @@ test("hallexit waits on frames for the route after a tap from the porch", () => 
   // projected onto the picture and what it is bound for is `goal`, not its first leg `target`.)
   assert.match(body, /for \(let n = 0; n < \d+ && !s1\.(?:target|goal)[^\n]*\n[^\n]*should be bound past the foot of the steps/);
 });
+
+// The `taps` scenario's court taps from the blocked spot are made in the third person: the eye asks the written plan until its hierarchy is built, and what is drawn after (#295),
+// and it moves when the change comes (at the first tap it was still gathering). They wait for it (nightly run 45469441175: taps failed on a card 2.5 times slower than the idle one).
+test("taps waits for the eye's space to be ready before it taps the court from the blocked spot", () => {
+  const taps = src.slice(src.indexOf("  taps: {"), src.indexOf("\n  } },", src.indexOf("  taps: {")));
+  const view = taps.indexOf('window.__view("third")'), ready = taps.indexOf('__eyeSpace().state === "ready"'), tap = taps.indexOf("touchscreen.tap(cp[2], cp[3])");
+  assert.ok(view > 0 && tap > view, "the third-person half of taps is not where this test looks for it");
+  assert.ok(ready > view && ready < tap, "no wait for the eye's space to be ready between going to the third person and the first court tap");
+});
