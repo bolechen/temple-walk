@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.8.0](https://github.com/bolechen/temple-walk/compare/v0.7.0...v0.8.0) (2026-11-24)
+
+
+### Features
+
+* **debug:** the feedback address holds where the eye is ([#623](https://github.com/bolechen/temple-walk/issues/623)) ([#628](https://github.com/bolechen/temple-walk/issues/628)) ([141e200](https://github.com/bolechen/temple-walk/commit/141e200df0a4d92696b5832cb477351fd4da4bda))
+* **novice:** the Tripo body blinks, and shuts its eyes to sit ([#607](https://github.com/bolechen/temple-walk/issues/607)) ([#617](https://github.com/bolechen/temple-walk/issues/617)) ([6416462](https://github.com/bolechen/temple-walk/commit/6416462d70c076404c59c0589fa8805724c087a7))
+* **novice:** wear the layered Tripo body by default ([#163](https://github.com/bolechen/temple-walk/issues/163)) ([#469](https://github.com/bolechen/temple-walk/issues/469)) ([f2f51ef](https://github.com/bolechen/temple-walk/commit/f2f51ef4893de8fe0ba7f5608e23042455f90d4b))
+* **novice:** 照第六版设定图用代码重画小沙弥第三版 ([#642](https://github.com/bolechen/temple-walk/issues/642)) ([#658](https://github.com/bolechen/temple-walk/issues/658)) ([b88bd09](https://github.com/bolechen/temple-walk/commit/b88bd0920d9e03be33926e0c7adedd79924abcee))
+* **render:** two trials behind ?trial=, baked light probes and a sky worked from the sun ([#592](https://github.com/bolechen/temple-walk/issues/592)) ([#620](https://github.com/bolechen/temple-walk/issues/620)) ([959279e](https://github.com/bolechen/temple-walk/commit/959279ee5b23309d7cdc5c078ecc4ec42bc8fa7a))
+* **stele:** 御碑亭的碑——笏头碣，石质、风化、字痕（[#520](https://github.com/bolechen/temple-walk/issues/520) 第三次交，额待字形） ([#594](https://github.com/bolechen/temple-walk/issues/594)) ([d737c60](https://github.com/bolechen/temple-walk/commit/d737c6069ab5168ecda0c1c896395c68e5995cea))
+* **t05:** the gongyan wall becomes a 3.7 cm board behind the bracket sets ([#602](https://github.com/bolechen/temple-walk/issues/602)) ([9772e3b](https://github.com/bolechen/temple-walk/commit/9772e3b69dd063fdcd11ce7e7813d7c913833f5b))
+* **t05:** the hall's timber in three layers, lit from the doors' light ([#608](https://github.com/bolechen/temple-walk/issues/608)) ([b9da991](https://github.com/bolechen/temple-walk/commit/b9da991418833ba9f4710c7454170c35d010e85c))
+* **t05:** the monument pavilion is open on all four sides ([#605](https://github.com/bolechen/temple-walk/issues/605)) ([ec1d0a9](https://github.com/bolechen/temple-walk/commit/ec1d0a9852931edd8bc8b42f0933136a987a1a70))
+* **t05:** the town's roofs take three tones of tile, and a few are hipped or lean ([#630](https://github.com/bolechen/temple-walk/issues/630)) ([e8d16c0](https://github.com/bolechen/temple-walk/commit/e8d16c00fae838d76da8f90b726bcb4b360f05d2))
+* **t05:** two tiers of house wall, a darker one under the pale tile, brick on a lean-to's high face ([#637](https://github.com/bolechen/temple-walk/issues/637)) ([0ed3296](https://github.com/bolechen/temple-walk/commit/0ed3296c791056e75327b75dcf67dba8e0f22d9e))
+* **trailer:** a trailer mode that walks the storyboard's cameras and renders it frame by frame ([#610](https://github.com/bolechen/temple-walk/issues/610)) ([#613](https://github.com/bolechen/temple-walk/issues/613)) ([312ff0a](https://github.com/bolechen/temple-walk/commit/312ff0a2a605ba8f0ccad02a4c47c5504b6cfa41))
+
+
+### Bug Fixes
+
+* **analytics:** keep tool and automation runs out of Umami; record where the opening was skipped ([#660](https://github.com/bolechen/temple-walk/issues/660)) ([1769e86](https://github.com/bolechen/temple-walk/commit/1769e86bcd9be7d9d21b9c7b928d1682ee862db7))
+* **art:** a dusk hall with an unlit middle bay shows a dark door in every season ([#589](https://github.com/bolechen/temple-walk/issues/589)) ([0fa1c76](https://github.com/bolechen/temple-walk/commit/0fa1c769394e0e86a55ea0b127ee44e18fb6063c))
+* **art:** autumn dusk keeps its shafts of mist and no wall outshines the sky ([#593](https://github.com/bolechen/temple-walk/issues/593)) ([53b1471](https://github.com/bolechen/temple-walk/commit/53b1471129d3793c5dc9ab0b0daafabcdbe835da))
+* **camera:** he fades by where the eye is when it goes into his eyes and out, not by the push's time ([#631](https://github.com/bolechen/temple-walk/issues/631)) ([67a463b](https://github.com/bolechen/temple-walk/commit/67a463bfd24dba13f39572bd9da4289800db7278))
+* **camera:** him in the picture coming out of a hall's door and below a platform with his back to it ([#411](https://github.com/bolechen/temple-walk/issues/411)) ([518e543](https://github.com/bolechen/temple-walk/commit/518e543a6f4eba5c9da88a9cd52c5469be31007e))
+* **camera:** keep the eye and its sphere over the drawn floor when the view is dragged ([#627](https://github.com/bolechen/temple-walk/issues/627)) ([6055395](https://github.com/bolechen/temple-walk/commit/60553957f07b4a3d1816a2c760d7acb2a2fb31fe))
+* **camera:** no culm crosses the first picture's middle or the stair, and one near culm frames it on a phone ([#633](https://github.com/bolechen/temple-walk/issues/633)) ([3272c6c](https://github.com/bolechen/temple-walk/commit/3272c6c1ad3f765664cea3eb7c09412b8f646458))
+* **camera:** the following eye does not sweep through T05's 1 m gable when he turns out of an aisle ([#629](https://github.com/bolechen/temple-walk/issues/629)) ([ad53546](https://github.com/bolechen/temple-walk/commit/ad53546b3d69eb3d528d2b362ecf1adddb9cac66))
+* **camera:** the night's reds after [#411](https://github.com/bolechen/temple-walk/issues/411) — eyeroom, hallexit, taps, eye-address, litter ([#650](https://github.com/bolechen/temple-walk/issues/650)) ([53e5003](https://github.com/bolechen/temple-walk/commit/53e50037bab50079b4b8f96db75828ad5c58a372))
+* **credits:** the stele title's source link reads commons.wikimedia.org, so it fits a phone ([#626](https://github.com/bolechen/temple-walk/issues/626)) ([34282d6](https://github.com/bolechen/temple-walk/commit/34282d6694fb0454a7b4bc41c58bbca9d69b7de1))
+* **doorway:** unlit halls keep the room's shape at dusk and dawn, lit halls unchanged ([#606](https://github.com/bolechen/temple-walk/issues/606)) ([e357f1b](https://github.com/bolechen/temple-walk/commit/e357f1b639b9bc506a7ce39a892c7786787e1537))
+* **evidence:** a store that answers 429 or 503 is waited on, not counted as missing evidence ([564da53](https://github.com/bolechen/temple-walk/commit/564da53d495a9286ee6320b35170425f7cd202d5))
+* **evidence:** rename M4 manifest.json to avoid case collision with MANIFEST.json ([#654](https://github.com/bolechen/temple-walk/issues/654)) ([b2d6264](https://github.com/bolechen/temple-walk/commit/b2d62646b6ed2a220238903cc020e37c8e157177))
+* **i18n:** 英文名统一为 One City, One Temple ([#659](https://github.com/bolechen/temple-walk/issues/659)) ([84a8c1d](https://github.com/bolechen/temple-walk/commit/84a8c1d50cb46ecfea322954a55030a12d3e145c))
+* **monk:** robe stays closed when turning to set off; hem length pinned on stairs ([#284](https://github.com/bolechen/temple-walk/issues/284), [#541](https://github.com/bolechen/temple-walk/issues/541)) ([#609](https://github.com/bolechen/temple-walk/issues/609)) ([4bc8cb0](https://github.com/bolechen/temple-walk/commit/4bc8cb03f810577f3dd228d0d466d86a39a02d9c))
+* **novice:** the public build wears the body built in code by default ([#642](https://github.com/bolechen/temple-walk/issues/642)) ([#643](https://github.com/bolechen/temple-walk/issues/643)) ([a9b5c3a](https://github.com/bolechen/temple-walk/commit/a9b5c3a0ec3ad4798551c4e870cc3d8ba08aaaa9))
+* **rites:** 按真实移速驱动上香迈步并移除低速步频下限 ([#661](https://github.com/bolechen/temple-walk/issues/661)) ([#662](https://github.com/bolechen/temple-walk/issues/662)) ([2ab3d78](https://github.com/bolechen/temple-walk/commit/2ab3d789f63e277dfe05deba7964fb8ae5b32e8f))
+* **trailer:** the air and the cloth are seeded, so a frame drawn twice is the same picture ([#610](https://github.com/bolechen/temple-walk/issues/610)) ([#635](https://github.com/bolechen/temple-walk/issues/635)) ([67cd004](https://github.com/bolechen/temple-walk/commit/67cd00483a1c18a2c7ce6e04c5977d2c34d25621))
+* **trees:** the ginkgoes stand in stone tree pits, and the cedars' earth rings fade out through moss ([#611](https://github.com/bolechen/temple-walk/issues/611)) ([#621](https://github.com/bolechen/temple-walk/issues/621)) ([cc2ab6a](https://github.com/bolechen/temple-walk/commit/cc2ab6af9a7fccb74fb4e370461ce1656c260dda))
+* **ui:** on a phone held upright the action button no longer lies on the jump ring ([#619](https://github.com/bolechen/temple-walk/issues/619)) ([b079511](https://github.com/bolechen/temple-walk/commit/b079511bed37b23fd9ca660aec93aeefc706acf5))
+* **ui:** 画作卡片的日本指定单列一行，并说明它是什么等级 ([#657](https://github.com/bolechen/temple-walk/issues/657)) ([d478b57](https://github.com/bolechen/temple-walk/commit/d478b57cfa009b729a97cc8b9622b651927abb14))
+
 ## [0.7.0](https://github.com/bolechen/temple-walk/compare/v0.6.0...v0.7.0) (2026-11-22)
 
 
