@@ -991,10 +991,18 @@ const scenarios = {
     await t.close();
     t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0", { hasTouch: true });
     await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
-    await t.page.evaluate(() => window.__view("third")); await t.frames(2);
-    for (const [px, py] of [[210, 520], [150, 560], [260, 500]]) {
-      await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
-      await t.page.touchscreen.tap(px, py); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
+    await t.page.evaluate(() => window.__view("third")); await t.frames(4);
+    // The three taps are court ground, projected onto the picture: since #411 the eye stands right behind him, and the lower middle of the picture is his own feet on the porch
+    // (a tap there bound him 0.2–0.3 m, and once nowhere at all, run 45248154111) — not the court the tap is meant to be on.
+    // The eye eases behind him after each walk, so each tap is projected from where it stands at that moment, once it has come to rest.
+    const restEye = async () => { let was = null; for (let i = 0; i < 20; i++) { const e = await t.page.evaluate(() => window.__frame().eye); if (was && Math.hypot(e[0] - was[0], e[2] - was[2]) < 0.02) return e; was = e; await t.frames(1); } return was; };
+    for (const side of [0, 1.5, -1.5]) {
+      await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2); await restEye();
+      const cp = await t.page.evaluate((side) => { const yaw = -0.765;
+        for (const d of [6, 7, 5, 8, 4]) { const x = -12.85 + Math.sin(yaw) * d + Math.cos(yaw) * side, z = 5.98 - Math.cos(yaw) * d + Math.sin(yaw) * side, q = window.__project(x, z); if (!window.__blocked(x, z) && q.on && q.clear) return [+x.toFixed(2), +z.toFixed(2), q.x, q.y]; }
+        return null; }, side);
+      expect(cp, `no court ground ${side} m aside from the blocked place is in the picture and clear: ` + JSON.stringify(await t.page.evaluate(() => window.__frame().eye)));
+      await t.page.touchscreen.tap(cp[2], cp[3]); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
             await t.until(async () => { const s = await t.state(); return s.target === null && !s.dropping; }, 90000, "he never came out of the tea house porch's south end");
       const s2 = await t.state(); expect(!(await t.page.evaluate(() => window.__walker().blockedHere)) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
     }
@@ -3200,9 +3208,11 @@ const scenarios = {
     const t = await open(b, base, "q=low&cam=-5.68,49.8,1.145,0.2&view=third&season=autumn&time=day", { viewport: { width: 480, height: 300 } });
     await t.page.waitForSelector("#photoBtn", { timeout: 120000 }); await t.frames(20);
     await t.page.mouse.move(240, 150); await t.page.mouse.down(); await t.page.mouse.move(240, 190, { steps: 8 }); await t.page.mouse.up(); await t.frames(30);
-    const link = await t.page.evaluate(() => window.__debugURL()), q = new URL(link).searchParams;
+    // The address is the eye as it stands at the moment it is asked for (`eyeNow()`), and the eye is still easing from the drag: read both in one call, as a
+    // frame between the two reads left the address a centimetre or two behind where the second read found the eye (nightly 45248154111, 2.07 cm against the 2 cm bound).
+    const seen = await t.page.evaluate(() => ({ link: window.__debugURL(), eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) })), link = seen.link, q = new URL(link).searchParams;
     expect(/^-?[\d.]+,-?[\d.]+,-?[\d.]+,[\d.]+$/.test(q.get("eye") || ""), "the address should carry eye=x,y,z,dist: " + link);
-    const was = await t.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) }));
+    const was = seen;
     const u = await open(b, base, new URL(link).search.slice(1), { enter: false, viewport: { width: 480, height: 300 } });
     await u.page.waitForSelector("#photoBtn", { timeout: 120000 }); await u.frames(20);
     const now = await u.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) }));
