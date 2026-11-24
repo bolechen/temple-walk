@@ -49,3 +49,14 @@ test("a Markdown link or image to a picture or film is a full address or a file 
   }
   assert.deepEqual([...new Set(broken)].slice(0, 30), []);
 });
+
+test("no two tracked files differ only by case (macOS/Windows checkout safety)", () => {
+  const byLower = new Map();
+  for (const f of tracked) {
+    const k = f.toLowerCase();
+    if (!byLower.has(k)) byLower.set(k, []);
+    byLower.get(k).push(f);
+  }
+  const collisions = [...byLower.values()].filter((v) => v.length > 1);
+  assert.deepEqual(collisions, []);
+});
