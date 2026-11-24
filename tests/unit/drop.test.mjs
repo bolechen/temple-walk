@@ -57,3 +57,34 @@ test("too short to step onto a stool, he hops up onto it with his own jump and c
   assert.ok(plan.lift >= 3.0 && plan.lift < 3.15, `a stool at a grown man's height takes about his own jump (${plan.lift.toFixed(2)} m/s)`);
   assert.ok(seatHop(from, [0.6, 0.6, 0], 3.0, 9.8).lift > 3.0, "a higher seat asks a harder jump");
 });
+
+test("getting up from a stool or bench, he hops lightly down onto the floor instead of dropping in one frame", async () => {
+  const { seatHopOff, dropPose } = await import("../../app/src/drop.js");
+  const from = [0.6, 0.44, 0.1], to = [0, 0, 0], plan = seatHopOff(from, to);
+  const start = dropPose(plan, 0), end = dropPose(plan, plan.duration);
+  assert.deepEqual([start.x, start.y, start.z], from, "he leaves from the seat's top");
+  assert.ok(end.done && Math.abs(end.x - to[0]) < 1e-9 && Math.abs(end.y - to[1]) < 1e-9 && Math.abs(end.z - to[2]) < 1e-9, "he lands cleanly on the floor beside it");
+  let apex = -Infinity, low = Infinity;
+  for (let t = 0; t <= plan.duration; t += plan.duration / 50) { const p = dropPose(plan, t); apex = Math.max(apex, p.y); low = Math.min(low, p.y); }
+  assert.ok(apex > from[1] && apex < from[1] + 0.08, `a light push off the edge, not a high bounce (apex ${apex.toFixed(3)} m)`);
+  assert.ok(low >= -1e-9, "never dips below the floor");
+  assert.ok(plan.duration > 0.25 && plan.duration < 0.5, `snappy dismount (${plan.duration.toFixed(2)} s)`);
+});
+
+test("getting up from a seat, he comes down off its front, and round its side when what stands before it is in the way", async () => {
+  const { seatExit } = await import("../../app/src/drop.js");
+  const seat = [0, 0], face = 0;   // on it he faces +z
+  const open = { heightAt: () => 0, blocked: () => false };
+  assert.deepEqual(seatExit(open, seat, face, [0, -0.4]), [0, 0.55], "the front is taken first, and the nearer ground out from it");
+  // A table before the stool (0.39 m from its middle, as at the tea house): the front is shut, the sides open.
+  const table = { heightAt: () => 0, blocked: (x, z) => z > 0.2 && Math.abs(x) < 0.5 };
+  const side = seatExit(table, seat, face, [0, -0.4]);
+  assert.ok(side && side[1] > 0 && Math.abs(side[0]) > 0.3, `he should get down round the side, never over the back of the stool (${side})`);
+  assert.ok(Math.hypot(side[0], side[1]) > 0.5, "and a step out from the seat's middle");
+  // Ground lower than the seat's own floor (a step down beside it) is not where he comes down.
+  const step = { heightAt: (x, z) => (z > 0.3 ? -0.3 : 0), blocked: () => false };
+  const beside = seatExit(step, seat, face, [0, -0.4]);
+  assert.ok(beside && beside[1] <= 0.3 && Math.abs(step.heightAt(beside[0], beside[1])) < 1e-9, `the floor he sat from, not the step down (${beside})`);
+  // Nowhere before or beside it clear: no answer, and the caller keeps where he stood.
+  assert.equal(seatExit({ heightAt: () => 0, blocked: () => true }, seat, face, [0, -0.4]), null);
+});

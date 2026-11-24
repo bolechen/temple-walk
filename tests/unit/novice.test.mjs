@@ -26,7 +26,8 @@ test("he stands 1.18 m tall on the floor, centred, as wide as the one built in c
   assert.ok(Math.abs(box.min.y) < 0.003, `his soles are ${box.min.y.toFixed(3)} m from y = 0`);
   assert.ok(Math.abs(box.min.x + box.max.x) < 0.01 && Math.abs(box.min.z + box.max.z) < 0.04, "centred on the axis he turns about");
   const bs = built.getSize(new THREE.Vector3());
-  assert.ok(Math.abs(size.x - bs.x) < 0.06 && Math.abs(size.z - bs.z) < 0.06, `${size.x.toFixed(3)} × ${size.z.toFixed(3)} m beside ${bs.x.toFixed(3)} × ${bs.z.toFixed(3)} for the one built in code`);
+  // #642: the code body was redrawn to v6 (0.637 m fingertip span), while the legacy Meshy novice.glb keeps v5's 0.744 m span.
+  assert.ok(Math.abs(size.x - bs.x) < 0.13 && Math.abs(size.z - bs.z) < 0.06, `${size.x.toFixed(3)} × ${size.z.toFixed(3)} m beside ${bs.x.toFixed(3)} × ${bs.z.toFixed(3)} for the one built in code`);
 });
 
 test("the four parts are skinned to the skeleton, every weight whole, and he wears them", () => {

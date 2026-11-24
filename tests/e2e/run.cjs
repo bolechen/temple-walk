@@ -443,7 +443,7 @@ const scenarios = {
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
-    { const st = await t.state(); expect(st.dressed === true && st.body === "tripo", "a visitor should meet the novice in the layered body made from Tripo's model (#163; app/shared/models/novice-tripo.glb), on him before the page is ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }
+    { const st = await t.state(); expect(st.dressed === false && st.body === "code", "a visitor should meet the novice in the body built in code (monk.js, #642), nothing fetched, before the page is ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
     { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
       expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
@@ -3103,9 +3103,9 @@ const scenarios = {
     }
   } },
   push: { tier: 2, async run(b, base) {
-    // Both bodies, the default (Tripo's) and the one built in code, each pushed in and out (#612: pressing V, the eye went into the back of his
+    // Both bodies, the default (the one built in code) and Tripo's, each pushed in and out (#612: pressing V, the eye went into the back of his
     // head for a moment, he still a little drawn: his fade followed the push's time, not where the eye was).
-    for (const body of ["", "&body=code"]) await pushRun(b, base, body);
+    for (const body of ["", "&body=tripo"]) await pushRun(b, base, body);
   } },
   // #454: the first picture after the entry, in three shapes of screen: no culm within 12 m crosses the middle of the picture or his column,
   // and one near culm (within 3.2 m of the eye) stands in the outer fifth of the picture's width, to frame it (the art review: on a

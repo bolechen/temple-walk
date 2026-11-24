@@ -306,3 +306,30 @@ test("on a pavilion's sill-bench he sits clear of its board and its rail, his fe
   const feet = ["left", "right"].map((s) => world(m.bones[s + "Foot"]));
   for (const f of feet) assert.ok(f.z > H / 2 - BENCH.back - 0.02, `a foot at z ${f.z.toFixed(2)} is under the board`);
 });
+
+// Getting up from a stool (#642): he pushes off its front edge and comes down over his feet, leaning forward as one does to
+// rise, legs reaching down, and his knees take the landing — not a hop's tuck, and never backwards over the stool's back.
+test("getting up from a stool he leans forward over his feet, reaches down and lands on his knees", async () => {
+  const { seatHopOff, dropPose } = await import("../../app/src/drop.js");
+  const m = createMonk(), floor = () => 0, top = 0.44, shoe = m.parts.shoes;
+  for (let i = 0; i < 120; i++) { m.group.position.set(0, top, 0); m.update(1 / 30, 0, "chair", i / 30, floor, { heightAt: floor }); }
+  let worst = Infinity, leastHang = Infinity;
+  const lean = [], plan = seatHopOff([0, top, 0], [0, 0, 0.55]);
+  for (let i = 0; i <= 30; i++) {
+    const u = i / 30, p = dropPose(plan, plan.duration * u);
+    m.group.position.set(p.x, p.y, p.z);
+    m.update(1 / 30, 0, "rise", 4 + i / 30, floor, { heightAt: floor, rise: u });
+    m.group.updateMatrixWorld(true); m.skeleton.update();
+    for (let k = 0; k < shoe.geometry.attributes.position.count; k += 3) worst = Math.min(worst, skinnedWorld(shoe, k).y);
+    if (u >= 0.3 && u <= 0.9) leastHang = Math.min(leastHang, world(m.bones.hips).y - world(m.bones.leftFoot).y);   // (in the air)
+    lean.push(m.group.worldToLocal(m.bones.head.getWorldPosition(new THREE.Vector3())).z);
+  }
+  assert.ok(worst > -0.02, `${(-worst * 100).toFixed(1)} cm of his shoe went under the floor getting up`);
+  assert.ok(leastHang > 0.3, `his legs should reach down as he comes down, not tuck up under him (feet only ${leastHang.toFixed(2)} m below his hips)`);
+  assert.ok(lean[8] > lean.at(-1) + 0.02, `he should lean forward over his feet as he rises (head ${lean[8].toFixed(3)} m before him mid-rise, ${lean.at(-1).toFixed(3)} m stood)`);
+  // Stood, a crouch of 4.5 cm (the landing) brings his hips down with his feet still on the floor.
+  const hips = () => { m.group.updateMatrixWorld(true); return world(m.bones.hips).y; };
+  for (let i = 0; i < 20; i++) m.update(1 / 30, 0, "rise", 6 + i / 30, floor, { heightAt: floor, rise: 1 });
+  const up = hips(); m.update(1 / 30, 0, "rise", 7, floor, { heightAt: floor, rise: 1, crouch: 0.045 }); const down = hips();
+  assert.ok(up - down > 0.03, `landing should bend his knees: his hips drop ${(up - down).toFixed(3)} m`);
+});
