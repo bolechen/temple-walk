@@ -286,10 +286,10 @@ const monkWorld = () => {
   return monkBounds;
 };
 const monkNear = () => eyeRadius(camera.fov, camera.aspect, camera.near) + 0.03;
-// He wears the layered body made from Tripo's model (#163; src/novice.js), fetched while the place is built; the page is
-// not called ready until it has arrived or failed, so that no picture catches him half dressed. ?body=sculpt wears the
-// older body made with Meshy, ?body=code keeps the figure built in code. A body that fails to arrive or to fit leaves
-// him as built in code, with a warning. `body` is what he wears: "code" until a fetched body is on him.
+// He wears the figure built in code (src/monk.js, #642). ?body=tripo fetches the layered body made from Tripo's model
+// (#163; src/novice.js) while the place is built, and the page is not called ready until it has arrived or failed, so
+// that no picture catches him half dressed; ?body=sculpt wears the older body made with Meshy. A body that fails to
+// arrive or to fit leaves him as built in code, with a warning. `body` is what he wears: "code" until a fetched body is on him.
 const bodyAsked = bodyChoice(Q);
 let body = "code", bodySettled = bodyAsked === "code";
 if (bodyAsked !== "code") loadNovice(monk, asset(BODY_FILE[bodyAsked])).then(() => { body = bodyAsked; }, (e) => console.warn(`the ${bodyAsked} body was not worn: ${e?.message || e}`)).finally(() => { bodySettled = true; });

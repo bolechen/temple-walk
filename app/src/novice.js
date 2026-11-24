@@ -10,15 +10,15 @@
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { BufferAttribute } from "three";
 import { asset } from "./assets.js";
-import { DEPLOY } from "./deploy.js";
 import { lidShader, eyeSkin } from "./blink.js";
 
 export const PARTS = ["skin", "robe", "legs", "shoes"];
 
-/** Which body an address asks for: "sculpt" (Meshy's), "tripo" or "code" (none fetched); with none asked, the build's own: the public page wears the body built in code
- *  (#642: the owner left the novice's direction to the lead, who ruled that the public build does not yet show the open-eyed Tripo body), the canary and a preview "tripo".
- *  @param {URLSearchParams | null | undefined} q @param {import("./deploy.js").Deploy} [deploy] */
-export function bodyChoice(q, deploy = DEPLOY) { const b = q?.get?.("body"); return b === "code" || b === "sculpt" || b === "tripo" ? b : deploy === "production" ? "code" : "tripo"; }
+/** Which body an address asks for: "sculpt" (Meshy's), "tripo" or "code" (none fetched). With none asked it is the body
+ *  built in code, in every build (#642, the owner 2026-11-24: a preview should show what the page ships, not another body);
+ *  ?body=tripo still asks for the sculpted one in all of them.
+ *  @param {URLSearchParams | null | undefined} q */
+export function bodyChoice(q) { const b = q?.get?.("body"); return b === "code" || b === "sculpt" || b === "tripo" ? b : "code"; }
 /** The file each fetched body is read from. */
 export const BODY_FILE = { tripo: "shared/models/novice-tripo.glb", sculpt: "shared/models/novice.glb" };
 

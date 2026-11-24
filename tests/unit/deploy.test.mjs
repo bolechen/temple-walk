@@ -107,15 +107,13 @@ test("the three builds send the same cache headers: hashed files for a year, the
   for (const p of Object.keys(rules)) assert.ok(!["/shared/*", "/shared/doorways/*"].includes(p) && !/^\/shared\/(walk|textures|models)\b/.test(p) && !/t00\.(json|bin)/.test(p), `a rule over ${p} would cache a plain name`);
 });
 
-// #642: the public page wears the body built in code until the new face with its eyes shut is made; the canary and a preview wear the Tripo body as before.
-// The address can still ask for any of the three bodies in every build.
-test("the default body by build (#642): code in production, tripo in canary and preview; ?body= still asks for any in all three", async () => {
+// #642, the owner 2026-11-24: every build wears the body built in code unless the address asks otherwise, so that a
+// preview shows what the page ships; ?body=tripo or ?body=sculpt asks for the others.
+test("the default body in every build (#642) is the one built in code; ?body= asks for any of the three", async () => {
   const { bodyChoice } = await import("../../app/src/novice.js"), q = (s) => new URLSearchParams(s);
-  assert.equal(bodyChoice(q("")), "tripo", "unit tests run as a preview");
-  for (const [deploy, def] of [["production", "code"], ["canary", "tripo"], ["preview", "tripo"]]) {
-    assert.equal(bodyChoice(q(""), deploy), def, `${deploy}: the default body`);
-    assert.equal(bodyChoice(null, deploy), def, `${deploy}: no address at all`);
-    assert.equal(bodyChoice(q("body=nonsense"), deploy), def, `${deploy}: an unknown body is the default`);
-    for (const b of ["code", "tripo", "sculpt"]) assert.equal(bodyChoice(q("body=" + b), deploy), b, `${deploy}: ?body=${b}`);
+  for (const asked of ["", "?q=low", "?body=nonsense"]) {
+    assert.equal(bodyChoice(q(asked.replace(/^\?/, ""))), "code", `${asked || "no address"}: the default body`);
   }
+  assert.equal(bodyChoice(null), "code", "no address at all");
+  for (const b of ["code", "tripo", "sculpt"]) assert.equal(bodyChoice(q("body=" + b)), b, `?body=${b}`);
 });
