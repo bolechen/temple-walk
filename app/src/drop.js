@@ -52,6 +52,25 @@ export function seatHopOff(from, to, speed = 0.55, gravity = 9.8) {
   const duration = (lift + Math.sqrt(lift * lift + 2 * gravity * fall)) / gravity;
   return { from: [...from], to: [...to], lift, gravity, duration };
 }
+// Where he gets down from a raised seat: off its front, the way his knees point, so that he rises over his feet as a person
+// does and never backwards over the back of what he sat on (the owner, 2026-11-24: getting up should come down from before
+// the stool). The front is tried first, then its sides in widening angles: a stool at a table has the table before it, and
+// the only floor it can come down on is round the side. Ground that is blocked, or that is not the floor beside the seat,
+// is passed over. `fallback` is where he stood to sit down, and the only answer when nothing before the seat is clear.
+// Returns [x, z] or null.
+export const SEAT_WAY = Object.freeze([0, 40, -40, 70, -70, 100, -100, 120, -120]);   // degrees off the seat's front
+export const SEAT_OUT = Object.freeze([0.55, 0.7]);   // metres out from the seat's middle, the first clear one taken
+export function seatExit(walker, seat, face, fallback, ground = walker.heightAt(fallback[0], fallback[1])) {
+  for (const deg of SEAT_WAY) {
+    const a = face + (deg * Math.PI) / 180, dx = Math.sin(a), dz = Math.cos(a);
+    for (const out of SEAT_OUT) {
+      const x = seat[0] + dx * out, z = seat[1] + dz * out;
+      // Where his body fits (`walker.blocked` is asked of the whole of it) and on the floor he sat from.
+      if (!walker.blocked(x, z) && Math.abs(walker.heightAt(x, z) - ground) <= 0.04) return [x, z];
+    }
+  }
+  return null;
+}
 
 // The way up: from the ground below an unrailed porch edge, facing it, a jump onto a platform no higher than his own jump
 // reaches. How high that is comes from JUMP (the top of the arc, v²/2g), not from a number of its own.

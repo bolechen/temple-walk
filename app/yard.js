@@ -66,7 +66,7 @@ import { createPaper } from "./src/paper.js";
 import { createTour } from "./src/tour.js";
 import { poseQuery, readEye } from "./src/link.js";
 import { PRODUCTION } from "./src/deploy.js";
-import { findDrop, dropPose, findClimb, climbPose, seatHop, seatHopOff, stepOff, stepPose } from "./src/drop.js";
+import { findDrop, dropPose, findClimb, climbPose, seatHop, seatHopOff, seatExit, stepOff, stepPose } from "./src/drop.js";
 import { planSteps, clearLine, wayThrough } from "./src/route.js";
 import { createGridWalker, gridsByPlace, walkerMode, gridBytes, settle as settleAt } from "./src/gridwalker.js";
 import { decode as decodeWalk, inflateRawAsync } from "./src/walkgrid.js";
@@ -757,12 +757,13 @@ function frame(now) {
   if (f || s) { interrupt(); director.back(); target = null; route = []; vx = Math.sin(yaw) * f + Math.cos(yaw) * s; vz = -Math.cos(yaw) * f + Math.sin(yaw) * s; }
   else if (target) { vx = target.x - pos.x; vz = target.z - pos.z; if (Math.hypot(vx, vz) < 0.02) { const reached = target; target = route.shift() || null; vx = vz = 0; if (reached.drop) { hop = { plan: reached.drop, elapsed: 0, then: [target, ...route].filter(Boolean) }; target = null; route = []; pace.v = 0; } else if (!target) { settle(true); pace.v = 0; } } }
   const len = Math.hypot(vx, vz);
-  if (menuUp || photo.on || (airborne && !stepping)) pace.v = 0;   // a sheet over the walk, the camera raised, a hop: he stands, or the hop carries him (a step down he walks on from)
+  const dismounting = !!(climb && climb.down && climb.t < climb.plan.duration);
+  if (menuUp || photo.on || (airborne && !stepping) || dismounting) pace.v = 0;   // a sheet over the walk, the camera raised, a hop or seat dismount: he stands, or the arc carries him (a step down he walks on from)
   // He gathers speed and loses it again over a few steps, as a child walks, rather than starting and stopping dead:
   // the picture lurching into motion is felt (《小王子》's PlayerController: 7 m/s² up, 8 m/s² down). Let go of the
   // keys and he slows along the way he was going; coming to a tapped spot he slows so as to stop on it.
   if (len > 0) { const ux = vx / len, uz = vz / len; pace.v *= Math.max(0, ux * pace.dir[0] + uz * pace.dir[1]); pace.dir = [ux, uz]; }   // turned right round, he starts again
-  if ((len > 0 || pace.v > 0) && !airborne) {
+  if ((len > 0 || pace.v > 0) && !airborne && !dismounting) {
     const walkPace = keys.shift || Math.hypot(joy.x, joy.y) > 0.94 ? 4.2 : 2.1 * (f || s ? Math.min(1, Math.max(0.35, len)) : 1);
     let want = len === 0 ? 0 : Math.min(walkPace, walker.onStairs(pos.x, pos.z) ? STAIR.tread * (keys.shift ? STAIR.hurry : STAIR.steps) : Infinity);   // Shift to hurry; a stick pushed a little walks slowly
     if (target) { let left = len, at = target; for (const p of route) { left += Math.hypot(p.x - at.x, p.z - at.z); at = p; } want = Math.min(want, Math.sqrt(2 * WALK.down * left) + 0.15); }
@@ -800,15 +801,27 @@ function frame(now) {
   // Seated on something that stands in the way (a stool): he came to stand behind it, and is drawn on it while he sits.
   const sat = stage && stage.seat ? stage.seat : null;
   // He is drawn going over to a seat and down onto it; a seat higher than he can step onto (a stool, sill-bench or
-  // platform) he hops up onto, and hops lightly back down from when he gets up, instead of dropping straight onto the floor.
+  // platform) he hops up onto, and gets down off its front when he gets up, instead of dropping back over its back.
   if (stage !== climbFor) {
     const prev = climbFor; climbFor = stage; climb = null;
     if (stage && sat && (stage.lift || 0) > 0.25 && drawn) { climb = { plan: seatHop([drawn[0], footY, drawn[2]], [sat[0], footY + stage.lift, sat[1]], JUMP.speed, JUMP.gravity), t: 0 }; climbs++; }
-    else if (!stage && prev && prev.seat && drawn && ((prev.lift || 0) > 0.25 || drawn[1] - footY > 0.25)) { climb = { plan: seatHopOff(drawn, [pos.x, footY, pos.z]), t: 0, down: true }; }
+    else if (!stage && prev && prev.seat && drawn && ((prev.lift || 0) > 0.25 || drawn[1] - footY > 0.25)) {
+      // Where he gets down: off the seat's own front (the way a person on it faces and his knees point), or the nearest
+      // clear side of that when what stands before it is in the way (the tea table before a stool). `pos` comes down with
+      // him, so that the walk goes on from where he stands and not from behind what he sat on.
+      const feet = seatExit(walker, prev.seat, prev.face, [pos.x, pos.z], walker.heightAt(pos.x, pos.z));
+      if (feet) { pos.x = feet[0]; pos.z = feet[1]; footY = walker.heightAt(pos.x, pos.z); }
+      climb = { plan: seatHopOff(drawn, [pos.x, footY, pos.z]), t: 0, down: true };
+    }
   }
   if (climb) {
-    if (climb.down) { climb.plan.to[0] = pos.x; climb.plan.to[1] = footY; climb.plan.to[2] = pos.z; }
-    climb.t += dt; const p = dropPose(climb.plan, climb.t); drawn = [p.x, p.y, p.z]; if (p.done) climb = null;
+    climb.t += dt; const p = dropPose(climb.plan, climb.t); drawn = [p.x, p.y, p.z];
+    // Landing, his knees take his weight for a moment (`crouch` in monk.update) before he stands up straight —
+    // unless the visitor is already walking him away, in which case he steps straight into the walk on touchdown.
+    if (p.done && (!climb.down || f || s || target || climb.t > climb.plan.duration + 0.34)) climb = null;
+    // And he turns to face the way he comes down — the seat's front, or the side of it he steps off at — unless the visitor
+    // is already walking him somewhere else.
+    if (climb && climb.down && !f && !s) { const a = Math.atan2(climb.plan.to[0] - climb.plan.from[0], climb.plan.to[2] - climb.plan.from[2]); heading += Math.atan2(Math.sin(a - heading), Math.cos(a - heading)) * Math.min(1, dt * 9); }
   }
   else if (!stage || !drawn) drawn = [sat ? sat[0] : pos.x, footY, sat ? sat[1] : pos.z];
   else { const k = Math.min(1, dt * 7); drawn[0] += ((sat ? sat[0] : pos.x) - drawn[0]) * k; drawn[2] += ((sat ? sat[1] : pos.z) - drawn[2]) * k; drawn[1] += (footY + (stage.lift || 0) - drawn[1]) * k; }
@@ -817,7 +830,17 @@ function frame(now) {
   if (walkViz) walkViz.update(pos.x, walker.heightAt(pos.x, pos.z), pos.z);
   // (`posed`: a tool may have him walk, hurry, climb, hop or sit on the spot, to be looked at closely: `__act`.)
   if (posed) monk.update(dt || 1 / 30, posed.speed || 0, posed.pose || false, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: !!posed.stairs, act: posed.act || null });
-  else { monk.blinking = !Q.has("shot") && !photo.on; monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) || climb ? 0 : speedNow, (aloft && !stepping) || (climb && climb.t < climb.plan.duration * (climb.down ? 0.72 : 0.5)) ? "hop" : stage ? stage.pose : photo.on && photo.pray, t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null }); }
+  else {
+    monk.blinking = !Q.has("shot") && !photo.on;
+    // Off a seat he does not tuck into a jump (`hop`): he rises over his feet, leaning forward as one does to get up, and
+    // his knees take the landing (`rise`, and `crouch` once his feet are down).
+    const down = climb && climb.down ? climb : null;
+    monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) || climb ? 0 : speedNow,
+      (aloft && !stepping) || (climb && !climb.down && climb.t < climb.plan.duration * 0.5) ? "hop" : down ? "rise" : stage ? stage.pose : photo.on && photo.pray,
+      t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null,
+        rise: down ? Math.min(1, down.t / down.plan.duration) : null,
+        crouch: down && down.t > down.plan.duration ? 0.045 * Math.sin(Math.PI * Math.min(1, (down.t - down.plan.duration) / 0.34)) : 0 });
+  }
   // Where he steps outdoors in the snow he leaves his prints (a room's floor keeps none, and the square stays outside),
   // and every step is heard, as what it comes down on sounds: snow, dry stone, stone wet after rain, a puddle in the
   // paving, a hall's floor. A little to the side of the foot that made it (his left is the listener's left, from

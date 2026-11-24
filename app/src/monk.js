@@ -816,26 +816,31 @@ export function createMonk(opts = {}) {
     shadow: patch,
     setSun(dir, strength) { const flat = Math.hypot(dir.x, dir.z) || 1e-3; sun.az = Math.atan2(-dir.x, -dir.z); sun.len = Math.min(3.4, Math.max(1, flat / Math.max(dir.y, 0.12))); sun.op = 0.35 + 0.65 * Math.min(1, strength); },
     // `speed` in metres a second. `pose`: false to stand or walk, true or "pray" for palms together, "sit" to sit with
-    // legs folded (on a cushion), "chair" to sit on a stool as on a chair, "hop" in the air, "bind" for the A-pose he is bound in. `surfaceAt(x, z)` is the ground under a
+    // legs folded (on a cushion), "chair" to sit on a stool as on a chair, "rise" getting up from a seat, "hop" in the air,
+    // "bind" for the A-pose he is bound in. `surfaceAt(x, z)` is the ground under a
     // point; `grounding.heightAt` the smooth height his body follows, `grounding.stairs` whether he is on a stair.
     // `grounding.act` is what an observance asks of him over the pose (rites.js): `bow` and `twist` of the trunk and
     // `nod` of the head in radians, `look` the head turned aside (radians, + to his left), `breath` from -1 (out) to 1 (in), and for either hand a place in the world to
     // reach (`hands.left.at`), which way its fingers and palm turn there, and how far it has gone over (`w`, 0 to 1).
+    // `grounding.rise` (0 as he leaves the seat, 1 stood up) and `grounding.crouch` (how far his knees give as he lands,
+    // in metres) are the getting-up-from-a-seat pose's.
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
       dt = Math.min(Math.max(dt || 0, 0), 0.1); speed = Math.max(0, speed || 0);
       bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
       if (pose === "bind") { legs.visible = shoes.visible = true; group.updateMatrixWorld(true); driveHelpers(true); return; }
-      const pray = pose === true || pose === "pray", sit = pose === "sit", chair = pose === "chair", hop = pose === "hop", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
+      const pray = pose === true || pose === "pray", sit = pose === "sit", chair = pose === "chair", hop = pose === "hop", rise = pose === "rise", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
+      // Getting up: how far it has gone, and the lean forward over his feet that carries him up (back straight as he lands).
+      const rising = rise ? Math.min(1, Math.max(0, grounding.rise ?? 0)) : 0, lean = rise ? 0.3 * Math.sin(Math.PI * Math.min(1, rising / 0.8)) : 0;
       // `seat`: cross-legged on a cushion; `perch`: on a stool, as on a chair.
       seat += ((sit ? 1 : 0) - seat) * ease(3.5); perch += ((chair ? 1 : 0) - perch) * ease(3.5);
       hopW += ((hop ? 1 : 0) - hopW) * ease(14);
       lid.value = eyed ? blink.step(dt, sit && seat > 0.4, blinking) : 0;   // the Tripo body's eyelids (#607): shut once he is mostly down on the cushion, open as he rises
-      // His legs fold into the seat as slowly as he sits down; hopping off a raised stool they unfold smoothly into the hop,
-      // while stepping straight onto the floor (or from a low cushion) releases them at once so his shoes never dip underground.
+      // His legs fold into the seat as slowly as he sits down; getting up off a raised seat (or hopping) they unfold smoothly
+      // to reach the floor, while stepping straight down off a low cushion releases them at once so his shoes never dip underground.
       const kind = sit ? "sit" : chair ? "chair" : null;
       if (kind) { legSit = kind === legKind ? legSit + (1 - legSit) * ease(3.5) : ease(3.5); legKind = kind; }
-      else if (hop && legSit > 0.02) { legSit *= 1 - ease(14); if (legSit <= 0.02) { legSit = 0; legKind = null; } }
+      else if ((hop || rise) && legSit > 0.02) { legSit *= 1 - ease(14); if (legSit <= 0.02) { legSit = 0; legKind = null; } }
       else { legSit = 0; legKind = null; }
       gait += ((speed > 0.05 && !sit && !chair ? 1 : 0) - gait) * ease(8);
       palms += ((pray ? 1 : 0) - palms) * ease(4);
@@ -852,12 +857,13 @@ export function createMonk(opts = {}) {
       group.updateWorldMatrix(true, false); group.getWorldQuaternion(gq);
       const rootY = group.matrixWorld.elements[13];
       let lift = 0;
-      if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) {
+      if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop && !rise) {
         const want = grounding.heightAt ? grounding.heightAt(group.position.x, group.position.z) : rootY;
         bodyHeight = bodyHeight === null || Math.abs(want - bodyHeight) > 1.2 ? want : damp(bodyHeight, want, 18, dt);
         lift = clamp(bodyHeight - rootY, -0.35, 0.2);
       } else bodyHeight = rootY;
-      B.root.position.y = lift - SIT_DROP * (seat + perch) + Math.sin(t * 0.9) * 0.006 * seat;
+      // (Landing from a seat, `crouch` lets his knees give a little under him before he stands straight.)
+      B.root.position.y = lift - SIT_DROP * (seat + perch) + Math.sin(t * 0.9) * 0.006 * seat - (rise ? Math.max(0, grounding.crouch || 0) : 0);
 
       // The spine, posed directly: the pelvis turns with the leading leg, the chest against it; he leans into his walk,
       // bows to pray, and otherwise carries his face a little up.
@@ -865,17 +871,19 @@ export function createMonk(opts = {}) {
       B.hips.position.y += 0.0025 * breathe * (1 - gait);
       B.hips.position.z += 0.035 * perch;   // on a stool he sits toward its front edge, so that his shins hang clear of it
       B.hips.rotation.set(0, twist, 0.022 * Math.sin(phase) * gait);
-      B.spine.rotation.set(0.025 * gait + 0.04 * palms + 0.04 * seat + 0.05 * perch + 0.5 * bow, -twist * 0.5 + 0.5 * turnTo, 0);
-      B.chest.rotation.set(0.03 * gait + 0.05 * palms + 0.006 * breathe + 0.4 * bow - 0.035 * (air || 0), -twist * 0.9 + 0.5 * turnTo, -0.012 * Math.sin(phase) * gait);
-      B.neck.rotation.x = -0.03 * gait;
+      B.spine.rotation.set(0.025 * gait + 0.04 * palms + 0.04 * seat + 0.05 * perch + 0.5 * bow + lean, -twist * 0.5 + 0.5 * turnTo, 0);
+      B.chest.rotation.set(0.03 * gait + 0.05 * palms + 0.006 * breathe + 0.4 * bow + 0.6 * lean - 0.035 * (air || 0), -twist * 0.9 + 0.5 * turnTo, -0.012 * Math.sin(phase) * gait);
+      B.neck.rotation.x = -0.03 * gait - 0.25 * lean;   // (rising, his face stays up as his trunk comes over his feet)
       B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) * (1 - perch) + 0.2 * palms + 0.14 * seat + 0.05 * perch + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4 + 0.6 * look, -0.018 * Math.sin(phase) * gait);
       // A breath taken on purpose shows: the chest fills and rises, the shoulders with it; the head keeps its size.
       if (air !== null) { const k = 0.5 + 0.5 * air; B.chest.scale.set(1 + 0.035 * k, 1, 1 + 0.06 * k); B.neck.scale.set(1 / (1 + 0.035 * k), 1, 1 / (1 + 0.06 * k)); B.chest.position.y += 0.007 * k; for (const [n] of SIDES) B[n + "Shoulder"].position.y += 0.006 * k; }
 
-      // The legs reach for the ground under each shoe.
+      // The legs reach for the ground under each shoe. Getting up off a seat, they hang straight down until his feet are
+      // nearly there (`rising` past a half): reached for from the top of the drop, the floor's pull would set them on it
+      // at once and he would slide down planted, not come down on them.
       const sitW = Math.max(seat, perch), legsShown = legSit < 0.9, thigh = [0, 0];
       legs.visible = shoes.visible = true;
-      if (legsShown && hopW < 0.99) {
+      if (!hop && legsShown && !(rise && rising < 0.5)) {
         group.updateMatrixWorld(true);
         SIDES.forEach(([, s], i) => {
           tv.set(s * FOOT_X, 0, FOOT_Z + step[i].off * gait);
@@ -946,16 +954,14 @@ export function createMonk(opts = {}) {
           steps.push({ x: tv.x, z: tv.z, y: footY[i], yaw: group.rotation.y + s * TOE_OUT, side: s, late });
         });
       } else lastN[0] = lastN[1] = null;
-      // In the air (`hop`), blend smoothly into tucked hop legs so takeoff and landing never snap.
-      if (hopW > 0.01) {
+      // In the air (`hop`), his legs tuck up as a jump's do, and his shoes go up with him: they never reach for the floor
+      // he has left until he is standing on it again (a body dropped into the air, walked through a test, must not be
+      // drawn planted on the floor below it).
+      if (hop) {
         SIDES.forEach(([n], i) => {
           const up = B[n + "UpperLeg"], lo = B[n + "LowerLeg"], ft = B[n + "Foot"];
-          if (hopW >= 0.99 || !legsShown) { up.rotation.set(-0.55 - 0.1 * i, 0, 0); lo.rotation.set(1.0, 0, 0); ft.rotation.set(-0.4, 0, 0); }
-          else {
-            qa.setFromAxisAngle(XV, -0.55 - 0.1 * i); qb.setFromAxisAngle(XV, 1.0); qc.setFromAxisAngle(XV, -0.4);
-            up.quaternion.slerp(qa, hopW); lo.quaternion.slerp(qb, hopW); ft.quaternion.slerp(qc, hopW);
-          }
-          thigh[i] = thigh[i] * (1 - hopW) + (0.6 + 0.1 * i) * hopW;
+          up.rotation.set(-0.55 - 0.1 * i, 0, 0); lo.rotation.set(1.0, 0, 0); ft.rotation.set(-0.4, 0, 0);
+          thigh[i] = 0.6 + 0.1 * i;
         });
       }
       // Seated, the legs are put where the seat has them, in his own frame, whose floor is the seat's top. On a stool, as
@@ -980,7 +986,7 @@ export function createMonk(opts = {}) {
           }
           group.localToWorld(kneeW.copy(kneeL)); group.localToWorld(ankW.copy(ankL)); group.localToWorld(hipW.copy(hipL));
           const pole = tv2.copy(kneeW).sub(hipW.add(ankW).multiplyScalar(0.5));   // (hipW is not needed after this)
-          if (hop) {
+          if (hop || (rise && rising < 0.5)) {
             reach(up, lo, THIGH, SHIN, ankW, pole, 1);
             up.quaternion.slerpQuaternions(q0, up.quaternion, w); lo.quaternion.slerpQuaternions(q1, lo.quaternion, w);
           } else {
