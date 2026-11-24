@@ -513,6 +513,7 @@ const ray = new THREE.Raycaster();
 // inside it): the line passes through it and goes on to find the court. The boxes are the ones the doorways paint (`site.doorways`), taken in world space once.
 let darkBoxes = null;
 const inDark = (p) => {
+  if (inside) return false;   // interior rooms sit below the courts (FLOOR = -60); exterior doorway boxes only apply outdoors
   darkBoxes ||= Object.values(site.doorways || {}).map((w) => { w.mesh.updateWorldMatrix(true, false); w.mesh.geometry.computeBoundingBox(); const bx = w.mesh.geometry.boundingBox.clone().applyMatrix4(w.mesh.matrixWorld); bx.min.y = -1e3; return bx; });   // (the box's whole footprint, however far down: a line from an eye in the dark that leaves it through its floor is still in the hall)
   return darkBoxes.some((bx) => bx.containsPoint(p));
 };
