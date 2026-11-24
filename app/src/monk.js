@@ -471,16 +471,17 @@ export function createMonk(opts = {}) {
   const legParts = [];
   const TROUSER = new THREE.CatmullRomCurve3([
     [0.038, 0.142], [0.052, 0.152], [0.068, 0.172], [0.078, 0.2], [0.081, 0.232], [0.079, 0.262],
-    [0.071, 0.285], [0.056, 0.318], [0.044, 0.37], [0.036, 0.44], [0.031, 0.50], [0.029, 0.53],
+    [0.058, 0.285], [0.042, 0.318], [0.034, 0.37], [0.03, 0.44], [0.028, 0.5], [0.026, 0.53],
   ].map(([r, y]) => V3(r, y, 0)), false, "centripetal").getPoints(20);
   for (const [n, s] of SIDES) {
     const cx = s * 0.088, cz = -0.006, NC = 24;
     const tr = grid(TROUSER.length, NC + 1, (i, j) => {
       const { x: r0, y } = TROUSER[i], a = -Math.PI + (TAU * j) / NC;
       const gather = 1 + 0.045 * Math.sin(10 * a + s) * smooth(0.185, 0.145, y);
-      const rx = r0 * gather * (1 + 0.035 * smooth(0.16, 0.24, y) * smooth(0.30, 0.24, y) * Math.max(0, s * Math.sin(a)));
-      const rz = r0 * gather * (1 + 0.24 * smooth(0.15, 0.22, y) * smooth(0.32, 0.25, y));
-      return [cx + rx * Math.sin(a), y, cz + rz * Math.cos(a), (j / NC) * 3, y * 6, PAL.trousers];
+      const rx = r0 * gather * (1 + 0.035 * smooth(0.16, 0.24, y) * smooth(0.285, 0.24, y) * Math.max(0, s * Math.sin(a)));
+      const rz = r0 * gather * (1 + 0.24 * smooth(0.15, 0.22, y) * smooth(0.285, 0.245, y));
+      const hipIn = s * 0.016 * smooth(0.36, 0.5, y);
+      return [cx - hipIn + rx * Math.sin(a), y, cz + rz * Math.cos(a), (j / NC) * 3, y * 6, PAL.trousers];
     });
     weld(tr);
     legParts.push(finish(tr, null, (x, y) => { const lo = smooth(0.315, 0.245, y), hip = 0.55 * smooth(0.44, 0.53, y); return [[IDX.hips, hip], [IDX[n + "UpperLeg"], (1 - hip) * (1 - lo)], [IDX[n + "LowerLeg"], (1 - hip) * lo]]; }, true));
@@ -1024,6 +1025,12 @@ export function createMonk(opts = {}) {
       const kneeLift = (k, to) => reachOf(0.9 * Math.max(0, k), to) / 0.9, backTurn = (k) => reachOf(tr + 0.7 * Math.max(0, -k), SKIRT_BACK_REACH, SKIRT_BACK_FREE);
       const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt drapes smoothly over his lap and thighs, the sides open over his knees, the back rests on the seat.
+      // Climbing stairs: a high knee pushes the code robe's cloth over it forward without lifting the whole hem into a flat board (#615, #642).
+      const kneePush = (k) => (dressed ? 0 : 0.085 * smooth(0.5, 1.5, k) * (1 - sitW));
+      const pushF = kneePush(Math.max(thigh[0], thigh[1])), pushL = kneePush(thigh[0]), pushR = kneePush(thigh[1]);
+      B.robeFront.position.z += pushF;
+      B.robeLeft.position.z += 0.55 * pushL; B.robeLeft.position.x += 0.14 * pushL;
+      B.robeRight.position.z += 0.55 * pushR; B.robeRight.position.x -= 0.14 * pushR;
       B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * seat - 0.78 * perch, 0, sd);
       B.robeBack.rotation.set(back + 0.32 * seat + 0.22 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
@@ -1032,7 +1039,7 @@ export function createMonk(opts = {}) {
       B.robeFront.scale.y = 1 - 0.04 * seat - 0.18 * perch; B.robeBack.scale.y = 1 - 0.3 * seat - 0.62 * perch;   // on a stool the back of the skirt is gathered on the seat
       B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * seat - 0.14 * perch;
       // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
-      B.sashTail.rotation.set(B.robeFront.rotation.x * (1 - 0.6 * sitW) + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
+      B.sashTail.rotation.set(B.robeFront.rotation.x * (1 - 0.6 * sitW) - 2.2 * pushF + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
       B.hat.rotation.set(0.15 + Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)) + 0.08 * seat + 0.12 * perch, 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
       if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) liftHem(surfaceAt, dt);
 
