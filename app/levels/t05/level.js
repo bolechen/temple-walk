@@ -5,9 +5,9 @@
 import { buildSite, createWalker, COMPOUND, WAY } from "./site.js";
 
 // J01, the first look of T05: an early-winter morning, clear and cold, no snow (docs/t05/ART.md §4.2, PRD.md §4). The sun is
-// where #280's white box worked it out for 9:45 on a day in early December at 41.5° N: 17° up, 152° from north (推算), which in
+// where #280's white box worked it out for 9:45 on a day in early December at 41.5° N: 17° up, 152° from north (a calculation, not a record), which in
 // the plan's frame (north is -z, east +x) is toward the south-south-east. Its light is cold white, the sky's shade blue, the air
-// clean (no layered mist, thin haze). The numbers other than the sun's position are 自拟, set against ART.md's words and
+// clean (no layered mist, thin haze). The numbers other than the sun's position are the project's own, set against ART.md's words and
 // judged on the named views (docs/t05/DECISIONS.md, 2026-11-24). Only winter by day is changed; the engine's other hours stand.
 const J01_ELEV = (17 * Math.PI) / 180, J01_AZ = (152 * Math.PI) / 180;
 const J01 = {
@@ -18,7 +18,7 @@ const J01 = {
   exp: 1.1, bloom: 0.16, glow: 0.35, hal: 0.12, mist: 0.7, fogLayer: [0.15, -6, 20, 2],
   sh: [0.9, 0.98, 1.07], hi: [1.01, 1, 0.97], sat: 0.94,
   lut: { lift: [0, 0.002, 0.006], gamma: [1, 1, 1.01], gain: [1, 1, 1], sat: 0.96, shadow: [-0.01, 0.002, 0.014], light: [0.004, 0.002, -0.003] },
-  drift: "none", line: "晴寒霜后，钟声独远",
+  drift: "none", line: "寒霜清晨，钟声独远",
 };
 
 /** @type {import("../../src/level.js").Level} */
