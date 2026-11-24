@@ -98,7 +98,9 @@ export function relayBeads(monk, { gap = 0.004 } = {}) {
   let beads = null; monk.group.traverse((o) => { if (o.isMesh && !o.isSkinnedMesh && o.parent === monk.bones.chest && o !== monk.parts.hat && o.geometry.attributes.position.count > 1000) beads = o; });
   if (!beads) throw new Error("no beads on the chest");
   monk.update(0, 0, "bind", 0); monk.group.updateMatrixWorld(true);
-  const g = beads.geometry, P = g.attributes.position, N = 32, per = P.count / N; if (per !== Math.round(per)) throw new Error(`${P.count} bead vertices are not ${N} beads`);
+  const g = beads.geometry, P = g.attributes.position;
+  let N = 38; for (const cand of [38, 32]) if (P.count % cand === 0) { N = cand; break; }
+  const per = P.count / N; if (per !== Math.round(per)) throw new Error(`${P.count} bead vertices are not ${N} beads`);
   const cloth = ["robe", "skin"].map((n) => { const m = new THREE.Mesh(monk.parts[n].geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); m.updateMatrixWorld(true); return m; });
   const ray = new THREE.Raycaster(), v = new THREE.Vector3(), c = new THREE.Vector3(), toLocal = beads.matrixWorld.clone().invert();
   let moved = 0, most = 0;

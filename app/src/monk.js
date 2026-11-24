@@ -34,17 +34,17 @@ const col = (hex) => new THREE.Color(hex);
 const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const XV = V3(1, 0, 0), UPV = V3(0, 1, 0);
 
-// His measure, in metres: 1.18 tall, the head a quarter of it, the arms bound 38° from his sides.
+// His measure, in metres: 1.18 tall, 4.55 heads tall (refs/monk-sheet-v6-2026-11-22-eyes-closed.webp, #642), arms bound 38° from his sides.
 const APOSE = 0.66, UPPER = 0.2, FORE = 0.15, THIGH = 0.22, SHIN = 0.22, ANKLE = 0.06;
 const LEG = THIGH + SHIN;
 // How a shoe goes over the steps (issue #270), in his own measure so that another body keeps it. Up, the foot is lifted
 // early and comes over the nosing a finger above it, toe up; down, it goes forward at the height of the tread it leaves and
 // only then lets itself down onto the one below, toe first (a foot lifted on the way down is what read as a high knee).
 // Where the pelvis stands is decided by the feet that bear him, not by the slope.
-export const STAIRGAIT = { upBy: 0.42, upClear: 0.034 * LEG, upToe: 0.2, downFrom: 0.35, downTo: 0.95, downClear: 0.008 * LEG, downToe: 0.35, flat: 0.09 * LEG, kind: 0.08 * LEG, sag: 0.1 * LEG, upFollow: 0.5, toeLen: 0.117, heelLen: 0.056 };
+export const STAIRGAIT = { upBy: 0.42, upClear: 0.034 * LEG, upToe: 0.2, downFrom: 0.35, downTo: 0.95, downClear: 0.008 * LEG, downToe: 0.35, flat: 0.09 * LEG, kind: 0.08 * LEG, sag: 0.1 * LEG, upFollow: 0.5, toeLen: 0.117, heelLen: 0.072 };
 const SIT_DROP = 0.41;   // seated, how far he comes down: his hip joints about 9 cm above the seat
-const SKULL = V3(0, 1.04, -0.004), R = 0.14;
-const FOOT_X = 0.088, FOOT_Z = 0.012, TOE_OUT = 0.12;
+const SKULL = V3(0, 1.049, 0.006), R = 0.131;
+const FOOT_X = 0.09, FOOT_Z = 0.012, TOE_OUT = 0.08;
 /** @type {[string, number][]} */
 const SIDES = [["left", 1], ["right", -1]];   // he faces +z, so his left hand is on +x
 // How far the skirt's bones follow a raised knee (radians of bone turn): freely up to SKIRT_FREE, easing to SKIRT_REACH for
@@ -60,38 +60,62 @@ const SKIRT_BACK_FREE = 0.25, SKIRT_BACK_REACH = 0.4;
 const SKIRT_SWING = 0.05, SKIRT_SIDE_SWING = 0.25, SKIRT_TRAIL = 0.15;
 const SKIRT = ["robeFront", "robeLeft", "robeBack", "robeRight"];
 // Under each sole, the points that must clear the ground (in the foot's own frame, on the floor).
-const PROBES = [[0.045, -0.054], [-0.045, -0.054], [0.045, 0.114], [-0.045, 0.114], [0, 0.117], [0, -0.056]].map(([x, z]) => V3(x, 0, z));
+const PROBES = [[0.055, -0.072], [-0.055, -0.072], [0.055, 0.11], [-0.055, 0.11], [0, 0.112], [0, -0.073]].map(([x, z]) => V3(x, 0, z));
 
+// v6 colour palette (refs/monk-sheet-v6-2026-11-22-eyes-closed.webp & docs/t00/novice-v6-brief.md), calibrated for T00 courtyard light (#642).
 const PAL = {
-  skin: col(0xf0c6a4), crown: col(0xf3d0b2), blush: col(0xe9958a), lip: col(0x9a5244), brow: col(0x5e3b29), lash: col(0x3a271d), earIn: col(0xe4a58c),
-  robe: col(0xb2633f), robeIn: col(0x6c3720), band: col(0x9c5232), sash: col(0xa2583a), collar: col(0xdcd1bb),
-  trousers: col(0x6f6155), wrap: col(0xddd2bc), shoe: col(0x48423f), sole: col(0xc6b9a1), strap: col(0xcdbba0), tie: col(0x7a5c38),
+  skin: col(0xf0c7a7), crown: col(0xf4d1b4), blush: col(0xe48e7e), lip: col(0x8e4b3a), brow: col(0x543320), lash: col(0x362014), earIn: col(0xdca486),
+  robe: col(0xa96243), robeIn: col(0x64331e), band: col(0x985538), sash: col(0x905034), collar: col(0xe2d2ba),
+  trousers: col(0x7c5b43), wrap: col(0xe0d1b8), shoe: col(0x523e30), sole: col(0xd4c1a5), strap: col(0xcab698), tie: col(0x8c6438),
 };
 
-// ---- Cloth and straw, painted once ----
+// ---- Cloth and bamboo, painted once ----
 /** @returns {[HTMLCanvasElement, CanvasRenderingContext2D]} */
 function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d")]; }
-function linen(createRnd) {   // coarse, hand-woven: a thread to two pixels, and here and there a thicker slub
+function linen(createRnd) {   // soft matte cotton/felt micro-grain matching the v6 soft-clay finish (#642)
   const [c, x] = canvas(256, 256), rnd = createRnd ? createRnd(0x11e4) : Math.random;   // (the trailer seeds it: the same cloth every time, #610)
-  x.fillStyle = "#f3f3f3"; x.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 256; i += 2) { x.fillStyle = `rgba(255,255,255,${0.1 + rnd() * 0.15})`; x.fillRect(i, 0, 1, 256); x.fillStyle = `rgba(60,48,38,${0.05 + rnd() * 0.09})`; x.fillRect(0, i, 256, 1); }
-  for (let i = 0; i < 170; i++) { x.fillStyle = rnd() < 0.5 ? `rgba(255,255,255,${0.08 + rnd() * 0.1})` : `rgba(40,30,20,${0.06 + rnd() * 0.08})`; x.fillRect(rnd() * 256, rnd() * 256, 6 + rnd() * 44, 1 + rnd()); }
+  x.fillStyle = "#f7f5f2"; x.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 256; i += 2) {
+    x.fillStyle = `rgba(255,255,255,${0.035 + rnd() * 0.045})`; x.fillRect(i, 0, 1, 256);
+    x.fillStyle = `rgba(70,50,35,${0.02 + rnd() * 0.035})`; x.fillRect(0, i, 256, 1);
+  }
+  for (let i = 0; i < 420; i++) {
+    const rad = 1 + rnd() * 2.5;
+    x.fillStyle = rnd() < 0.5 ? `rgba(255,250,245,${0.025 + rnd() * 0.035})` : `rgba(60,40,24,${0.02 + rnd() * 0.03})`;
+    x.fillRect(rnd() * 256, rnd() * 256, rad * (1 + rnd() * 2), rad);
+  }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-function straw() {   // split bamboo plaited on the diagonal: two strips over, two under, converging to the crown
-  const W = 512, H = 128, [c, x] = canvas(W, H), cell = W / 64 / Math.SQRT2;
-  x.fillStyle = "#5e4a2c"; x.fillRect(0, 0, W, H);
-  x.save(); x.rotate(Math.PI / 4);
-  for (let i = -4; i < 120; i++) for (let j = -110; j < 30; j++) {
-    const u = i * cell, v = j * cell, h = Math.abs(Math.sin((i + j) * 12.9898 + (((i - j) % 128) + 128) % 128 * 78.233) * 43758.5453) % 1;
-    const tone = 196 + h * 46, over = ((i + j) & 3) < 2;
-    x.fillStyle = `rgb(${tone | 0},${(tone * 0.83) | 0},${(tone * 0.55) | 0})`;
-    if (over) x.fillRect(u + 0.3, v + 0.1 * cell, cell - 0.6, cell * 0.8); else x.fillRect(u + 0.1 * cell, v + 0.3, cell * 0.8, cell - 0.6);
-    x.fillStyle = "rgba(90,66,30,.22)";
-    if (over) x.fillRect(u + 0.3, v + cell * 0.48, cell - 0.6, 0.6); else x.fillRect(u + cell * 0.48, v + 0.3, 0.6, cell - 0.6);
+function straw() {   // split bamboo woven in concentric rings with 24 radial ribs converging to the crown (refs/monk-props-v6)
+  const W = 512, H = 256, [c, x] = canvas(W, H), spokes = 24, rings = 22;
+  x.fillStyle = "#c88d52"; x.fillRect(0, 0, W, H);
+  const rh = H / rings, sw = W / spokes;
+  for (let r = 0; r < rings; r++) {
+    const y = r * rh;
+    for (let s = 0; s < spokes; s++) {
+      const h = Math.abs(Math.sin(r * 19.31 + s * 7.13) * 43758.5453) % 1;
+      const lum = 0.93 + h * 0.14;
+      const cr = Math.min(255, Math.round(213 * lum)), cg = Math.min(255, Math.round(154 * lum)), cb = Math.min(255, Math.round(96 * lum));
+      x.fillStyle = `rgb(${cr},${cg},${cb})`;
+      x.fillRect(s * sw, y + 1, sw, rh - 2);
+      // fine parallel bamboo splints within each ring
+      x.fillStyle = "rgba(110,72,34,0.16)";
+      x.fillRect(s * sw, y + rh * 0.35, sw, 1);
+      x.fillRect(s * sw, y + rh * 0.68, sw, 1);
+    }
+    // dark weave seam between concentric rings
+    x.fillStyle = "rgba(96,60,26,0.34)";
+    x.fillRect(0, y, W, 1.5);
   }
-  x.restore();
-  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
+  // 24 radial bamboo ribs running from apex (v=0) to rim (v=1)
+  for (let s = 0; s < spokes; s++) {
+    const sx = s * sw;
+    x.fillStyle = "rgba(92,58,24,0.38)";
+    x.fillRect(sx - 2, 0, 4.5, H);
+    x.fillStyle = "rgba(232,182,122,0.85)";
+    x.fillRect(sx - 1, 0, 2.2, H);
+  }
+  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 
 // ---- Geometry helpers ----
@@ -159,15 +183,18 @@ function finish(g, color, w, keepUV) {
   return g;
 }
 
-// ---- The robe's body, as half-widths (across) and depths (front to back) at each height ----
-const PROF = new THREE.CatmullRomCurve3([[0.172, 0.255], [0.164, 0.3], [0.146, 0.4], [0.124, 0.5], [0.106, 0.58], [0.099, 0.62], [0.1, 0.66], [0.104, 0.72], [0.108, 0.775], [0.111, 0.8], [0.098, 0.826], [0.075, 0.85], [0.055, 0.866], [0.044, 0.876]]
-  .map(([r, y]) => V3(r, y, 0)), false, "centripetal").getPoints(48);
+// ---- The robe's body, as half-widths (across), depths (front to back) and z-centre at each height (refs/monk-v6-ortho) ----
+const PROF = new THREE.CatmullRomCurve3([
+  [0.192, 0.277], [0.186, 0.315], [0.174, 0.37], [0.158, 0.44], [0.141, 0.51], [0.123, 0.58], [0.111, 0.625],
+  [0.105, 0.658], [0.111, 0.695], [0.12, 0.745], [0.126, 0.79], [0.118, 0.822], [0.095, 0.846], [0.068, 0.866], [0.056, 0.876],
+].map(([r, y]) => V3(r, y, 0)), false, "centripetal").getPoints(42);
 const rxAt = (y) => { if (y <= PROF[0].y) return PROF[0].x; for (let i = 1; i < PROF.length; i++) if (PROF[i].y >= y) { const a = PROF[i - 1], b = PROF[i]; return a.x + (b.x - a.x) * ((y - a.y) / (b.y - a.y || 1)); } return PROF[PROF.length - 1].x; };
-const DEPTH = [[0.255, 0.68], [0.45, 0.71], [0.62, 0.76], [0.7, 0.73], [0.79, 0.645], [0.84, 0.75], [0.876, 0.93]];
+const DEPTH = [[0.277, 0.865], [0.42, 0.905], [0.56, 0.96], [0.658, 1.07], [0.74, 0.94], [0.80, 0.76], [0.845, 0.78], [0.876, 0.88]];
 const depthAt = (y) => { if (y <= DEPTH[0][0]) return DEPTH[0][1]; for (let i = 1; i < DEPTH.length; i++) if (DEPTH[i][0] >= y) { const [y0, d0] = DEPTH[i - 1], [y1, d1] = DEPTH[i]; return d0 + (d1 - d0) * smooth(y0, y1, y); } return DEPTH[DEPTH.length - 1][1]; };
-const belly = (y) => 0.009 * Math.exp(-sq((y - 0.655) / 0.06));   // a child's round front
+const zOffAt = (y) => 0.008 * smooth(0.28, 0.58, y) * smooth(0.87, 0.76, y) + 0.004 * smooth(0.277, 0.45, y);
+const belly = (y) => 0.008 * Math.exp(-sq((y - 0.66) / 0.08));   // soft child front
 const rzAt = (y, c) => rxAt(y) * depthAt(y) + belly(y) * smooth(-0.3, 0.6, c);
-const inBody = (x, y, z) => { if (y < 0.255 || y > 0.876) return 9; const r = Math.hypot(x, z) || 1e-9; return Math.hypot(x / rxAt(y), z / rzAt(y, z / r)); };
+const inBody = (x, y, z) => { if (y < 0.277 || y > 0.876) return 9; const zo = z - zOffAt(y), r = Math.hypot(x, zo) || 1e-9; return Math.hypot(x / rxAt(y), zo / rzAt(y, zo / r)); };
 function toBody(p, c) {   // where the line from c (inside him) out through p meets the robe
   const d = p.clone().sub(c), q = V3(), f = (m) => inBody(...q.copy(c).addScaledVector(d, m).toArray());
   let hi = 1; while (f(hi) < 1 && hi < 16) hi *= 2;
@@ -178,19 +205,19 @@ function bodyNormal(p) { const h = 0.0015, f = (dx, dy, dz) => inBody(p.x + dx, 
 // A path laid on the robe: each guess [x, y, z, cx, cy, cz] is projected from the centre given (inside him), the result
 // smoothed and resampled, and every sample settled back onto the cloth `lift` above it.
 function onBody(guesses, count, lift, closed = false) {
-  const pts = guesses.map(([x, y, z, cx = 0, cy = y, cz = 0]) => toBody(V3(x, y, z), V3(cx, cy, cz)));
+  const pts = guesses.map(([x, y, z, cx = 0, cy = y, cz = zOffAt(y)]) => toBody(V3(x, y, z), V3(cx, cy, cz)));
   let s = new THREE.CatmullRomCurve3(pts, closed, "centripetal").getSpacedPoints(count);
   if (closed) s = s.slice(0, -1);
   return s.map((p) => { const n = bodyNormal(p), q = toBody(p.clone().addScaledVector(n, 0.06), p.clone().addScaledVector(n, -0.045)), m = bodyNormal(q); return { p: q.addScaledVector(m, lift), n: m }; });
 }
 
-// The skull: a deep, round head, full in the cheek, the back of it full, the face a little flat.
+// The skull (v6 4.55 heads): smooth soft-clay sphere, gentle chubby lower cheeks, soft rounded chin, full round occiput.
 function deform(p) {
-  const r = p.length() || 1, n = p.clone().divideScalar(r), u = n.y, front = smooth(-0.5, 0.4, n.z), back = smooth(0.1, -0.6, n.z);
-  const cheek = Math.exp(-sq((u + 0.5) / 0.3)) * front;
-  const kx = 1 + 0.085 * cheek - 0.05 * smooth(-0.78, -1, u);
-  const kz = 1.07 + 0.025 * cheek + 0.06 * Math.exp(-sq((u + 0.2) / 0.38)) * back - 0.03 * smooth(0.72, 1, n.z) * (1 - smooth(0.55, 0.9, Math.abs(u)));
-  const ky = 1 - 0.02 * smooth(0, 1, u);
+  const r = p.length() || 1, n = p.clone().divideScalar(r), u = n.y, front = smooth(-0.4, 0.45, n.z), back = smooth(0.15, -0.55, n.z);
+  const cheek = Math.exp(-sq((u + 0.34) / 0.32)) * front;
+  const kx = 1.012 + 0.036 * cheek - 0.075 * smooth(-0.74, -1, u);
+  const kz = 1.06 + 0.03 * cheek + 0.042 * Math.exp(-sq((u + 0.06) / 0.44)) * back - 0.024 * smooth(0.68, 1, n.z) * (1 - smooth(0.55, 0.9, Math.abs(u))) + 0.055 * Math.exp(-sq((u + 0.68) / 0.25)) * front;
+  const ky = 1.0;
   return V3(p.x * kx, p.y * ky, p.z * kz);
 }
 const onFace = (az, el, lift = 0) => deform(V3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(R + lift)).add(SKULL);
@@ -198,29 +225,29 @@ const onFace = (az, el, lift = 0) => deform(V3(Math.sin(az) * Math.cos(el), Math
 const spring = (k = 70, c = 9) => ({ x: 0, v: 0, step(target, dt) { for (let left = dt; left > 1e-6; left -= 1 / 60) { const h = Math.min(left, 1 / 60); this.v += (k * (target - this.x) - c * this.v) * h; this.x += this.v * h; } return this.x; } });
 
 export function createMonk(opts = {}) {
-  // ---- The skeleton, in the A-pose he was drawn in ----
+  // ---- The skeleton, in the A-pose he was drawn in (4.55 heads tall, arms 38°) ----
   const group = new THREE.Group(), bones = [], B = {};
   const bone = (name, parent, x, y, z) => { const b = new THREE.Bone(); b.name = name; b.position.set(x, y, z); (parent || group).add(b); bones.push(b); B[name] = b; return b; };
   bone("root", null, 0, 0, 0);
   bone("hips", B.root, 0, 0.53, 0);
   bone("spine", B.hips, 0, 0.08, 0);
   bone("chest", B.spine, 0, 0.11, 0);
-  bone("neck", B.chest, 0, 0.145, -0.004);
+  bone("neck", B.chest, 0, 0.146, -0.002);
   bone("head", B.neck, 0, 0.04, 0.004);
   for (const [n, s] of SIDES) {
-    bone(n + "Shoulder", B.chest, s * 0.03, 0.08, 0);
-    bone(n + "UpperArm", B[n + "Shoulder"], s * 0.062, -0.005, 0).rotation.z = s * APOSE;
+    bone(n + "Shoulder", B.chest, s * 0.028, 0.088, 0);
+    bone(n + "UpperArm", B[n + "Shoulder"], s * 0.048, -0.004, 0).rotation.z = s * APOSE;
     bone(n + "LowerArm", B[n + "UpperArm"], 0, -UPPER, 0);
     bone(n + "Hand", B[n + "LowerArm"], 0, -FORE, 0);
   }
   for (const [n, s] of SIDES) {
-    bone(n + "UpperLeg", B.hips, s * 0.085, -0.03, 0);
+    bone(n + "UpperLeg", B.hips, s * 0.086, -0.03, 0);
     bone(n + "LowerLeg", B[n + "UpperLeg"], 0, -THIGH, 0);
     bone(n + "Foot", B[n + "LowerLeg"], 0, -SHIN, 0);
   }
-  for (const n of SKIRT) bone(n, B.hips, 0, 0.07, 0);   // the skirt hangs from the waist on four bones
-  bone("sashTail", B.hips, 0.032, 0.096, 0.094);         // at the knot
-  bone("hat", B.chest, 0, 0.045, -0.085);                 // where the hat rests against his upper back
+  for (const n of SKIRT) bone(n, B.hips, 0, 0.07, 0);     // the skirt hangs from the waist on four bones (kept at 0.07 for worn-body compatibility)
+  bone("sashTail", B.hips, 0.036, 0.115, 0.126);          // at the double knot
+  bone("hat", B.chest, 0, 0.055, -0.085);                 // where the hat rests against his upper back
   group.updateMatrixWorld(true);
   const IDX = Object.fromEntries(bones.map((b, i) => [b.name, i]));
   const at = (name) => B[name].getWorldPosition(V3());
@@ -230,11 +257,11 @@ export function createMonk(opts = {}) {
   // faces; at the shoulders the cloth goes some way with the arm.
   const robeW = (x, y, z) => {
     const w = {}, add = (n, v) => { if (v > 1e-5) w[n] = (w[n] || 0) + v; };
-    const up = smooth(0.585, 0.655, y), top = smooth(0.67, 0.76, y), skirt = smooth(0.62, 0.4, y), a = Math.atan2(x, z), sk = (1 - up) * skirt;
+    const up = smooth(0.615, 0.675, y), top = smooth(0.69, 0.77, y), skirt = smooth(0.64, 0.42, y), a = Math.atan2(x, z), sk = (1 - up) * skirt;
     add("chest", up * top); add("spine", up * (1 - top)); add("hips", (1 - up) * (1 - skirt));
     add("robeFront", sk * sq(Math.max(0, Math.cos(a)))); add("robeBack", sk * sq(Math.max(0, -Math.cos(a))));
     add("robeLeft", sk * sq(Math.max(0, Math.sin(a)))); add("robeRight", sk * sq(Math.max(0, -Math.sin(a))));
-    const arm = 0.55 * smooth(0.07, 0.112, Math.abs(x)) * smooth(0.7, 0.775, y) * smooth(0.885, 0.83, y);
+    const arm = 0.55 * smooth(0.072, 0.118, Math.abs(x)) * smooth(0.71, 0.785, y) * smooth(0.885, 0.835, y);
     if (arm > 0) { for (const k in w) w[k] *= 1 - arm; add(x > 0 ? "leftUpperArm" : "rightUpperArm", arm); }
     return Object.entries(w).map(([n, v]) => [IDX[n], v]);
   };
@@ -244,208 +271,314 @@ export function createMonk(opts = {}) {
   // ---- Skin: head, neck, forearms, hands, one mesh ----
   const skinParts = [];
   {
-    const g = new THREE.SphereGeometry(R, 56, 40), p = g.attributes.position, clr = new Float32Array(p.count * 3), c = new THREE.Color();
+    const g = new THREE.SphereGeometry(R, 48, 32), p = g.attributes.position, clr = new Float32Array(p.count * 3), c = new THREE.Color();
     for (let i = 0; i < p.count; i++) {
       const n = V3(p.getX(i), p.getY(i), p.getZ(i)).divideScalar(R);
-      const cheek = Math.max(...[1, -1].map((s) => Math.exp(-(sq(n.x - s * 0.53) + sq(n.y + 0.41) + sq(n.z - 0.74)) / 0.024)));   // the cheeks flush
-      c.copy(PAL.skin).lerp(PAL.crown, smooth(0.45, 0.95, n.y)).lerp(PAL.blush, 0.6 * cheek);
+      const cheek = Math.max(...[1, -1].map((s) => Math.exp(-(sq(n.x - s * 0.53) + sq(n.y + 0.34) + sq(n.z - 0.76)) / 0.082)));   // soft feathered blush
+      const jawShade = smooth(-0.68, -0.98, n.y) * 0.04;
+      c.copy(PAL.skin).lerp(PAL.crown, smooth(0.38, 0.95, n.y)).lerp(PAL.blush, 0.62 * cheek).multiplyScalar(1 - jawShade);
       clr.set([c.r, c.g, c.b], i * 3);
       const q = deform(n.multiplyScalar(R)).add(SKULL); p.setXYZ(i, q.x, q.y, q.z);
     }
     g.setAttribute("color", new THREE.BufferAttribute(clr, 3)); weld(g);
     skinParts.push(finish(g, null, IDX.head));
-    // The face is a few fine strokes: closed eyes curving down in a smile, soft brows, a small mouth.
-    const stroke = (pts, width, color) => {
-      const P = pts.map(([az, el]) => onFace(az, el, 0.0006)), fr = frames(P, (q) => q.clone().sub(SKULL).normalize());
+    // Face strokes (refs/monk-poses-v6-2026-11-23-gassho-head.webp):
+    // short flat rounded-cap brows, gentle downward U-arc closed eyes (no eyelashes), small button nose, tiny shallow smile.
+    const stroke = (pts, width, color, depthRatio = 0.5, cap = true) => {
+      const P = pts.map(([az, el]) => onFace(az, el, 0.0005)), fr = frames(P, (q) => q.clone().sub(SKULL).normalize());
       fr.forEach((f, i) => { f.k = width(i / (fr.length - 1)); });
-      return finish(sweep(fr, oval(1, 0.45, 8)), color, IDX.head);
+      const parts = [sweep(fr, oval(1, depthRatio, 8))];
+      if (cap) for (const end of [fr[0], fr[fr.length - 1]]) {
+        parts.push(new THREE.SphereGeometry(end.k, 8, 6).scale(1, 1, depthRatio).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(V3(0, 0, 1), end.n)).translate(end.p.x, end.p.y, end.p.z));
+      }
+      return finish(mergeGeometries(parts.map((q) => { q.deleteAttribute("uv"); return q; })), color, IDX.head);
     };
     const arc = (n, f) => Array.from({ length: n + 1 }, (_, i) => f((2 * i) / n - 1));
     for (const s of [1, -1]) {
-      skinParts.push(stroke(arc(12, (t) => [s * (0.485 + 0.125 * t), -0.262 - 0.048 * (1 - t * t)]), (u) => 0.001 + 0.0026 * Math.sin(Math.PI * u), PAL.lash));
-      skinParts.push(stroke(arc(12, (t) => [s * (0.49 + 0.15 * t), 0.014 + 0.036 * (1 - t * t)]), (u) => 0.0016 + 0.0058 * Math.pow(Math.sin(Math.PI * u), 0.7), PAL.brow));
-      for (const [a0, e0, a1, e1] of [[0.585, -0.27, 0.635, -0.292], [0.6, -0.266, 0.655, -0.278]]) skinParts.push(stroke(arc(4, (t) => [s * (a0 + (a1 - a0) * (t + 1) / 2), e0 + (e1 - e0) * (t + 1) / 2]), (u) => 0.0011 * (1 - u) + 0.0002, PAL.lash));
+      // Closed eyes: gentle downward-curving smile arc, no eyelashes
+      skinParts.push(stroke(arc(12, (t) => [s * (0.46 + 0.12 * t), -0.15 - 0.046 * (1 - t * t)]), (u) => 0.0026 + 0.0014 * Math.sin(Math.PI * u), PAL.lash, 0.52));
+      // Short flat rounded brows (uniform pill bar with barely a gentle lift)
+      skinParts.push(stroke(arc(10, (t) => [s * (0.465 + 0.118 * t), 0.195 + 0.015 * (1 - t * t)]), () => 0.0058, PAL.brow, 0.48));
     }
-    skinParts.push(stroke(arc(10, (t) => [0.125 * t, -0.7 + 0.045 * t * t]), (u) => 0.001 + 0.0011 * Math.sin(Math.PI * u), PAL.lip));
-    skinParts.push(finish(new THREE.SphereGeometry(0.0125, 14, 10).scale(1.25, 0.85, 0.8).translate(...onFace(0, -0.5, -0.0035).toArray()), PAL.skin.clone().lerp(PAL.blush, 0.25), IDX.head));   // the nose
-    for (const s of [1, -1]) {   // large ears, standing a little out and turned forward
-      const ear = mergeGeometries([paint(new THREE.SphereGeometry(1, 16, 12).scale(0.0095, 0.036, 0.0245), PAL.skin),
-        paint(new THREE.TorusGeometry(0.021, 0.0062, 8, 24).rotateY(Math.PI / 2).scale(1, 1.36, 1.05).translate(0.003, 0.001, 0), PAL.skin),
-        paint(new THREE.SphereGeometry(1, 12, 8).scale(0.0045, 0.017, 0.011).translate(0.0055, -0.003, 0.001), PAL.earIn)]);
+    // Small sweet shallow smile mouth
+    skinParts.push(stroke(arc(10, (t) => [0.115 * t, -0.505 + 0.036 * t * t]), (u) => 0.0013 + 0.0007 * Math.sin(Math.PI * u), PAL.lip, 0.48));
+    // Cute small rounded button nose
+    skinParts.push(finish(new THREE.SphereGeometry(0.0106, 14, 10).scale(1.04, 0.84, 0.96).translate(...onFace(0, -0.34, -0.0012).toArray()), PAL.skin.clone().lerp(PAL.blush, 0.18), IDX.head));
+    // Low-set plump C-cup ears (ear top roughly level with closed eyes, y = 0.95..1.01, smooth clay lobe)
+    for (const s of [1, -1]) {
+      const ear = mergeGeometries([
+        paint(new THREE.SphereGeometry(1, 14, 10).scale(0.0155, 0.0295, 0.0235), PAL.skin),
+        paint(new THREE.TorusGeometry(0.0175, 0.0062, 8, 20).rotateY(Math.PI / 2).scale(0.82, 1.28, 1.0).translate(0.0032, 0.0005, -0.001), PAL.skin),
+        paint(new THREE.SphereGeometry(1, 10, 8).scale(0.0045, 0.0135, 0.0105).translate(0.0055, -0.0015, 0.001), PAL.earIn),
+      ]);
       if (s < 0) { ear.scale(-1, 1, 1); flip(ear); }
-      ear.rotateY(-s * 0.45).translate(...onFace(s * 1.66, -0.56, -0.004).toArray());
+      ear.rotateY(-s * 0.26).translate(...onFace(s * 1.58, -0.45, -0.002).toArray());
       skinParts.push(finish(ear, null, IDX.head));
     }
-    skinParts.push(finish(new THREE.CylinderGeometry(0.036, 0.041, 0.08, 20, 3, true).translate(0, 0.885, -0.006), PAL.skin, (x, y) => {
-      const h = smooth(0.888, 0.918, y), c2 = smooth(0.875, 0.85, y); return [[IDX.head, h], [IDX.chest, c2], [IDX.neck, Math.max(0, 1 - h - c2)]];
-    }));
-    for (const arm of ARM) {   // a child's soft forearm, thinning to the wrist, out of the sleeve
-      const { J, d, o, e2, n } = arm, NC = 16, NA = 9;
+    // Sturdy child's neck + throat extending cleanly behind the crossed cream V-collar (zero seam!)
+    {
+      const NNY = 10, NNC = 20;
+      const nk = grid(NNY, NNC + 1, (i, j) => {
+        const u = i / (NNY - 1), y = 0.798 + 0.134 * u, a = -Math.PI + (TAU * j) / NNC;
+        const flare = 1 + 0.07 * sq(Math.max(0, u - 0.6) / 0.4);
+        const rx = 0.049 * flare, rz = 0.046 * flare;
+        const frontChest = 0.026 * smooth(0.55, 0, u) * Math.max(0, Math.cos(a));
+        return [rx * Math.sin(a), y, rz * Math.cos(a) - 0.001 + frontChest, 0, 0, PAL.skin.clone().multiplyScalar(0.95 + 0.05 * smooth(0.85, 0.35, u))];
+      });
+      weld(nk);
+      skinParts.push(finish(nk, null, (x, y) => {
+        const h = smooth(0.896, 0.922, y), c2 = smooth(0.875, 0.848, y);
+        return [[IDX.head, h], [IDX.chest, c2], [IDX.neck, Math.max(0, 1 - h - c2)]];
+      }));
+    }
+    // Plump child's forearms and sculpted soft-clay hands (wrist sphere centred on B.Hand so pray/tea/sit stay connected)
+    for (const arm of ARM) {
+      const { J, d, o, e2, n, s } = arm, NC = 16, NA = 10;
       const fa = grid(NA, NC + 1, (i, j) => {
-        const t = 0.165 + ((0.352 - 0.165) * i) / (NA - 1), th = Math.PI + (TAU * j) / NC;
-        const r = 0.0235 - 0.0055 * smooth(0.17, 0.34, t) + 0.0015 * Math.exp(-sq((t - 0.23) / 0.03));
-        const q = J.clone().addScaledVector(d, t).addScaledVector(o, r * Math.cos(th)).addScaledVector(e2, r * 0.86 * Math.sin(th));
+        const u = i / (NA - 1), t = 0.145 + (UPPER + FORE + 0.004 - 0.145) * u, th = Math.PI + (TAU * j) / NC;
+        const r = 0.0365 - 0.0115 * smooth(0.15, UPPER + FORE, t) + 0.002 * Math.exp(-sq((t - 0.21) / 0.045));
+        const tuckIn = -0.0085 * smooth(0.16, 0.30, t) * (1 - 0.45 * smooth(0.30, UPPER + FORE, t));
+        const q = J.clone().addScaledVector(d, t).addScaledVector(o, r * Math.cos(th) + tuckIn).addScaledVector(e2, r * 0.96 * Math.sin(th));
         return [q.x, q.y, q.z, 0, 0];
       });
       weld(fa);
-      skinParts.push(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.18, 0.215, t), h = 0.5 * smooth(0.335, 0.352, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
-      // The hand, made in its own frame (wrist at the origin, fingers down -y, palm to +z, thumb outward), then set where
-      // the bone is.
+      skinParts.push(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.175, 0.215, t), h = 0.5 * smooth(UPPER + FORE - 0.02, UPPER + FORE, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
+      // The hand in its own frame: spherical wrist ball near (0,0,0), palm & fingers gently angled down (-0.46 rad around wrist)
       /** @type {THREE.BufferGeometry[]} */
-      const parts = [new THREE.SphereGeometry(1, 16, 12).scale(0.0215, 0.026, 0.0118).translate(0, -0.026, 0.002), new THREE.CylinderGeometry(0.0185, 0.0195, 0.024, 14)];
-      [[0.0132, 0.021], [0.0045, 0.025], [-0.0045, 0.024], [-0.0132, 0.019]].forEach(([fx, len], k) => parts.push(new THREE.CapsuleGeometry(0.0061 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(-0.28 - k * 0.04).rotateZ(fx * 3).translate(fx, -0.046, 0.002)));
-      parts.push(new THREE.CapsuleGeometry(0.0068, 0.018, 4, 8).translate(0, -0.009, 0).rotateZ(0.75).rotateX(-0.5).translate(0.017, -0.016, 0.007));
-      const hand = mergeGeometries(parts.map((g) => { g.deleteAttribute("uv"); return g; }));
-      if (arm.s < 0) { hand.scale(-1, 1, 1); flip(hand); }
+      const palmParts = [new THREE.SphereGeometry(1, 14, 10).scale(0.0245, 0.0285, 0.015).translate(0, -0.026, 0.002)];
+      [[0.0135, 0.026], [0.0045, 0.032], [-0.0048, 0.03], [-0.0138, 0.024]].forEach(([fx, len], k) =>
+        palmParts.push(new THREE.CapsuleGeometry(0.0064 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(-0.18 - k * 0.03).rotateZ(fx * 1.6).translate(fx, -0.048, 0.003)));
+      palmParts.push(new THREE.CapsuleGeometry(0.0074, 0.019, 4, 8).translate(0, -0.0095, 0).rotateZ(0.24).rotateX(-0.55).translate(0.012, -0.018, 0.009));
+      const palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(-0.46).translate(-0.0045, -0.002, 0);
+      const wrist = new THREE.SphereGeometry(0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");
+      const hand = mergeGeometries([wrist, palm]);
+      if (s < 0) { hand.scale(-1, 1, 1); flip(hand); }
       hand.applyMatrix4(B[n + "Hand"].matrixWorld);
       skinParts.push(finish(hand, PAL.skin, IDX[n + "Hand"]));
     }
   }
 
-  // ---- The robe: body and skirt, sleeves, collar, sash, the hat's straps; one mesh ----
+  // ---- The robe: clean A-line body & skirt, wide sleeves, crisp crossed cream V-collar, lapel, sash with twin knot & single flat tail ----
   const robeParts = [];
   /** @type {{ y: number, k: number, inner?: number }[]} */
-  const rows = [{ y: 0.3, k: 0.955, inner: 1 }, { y: 0.266, k: 0.972, inner: 1 }, { y: 0.2568, k: 0.99, inner: 1 }, ...PROF.map((p) => ({ y: p.y, k: 1 })), { y: 0.868, k: 0.78, inner: 1 }];
-  const NT = 72;
+  const rows = [
+    { y: 0.32, k: 0.945, inner: 1 }, { y: 0.286, k: 0.968, inner: 1 }, { y: 0.2785, k: 0.988, inner: 1 },
+    ...PROF.map((p) => ({ y: p.y, k: 1 })),
+    { y: 0.868, k: 0.84, inner: 1 },
+  ];
+  const NT = 64;
   const torso = grid(rows.length, NT + 1, (i, j) => {
     const { y: y0, k, inner } = rows[i], a = -Math.PI + (TAU * j) / NT, s = Math.sin(a), c = Math.cos(a);
-    const low = 1 - smooth(0.3, 0.62, y0), hem = smooth(0.36, 0.26, y0);
-    const y = y0 + hem * (0.006 * Math.sin(5 * a + 1.2) + 0.0035 * Math.sin(11 * a + 0.3));                                // the hem is not quite level
-    let m = 1 + low * (0.034 * Math.sin(7 * a + 0.6) + 0.017 * Math.sin(13 * a + 2.1) + 0.008 * Math.sin(23 * a + 0.4));   // folds that open toward the hem
-    m += 0.02 * smooth(-0.68, -0.63, a) * smooth(2.4, 1.9, a) * (1 - smooth(0.6, 0.64, y0));   // the left panel lies over the right: its edge runs down his right front
-    m += 0.024 * Math.exp(-sq((y0 - 0.664) / 0.016));                                          // the cloth pouches a little over the sash
-    m -= 0.012 * Math.exp(-sq((Math.abs(a) - Math.PI) * 9)) * (1 - smooth(0.8, 0.84, y0));     // the seam down his back
-    const x = rxAt(y0) * k * m * s, z = rzAt(y0, c) * k * m * c;
-    const v = (y0 - 0.8) * 0.667 - Math.abs(x);   // inside the V at his throat the under-collar shows
-    const colour = inner ? PAL.robeIn : z > 0 && y0 > 0.79 ? PAL.robe.clone().lerp(PAL.collar, smooth(-0.002, 0.002, v)) : PAL.robe;
-    return [x, y, z, (j / NT) * 5, y0 * 7, colour];
+    // Smooth parametric V-neckline along the top rows so the torso edge tucks cleanly behind the crossed cream collar bands (zero stair-stepping)
+    const vDip = Math.max(0, 1 - Math.abs(a) / 0.85) * 0.068 * smooth(0.75, 0.876, y0);
+    const y = y0 - vDip;
+    let m = 1 - 0.005 * smooth(0.295, 0.277, y0) * (inner ? 0 : 1);
+    const x = rxAt(y) * k * m * s, z = zOffAt(y) + rzAt(y, c) * k * m * c;
+    const inBackCollar = !inner && z <= zOffAt(y) && y0 > 0.868;
+    const colour = inner ? PAL.robeIn
+      : inBackCollar ? PAL.robe.clone().lerp(PAL.collar, smooth(0.868, 0.873, y0))
+      : PAL.robe;
+    return [x, y, z, (j / NT) * 5, y * 7, colour];
   });
   weld(torso);
   robeParts.push(finish(torso, null, robeW, true));
   const torsoCount = torso.attributes.position.count;
-  for (const arm of ARM) {   // wide sleeves to the elbow, the underside hanging longer, lined a shade darker
-    const { J, d, o, e2, n } = arm, NC = 36, NA = 15;
+  // Wide conical sleeves to the elbow with crisp rolled cuff and dark interior lining
+  for (const arm of ARM) {
+    const { J, d, o, e2, n, s } = arm, NC = 28, NA = 12;
     /** @type {{ v: number, k: number, back: number, lining?: number }[]} */
-    const srows = [...Array.from({ length: NA }, (_, i) => ({ v: i / (NA - 1), k: 1, back: 0 })), { v: 1, k: 0.93, back: 0.012, lining: 1 }, { v: 1, k: 0.88, back: 0.06, lining: 1 }];
+    const srows = [
+      ...Array.from({ length: NA }, (_, i) => ({ v: i / (NA - 1), k: 1, back: 0 })),
+      { v: 1, k: 0.94, back: 0.008, lining: 1 },
+      { v: 1, k: 0.88, back: 0.052, lining: 1 },
+    ];
     const sl = grid(srows.length, NC + 1, (i, j) => {
       const th = Math.PI + (TAU * j) / NC, c = Math.cos(th), sn = Math.sin(th), row = srows[i];
-      const tEnd = 0.198 + 0.036 * Math.pow(Math.max(0, -c), 1.5), t = -0.035 + (tEnd + 0.035) * row.v - row.back, vv = clamp((t + 0.035) / 0.235, 0, 1);
-      let r = (0.047 + 0.019 * smooth(0, 1, vv)) * row.k;
-      r *= (1 - 0.14 * Math.max(0, -c) * smooth(0.1, 0.6, vv)) * (1 + 0.02 * Math.sin(th * 5 + vv * 3) * vv);
-      const q = J.clone().addScaledVector(d, t).addScaledVector(o, r * c).addScaledVector(e2, r * sn);
+      const tEnd = 0.214 + 0.016 * Math.pow(Math.max(0, -c), 1.4), t = -0.032 + (tEnd + 0.032) * row.v - row.back, vv = clamp((t + 0.032) / 0.255, 0, 1);
+      const rO = (0.053 + 0.02 * smooth(0, 1, vv)) * row.k * (1 - 0.14 * Math.max(0, -c) * smooth(0.15, 0.8, vv));
+      const rZ = (0.054 + 0.02 * smooth(0, 1, vv)) * row.k;
+      const q = J.clone().addScaledVector(d, t).addScaledVector(o, rO * c + 0.006 * (1 - vv)).addScaledVector(e2, rZ * sn);
+      q.x += s * 0.005 * (1 - vv);
       return [q.x, q.y, q.z, (j / NC) * 2, vv * 1.6, row.lining ? PAL.robeIn : PAL.robe];
     });
     weld(sl);
-    robeParts.push(finish(sl, null, (x, y, z) => { const t = along(arm, x, y, z), w = smooth(-0.025, 0.07, t); return [[IDX[n + "UpperArm"], w], [IDX[n + "Shoulder"], (1 - w) * 0.5], [IDX.chest, (1 - w) * 0.5]]; }, true));
+    robeParts.push(finish(sl, null, (x, y, z) => {
+      if (Math.abs(x) < 0.052) return [[IDX.chest, 1]];
+      const t = along(arm, x, y, z), w = smooth(-0.024, 0.068, t);
+      return [[IDX[n + "UpperArm"], w], [IDX[n + "Shoulder"], (1 - w) * 0.5], [IDX.chest, (1 - w) * 0.5]];
+    }, true));
   }
   const band = (pts, section, color, w = robeW) => finish(sweep(frames(pts.map((q) => q.p), (_, i) => pts[i].n), section), color, w, true);
   const flat = (hw, h) => [[-hw, 0], [-hw, h], [hw, h], [hw, 0]];
-  // The collar: in the V at his throat the cream under-collar; over it the robe's own band, the left panel's crossing
-  // down to his right side under the sash (the way a robe is always closed), the right panel's running under it.
-  const F = (x, y) => [x, y, 0.3, x, y, 0], Bk = (x, y) => [x, y, -0.3, x, y, 0];   // straight onto his front, or his back
-  robeParts.push(band(onBody([F(-0.0035, 0.806), F(-0.022, 0.835), F(-0.038, 0.858), [-0.25, 0.869, 0.1], [-0.25, 0.869, -0.12], [-0.12, 0.869, -0.3], [0, 0.869, -0.3], [0.12, 0.869, -0.3], [0.25, 0.869, -0.12], [0.25, 0.869, 0.1], F(0.038, 0.858), F(0.022, 0.835), F(0.0035, 0.806)], 64, 0.0012), flat(0.0075, 0.0022), PAL.collar));
-  robeParts.push(band(onBody([F(-0.0549, 0.8589), [-0.25, 0.86, 0.12], [-0.25, 0.86, -0.12], [-0.12, 0.86, -0.3], [0, 0.86, -0.3], [0.12, 0.86, -0.3], [0.25, 0.86, -0.12], [0.25, 0.86, 0.12], F(0.0549, 0.8589), F(0.033, 0.826), F(0.0109, 0.7929), F(-0.022, 0.743), F(-0.056, 0.691), F(-0.0893, 0.64)], 90, 0.0024), flat(0.013, 0.0034), PAL.band));
-  robeParts.push(band(onBody([F(-0.0549, 0.8589), F(-0.033, 0.826), F(-0.0109, 0.7929), F(0, 0.776)], 16, 0.0014), flat(0.013, 0.003), PAL.band));
-  // The sash: a band round the waist, knotted at his left front, its two ends hanging.
+  // Crisp crossed cream inner collar (two narrow bands crossing at the V-point, skin showing smoothly above) + robe crossover lapels.
+  const F = (x, y) => [x, y, 0.3, x, y, zOffAt(y)], Bk = (x, y) => [x, y, -0.3, x, y, zOffAt(y)];
+  // Left-side cream under-collar strip crossing cleanly over right at the bottom of the V
+  robeParts.push(band(onBody([
+    [-0.12, 0.872, -0.3], [0, 0.87, -0.3], [0.12, 0.872, -0.3], [0.25, 0.873, -0.14], [0.25, 0.873, 0.06],
+    F(0.05, 0.866), F(0.027, 0.84), F(0.002, 0.813), F(-0.011, 0.802),
+  ], 44, 0.0038), flat(0.0092, 0.0046), PAL.collar));
+  robeParts.push(band(onBody([
+    [-0.25, 0.873, -0.14], [-0.25, 0.873, 0.06], F(-0.05, 0.866), F(-0.027, 0.84), F(-0.002, 0.813), F(0.008, 0.805),
+  ], 28, 0.0026), flat(0.0092, 0.0042), PAL.collar));
+  // Left-over-right crossover outer robe lapel (subtle form relief in robe colour)
+  robeParts.push(band(onBody([
+    F(0.062, 0.86), F(0.036, 0.826), F(0.004, 0.79), F(-0.028, 0.746), F(-0.058, 0.702), F(-0.082, 0.67),
+  ], 36, 0.002), flat(0.009, 0.0038), PAL.band));
+  robeParts.push(band(onBody([
+    F(-0.062, 0.86), F(-0.036, 0.826), F(-0.004, 0.79),
+  ], 16, 0.0014), flat(0.009, 0.0032), PAL.band));
+
+  // The waist sash (y = 0.635..0.681, height 4.6 cm): clean bevelled belt, twin plump cloth-knot puffs at front-left, and one crisp rectangular hanging tail.
   {
-    const y = 0.626, ring = Array.from({ length: 72 }, (_, k) => { const a = -Math.PI + (TAU * k) / 72, c = Math.cos(a), q = V3(rxAt(y) * Math.sin(a), y, rzAt(y, c) * c); const n = bodyNormal(q); return { p: q.addScaledVector(n, 0.0022), n }; });
-    robeParts.push(finish(sweep(frames(ring.map((q) => q.p), (_, i) => ring[i].n, true), [[-0.022, 0], [-0.0226, 0.0035], [-0.021, 0.0072], [0.021, 0.0072], [0.0226, 0.0035], [0.022, 0]], true), PAL.sash, IDX.spine, true));
-    const K = at("sashTail");
-    const knot = mergeGeometries([new THREE.SphereGeometry(0.019, 14, 10).scale(1, 0.95, 0.65).translate(K.x, K.y, K.z),
-      new THREE.TorusGeometry(0.0165, 0.0068, 8, 20).scale(1, 0.72, 0.5).rotateZ(0.55).translate(K.x - 0.024, K.y + 0.009, K.z - 0.002)]);
+    const y = 0.658;
+    const ring = Array.from({ length: 56 }, (_, k) => {
+      const a = -Math.PI + (TAU * k) / 56, c = Math.cos(a), q = V3(rxAt(y) * Math.sin(a), y, zOffAt(y) + rzAt(y, c) * c);
+      const n = bodyNormal(q); return { p: q.addScaledVector(n, 0.0018), n };
+    });
+    robeParts.push(finish(sweep(frames(ring.map((q) => q.p), (_, i) => ring[i].n, true),
+      [[-0.0235, 0], [-0.0238, 0.004], [-0.0215, 0.0085], [0.0215, 0.0085], [0.0238, 0.004], [0.0235, 0]], true), PAL.sash, IDX.spine, true));
+    // Twin rounded knot puffs right on the sash front-left (matching front.webp & side.webp)
+    const kz = zOffAt(y) + rzAt(y, 1) + 0.011;
+    const knot = mergeGeometries([
+      new THREE.SphereGeometry(1, 14, 10).scale(0.0175, 0.0215, 0.014).translate(0.009, y, kz),
+      new THREE.SphereGeometry(1, 14, 10).scale(0.018, 0.0215, 0.0145).translate(0.037, y, kz - 0.002),
+    ]);
     robeParts.push(finish(knot, PAL.sash, IDX.spine, true));
-    for (const [dx, len, spread, wd] of [[0.004, 0.205, 0.006, 0.019], [-0.013, 0.17, -0.03, 0.017]]) {
-      const pts = [], N = 12;
-      for (let i = 0; i <= N; i++) {
-        const u = i / N, y2 = K.y - 0.008 - len * u, x2 = K.x + dx + spread * u * u, front = rzAt(y2, 1) * (1 + 0.06 * (1 - smooth(0.3, 0.62, y2)));
-        pts.push(V3(x2, y2, Math.max(K.z - 0.004, front + 0.013) + 0.002 * Math.sin(u * 5)));
-      }
-      const fr = frames(pts, () => V3(0, 0, 1));
-      fr.forEach((f, i) => { f.k = 1 + 0.25 * (i / N); });
-      robeParts.push(finish(sweep(fr, [[-wd, -0.002], [-wd, 0.002], [wd, 0.002], [wd, -0.002], [-wd, -0.002]]), PAL.sash, IDX.sashTail, true));
+    // Single clean flat rectangular hanging sash tail from under the right knot puff down to y = 0.432
+    const pts = [], N = 12, wd = 0.0205, len = 0.214;
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, y2 = (y - 0.012) - len * u, x2 = 0.037;
+      const frontZ = zOffAt(y2) + rzAt(y2, 1) * Math.sqrt(Math.max(0.1, 1 - sq(x2 / rxAt(y2))));
+      pts.push(V3(x2, y2, frontZ + 0.006));
     }
-  }
-  // The straps that hold the hat: over each shoulder and down his front, tucked under the sash. They are part of this
-  // robe, and are also kept on their own: the sculpted body (`dress`) has no straps, and the hat needs them.
-  const strapParts = [], strapLine = [];   // strapLine: each strap's centre line on the robe built here, and which way is out there
-  for (const s of [1, -1]) {
-    const c = [s * 0.05, 0.78, 0];
-    const g = [Bk(s * 0.05, 0.74), Bk(s * 0.058, 0.8), [s * 0.064, 0.95, -0.2, ...c], [s * 0.068, 1.0, 0, ...c], [s * 0.074, 0.95, 0.2, ...c], F(s * 0.082, 0.79), F(s * 0.086, 0.72), F(s * 0.088, 0.655)];
-    const line = onBody(g, 40, 0.0042), strap = band(line, flat(0.0075, 0.0028), PAL.strap);
-    robeParts.push(strap); strapParts.push(strap.clone()); strapLine.push(line.map(({ p, n }) => ({ p: p.clone(), n: n.clone() })));
+    const fr = frames(pts, () => V3(0, 0, 1));
+    const tailGeo = sweep(fr, [[-wd, -0.003], [-wd, 0.0035], [wd, 0.0035], [wd, -0.003], [-wd, -0.003]]);
+    const endP = pts[pts.length - 1];
+    const cap = new THREE.BoxGeometry(wd * 2, 0.006, 0.0065).translate(endP.x, endP.y, endP.z);
+    robeParts.push(finish(mergeGeometries([tailGeo, cap].map((q) => { if (!q.attributes.uv) q.setAttribute("uv", new THREE.Float32BufferAttribute(new Float32Array(q.attributes.position.count * 2), 2)); return q; })), PAL.sash, IDX.sashTail, true));
   }
 
-  // ---- Trousers and leg wraps: full below the hem, slim where the robe always covers them ----
+  // The straps that hold the hat: over each shoulder from the hat's upper rim, kept on their own SkinnedMesh (`straps`).
+  const strapParts = [], strapLine = [];
+  for (const s of [1, -1]) {
+    const c = [s * 0.055, 0.79, zOffAt(0.79)];
+    const g = [Bk(s * 0.062, 0.76), Bk(s * 0.07, 0.82), [s * 0.072, 0.94, -0.14, ...c], [s * 0.075, 0.96, 0.04, ...c], [s * 0.08, 0.91, 0.16, ...c], F(s * 0.085, 0.78), F(s * 0.09, 0.71)];
+    const line = onBody(g, 28, 0.0028), strap = band(line, flat(0.0062, 0.0024), PAL.strap);
+    strapParts.push(strap); strapLine.push(line.map(({ p, n }) => ({ p: p.clone(), n: n.clone() })));
+  }
+
+  // ---- Plump balloon trousers and chunky layered leg wraps (refs/monk-v6-ortho) ----
   const legParts = [];
-  const TROUSER = new THREE.CatmullRomCurve3([[0.034, 0.118], [0.041, 0.128], [0.053, 0.141], [0.064, 0.16], [0.071, 0.19], [0.072, 0.225], [0.066, 0.262], [0.052, 0.3], [0.04, 0.36], [0.033, 0.43], [0.029, 0.5], [0.027, 0.53]].map(([r, y]) => V3(r, y, 0)), false, "centripetal").getPoints(22);
+  const TROUSER = new THREE.CatmullRomCurve3([
+    [0.038, 0.142], [0.052, 0.152], [0.068, 0.172], [0.078, 0.2], [0.081, 0.232], [0.079, 0.262],
+    [0.071, 0.285], [0.056, 0.318], [0.044, 0.37], [0.036, 0.44], [0.031, 0.50], [0.029, 0.53],
+  ].map(([r, y]) => V3(r, y, 0)), false, "centripetal").getPoints(20);
   for (const [n, s] of SIDES) {
-    const cx = s * 0.085, NC = 28;
+    const cx = s * 0.088, cz = -0.006, NC = 24;
     const tr = grid(TROUSER.length, NC + 1, (i, j) => {
       const { x: r0, y } = TROUSER[i], a = -Math.PI + (TAU * j) / NC;
-      const pleat = 1 + 0.075 * Math.sin(10 * a + s) * smooth(0.2, 0.13, y) + 0.025 * Math.sin(5 * a + 1 + s) * smooth(0.3, 0.19, y) * smooth(0.13, 0.17, y);   // gathered into the wraps
-      const r = r0 * pleat * (1 + 0.06 * smooth(0.12, 0.2, y) * smooth(0.32, 0.22, y) * Math.max(0, s * Math.sin(a)));                                          // and ballooning outward over them
-      return [cx + r * Math.sin(a), y, r * Math.cos(a) * 0.97 - 0.004, (j / NC) * 3, y * 6, PAL.trousers];
+      const gather = 1 + 0.045 * Math.sin(10 * a + s) * smooth(0.185, 0.145, y);
+      const rx = r0 * gather * (1 + 0.035 * smooth(0.16, 0.24, y) * smooth(0.30, 0.24, y) * Math.max(0, s * Math.sin(a)));
+      const rz = r0 * gather * (1 + 0.24 * smooth(0.15, 0.22, y) * smooth(0.32, 0.25, y));
+      return [cx + rx * Math.sin(a), y, cz + rz * Math.cos(a), (j / NC) * 3, y * 6, PAL.trousers];
     });
     weld(tr);
     legParts.push(finish(tr, null, (x, y) => { const lo = smooth(0.315, 0.245, y), hip = 0.55 * smooth(0.44, 0.53, y); return [[IDX.hips, hip], [IDX[n + "UpperLeg"], (1 - hip) * (1 - lo)], [IDX[n + "LowerLeg"], (1 - hip) * lo]]; }, true));
-    const ys = []; for (let y = 0.044; y <= 0.1375; y += 0.0029) ys.push(y);
-    const wr = grid(ys.length, 25, (i, j) => {   // the cloth wound up the shin, each turn over the last
-      const y = ys[i], a = -Math.PI + (TAU * j) / 24, f = ((((y - 0.044) / 0.0115 + (s * a) / TAU) % 1) + 1) % 1;
-      const r = 0.0305 + 0.003 * smooth(0.05, 0.1, y) + 0.0065 * smooth(0.11, 0.135, y) + 0.0017 * f;
-      return [cx + r * Math.sin(a), y, r * Math.cos(a) - 0.002, (j / 24) * 2, y * 8, PAL.wrap.clone().multiplyScalar(0.84 + 0.16 * smooth(0, 0.2, f))];
+    // Chunky pale cream leg wraps (y = 0.062..0.152, width ~7.2 cm, depth ~9.0 cm)
+    const ys = []; for (let y = 0.062; y <= 0.153; y += 0.0045) ys.push(y);
+    const wr = grid(ys.length, 21, (i, j) => {
+      const y = ys[i], a = -Math.PI + (TAU * j) / 20, f = ((((y - 0.062) / 0.0165 + (s * a) / (TAU * 2.5)) % 1) + 1) % 1;
+      const rx = 0.0345 + 0.0035 * smooth(0.07, 0.145, y) + 0.0014 * f;
+      const rz = 0.0435 + 0.0035 * smooth(0.07, 0.145, y) + 0.0014 * f;
+      return [cx + rx * Math.sin(a), y, -0.012 + rz * Math.cos(a), (j / 20) * 2, y * 8, PAL.wrap.clone().multiplyScalar(0.9 + 0.1 * smooth(0, 0.22, f))];
     });
     weld(wr);
     legParts.push(finish(wr, null, IDX[n + "LowerLeg"], true));
   }
-  // ---- Cloth shoes on pale soles ----
+
+  // ---- Chunky flat-soled cloth shoes (width ~10.2 cm, length ~17.6 cm, thick 2 cm pale sole) ----
   const shoeParts = [];
   for (const [n, s] of SIDES) {
-    const up = new THREE.SphereGeometry(1, 28, 16), p = up.attributes.position;
-    for (let i = 0; i < p.count; i++) { const x = p.getX(i) * 0.041, z = p.getZ(i) * 0.079 + 0.03; let y = p.getY(i) * 0.04 - 0.031; y = Math.min(Math.max(y, -0.047), -0.013 - Math.max(0, z - 0.05) * 0.35); p.setXYZ(i, x, y, z); }
+    const up = new THREE.SphereGeometry(1, 24, 14), p = up.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const ux = p.getX(i), uy = p.getY(i), uz = p.getZ(i);
+      const widen = 1 + 0.08 * smooth(-0.3, 0.5, uz);
+      const x = ux * 0.0485 * widen;
+      const z = uz * 0.086 + 0.018;
+      let y = uy > 0 ? uy * 0.049 - 0.041 : uy * 0.006 - 0.041;
+      y = Math.min(y, 0.008 - Math.max(0, z - 0.03) * 0.36);
+      p.setXYZ(i, x, y, z);
+    }
     up.computeVertexNormals();
-    const shoe = mergeGeometries([paint(up, PAL.shoe), paint(new THREE.CylinderGeometry(1, 1, 1, 28).scale(0.045, 0.012, 0.084).translate(0, -0.054, 0.03), PAL.sole)]);
-    shoe.translate(s * 0.085, ANKLE, 0);
+    const sole = new THREE.CylinderGeometry(1, 1.01, 0.02, 24, 1);
+    const sp = sole.attributes.position;
+    for (let i = 0; i < sp.count; i++) {
+      const sx = sp.getX(i), sy = sp.getY(i), sz = sp.getZ(i);
+      const widen = 1 + 0.08 * smooth(-0.3, 0.5, sz);
+      sp.setXYZ(i, sx * 0.0505 * widen, sy - 0.05, sz * 0.0885 + 0.018);
+    }
+    sole.computeVertexNormals();
+    const shoe = mergeGeometries([paint(up, PAL.shoe), paint(sole, PAL.sole)]);
+    shoe.translate(s * 0.091, ANKLE, 0);
     shoeParts.push(finish(shoe, null, IDX[n + "Foot"], true));
   }
 
-  // ---- Materials and meshes ----
+  // ---- Materials and meshes (soft matte clay / fine cotton feel matching v6) ----
   const lin = linen(opts.rand ? mulberry32 : null);
-  const clothM = new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, map: lin, bumpMap: lin, bumpScale: 0.6, roughness: 0.92, sheen: 0.5, sheenRoughness: 0.75, sheenColor: new THREE.Color(0xffe2cc), envMapIntensity: 0.4 });
-  const skinM = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.56, envMapIntensity: 0.45, emissive: 0x2a1206, emissiveIntensity: 0.5 });
-  const shoeM = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.86, bumpMap: lin, bumpScale: 0.35, envMapIntensity: 0.3 });
-  const beadM = new THREE.MeshStandardMaterial({ color: 0x9a6038, roughness: 0.34, envMapIntensity: 0.9 });
+  const clothM = new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, map: lin, bumpMap: lin, bumpScale: 0.16, roughness: 0.92, sheen: 0.5, sheenRoughness: 0.78, sheenColor: new THREE.Color(0xffe0c6), envMapIntensity: 0.4 });
+  const skinM = new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.7, sheen: 0.18, sheenRoughness: 0.85, sheenColor: new THREE.Color(0xffe2ca), envMapIntensity: 0.42, emissive: 0x2a1206, emissiveIntensity: 0.42 });
+  const shoeM = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.9, bumpMap: lin, bumpScale: 0.1, envMapIntensity: 0.28 });
+  const beadM = new THREE.MeshStandardMaterial({ color: 0x9e4e26, roughness: 0.34, metalness: 0.02, envMapIntensity: 0.85 });
   const skinned = (parts, mat) => { const m = new THREE.SkinnedMesh(mergeGeometries(parts), mat); m.frustumCulled = false; m.receiveShadow = true; group.add(m); return m; };
   const skin = skinned(skinParts, skinM), robe = skinned(robeParts, clothM), legs = skinned(legParts, clothM), shoes = skinned(shoeParts, shoeM);
-  const straps = skinned(strapParts, clothM); straps.visible = false;   // shown when the sculpted body replaces the robe that carried them
+  const straps = skinned(strapParts, clothM); straps.visible = true;   // shown whenever the hat is on his back (panel 4)
   const skeleton = new THREE.Skeleton(bones);
   for (const m of [skin, robe, legs, shoes, straps]) m.bind(skeleton);
   const rigid = (geo, mat, parent) => { const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; parent.add(m); return m; };
 
-  // The beads: thirty-two turned beads on a loop that lies over his shoulders and hangs to his chest.
+  // The beads: thirty-eight smooth wooden beads draped loosely around his neck down to mid-chest (tucked neatly at nape so only 2-3 show each side from behind).
   let beadMesh; const beadAt = [];
   {
-    const F = (x, y) => [x, y, 0.3, x, y, 0], Bk = (x, y) => [x, y, -0.3, x, y, 0];
-    const guess = [Bk(0, 0.872), Bk(0.035, 0.869), [0.062, 0.95, -0.12, 0.05, 0.8, 0], [0.072, 1.0, 0.02, 0.05, 0.8, 0], [0.08, 0.95, 0.15, 0.05, 0.8, 0], F(0.08, 0.8), F(0.072, 0.745), F(0.045, 0.705), F(0, 0.69)];
+    const F = (x, y) => [x, y, 0.3, x, y, zOffAt(y)], Bk = (x, y) => [x, y, -0.3, x, y, zOffAt(y)];
+    const guess = [
+      Bk(0, 0.856), Bk(0.036, 0.868), [0.06, 0.905, -0.09, 0.045, 0.82, 0], [0.066, 0.925, 0.02, 0.048, 0.82, 0],
+      [0.072, 0.905, 0.14, 0.05, 0.82, 0], F(0.072, 0.815), F(0.066, 0.755), F(0.045, 0.712), F(0, 0.696),
+    ];
     const loop = [...guess, ...guess.slice(1, -1).reverse().map(([x, y, z, cx, cy, cz]) => [-x, y, z, cx === undefined ? undefined : -cx, cy, cz])];
-    const pts = onBody(loop, 32, 0.0152, true), chest = at("chest"), beads = [];
-    pts.forEach(({ p }, i) => { const nx = pts[(i + 1) % pts.length].p.clone().sub(pts[(i - 1 + pts.length) % pts.length].p).normalize(), r = 0.0122 * (0.96 + 0.08 * Math.abs(Math.sin(i * 7.3)));
-      beads.push(new THREE.SphereGeometry(r, 9, 6).scale(1, 0.84, 1).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UPV, nx)).translate(p.x - chest.x, p.y - chest.y, p.z - chest.z)); });
+    const NBEADS = 38;
+    const pts = onBody(loop, NBEADS, 0.011, true), chest = at("chest"), beads = [];
+    pts.forEach(({ p, n }, i) => {
+      // Pull the centre-nape beads snugly behind the collar rim so back view shows 2-3 beads each side like back.webp
+      const nape = smooth(-0.01, -0.046, p.z) * smooth(0.054, 0.014, Math.abs(p.x));
+      const pos = p.clone().addScaledVector(n, -0.017 * nape);
+      pos.y -= 0.015 * nape;
+      const nx = pts[(i + 1) % pts.length].p.clone().sub(pts[(i - 1 + pts.length) % pts.length].p).normalize();
+      const r = 0.0108;
+      beads.push(new THREE.SphereGeometry(r, 8, 6).scale(1, 0.92, 1).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UPV, nx)).translate(pos.x - chest.x, pos.y - chest.y, pos.z - chest.z));
+      beadAt.push({ c: pos.clone(), r });
+    });
     beadMesh = rigid(mergeGeometries(beads), beadM, B.chest);
-    // where each bead sits in the bind pose (his own frame) and how big it is, so that a body worn later can lay them again
-    for (const [i, { p }] of pts.entries()) beadAt.push({ c: p.clone(), r: 0.0122 * (0.96 + 0.08 * Math.abs(Math.sin(i * 7.3))) });
   }
-  // The hat: a shallow cone of plaited bamboo with a bound rim and a small finial, carried on his back, hollow to him.
+  // The bamboo hat (refs/monk-props-v6 & panel 4): 40 cm shallow cone (height/diam ~0.36) with radial ribs, rolled rim, apex cap and inner head-ring.
   let hat;
   {
-    const prof = [[0, 0.124], [0.006, 0.122], [0.01, 0.116], [0.0125, 0.109], [0.016, 0.104]];
-    for (let i = 0; i <= 14; i++) { const t = i / 14; prof.push([0.016 + 0.154 * t, 0.102 * (1 - t) + 0.006 * Math.sin(Math.PI * t) + 0.002]); }
-    prof.push([0.1735, 0], [0.17, -0.004]);
-    for (let i = 14; i >= 0; i--) { const t = i / 14; prof.push([0.012 + 0.153 * t, 0.098 * (1 - t) + 0.006 * Math.sin(Math.PI * t) - 0.003]); }
-    const parts = [paint(new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 48), new THREE.Color(1, 1, 1)), paint(new THREE.TorusGeometry(0.1725, 0.0055, 6, 48).rotateX(Math.PI / 2), new THREE.Color(0.8, 0.78, 0.74))];
-    for (let k = 0; k < 18; k++) { const a = (TAU * k) / 18; parts.push(paint(new THREE.BoxGeometry(0.011, 0.016, 0.017).translate(0.1725, 0, 0).rotateY(a), PAL.tie)); }
-    const g = mergeGeometries(parts.map((q) => { q.deleteAttribute("normal"); q.computeVertexNormals(); return q; })).rotateX(-(Math.PI / 2 - 0.1)).translate(0, -0.16, -0.02);
+    const RH = 0.198, HH = 0.136;
+    const prof = [[0, HH + 0.01], [0.012, HH + 0.008], [0.018, HH + 0.002], [0.021, HH - 0.004]];
+    for (let i = 0; i <= 14; i++) { const t = i / 14; prof.push([0.02 + (RH - 0.02) * t, (HH - 0.005) * (1 - t) + 0.004 * Math.sin(Math.PI * t) + 0.002]); }
+    prof.push([RH + 0.003, 0], [RH, -0.004]);
+    for (let i = 14; i >= 0; i--) { const t = i / 14; prof.push([0.016 + (RH - 0.02) * t, (HH - 0.009) * (1 - t) + 0.004 * Math.sin(Math.PI * t) - 0.003]); }
+    const cone = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 40);
+    const cu = cone.attributes.uv, cp = cone.attributes.position;
+    for (let i = 0; i < cp.count; i++) cu.setY(i, clamp(Math.hypot(cp.getX(i), cp.getZ(i)) / RH, 0, 1));
+    const parts = [
+      paint(cone, new THREE.Color(1, 1, 1)),
+      paint(new THREE.TorusGeometry(RH, 0.0075, 7, 40).rotateX(Math.PI / 2), new THREE.Color(0.95, 0.9, 0.82)),
+      paint(new THREE.SphereGeometry(0.02, 12, 8).scale(1, 0.65, 1).translate(0, HH + 0.003, 0), new THREE.Color(0.95, 0.88, 0.78)),
+      paint(new THREE.TorusGeometry(0.078, 0.0055, 6, 28).rotateX(Math.PI / 2).translate(0, HH * 0.42, 0), new THREE.Color(0.88, 0.82, 0.72)),
+    ];
+    const g = mergeGeometries(parts.map((q) => { q.deleteAttribute("normal"); q.computeVertexNormals(); return q; })).rotateX(-(Math.PI / 2 - 0.1)).translate(0, -0.11, -0.016);
     const tex = straw();
-    hat = rigid(g, new THREE.MeshStandardMaterial({ map: tex, bumpMap: tex, bumpScale: 1.2, roughness: 0.8, vertexColors: true, side: THREE.DoubleSide, envMapIntensity: 0.35 }), B.hat);
+    hat = rigid(g, new THREE.MeshStandardMaterial({ map: tex, bumpMap: tex, bumpScale: 0.85, roughness: 0.82, vertexColors: true, side: THREE.DoubleSide, envMapIntensity: 0.32 }), B.hat);
   }
 
   // He casts no real shadow (the shadow map is drawn once, for the buildings); a soft dark patch goes with him.
@@ -610,16 +743,26 @@ export function createMonk(opts = {}) {
   // lies as a ribbon and does not kink).
   function layStraps(gap = 0.003) {
     const g = straps.geometry, P = g.attributes.position, cloth = [robe, skin].map((m) => { const c = new THREE.Mesh(m.geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); c.updateMatrixWorld(true); return c; });
-    const ray = new THREE.Raycaster(), o = V3(), IN = 0.15;
+    const ray = new THREE.Raycaster(), o = V3(), d = V3(), IN = 0.15;
     const shifts = strapLine.map((line) => {
-      const raw = line.map(({ p, n }) => { ray.set(o.copy(p).addScaledVector(n, -IN), n); ray.far = IN + 0.08; const hits = ray.intersectObjects(cloth, false); const d = hits.length ? hits[hits.length - 1].distance - IN : -Infinity; return Math.max(0, d + gap); });
+      const raw = line.map(({ p, n }) => { ray.set(o.copy(p).addScaledVector(n, -IN), n); ray.far = IN + 0.08; const hits = ray.intersectObjects(cloth, false); const dist = hits.length ? hits[hits.length - 1].distance - IN : -Infinity; return Math.max(0, dist + gap); });
       return raw.map((_, i) => { let m = 0; for (let k = -3; k <= 3; k++) m = Math.max(m, raw[Math.min(raw.length - 1, Math.max(0, i + k))] * (1 - Math.abs(k) / 4)); return m; });
     });
     const v = V3(); let most = 0;
     for (let i = 0; i < P.count; i++) {
       v.fromBufferAttribute(P, i); let best = Infinity, at = null, sh = 0;
-      strapLine.forEach((line, L) => line.forEach((q, k) => { const d = q.p.distanceToSquared(v); if (d < best) { best = d; at = q; sh = shifts[L][k]; } }));
-      if (sh > 0) { v.addScaledVector(at.n, sh); P.setXYZ(i, v.x, v.y, v.z); most = Math.max(most, sh); }
+      strapLine.forEach((line, L) => line.forEach((q, k) => { const dist = q.p.distanceToSquared(v); if (dist < best) { best = dist; at = q; sh = shifts[L][k]; } }));
+      if (sh > 0) { v.addScaledVector(at.n, sh); most = Math.max(most, sh); }
+      // Clear any remaining horizontal overlap with worn cloth without lifting the strap into the head.
+      if (v.y < 0.95) {
+        d.set(v.x, 0, v.z); const len = d.length();
+        if (len > 0.03) {
+          d.divideScalar(len); ray.set(o.copy(v).addScaledVector(d, 0.0005), d); ray.far = 0.03;
+          const rh = ray.intersectObjects(cloth, false);
+          if (rh.length) { const push = rh[rh.length - 1].distance + gap; v.addScaledVector(d, push); most = Math.max(most, push); }
+        }
+      }
+      P.setXYZ(i, v.x, v.y, v.z);
     }
     P.needsUpdate = true; g.computeBoundingSphere();
     return most;
@@ -835,7 +978,7 @@ export function createMonk(opts = {}) {
       SIDES.forEach(([n, s], i) => {
         const ua = B[n + "UpperArm"], la = B[n + "LowerArm"], hd = B[n + "Hand"], swing = -lead[i] * 0.32;
         ua.rotation.set(-swing, 0, s * (0.27 - 0.03 * gait)); la.rotation.set(-(0.22 + 0.35 * Math.max(0, swing)), -s * 1.15, 0); hd.rotation.set(-0.1, 0, s * 0.05);
-        if (hop) { ua.rotation.set(-0.3, 0, s * 0.62); la.rotation.set(-0.5, -s * 1.15, 0); }
+        if (hop) { ua.rotation.set(-0.3, 0, s * 0.58); la.rotation.set(-0.5, -s * 1.15, 0); }
         const w = Math.max(palms, seat, perch);
         if (w < 0.001) return;
         q0.copy(ua.quaternion); q1.copy(la.quaternion); q2.copy(hd.quaternion);
@@ -845,7 +988,7 @@ export function createMonk(opts = {}) {
         group.updateMatrixWorld(true);
         if (mode === "pray") anchor.localToWorld(tv.set(s * 0.0125, 0.02, 0.165));
         else if (mode === "lap") anchor.localToWorld(tv.set(s * 0.012, 0.055 + (s > 0 ? 0.012 : 0), 0.13));
-        else anchor.localToWorld(tv.set(s * 0.085, 0.045, 0.14));
+        else anchor.localToWorld(tv.set(s * 0.085, 0.062, 0.14));
         reach(ua, la, UPPER, FORE, tv, tv2.set(s, mode === "pray" ? -1.3 : mode === "lap" ? -0.2 : -0.8, mode === "pray" ? -0.35 : mode === "lap" ? -0.6 : -0.5).applyQuaternion(gq), -1);
         ua.updateMatrixWorld(true);
         anchor.getWorldQuaternion(tq).multiply(handFrame(mode, s, tq2));
@@ -880,14 +1023,14 @@ export function createMonk(opts = {}) {
       const reachOf = (x, to = SKIRT_REACH, free = SKIRT_FREE) => x <= free ? x : free + (to - free) * Math.tanh((x - free) / (to - free));
       const kneeLift = (k, to) => reachOf(0.9 * Math.max(0, k), to) / 0.9, backTurn = (k) => reachOf(tr + 0.7 * Math.max(0, -k), SKIRT_BACK_REACH, SKIRT_BACK_FREE);
       const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
-      // Seated, the front of the skirt lies over his thighs, the sides open over his knees, the back falls behind.
-      B.robeFront.rotation.set(tr - 0.9 * fwd - 0.85 * seat - 1.22 * perch, 0, sd);
-      B.robeBack.rotation.set(back + 0.35 * seat + 0.9 * perch, 0, sd);
+      // Seated, the front of the skirt drapes smoothly over his lap and thighs, the sides open over his knees, the back rests on the seat.
+      B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * seat - 0.78 * perch, 0, sd);
+      B.robeBack.rotation.set(back + 0.32 * seat + 0.22 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
-      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.3 * seat - 0.8 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.5 * seat + 0.16 * perch);
-      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.3 * seat - 0.8 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.5 * seat - 0.16 * perch);
-      B.robeFront.scale.y = 1 - 0.25 * seat - 0.38 * perch; B.robeBack.scale.y = 1 - 0.35 * seat - 0.7 * perch;   // on a stool the back of the skirt is gathered on the seat
-      B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.2 * seat - 0.15 * perch;
+      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.66 * seat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.64 * seat + 0.22 * perch);
+      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.66 * seat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.64 * seat - 0.22 * perch);
+      B.robeFront.scale.y = 1 - 0.04 * seat - 0.18 * perch; B.robeBack.scale.y = 1 - 0.3 * seat - 0.62 * perch;   // on a stool the back of the skirt is gathered on the seat
+      B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * seat - 0.14 * perch;
       // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
       B.sashTail.rotation.set(B.robeFront.rotation.x * (1 - 0.6 * sitW) + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
       B.hat.rotation.set(Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)), 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
