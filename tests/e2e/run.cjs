@@ -443,7 +443,7 @@ const scenarios = {
     const s = await t.state(); expect(s.running && s.frames >= 3, "the walk is not running"); expect(s.tris > 50000, "almost nothing is being drawn: " + s.tris);
     expect(s.h < -10, "the visit should begin at the foot of the path, not at height " + s.h);
     await t.frames(10);
-    { const st = await t.state(); expect(st.dressed === true && st.body === "code", "a visitor should meet the novice in the body built in code (monk.js, #642), on him before the page is ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }
+    { const st = await t.state(); expect(st.dressed === false && st.body === "code", "a visitor should meet the novice in the body built in code (monk.js, #642), nothing fetched, before the page is ready: " + JSON.stringify({ dressed: st.dressed, body: st.body })); }
     const p = await t.probe(); expect(p.view === "third" && p.monk, "a visitor arriving should see the novice from behind");
     { const vp = t.page.viewportSize(), [x, y, w, h] = p.monkBox || [];   // and he is in the picture, whole, at a size a person can see (tools/portrait.js finds him by this)
       expect(p.monkBox && x >= 0 && y >= 0 && x + w <= vp.width && y + h <= vp.height && h > vp.height * 0.08, "the novice should stand whole in the picture: " + JSON.stringify({ box: p.monkBox, vp })); }
