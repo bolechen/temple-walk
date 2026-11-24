@@ -1033,7 +1033,7 @@ export function createMonk(opts = {}) {
       B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * seat - 0.14 * perch;
       // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
       B.sashTail.rotation.set(B.robeFront.rotation.x * (1 - 0.6 * sitW) + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
-      B.hat.rotation.set(Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)), 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
+      B.hat.rotation.set(Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)) + 0.18 * seat + 0.12 * perch, 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
       if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) liftHem(surfaceAt, dt);
 
       // The shadow keeps to the ground and to the sun, whichever way he turns.

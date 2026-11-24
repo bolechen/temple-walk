@@ -90,7 +90,8 @@ const POSES = {
   tea: (m) => hold(m, (B, act) => {
     const mouth = B.head.localToWorld(new THREE.Vector3(0, 0.052, 0.128)), cup = mouth.sub(new THREE.Vector3(0, 0.06, -0.07));
     bowl.position.copy(cup); bowl.quaternion.identity(); scene.add(bowl);
-    for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * 0.068, -0.025, -0.025).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
+    const [hx, hy, hz] = stage.hold || (m.dressed ? [0.068, -0.025, -0.025] : [0.054, 0.02, -0.008]);
+    for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * hx, hy, hz).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
   }),
   // the tea as it is drunk, seated on his stool: `stage.tea` = [tilt, nod] of the bowl at his lips (#286; rites.js tilts
   // it to 0.78 with the head back 0.24)
@@ -98,7 +99,7 @@ const POSES = {
     const [tilt, nod] = stage.tea || [0.78, -0.24]; act.nod = nod;
     const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -tilt), mouth = B.head.localToWorld(new THREE.Vector3(0, 0.052, 0.128)), cup = mouth.sub(new THREE.Vector3(0, 0.06, -0.07).applyQuaternion(q));
     bowl.position.copy(cup); bowl.quaternion.copy(q); scene.add(bowl);
-    const [hx, hy, hz] = stage.hold || [0.068, -0.025, -0.025];   // rites.js's grip (hold()), in the bowl's frame
+    const [hx, hy, hz] = stage.hold || (m.dressed ? [0.068, -0.025, -0.025] : [0.054, 0.02, -0.008]);   // rites.js's grip (hold()), in the bowl's frame
     for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; h.at.set(s * hx, hy, hz).applyQuaternion(q).add(cup); h.fingers.set(-s * 0.45, 0.15, 1).normalize(); h.palm.set(-s, 0.25, 0).normalize(); h.w = 1; }
   }, "chair", -0.44),
   incense: (m) => hold(m, (B, act) => { for (const [n, s] of [["left", 1], ["right", -1]]) { const h = act.hands[n]; const [by, bz] = stage.brow || [0.15, 0.15]; B.head.localToWorld(h.at.set(s * 0.0125, by, bz)); h.fingers.set(0, 1, 0.25).normalize(); h.palm.set(-s, 0, 0); h.w = 1; } }),

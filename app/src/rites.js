@@ -199,7 +199,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // They turn with the bowl as he tilts it to drink; held at its sides above the foot (0.034 up, 0.012 out, as they were
   // until #286), they went round with it at the full tilt and came up over his eyes, 4.5 cm above their lower edge.
   // Held here they stay 2.3 cm below it the whole drink (tests/unit/rites-tea.test.mjs).
-  const hold = () => HANDS.forEach(([n, s]) => { const h = act.hands[n]; h.at.set(s * 0.068, -0.025, -0.025).applyQuaternion(cup.quaternion).add(cup.position); dir(-s * 0.45, 0.15, 1, h.fingers); dir(-s, 0.25, 0, h.palm); });
+  const hold = () => { const [hx, hy, hz] = y.monk.dressed ? [0.068, -0.025, -0.025] : [0.054, 0.02, -0.008]; HANDS.forEach(([n, s]) => { const h = act.hands[n]; h.at.set(s * hx, hy, hz).applyQuaternion(cup.quaternion).add(cup.position); dir(-s * 0.45, 0.15, 1, h.fingers); dir(-s, 0.25, 0, h.palm); }); };
   const cupAt = (p, tilt) => { tea.tilt = tilt; cup.quaternion.copy(G.quaternion).multiply(qA.setFromAxisAngle(V(1, 0, 0), -tilt)); cup.position.copy(p); };
   const toLips = (out) => mouthAt(out).sub(tB.copy(rim).applyQuaternion(cup.quaternion));
   /** @param {() => boolean} on @param {(what: string) => void} [cue] */
