@@ -248,6 +248,7 @@ export default {
   "叶落知山空": "Leaves fall, and the mountain is empty",
   "一灯红叶深": "One lamp, deep among red leaves",
   "雪深不闻钟": "Snow so deep no bell is heard",
+  "晴寒霜后，钟声独远": "Clear and cold after the frost, the bell alone carries far",
   "雪夜一灯明": "A snowy night, one lamp burning",
 
   // ---- The leaves in the halls (interior.js) ----
