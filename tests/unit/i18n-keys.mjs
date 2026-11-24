@@ -70,7 +70,7 @@ export async function dataKeys() {
   for (const load of Object.values(levels)) { const how = (await load()).how; if (how) { keys.add(how.place); keys.add(how.line); } }
   keys.add("山路上"); keys.add("凌霄阁上");   // where he was left, on the ground or up on the summit pavilion's balcony
   // Words each table needs for the action button and the calligraphy (game.js translates these as they are shown).
-  for (const k of ["撞钟", "起身", "观看", "坐下", "登楼", "下楼", "圆", "奉拜", "云径", "云径禅寺", "年代", "质地", "尺寸", "收藏"]) keys.add(k);
+  for (const k of ["撞钟", "起身", "观看", "坐下", "登楼", "下楼", "圆", "奉拜", "云径", "云径禅寺", "年代", "质地", "尺寸", "收藏", "等级"]) keys.add(k);
   return keys;
 }
 

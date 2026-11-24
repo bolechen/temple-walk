@@ -468,7 +468,9 @@ export function createGame(y) {
     $("pieceImg").src = asset(`levels/t00/gallery/${slug}.webp`); $("pieceImg").alt = w.title;
     $("pieceTitle").textContent = w.title; $("pieceBy").textContent = [w.by, w.dates].filter(Boolean).join(lang === "en" ? " · " : "　");
     // The facts and the note in the visitor's language (levels/t00/works-local.js); the museum's source line stays as published.
-    $("pieceFacts").innerHTML = [["年代", w.period], ["质地", w.medium], ["尺寸", w.size && t("{size} 厘米", { size: w.size })], ["收藏", w.holder + (w.rank ? (lang === "en" ? "; " : "　") + w.rank : "")]].filter(([, v]) => v).map(([k, v]) => `<dt>${t(k)}</dt><dd>${v}</dd>`).join("");
+    $("pieceFacts").innerHTML = [["年代", w.period], ["质地", w.medium], ["尺寸", w.size && t("{size} 厘米", { size: w.size })], ["收藏", w.holder], ["等级", w.rank]].filter(([, v]) => v).map(([k, v]) => `<dt>${t(k)}</dt><dd>${v}</dd>`).join("");
+    // Japan's designation, said plainly once under the facts: the word alone (“重要文化财”) reads as a phrase dropped from a sentence.
+    $("pieceRank").textContent = w.rank ? t("“重要文化财”“国宝”是日本文化财保护法下的指定等级，国宝由重要文化财中特别指定。") : ""; $("pieceRank").hidden = !w.rank;
     $("pieceNote").textContent = w.note; $("pieceLink").textContent = w.link; $("pieceCredit").textContent = w.credit;
     // ColBase's terms ask that a picture that was edited say so, apart from the source line (src/credits.js).
     const edited = processedLine(w); $("pieceProcessed").textContent = edited; $("pieceProcessed").hidden = !edited;
