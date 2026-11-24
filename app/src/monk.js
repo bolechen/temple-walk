@@ -362,7 +362,8 @@ export function createMonk(opts = {}) {
   const robeParts = [];
   /** @type {{ y: number, k: number, inner?: number }[]} */
   const rows = [
-    { y: 0.32, k: 0.945, inner: 1 }, { y: 0.286, k: 0.968, inner: 1 }, { y: 0.2785, k: 0.988, inner: 1 },
+    { y: 0.68, k: 0.9, inner: 1 }, { y: 0.61, k: 0.92, inner: 1 }, { y: 0.54, k: 0.93, inner: 1 }, { y: 0.46, k: 0.94, inner: 1 }, { y: 0.38, k: 0.948, inner: 1 },
+    { y: 0.32, k: 0.958, inner: 1 }, { y: 0.286, k: 0.972, inner: 1 }, { y: 0.2785, k: 0.99, inner: 1 },
     ...PROF.map((p) => ({ y: p.y, k: 1 })),
     { y: 0.868, k: 0.84, inner: 1 },
   ];
@@ -471,16 +472,18 @@ export function createMonk(opts = {}) {
   const legParts = [];
   const TROUSER = new THREE.CatmullRomCurve3([
     [0.038, 0.142], [0.052, 0.152], [0.068, 0.172], [0.078, 0.2], [0.081, 0.232], [0.079, 0.262],
-    [0.058, 0.285], [0.042, 0.318], [0.034, 0.37], [0.03, 0.44], [0.028, 0.5], [0.026, 0.53],
+    [0.071, 0.288], [0.062, 0.325], [0.057, 0.38], [0.055, 0.445], [0.054, 0.5], [0.052, 0.54],
   ].map(([r, y]) => V3(r, y, 0)), false, "centripetal").getPoints(20);
+  // Pelvis/seat cap closing the top of the trousers inside the robe so looking up under the hem never sees empty tubes
+  legParts.push(finish(new THREE.SphereGeometry(1, 18, 12).scale(0.105, 0.062, 0.088).translate(0, 0.525, -0.008), PAL.trousers, IDX.hips, true));
   for (const [n, s] of SIDES) {
     const cx = s * 0.088, cz = -0.006, NC = 24;
     const tr = grid(TROUSER.length, NC + 1, (i, j) => {
       const { x: r0, y } = TROUSER[i], a = -Math.PI + (TAU * j) / NC;
       const gather = 1 + 0.045 * Math.sin(10 * a + s) * smooth(0.185, 0.145, y);
       const rx = r0 * gather * (1 + 0.035 * smooth(0.16, 0.24, y) * smooth(0.285, 0.24, y) * Math.max(0, s * Math.sin(a)));
-      const rz = r0 * gather * (1 + 0.24 * smooth(0.15, 0.22, y) * smooth(0.285, 0.245, y));
-      const hipIn = s * 0.016 * smooth(0.36, 0.5, y);
+      const rz = r0 * gather * (1 + 0.24 * smooth(0.15, 0.22, y) * smooth(0.285, 0.245, y)) * (1 - 0.24 * smooth(0.32, 0.42, y) * Math.max(0, -Math.cos(a)));
+      const hipIn = s * 0.028 * smooth(0.28, 0.52, y);
       return [cx - hipIn + rx * Math.sin(a), y, cz + rz * Math.cos(a), (j / NC) * 3, y * 6, PAL.trousers];
     });
     weld(tr);
@@ -1026,11 +1029,11 @@ export function createMonk(opts = {}) {
       const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt drapes smoothly over his lap and thighs, the sides open over his knees, the back rests on the seat.
       // Climbing stairs: a high knee pushes the code robe's cloth over it forward without lifting the whole hem into a flat board (#615, #642).
-      const kneePush = (k) => (dressed ? 0 : 0.085 * smooth(0.5, 1.5, k) * (1 - sitW));
+      const kneePush = (k) => (dressed ? 0 : 0.105 * smooth(0.48, 1.48, k) * (1 - sitW));
       const pushF = kneePush(Math.max(thigh[0], thigh[1])), pushL = kneePush(thigh[0]), pushR = kneePush(thigh[1]);
-      B.robeFront.position.z += pushF;
-      B.robeLeft.position.z += 0.55 * pushL; B.robeLeft.position.x += 0.14 * pushL;
-      B.robeRight.position.z += 0.55 * pushR; B.robeRight.position.x -= 0.14 * pushR;
+      B.robeFront.position.z += pushF; B.robeFront.position.y -= 0.25 * pushF;
+      B.robeLeft.position.z += 0.65 * pushL; B.robeLeft.position.x += 0.14 * pushL;
+      B.robeRight.position.z += 0.65 * pushR; B.robeRight.position.x -= 0.14 * pushR;
       B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * seat - 0.78 * perch, 0, sd);
       B.robeBack.rotation.set(back + 0.32 * seat + 0.22 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
