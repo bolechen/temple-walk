@@ -992,6 +992,9 @@ const scenarios = {
     t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0", { hasTouch: true });
     await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
     await t.page.evaluate(() => window.__view("third")); await t.frames(4);
+    // The eye asks what is drawn once its hierarchy is built, and the written plan until then (#295): at the first tap it was still gathering (frame 46 of a run that took 92 s;
+    // nightly run 45469441175, a slower card, took 207 s and failed with him not moved), and the eye moves when the hierarchy arrives. Taps are made on the eye that will stay.
+    await t.until(() => t.page.evaluate(() => window.__eyeSpace().state === "ready"), 240000, "the eye's space was never built"); await t.frames(10);
     // The three taps are court ground, projected onto the picture: since #411 the eye stands right behind him, and the lower middle of the picture is his own feet on the porch
     // (a tap there bound him 0.2–0.3 m, and once nowhere at all, run 45248154111) — not the court the tap is meant to be on.
     // The eye eases behind him after each walk, so each tap is projected from where it stands at that moment, once it has come to rest.
