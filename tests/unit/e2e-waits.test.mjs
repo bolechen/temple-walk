@@ -13,7 +13,7 @@ test("hallexit lets a pass settle before coming out", () => {
 });
 
 test("hallexit waits on frames for the route after a tap from the porch", () => {
-  const i = body.indexOf("a tap on the court from the porch");
-  const before = body.slice(i - 400, i);
-  assert.match(before, /for \(let n = 0; n < \d+ && !s1\.target/);
+  // (the way round from a porch is worked out over a few frames: a single read misses it, #349. Since #411 the tap is
+  // projected onto the picture and what it is bound for is `goal`, not its first leg `target`.)
+  assert.match(body, /for \(let n = 0; n < \d+ && !s1\.(?:target|goal)[^\n]*\n[^\n]*should be bound past the foot of the steps/);
 });

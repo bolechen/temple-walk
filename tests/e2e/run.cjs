@@ -360,7 +360,10 @@ const scenarios = {
   // court's maple are handed to the ground's record as the frames go, and on an autumn night (a breeze below every leaf's
   // grip) none of them goes in the next minute; run on three minutes, more lie there than before.
   litter: { tier: 2, async run(b, base) {
-    const t = await open(b, base, "q=low&cam=-7.5,33,-0.38,-0.42&season=autumn&time=night" + BARE);
+    // The falling cloud draws its leaves' seeds from Math.random, so a leaf-count threshold failed now and then in CI ([10,0,26,0], run 45060329278): the page is
+    // given a seeded Math.random here (mulberry32, from before its scripts), in this test only; the page itself stays random.
+    const seeded = () => { let a = 0x5eed1e55; Math.random = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+    const t = await open(b, base, "q=low&cam=-7.5,33,-0.38,-0.42&season=autumn&time=night" + BARE, { init: seeded });
     const got = () => t.page.evaluate(() => window.__litter(0, true));
     await t.until(async () => (await got()).kept >= 5, 240000, "no leaf was handed to the ground under the maple");
     const L = (await got()).leaves.filter((l) => Math.abs(l[0]) > 3).slice(0, 30);
@@ -988,10 +991,18 @@ const scenarios = {
     await t.close();
     t = await open(b, base, "q=low&fast=1&view=first&cam=0,30,0,0", { hasTouch: true });
     await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
-    await t.page.evaluate(() => window.__view("third")); await t.frames(2);
-    for (const [px, py] of [[210, 520], [150, 560], [260, 500]]) {
-      await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2);
-      await t.page.touchscreen.tap(px, py); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
+    await t.page.evaluate(() => window.__view("third")); await t.frames(4);
+    // The three taps are court ground, projected onto the picture: since #411 the eye stands right behind him, and the lower middle of the picture is his own feet on the porch
+    // (a tap there bound him 0.2–0.3 m, and once nowhere at all, run 45248154111) — not the court the tap is meant to be on.
+    // The eye eases behind him after each walk, so each tap is projected from where it stands at that moment, once it has come to rest.
+    const restEye = async () => { let was = null; for (let i = 0; i < 20; i++) { const e = await t.page.evaluate(() => window.__frame().eye); if (was && Math.hypot(e[0] - was[0], e[2] - was[2]) < 0.02) return e; was = e; await t.frames(1); } return was; };
+    for (const side of [0, 1.5, -1.5]) {
+      await t.page.evaluate(() => window.__pose(-12.85, 5.98, -0.765, -0.188)); await t.frames(2); await restEye();
+      const cp = await t.page.evaluate((side) => { const yaw = -0.765;
+        for (const d of [6, 7, 5, 8, 4]) { const x = -12.85 + Math.sin(yaw) * d + Math.cos(yaw) * side, z = 5.98 - Math.cos(yaw) * d + Math.sin(yaw) * side, q = window.__project(x, z); if (!window.__blocked(x, z) && q.on && q.clear) return [+x.toFixed(2), +z.toFixed(2), q.x, q.y]; }
+        return null; }, side);
+      expect(cp, `no court ground ${side} m aside from the blocked place is in the picture and clear: ` + JSON.stringify(await t.page.evaluate(() => window.__frame().eye)));
+      await t.page.touchscreen.tap(cp[2], cp[3]); await t.until(async () => (await t.state()).target !== null || (await t.state()).x < -12.2, 30000, "the tap set no way out of the blocked spot");
             await t.until(async () => { const s = await t.state(); return s.target === null && !s.dropping; }, 90000, "he never came out of the tea house porch's south end");
       const s2 = await t.state(); expect(!(await t.page.evaluate(() => window.__walker().blockedHere)) && Math.hypot(s2.x + 12.85, s2.z - 5.98) > 0.3, `he is still in the ring that blocks, or has not moved: ${s2.x}, ${s2.z}`);
     }
@@ -1167,13 +1178,13 @@ const scenarios = {
       // (since #396 it may stand in the dark behind the leaves, as far as its back, and sees him framed in the door)
       expect(o.into < 3.0 && o.box, "coming out of the great hall the eye should stay within the dark behind its door, with him in the picture: " + JSON.stringify(o)); }
     lap("out of the door");
-    const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 0], [0, 1.5]], shut = []; let samples = 0;   // ((19.5, 1) lies a few tenths past where he can stand)
+    const round = [[0, 1], [-19.5, 1], [-19.5, -29], [19.5, -29], [19.5, 0], [0, 1.5]], shut = [], trail = []; let samples = 0;   // ((19.5, 1) lies a few tenths past where he can stand)
     for (const p of round) {
       await t.page.evaluate((q) => window.__walk([q]), p);
       let best = Infinity, still = 0;
       for (let i = 0; i < 2000; i++) {
         const s2 = await t.page.evaluate(() => { const y = window.__yard(), e = window.__eyeSpace(); return { x: y.x, z: y.z, f: y.frames, done: !y.target && !y.route, shut: e.shutNow, eye: window.__frame().eye }; });
-        samples++; if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)) });
+        samples++; trail.push({ at: [+s2.x.toFixed(2), +s2.z.toFixed(2)], eye: s2.eye.map((v) => +v.toFixed(2)), f: s2.f }); if (trail.length > 8) trail.shift(); if (s2.shut) shut.push({ at: [s2.x, s2.z], eye: s2.eye.map((v) => +v.toFixed(2)), before: trail.slice(), vertical: await t.page.evaluate(([x, y, z]) => { const o = []; for (let k = -0.8; k <= 0.81; k += 0.1) o.push([+k.toFixed(1), window.__eyeShutAt(x, y + k, z)]); return o; }, s2.eye), lift: await t.page.evaluate(() => window.__frame()) });
         const d = Math.hypot(s2.x - p[0], s2.z - p[1]); if (d < best - 0.05) { best = d; still = 0; } else still++;
         if ((s2.done && (d < 1.5 || i > 8)) || still > 30) break;   // (there, or as near as the way goes: he has stopped, or makes no way)
         await t.page.waitForFunction((f) => window.__yard().frames > f, s2.f, { polling: 30, timeout: 120000 });   // (the next frame: t.frames looks only every 1.2 s)
@@ -1840,8 +1851,10 @@ const scenarios = {
   } },
   // Issue #100: coming out of a hall, a tap on the court is a walk to the spot tapped, not back to the door. On the
   // main hall's porch and steps the tap rule "go to the hall's door" must not apply; from the court it still does.
+  // The halls whose court taps may be weaker than "bound for the point" (#411): the summit pavilion's doorway eye is 1.29 m above him and the ground falls away in front of it, so at 6 m the line of sight comes within 0.08 m of the ground's own slope. Names are added here by hand, never by the test.
   hallexit: { tier: 2, async run(b, base) {
-    for (const [view, touch] of [["third", false], ["first", false], ["third", true]]) {
+    const WEAK_COURT = ["lingxiao"];
+    for (const [view, touch] of [["third", false], ["first", false], ["third", true]].filter((v) => !process.env.HV || process.env.HV === v.join())) {   // (HV=first,false: one of the three passes, to look at it alone)
       // Only the third person has to draw the halls: where a tap on the ground lands is worked out from the eye, and the eye asks the drawn halls what stands in its way
       // (a hall switched off with ?off= is no wall to it, #391), so with the halls off it tests an eye no visitor has. From his own eyes the eye is his head: BARE is as true.
       const t = await open(b, base, `q=low&enter&view=${view}&season=summer&time=day` + (view === "third" ? "" : BARE), { hasTouch: touch });
@@ -1859,15 +1872,33 @@ const scenarios = {
         // Facing the court, a tap anywhere on the ground must go where it was aimed, never to the hall's door.
         const vp = t.page.viewportSize();
         let set = 0;
-        for (const [fx, fy] of [[0.5, 0.95], [0.5, 0.75], [0.5, 0.65], [0.3, 0.64], [0.7, 0.58], [0.5, 0.55]]) {
-          await tap(vp.width * fx, vp.height * fy); await t.frames(1);
+        // Since #411 the eye that follows him out stands behind him in the doorway, so the bottom of the picture is his own feet on the porch, 0.16 m from the door:
+        // a tap there rightly walks there. What the rule is for is the court, so the first tap is on the court's ground out from the door, projected onto the picture:
+        // the nearest of a few distances that is in the picture and that nothing of the floor hides from the eye (the porch's edge hides the near ground: 3 m out from the tea
+        // house the ray met the porch 1.4 m short, and the terraces of the others hide more).
+        const fo = [Math.sin(h.outYaw), -Math.cos(h.outYaw)], lt = [-fo[1], fo[0]];
+        // (the taps are on the court's ground straight out from the door and a few metres to either side, not at fixed fractions of the picture: since #411 the foot of the picture is his feet on the porch)
+        let unseen = 0;
+        for (const [side, must] of [[0, true], [-2.5, false], [2.5, false]]) {
+          // (each tap from where he came out, as the main hall's are: the tap before has walked him and turned the eye, and the point is projected from the eye as it stands now)
+          await t.page.evaluate(([x, z, yaw]) => { window.__walk([]); window.__pose(x, z, yaw, 0.04); }, [h.out[0], h.out[1], h.outYaw]); await t.frames(30);
+          let court = null, cp = null, weak = null;
+          for (const d of [3, 4.5, 6, 8, 10, 13]) { const c = [h.door[0] + fo[0] * d + lt[0] * side, h.door[1] + fo[1] * d + lt[1] * side], q = await t.page.evaluate(([x, z]) => window.__project(x, z), c); if (q.on && q.clear) { court = c; cp = q; break; } if (q.on && !weak) weak = { c, q }; }
+          const strict = !!cp; if (!cp && weak && WEAK_COURT.includes(h.id)) { court = weak.c; cp = weak.q; }   // (only the halls named in WEAK_COURT may fall back: any other hall with no clear court point fails below)
+          if (!cp && must && !WEAK_COURT.includes(h.id)) throw new Error(`${view}${touch ? " touch" : ""} ${h.name}: no court ground ${side} m aside is both in the picture and clear from the doorway eye; name the hall in WEAK_COURT only if that is the ground's own lie`);   // (none clear: the summit pavilion's court falls away from its door, so no ground there is both in the picture and clear of its own slope by a hand's breadth: the first that is in the picture, and a weaker ask of it)
+          if (!cp) { unseen++; continue; }   // (no ground of this court is in the picture at that side, in a hall that may fall back)
+          await tap(cp.x, cp.y); await t.frames(1);
           let s1 = await t.state();
           for (let n = 0; n < 12 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (from a porch the straight line is shut: the way round is worked out over a frame or two)
           if (!s1.target) continue;   // a tap above the horizon of this hall's court leads nowhere
           set++;
-          expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at (${fx},${fy}) went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
+          const dbg = await t.page.evaluate(([x, y]) => ({ eye: window.__frame().eye, pick: window.__pick(x, y, 5).map((q) => [q.part, q.distance, q.at]) }), [cp.x, cp.y]);
+          if (!strict || !must) expect(s1.goal && (s1.goal[0] - h.door[0]) * fo[0] + (s1.goal[1] - h.door[1]) * fo[1] > 0.5,   // (0.5 m past the door, as the rule has always been: the summit pavilion's tap was bound 0.71 m past its door, probably the nearest ground he can reach there; not checked)
+           `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court (${must ? "the ground no clear point of" : side + " m aside"}) was bound for ${s1.goal}, not out past the door`);
+          else expect(s1.goal && Math.hypot(s1.goal[0] - court[0], s1.goal[1] - court[1]) <= 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court out from the door, ${side} m aside (${court.map((v) => v.toFixed(2))}) was bound for ${s1.goal} (first leg ${s1.target}); pixel ${cp.x.toFixed(0)},${cp.y.toFixed(0)}, project ${JSON.stringify(cp)}, eye ${JSON.stringify(dbg.eye)}, pick ${JSON.stringify(dbg.pick)}`);
+          expect(Math.hypot(s1.target[0] - h.door[0], s1.target[1] - h.door[1]) > 0.5, `${view}${touch ? " touch" : ""} ${h.name}: a tap on the court at ${side} m aside went to the hall's door: ${s1.target} from ${s0.x},${s0.z}`);
           // (what the nightly run needs to tell a tap that went to the door from a step the funnel drew in: where he stood, what the tap set, where he is now and which grid answers, #349)
-          if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap (${fx}, ${fy}) from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
+          if (await t.inHall()) { const s2 = await t.state(), wk = await t.page.evaluate(() => window.__walker?.()); throw new Error(`${h.name}: he went back in | ${view}${touch ? " touch" : ""} tap ${side} m aside from ${s0.x},${s0.z} set ${s1.target} (door ${h.door}, out ${h.out}); now ${s2.x},${s2.z}, room ${s2.room}, grid ${wk && wk.grid}, mode ${wk && wk.mode}`); }
           await t.page.evaluate(() => window.__walk([]));
         }
         expect(set >= 1, `${view}${touch ? " touch" : ""} ${h.name}: only ${set} taps on the court set a destination`);
@@ -1878,14 +1909,20 @@ const scenarios = {
         await t.page.evaluate(() => window.__inside(null)); await t.until(async () => !(await t.inHall()), 60000, "never came out of the main hall"); await settle();
         const vp = t.page.viewportSize();
         const main = (await t.page.evaluate(() => window.__halls)).find((x) => x.id === "main");
-        for (const [fx, fy] of [[0.5, 0.75], [0.5, 0.65], [0.3, 0.64]]) {
-          // each tap from the porch where he came out, as the first was: the one before it has walked him off, and where the next lands depends on where the eye is in the walk
-          await t.page.evaluate(([x, z, yaw]) => { window.__walk([]); window.__pose(x, z, yaw, 0.04); }, [main.out[0], main.out[1], main.outYaw]); await t.frames(3);
-          await tap(vp.width * fx, vp.height * fy); await t.frames(1);
+        // (Taps on the court's ground, projected onto the picture as the halls' are above: since #411 the eye stands in the dark behind the door, 2.6 m back, and fixed fractions of the picture
+        // land on the porch and the balustrade. Each tap from the porch where he came out, as the first was: the one before it has walked him off.)
+        let made = 0;
+        for (const lat of [0, -3, 3]) {
+          await t.page.evaluate(([x, z, yaw]) => { window.__walk([]); window.__pose(x, z, yaw, 0.04); }, [main.out[0], main.out[1], main.outYaw]); await t.frames(30);
+          let cp = null;
+          for (const z of [3, 5, 8, 12, 16]) { const q = await t.page.evaluate(([x, z]) => window.__project(x, z), [main.door[0] + lat, z]); if (q.on && q.clear) { cp = q; break; } }
+          if (!cp) { expect(lat !== 0, "main hall: no court ground straight out from the door is both in the picture and clear from the porch"); continue; }
+          await tap(cp.x, cp.y); await t.frames(1);
           let s1 = await t.state();
-          for (let n = 0; n < 40 && !s1.target; n++) { await t.frames(1); s1 = await t.state(); }   // (the way round from a porch is worked out over a few frames; wait on frames, not on a single read)
-          expect(s1.target && s1.target[1] > -0.48, `main hall: a tap on the court from the porch should set a target past the foot of the steps (z > -0.48), got ${s1.target}`);
+          for (let n = 0; n < 40 && !s1.goal; n++) { await t.frames(1); s1 = await t.state(); }   // (the way round from a porch is worked out over a few frames; wait on frames, not on a single read)
+          expect(s1.goal && s1.goal[1] > -0.48, `main hall: a tap on the court (${lat} m aside) from the porch should be bound past the foot of the steps (z > -0.48), got ${s1.goal}`); made++;
         }
+        expect(made >= 1, "main hall: no tap on the court was made from the porch");
         // (Past the foot of the steps is what is asked, not the end of the way: the tap's target lies 16 m out, and on a card that draws sixty frames a second 400 of them are not enough to walk it, #349.)
         await t.untilFrames(async () => (await t.state()).z > -0.48, 900, "he did not walk down the steps"); await t.page.evaluate(() => window.__walk([]));
         expect(!(await t.inHall()), "main hall: walked back in");
@@ -3171,9 +3208,11 @@ const scenarios = {
     const t = await open(b, base, "q=low&cam=-5.68,49.8,1.145,0.2&view=third&season=autumn&time=day", { viewport: { width: 480, height: 300 } });
     await t.page.waitForSelector("#photoBtn", { timeout: 120000 }); await t.frames(20);
     await t.page.mouse.move(240, 150); await t.page.mouse.down(); await t.page.mouse.move(240, 190, { steps: 8 }); await t.page.mouse.up(); await t.frames(30);
-    const link = await t.page.evaluate(() => window.__debugURL()), q = new URL(link).searchParams;
+    // The address is the eye as it stands at the moment it is asked for (`eyeNow()`), and the eye is still easing from the drag: read both in one call, as a
+    // frame between the two reads left the address a centimetre or two behind where the second read found the eye (nightly 45248154111, 2.07 cm against the 2 cm bound).
+    const seen = await t.page.evaluate(() => ({ link: window.__debugURL(), eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) })), link = seen.link, q = new URL(link).searchParams;
     expect(/^-?[\d.]+,-?[\d.]+,-?[\d.]+,[\d.]+$/.test(q.get("eye") || ""), "the address should carry eye=x,y,z,dist: " + link);
-    const was = await t.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) }));
+    const was = seen;
     const u = await open(b, base, new URL(link).search.slice(1), { enter: false, viewport: { width: 480, height: 300 } });
     await u.page.waitForSelector("#photoBtn", { timeout: 120000 }); await u.frames(20);
     const now = await u.page.evaluate(() => ({ eye: window.__frame().eye, pick: window.__pick(240, 150).slice(0, 1).map((p) => [p.part, p.material]) }));

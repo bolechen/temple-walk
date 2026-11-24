@@ -80,6 +80,17 @@ test("a column passing between him and the eye is let pass; a wall coming betwee
   assert.ok(follow.dist < 3, `behind a wall the eye should come in to him, but stands ${follow.dist.toFixed(2)} m back`);
 });
 
+test("asking what is drawn, a narrow column sweeping past while turning is still let pass for postWait", () => {
+  const flat = { landAt: () => 0, heightAt: () => 0, answers: () => false, onStairs: () => false };
+  const mkSpace = (hit) => ({ radius: 0.25, along: () => {}, sees: () => true, thick: () => false, shut: (x, y, z) => hit && Math.hypot(x, z - 4) < 0.6 && y >= 0 && y <= 5 });
+  const follow = createFollow(), at = { x: 0, z: 0, foot: 0, eyeY: 0, yaw: 0, pitch: 0.04, side: 1, reach: 4 };
+  for (let i = 0; i < 6; i++) follow.step(dt, followEye(flat, { ...at, space: mkSpace(false) }));
+  const start = follow.dist;
+  follow.step(dt, followEye(flat, { ...at, space: mkSpace(true) }), followEye(flat, { ...at, yaw: 0.5, space: mkSpace(false) }));
+  assert.equal(follow.dist, start, "the last-resort pull-in must not defeat passing during a turn");
+  assert.equal(follow.forced, 0, "letting a column pass during a turn must not force-snap the eye");
+});
+
 // Visitors said the view swam about when they moved the mouse (2026-11-16). Standing still and swinging the view
 // right round, as a hand on a mouse swings it (three radians a second, either way), all over the first court and its
 // towers and steps: the arm sweeps into walls and eaves, and the eye used to be put straight out of them in 3% of the
