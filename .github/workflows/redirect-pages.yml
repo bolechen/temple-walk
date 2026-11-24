@@ -1,0 +1,77 @@
+name: Redirect retired GitHub Pages URL
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/redirect-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages-redirect
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Build static redirect pages
+        run: |
+          mkdir -p pages-redirect
+          cat <<'EOF' > pages-redirect/index.html
+          <!doctype html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="robots" content="noindex, nofollow">
+            <link rel="canonical" href="https://temple.rushiwowen.co/">
+            <title>山门之外 · Beyond the Mountain Gate</title>
+            <meta http-equiv="refresh" content="0; url=https://temple.rushiwowen.co/">
+            <script>
+              (function () {
+                var targetOrigin = "https://temple.rushiwowen.co";
+                var prefix = "/temple-walk";
+                var p = window.location.pathname || "/";
+                if (p === prefix || p.indexOf(prefix + "/") === 0) {
+                  p = p.slice(prefix.length) || "/";
+                }
+                if (p === "/index.html") p = "/";
+                if (p.charAt(0) !== "/") p = "/" + p;
+                window.__redirectTarget = targetOrigin + p + (window.location.search || "") + (window.location.hash || "");
+                window.location.replace(window.__redirectTarget);
+              })();
+            </script>
+          </head>
+          <body>
+            <p>《山门之外》已迁至 <a id="redirect-link" href="https://temple.rushiwowen.co/">https://temple.rushiwowen.co/</a>，正在跳转……</p>
+            <script>
+              if (window.__redirectTarget) {
+                var el = document.getElementById("redirect-link");
+                if (el) el.href = window.__redirectTarget;
+              }
+            </script>
+          </body>
+          </html>
+          EOF
+          cp pages-redirect/index.html pages-redirect/404.html
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-redirect
+          name: github-pages-redirect-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 1
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-redirect-${{ github.run_id }}-${{ github.run_attempt }}

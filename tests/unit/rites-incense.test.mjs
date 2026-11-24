@@ -20,7 +20,7 @@ const monk = createMonk(), G = monk.group, scene = new THREE.Scene(), ticks = []
 const planted = [];
 const y = { monk, scene, site, M, onTick: (f) => ticks.push(f), strike: () => {}, direct: () => {}, directed: () => false, directArrived: () => false, directOut: () => 1, put: (x, z) => G.position.set(x, G.position.y, z) };
 const rites = createRites(y, 1, { burn: BURN, onPlant: (at, hall) => planted.push([hall, at]) });
-const frame = () => { now += 1000 / 30; for (const f of ticks) f(); G.updateMatrixWorld(true); monk.update(1 / 30, 0, "pray", now / 1000, () => G.position.y, { act: rites.act }); G.updateMatrixWorld(true); };
+const frame = (speed = 0) => { now += 1000 / 30; for (const f of ticks) f(); G.updateMatrixWorld(true); monk.update(1 / 30, speed, "pray", now / 1000, () => G.position.y, { act: rites.act }); G.updateMatrixWorld(true); };
 const idle = (secs) => { now += secs * 1000; for (const f of ticks) f(); };
 
 /** Stand him at a hall's cushion and make the offering frame by frame; `each` after every frame. */
@@ -29,7 +29,7 @@ async function offer(hall, each = () => {}) {
   G.position.set(p.at[0], room.y, p.at[1]); G.rotation.y = p.face;
   const st = { seat: null, speed: null }; let done = false, result;
   const run = rites.offerIncense(() => true, st, () => {}, hall).then((r) => { done = true; result = r; });
-  for (let i = 0; i < 30 * 40 && !done; i++) { frame(); each(); await Promise.resolve(); await Promise.resolve(); }
+  for (let i = 0; i < 30 * 40 && !done; i++) { frame(st.speed ?? 0); each(st); await Promise.resolve(); await Promise.resolve(); }
   await run; return result;
 }
 const left = (hall) => rites.state().incense.halls[hall];
@@ -89,4 +89,44 @@ test("his hands and the sticks keep out of the offering table, the censer and th
     assert.ok(least > room.z0, `${hall}: a hand left the room`);
     idle(BURN + 10); frame();
   }
+});
+
+test("the step up to the incense stand matches the true smoothstep speed and clears on finish or cancel (#661)", async () => {
+  idle(BURN + 10); frame();
+  const p = rooms.places[incenseId("main")], dist = Math.hypot(p.front[0] - p.at[0], p.front[1] - p.at[1]);
+  const expectedPeak = (dist / 1.3) * 1.5;
+  const speeds = [];
+  let footfalls = 0;
+  monk.steps.splice(0);
+  await offer("main", (st) => {
+    if (st.speed !== null) {
+      speeds.push(st.speed);
+      footfalls += monk.steps.splice(0).length;
+    } else {
+      monk.steps.splice(0);
+    }
+  });
+  assert.ok(speeds.length >= 30, `expected ~39 frames during 1.3s step, got ${speeds.length}`);
+  const peak = Math.max(...speeds), first = speeds[0], last = speeds[speeds.length - 1];
+  const integral = speeds.reduce((s, v) => s + v / 30, 0);
+  assert.ok(Math.abs(peak - expectedPeak) < 0.015, `peak speed ${peak.toFixed(4)} should match true peak ${expectedPeak.toFixed(4)} (not hardcoded 0.5)`);
+  assert.ok(first < expectedPeak * 0.25 && last === 0, `speed should ease in and settle to 0 (first=${first.toFixed(4)}, last=${last.toFixed(4)})`);
+  assert.ok(Math.abs(integral - dist) < 0.02, `integrated distance ${integral.toFixed(3)} m should match true distance ${dist.toFixed(3)} m`);
+  assert.ok(footfalls <= 2, `a 0.25 m step should take at most 1–2 calm steps (${footfalls} footfalls)`);
+
+  // Interrupting mid-step clears st.speed to null.
+  idle(BURN + 10); frame();
+  const room = rooms.rooms.main.room;
+  G.position.set(p.at[0], room.y, p.at[1]); G.rotation.y = p.face;
+  const st = { seat: null, speed: null };
+  let active = true, sawMove = false, done = false;
+  const run = rites.offerIncense(() => active, st, () => {}, "main").then(() => { done = true; });
+  for (let i = 0; i < 30 * 20 && !done; i++) {
+    frame(st.speed ?? 0);
+    if (st.speed !== null && st.speed > 0.05) { sawMove = true; active = false; }
+    await Promise.resolve(); await Promise.resolve();
+  }
+  await run;
+  assert.ok(sawMove, "should have entered the step-up passage before cancelling");
+  assert.equal(st.speed, null, "cancelling mid-step must clear st.speed to null");
 });
