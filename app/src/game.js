@@ -713,7 +713,7 @@ export function createGame(y) {
     const toScene = async () => { if (land) await y.travel(land.at[0], land.at[1], Math.PI - land.face, land.room || null); showWay(); };
     if (o.eye === "none") { toScene(); return; }
     track("opening.played", { eye: o.eye, again: again === true });
-    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round((s.s / (s.length || 1)) * 100) }); toScene(); });
+    y.opening(o.eye).then((s) => { holdMusic(false); if (s.skipped) track("opening.skipped", { eye: o.eye, at: Math.round(((s.skippedAt ?? s.s) / (s.length || 1)) * 100) }); toScene(); });
   };
   // After a change of language the title's place is kept by the sheet that says the words are being changed, until
   // the page is ready; then it fades as the title does when he steps in (#140).
