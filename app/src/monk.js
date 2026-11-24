@@ -247,7 +247,7 @@ export function createMonk(opts = {}) {
   }
   for (const n of SKIRT) bone(n, B.hips, 0, 0.07, 0);     // the skirt hangs from the waist on four bones (kept at 0.07 for worn-body compatibility)
   bone("sashTail", B.hips, 0.036, 0.115, 0.126);          // at the double knot
-  bone("hat", B.chest, 0, 0.055, -0.085);                 // where the hat rests against his upper back
+  bone("hat", B.chest, 0, 0.055, -0.10);                 // hung on the straps just off his upper back: laid against it, its rim cut through the robe (#642)
   group.updateMatrixWorld(true);
   const IDX = Object.fromEntries(bones.map((b, i) => [b.name, i]));
   const at = (name) => B[name].getWorldPosition(V3());
@@ -977,7 +977,7 @@ export function createMonk(opts = {}) {
       // The arms hang a little out from his sides and swing against the legs; to pray, or seated, they reach.
       SIDES.forEach(([n, s], i) => {
         const ua = B[n + "UpperArm"], la = B[n + "LowerArm"], hd = B[n + "Hand"], swing = -lead[i] * 0.32;
-        ua.rotation.set(-swing, 0, s * (0.27 - 0.03 * gait)); la.rotation.set(-(0.22 + 0.35 * Math.max(0, swing)), -s * 1.15, 0); hd.rotation.set(-0.1, 0, s * 0.05);
+        ua.rotation.set(-swing, 0, s * (0.42 - 0.03 * gait)); la.rotation.set(-(0.22 + 0.35 * Math.max(0, swing)), -s * 1.15, 0); hd.rotation.set(-0.1, 0, s * 0.05);
         if (hop) { ua.rotation.set(-0.3, 0, s * 0.58); la.rotation.set(-0.5, -s * 1.15, 0); }
         const w = Math.max(palms, seat, perch);
         if (w < 0.001) return;
@@ -1033,7 +1033,7 @@ export function createMonk(opts = {}) {
       B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * seat - 0.14 * perch;
       // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
       B.sashTail.rotation.set(B.robeFront.rotation.x * (1 - 0.6 * sitW) + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
-      B.hat.rotation.set(Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)) + 0.18 * seat + 0.12 * perch, 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
+      B.hat.rotation.set(0.15 + Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)) + 0.08 * seat + 0.12 * perch, 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
       if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) liftHem(surfaceAt, dt);
 
       // The shadow keeps to the ground and to the sun, whichever way he turns.
