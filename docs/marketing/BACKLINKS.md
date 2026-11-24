@@ -34,4 +34,4 @@ SEO 提醒：知乎/Reddit/X 的用户内容链接多为 nofollow，收益主要
 
 ## 建页素材（复用到其他平台）
 
-英文标题：**Beyond the Mountain Gate · 山门之外**；一句话：A slow, quiet temple walk in your browser — bamboo path, bell, tea, and 16 seasons of light. 玩游戏链接 `https://temple.rushiwowen.co`，源码 `https://github.com/bolechen/temple-walk`，封面用上表三张实机图。免费预览版口径同上。
+英文标题：**One City, One Temple · 山门之外**；一句话：A slow, quiet temple walk in your browser — bamboo path, bell, tea, and 16 seasons of light. 玩游戏链接 `https://temple.rushiwowen.co`，源码 `https://github.com/bolechen/temple-walk`，封面用上表三张实机图。免费预览版口径同上。

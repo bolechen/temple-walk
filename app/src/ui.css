@@ -88,7 +88,7 @@ button { -webkit-tap-highlight-color: transparent; }
    no selecting its label. What is there to be read (a note, a line of verse) can still be selected. */
 button, a, input, .chip { touch-action: manipulation; }
 body { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-#pieceNote, #pieceLink, #pieceCredit, #pieceProcessed, #pieceTitle, #pieceBy, #pieceFacts, #slipText, #slipFrom, #bookHint { -webkit-user-select: text; user-select: text; }
+#pieceNote, #pieceLink, #pieceCredit, #pieceProcessed, #pieceRank, #pieceTitle, #pieceBy, #pieceFacts, #slipText, #slipFrom, #bookHint { -webkit-user-select: text; user-select: text; }
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
 
 /* ---- Paper ---- */
@@ -506,6 +506,7 @@ html.relang #title h1, html.relang #title .sub, html.relang #title .mark, html.r
 #pieceLink { margin: 12px 0 0; padding-left: 12px; border-left: 2px solid #8a2a1e; font: 400 14px/1.8 var(--kai); color: #4a443b; }
 #pieceCredit, #pieceProcessed { margin: 14px 0 0; font: 400 12px/1.6 var(--serif); color: #6f675b; word-break: break-all; }
 #pieceCredit + #pieceProcessed { margin-top: 4px; }
+#pieceRank { margin: 10px 0 0; font: 400 12px/1.7 var(--serif); color: #6f675b; }
 /* The way out stays in reach however long the entry is: a band of paper across the foot of the sheet, the words of the
    entry passing under its soft upper edge, with the word that closes it in the middle. It reaches over the sheet's own
    margin at the sides and foot, so that drawn to the end the source line stands clear above it. */

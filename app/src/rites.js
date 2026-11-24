@@ -283,9 +283,8 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     cue("bowed");
     if (!(await play(0.8, (u) => { brow(1 - ease(u)); inHands(); }, on))) return false;
     // A step or two up to the stand, the sticks still between his palms.
-    const from = [I.at[0], I.at[1]];
-    st.speed = 0.5;
-    if (!(await play(1.3, (u) => { const k = ease(u); st.seat = [mix(from[0], I.front[0], k), mix(from[1], I.front[1], k)]; inHands(); }, on))) { st.speed = null; return false; }
+    const from = [I.at[0], I.at[1]], dist = Math.hypot(I.front[0] - from[0], I.front[1] - from[1]), stepSecs = 1.3, stepDur = Math.max(1e-3, stepSecs * fast);
+    if (!(await play(stepSecs, (u) => { const k = ease(u); st.speed = (dist / stepDur) * 6 * u * (1 - u); st.seat = [mix(from[0], I.front[0], k), mix(from[1], I.front[1], k)]; inHands(); }, on))) { st.speed = null; return false; }
     st.speed = null; st.seat = I.front.slice(); y.put(I.front[0], I.front[1]);
     // He leans over the bowl and his right hand sets them in the ash.
     const h = act.hands.right; inHands(); const p0 = sticks.position.clone(), q0 = sticks.quaternion.clone();
