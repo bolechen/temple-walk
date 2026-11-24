@@ -1,12 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { track, withLang } from "../../app/src/analytics.js";
+import { track, withLang, isAutomatedPage } from "../../app/src/analytics.js";
 
-function page(hostname, umami) {
+function page(hostname, umami, { search = "", webdriver = false } = {}) {
   const previousLocation = globalThis.location, previousWindow = globalThis.window;
-  globalThis.location = /** @type {Location} */ ({ hostname });
+  const navDesc = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+  globalThis.location = /** @type {Location} */ ({ hostname, search });
   globalThis.window = /** @type {Window & typeof globalThis} */ ({ umami });
-  return () => { globalThis.location = previousLocation; globalThis.window = previousWindow; };
+  Object.defineProperty(globalThis, "navigator", { value: { webdriver }, configurable: true });
+  return () => {
+    globalThis.location = previousLocation;
+    globalThis.window = previousWindow;
+    if (navDesc) Object.defineProperty(globalThis, "navigator", navDesc);
+    else delete globalThis.navigator;
+  };
 }
 
 test("public milestones reach Umami as short strings", () => {
@@ -45,4 +52,31 @@ test("an event is remembered for the tests even where it is not sent", () => {
   assert.deepEqual(last.data, { lang: "zh", id: "main", count: 1 });
   delete globalThis.__events;
   restore();
+});
+
+test("automation runs and webdriver sessions stay silent on the public host while visitor params still send", () => {
+  for (const [search, webdriver] of [
+    ["?enter&tour=120x3&q=high&debug=0", false],
+    ["?shot=1&q=high", false],
+    ["?fast=1&cam=1.6,43.9,0.306,0.45", false],
+    ["?in=lingxiao&lang=zh", false],
+    ["?lang=zh", true],
+  ]) {
+    const calls = [];
+    const restore = page("temple.rushiwowen.co", { track: (...args) => calls.push(args) }, { search, webdriver });
+    assert.equal(isAutomatedPage(), true, `${search} (webdriver=${webdriver})`);
+    assert.equal(track("demo.ready", { tier: "high" }), false);
+    assert.deepEqual(calls, []);
+    delete globalThis.__events;
+    restore();
+  }
+  for (const search of ["", "?lang=ja", "?utm_source=reddit&utm_medium=r_threejs", "?from=bell"]) {
+    const calls = [];
+    const restore = page("temple.rushiwowen.co", { track: (...args) => calls.push(args) }, { search });
+    assert.equal(isAutomatedPage(), false, search);
+    assert.equal(track("demo.ready", { tier: "high" }), true);
+    assert.equal(calls.length, 1);
+    delete globalThis.__events;
+    restore();
+  }
 });

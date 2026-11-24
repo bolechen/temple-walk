@@ -100,6 +100,8 @@ export function openingPlan(end) {
 export function createOpening({ now = () => performance.now(), veil = (/** @type {number} */ k) => {} } = {}) {
   /** "idle" | "hold" | "fly" | "skip" | "ink" | "done" */
   let phase = "idle", mode = "fly", plan = null, t0 = 0, last = 0, steady = 0, began = 0, waited = 0, cuts = 0, skipped = false;
+  /** @type {number | null} */
+  let skippedAt = null;
   let skip = null;   // { s0, v0, at, secs }: the rest of the way, quickly
   let pinned = null;  // a tool's: the eye held this many seconds into the way down (pin)
   let ink = null;    // { at, moved }
@@ -116,14 +118,15 @@ export function createOpening({ now = () => performance.now(), veil = (/** @type
   };
   return {
     /** Begin: `fly` down the mountain, or `ink` (reduced motion: the summit held, then the leaves). */
-    start(how = "fly") { mode = how; phase = "hold"; plan = null; began = last = now(); steady = 0; skip = ink = null; skipped = false; return true; },
+    start(how = "fly") { mode = how; phase = "hold"; plan = null; began = last = now(); steady = 0; skip = ink = null; skipped = false; skippedAt = null; return true; },
     /** The visitor will not wait: the rest of the way in about a second (or the ink at once). */
     skip() {
       if (phase === "idle" || phase === "done" || skip || ink) return false;
       skipped = true; const clock = now();
-      if (mode === "ink") { ink = { at: clock, moved: false }; cuts++; phase = "ink"; return true; }
-      if (!plan) return (phase = "skip"), (skip = { s0: 0, v0: 0, at: clock, secs: OPENING.skip[1], pending: true }), true;
+      if (mode === "ink") { skippedAt = 0; ink = { at: clock, moved: false }; cuts++; phase = "ink"; return true; }
+      if (!plan) { skippedAt = 0; return (phase = "skip"), (skip = { s0: 0, v0: 0, at: clock, secs: OPENING.skip[1], pending: true }), true; }
       const s0 = sNow(clock), v0 = phase === "fly" ? plan.speed((clock - t0) / 1000) : 0, left = plan.length - s0;
+      skippedAt = s0;
       const secs = Math.min(OPENING.skip[1], Math.max(OPENING.skip[0], left / 120));
       skip = { s0, v0: Math.min(v0, (2.5 * left) / secs), at: clock, secs }; phase = "skip"; waited ||= clock - began;
       return true;
@@ -164,7 +167,7 @@ export function createOpening({ now = () => performance.now(), veil = (/** @type
       return true;
     },
     plan: () => plan,
-    state: () => ({ phase, mode, skipped, cuts, waited: Math.round(waited), secs: plan ? +plan.secs.toFixed(2) : null, length: plan ? +plan.length.toFixed(1) : null, s: plan ? +sNow(now()).toFixed(1) : 0 }),
+    state: () => ({ phase, mode, skipped, skippedAt: skippedAt == null ? null : +skippedAt.toFixed(1), cuts, waited: Math.round(waited), secs: plan ? +plan.secs.toFixed(2) : null, length: plan ? +plan.length.toFixed(1) : null, s: plan ? +sNow(now()).toFixed(1) : 0 }),
   };
 }
 

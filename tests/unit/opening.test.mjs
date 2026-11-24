@@ -100,7 +100,7 @@ test("the frame it hands the walk back on does not jump: the director's opening 
   assert.ok(done, "the opening ends");
   assert.ok(prev.p.distanceTo(A.p) < 0.05 && deg(turnBetween(prev.q, A.q)) < 1, "the last frame is the following eye");
   assert.ok(deg(turn) <= deg(DIRECT.rate.in) * DT + 1e-6 && move <= DIRECT.speed * DT + 1e-6, `a frame turned ${deg(turn).toFixed(2)}° or moved ${move.toFixed(3)} m`);
-  const s = o.state(); assert.equal(s.phase, "done"); assert.ok(s.waited >= OPENING.hold.least * 1000 - 1, "it waits on the first frame before moving");
+  const s = o.state(); assert.equal(s.phase, "done"); assert.equal(s.skippedAt, null); assert.ok(s.waited >= OPENING.hold.least * 1000 - 1, "it waits on the first frame before moving");
 });
 
 test("it waits for the picture to settle before it moves: slow frames hold it on the first picture, up to a limit", () => {
@@ -138,6 +138,7 @@ test("skipped at any moment, it comes down the rest of the same way in 0.8–1.2
     // Quick, but travelled: no frame steps farther than the eased pace over the rest of the way allows (a cut would).
     assert.ok(gap <= (1.6 * left) / took / 60 + 0.05, `skipped at ${at} s: a jump of ${gap.toFixed(2)} m in one frame (a cut)`);
     assert.equal(o.state().cuts, 0);
+    assert.ok(Math.abs(o.state().skippedAt - plan.sAt(at)) < 0.5, `skippedAt (${o.state().skippedAt}) records where the skip happened (${plan.sAt(at).toFixed(1)}), not the end`);
   }
 });
 

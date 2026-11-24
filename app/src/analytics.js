@@ -3,6 +3,12 @@
 // or this machine: the tracker itself also refuses every host but the public one.
 import { lang } from "./i18n.js";
 const HOST = "temple.rushiwowen.co";
+const AUTOMATION_PARAM = /(?:^|[?&])(tour|shot|debug|cam|show|fast|enter|in|at|play|seals|off|trailer)(?:=|&|$)/;
+
+/** Whether the current page is an automated/tool run (tour, shot, debug, webdriver) rather than a real visitor. */
+export function isAutomatedPage(loc = globalThis.location, nav = globalThis.navigator) {
+  return !!nav?.webdriver || AUTOMATION_PARAM.test(loc?.search || "");
+}
 
 /** What every event carries besides its own: the language the visitor reads the page in. @param {Record<string, string | number | boolean | null | undefined>=} data @param {string=} to */
 export const withLang = (data, to = lang) => ({ lang: to, ...(data || {}) });
@@ -13,6 +19,7 @@ export function track(name, data) {
     // What was asked is kept (the last hundred), sent or not, so that a test can see which events a page makes.
     const log = (globalThis.__events ||= []); log.push({ name, data: withLang(data) }); if (log.length > 100) log.shift();
     if (globalThis.location?.hostname !== HOST) return false;
+    if (isAutomatedPage()) return false;
     const send = globalThis.window?.umami?.track;
     if (typeof send !== "function") return false;
     /** @type {Record<string, string>} */
