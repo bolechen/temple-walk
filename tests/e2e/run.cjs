@@ -820,6 +820,8 @@ const scenarios = {
     // A work's card in the hall: its title and its note in Japanese, the museum's source line as published.
     await t.page.evaluate(() => window.__work("liangkai-chushan-shijia")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open");
     expect((await words("#pieceTitle")) === "出山釈迦図" && /[ぁ-ん]/.test(await words("#pieceNote")) && (await words("#pieceFacts")).includes("東京国立博物館") && (await words("#pieceCredit")).startsWith("Source: ColBase"), "the work's card should be in Japanese: " + (await words("#pieceTitle")));
+    // The designation stands on a line of its own, with what it is worth beside it (#656): run into the collection it read as part of the museum's name.
+    expect((await words("#pieceFacts")).includes("指定") && await t.page.isVisible("#pieceRank") && /文化財保護法/.test(await words("#pieceRank")), "a designated work should say what the designation is: " + (await words("#pieceRank")));
     expect((await words("#pieceProcessed")).includes("を加工して作成") && (await words("#pieceProcessed")).includes("TA-617") && await t.page.isVisible("#pieceProcessed"), "a ColBase card should say, in Japanese, that the picture was edited: " + (await words("#pieceProcessed")));
     await t.page.click("#pieceClose");
     // Chosen in the menu, during the walk (#140): kept, the page opens again in it under a sheet that says so in the new
@@ -885,6 +887,8 @@ const scenarios = {
     expect(await t.page.evaluate(() => document.documentElement.lang) === "en" && (await words("#title .sub")).includes("Yunjing Temple") && new URL(t.page.url()).searchParams.get("lang") === null, "English should be chosen and kept, with nothing in the address: " + (await words("#title .sub")));
     expect(await t.page.evaluate(() => getComputedStyle(document.getElementById("photoBtn")).writingMode) === "horizontal-tb", "English is not written down the page");
     await t.page.evaluate(() => window.__work("muqi-hu-tu")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open in English");
+    // No designation, no line about one (#656).
+    expect(await t.page.evaluate(() => document.getElementById("pieceRank").hidden), "a work with no designation should carry no line about one: " + (await words("#pieceRank")));
     expect((await words("#pieceTitle")) === "Tiger" && (await words("#pieceNote")).startsWith("An ink painting on silk by the Southern Song") && !/[\u3400-\u9fff]/.test((await words("#pieceNote")) + (await words("#pieceFacts"))), "the work's card should be in English: " + (await words("#pieceNote")).slice(0, 80));
     await t.page.click("#pieceClose");
     // Nothing on the English title is left in Chinese but the calligraphy (the name and its seal).
@@ -896,6 +900,7 @@ const scenarios = {
     expect(await t.page.evaluate(async () => { await document.fonts.load('20px "Yunjing Serif KO"', "산에 들기"); return document.fonts.check('20px "Yunjing Serif KO"', "산에 들기"); }), "the Korean face did not load");
     await t.page.evaluate(() => window.__work("liangkai-chushan-shijia")); await t.until(() => t.page.isVisible("#piece"), 20000, "the work's card did not open in Korean");
     expect((await words("#pieceTitle")) === "출산석가도" && /[가-힣]/.test(await words("#pieceNote")), "the work's card should be in Korean: " + (await words("#pieceTitle")));
+    expect(/문화재/.test(await words("#pieceRank")) && !/[\u3400-\u9fff]/.test(await words("#pieceRank")), "the designation's line should be in Hangul: " + (await words("#pieceRank")));
     await t.page.click("#pieceClose");
     await t.page.goto(base + "?q=low&lang=zh" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     expect((await t.page.evaluate(() => document.documentElement.lang)).startsWith("zh") && (await words("#title .sub")).includes("云径禅寺"), "?lang=zh should bring the Chinese back");
