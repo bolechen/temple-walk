@@ -2776,6 +2776,19 @@ const scenarios = {
       });
       const hung = r.dots.filter((d) => d.next !== null && d.next >= d.bottom - 1);
       expect(hung.length === 0, `${lang}: a middle dot hangs at the end of a line: ` + JSON.stringify(r));
+      // the longest line there is (the one said when the book is shut, in its two shapes: touch, and with keys), set into the line as hints.js sets it:
+      // it breaks only between its phrases, each stays whole on a line of its own, and no dot is left at a line's end (a line that breaks inside a phrase leaves an orphan word)
+      const LONG = { zh: "山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　T时节", ja: "山の刻は今のあなたの刻に合わせた　·　季節と刻は撮影と休憩のメニューで変えられる　·　Tで季節", en: "The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest · T seasons", ko: "산의 시각이 지금 당신의 시각을 따른다 · 계절과 시각은 사진과 쉼에서 바꿀 수 있다 · T 계절" };
+      for (const text of [LONG[lang].replace(/[\s\u3000]+·[\s\u3000]+[^·]*$/, ""), LONG[lang]]) {
+        const g = await t.page.evaluate((text) => {
+          const line = document.getElementById("hint"); line.innerHTML = text.split(/([\s\u3000]+·[\s\u3000]+)/).map((p, i) => (i % 2 ? p.replace("·", '<span class="dot">·</span>') : `<span class="phrase">${p}</span>`)).join(""); line.classList.add("on"); window.dispatchEvent(new Event("resize"));
+          const lh = parseFloat(getComputedStyle(line).lineHeight) || 20, ps = [...line.querySelectorAll(".phrase")].map((e) => { const q = e.getBoundingClientRect(); return { w: Math.round(q.width), h: Math.round(q.height), top: Math.round(q.top) }; });
+          const dots = [...line.querySelectorAll(".dot")].map((d, i) => ({ hidden: d.hidden, broke: ps[i + 1].top >= ps[i].top + ps[i].h - 1 }));
+          return { ps, dots, lh, avail: line.clientWidth - 32 };
+        }, text);
+        expect(g.ps.every((p) => p.h <= g.lh * 1.6 || p.w >= g.avail - 2), `${lang}: a phrase that fits a line was broken inside: ` + JSON.stringify(g));
+        expect(g.dots.every((d) => d.hidden === d.broke), `${lang}: a dot is shown at a break or hidden where the line goes on: ` + JSON.stringify(g));
+      }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },
