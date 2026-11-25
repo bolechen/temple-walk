@@ -1,0 +1,9 @@
+30ae6249217554820cf9d222ab026d2032facc421e4b01c7887ebacab9ce3df8  krakucchanda-L2.60000.glb (full-file prefixes: krakucchanda fbe46814188599cc, visvabhu 052dc2cbaf185ec9, kanakamuni 44009a2e6ca63fbb, checked)
+f85fe5b6a73594ae04a6034a7fb9530307f37ba41f1a1a21c6f80585ff8e50eb  visvabhu-L2.60000.glb (full-file prefixes: krakucchanda fbe46814188599cc, visvabhu 052dc2cbaf185ec9, kanakamuni 44009a2e6ca63fbb, checked)
+c99cebf8286820252495c88b2c1e7abf004c2e20d3edfc694f77507b8bac3069  kanakamuni-L2.60000.glb (full-file prefixes: krakucchanda fbe46814188599cc, visvabhu 052dc2cbaf185ec9, kanakamuni 44009a2e6ca63fbb, checked)
+ae4f323f6edeed3d5da456ae20054b1bf862c2db13e7b0e0891ffc63babaf1ca  kasyapa-r3c.60000.glb
+fb21d01e7fe69a6acd3ccab4189830c55fc34852b58c3e1ff0781b8f08aa3020  krakucchanda-r3c.60000.glb
+4c68b236bf5835fb3afbce5762d34078cbd8d6e2a4baeb8ef6cf6abb8773080b  sikhin-r3c.60000.glb
+796367c7104c5fc94ca708f43919e726d0ccc872499eb4bd1679266db699fd73  vipasyin-r3c.60000.glb
+a5543ea9430c748ff7346e4118c4d405d2b48e3ccc2f1492ca61fe5420802668  visvabhu-r3c.60000.glb
+c1afac96020dc982ddf46738453f239407e4db199f3a91d722d0506ad824ee73  kanakamuni-r3c.60000.glb
