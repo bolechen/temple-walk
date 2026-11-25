@@ -105,7 +105,7 @@ test("the hands lie on the lap against his belly in the meditation seal: palms u
   // the front of the robe at that height straight behind it
   const mid = palm("left").add(palm("right")).multiplyScalar(0.5);
   ray.set(V(0, mid.y, 0.6), V(0, 0, -1)); const belly = ray.intersectObject(trunk)[0];
-  assert.ok(belly && mid.z - belly.point.z <= 0.03 && mid.z > belly.point.z, `the hands' middle is ${(mid.z - belly.point.z).toFixed(3)} m before his belly (at most 0.03)`);
+  assert.ok(belly && mid.z - belly.point.z <= 0.03 && mid.z > belly.point.z, `the hands' middle is ${(mid.z - belly.point.z).toFixed(4)} m before his belly (at most 0.03)`);
   // every point of the hands (the hand bones' own skin): not under the cloth of the lap (nothing of the skirt straight
   // above it), not in his belly (a point inside the trunk meets its front within a few centimetres straight ahead; one
   // before it meets nothing), and the cloth of the lap under it. (Tucked under the belly's swell is touching, not in it.)

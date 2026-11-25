@@ -111,10 +111,13 @@ export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, 
 // plump (the sheet's are a small child's mitts), `x` being where the middle of each hand's length lies: the two lie
 // deep over each other, the left's fingers on the right's fingers and palm, so that from before him there is little
 // more than one hand's width to see. `elbow` is the way the elbows are drawn.
-export const LAP_HAND = { x: 0.004, z: 0.163, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.018, fwd: 0.03, gap: 0.006, turn: 0.5, arch: 1.0, thick: 1.25 } };
+export const LAP_HAND = { x: 0.002, z: 0.1624, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.02, fwd: 0.012, gap: 0.006, turn: 0.6, lift: 0.024, thick: 1.25 } };
+// In the lap the wrist's ball is no bigger than the heel of the hand it ends in (the second art review's A: a ball
+// larger than the palm read as a puppet's joint); `HAND_HEEL` is its radius.
+const HAND_HEEL = 0.018;
 // A hand lying palm up, as rods along its fingers' way from the wrist's middle: how far along, how thick it is there
 // (the wrist's ball, the palm, the knuckles, the fingertips) and how far to either side it reaches.
-const HAND_ROD = [[0, 0.027, 0], [0.03, 0.013, 0.022], [0.052, 0.0115, 0.018], [0.082, 0.0115, 0.014]].map(([d, r, w], i) => (i ? [d * LAP_HAND.big, r * LAP_HAND.big, w * LAP_HAND.big] : [d, r, w]));
+const HAND_ROD = [[0, HAND_HEEL, 0], [0.03, 0.013, 0.022], [0.052, 0.0115, 0.018], [0.082, 0.0115, 0.014]].map(([d, r, w], i) => (i ? [d * LAP_HAND.big, r * LAP_HAND.big, w * LAP_HAND.big] : [d, r, w]));
 const HAND_MID = 0.045 * LAP_HAND.big;   // from the wrist to the middle of the hand's length
 const HAND_SHIFT = [-0.0045, -0.002, 0];   // how the palm and its fingers are set against the wrist's bone (buildHand)
 const SKULL = V3(0, 1.049, 0.006), R = 0.131;
@@ -491,7 +494,7 @@ export function createMonk(opts = {}) {
     const out = {}, under = [];
     for (const [n, s] of /** @type {[string, number][]} */ ([["right", -1], ["left", 1]])) {
       const hx = -s / Math.hypot(1, LAP_HAND.out), hz = LAP_HAND.out / Math.hypot(1, LAP_HAND.out), px = s * LAP_HAND.x, pz = LAP_HAND.z;
-      const floorAt = (x, z) => { let y = clothTop(x, z); for (const u of under) { const d = (x - u.wrist.x) * u.f.x + (z - u.wrist.z) * u.f.z, side = Math.abs((x - u.wrist.x) * u.f.z - (z - u.wrist.z) * u.f.x); if (d > -0.02 && d < 0.09 * LAP_HAND.big && side < 0.03 * LAP_HAND.big) y = Math.max(y, u.wrist.y + u.f.y * d + (d < 0.015 ? 0.027 : (d < 0.045 * LAP_HAND.big ? 0.013 : 0.0115) * LAP_HAND.big)); } return y; };
+      const floorAt = (x, z) => { let y = clothTop(x, z); for (const u of under) { const d = (x - u.wrist.x) * u.f.x + (z - u.wrist.z) * u.f.z, side = Math.abs((x - u.wrist.x) * u.f.z - (z - u.wrist.z) * u.f.x); if (d > -0.02 && d < 0.086 * LAP_HAND.big && side < 0.03 * LAP_HAND.big) y = Math.max(y, u.wrist.y + u.f.y * d + Math.max(Math.sqrt(Math.max(0, HAND_HEEL * HAND_HEEL - d * d)), (d < 0.045 * LAP_HAND.big ? 0.013 : 0.0115) * LAP_HAND.big)); } return y; };
       let best = null;
       for (let sl = -LAP_HAND.tip; sl <= LAP_HAND.tip + 1e-9; sl += 0.02) {
         const l = Math.hypot(1, sl), f = V3(hx / l, sl / l, hz / l), cosl = 1 / l; let wy = -9;
@@ -509,17 +512,25 @@ export function createMonk(opts = {}) {
       best.q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z)); best.s = s;
       out[n] = best; under.push(best);
     }
-    // The thumbs' tips meet over the middle, a little apart to either side; each is worked back into its own hand's frame
-    // (the right hand is the left's mirror, so its own x is counted the other way).
-    const T = LAP_HAND.thumb, meet = V3(0, out.left.palm.y + T.up, (out.left.palm.z + out.right.palm.z) / 2 + T.fwd);
+    // The thumbs (#680, the second art review's A): one arch, the same on both sides. The left hand lies a finger higher
+    // than the right, so a thumb drawn alike in each hand's own frame rose steeply off the right and lay nearly flat off
+    // the left, a hook and a bar. Instead the arch is laid out in the seat's frame: each thumb leaves the heel of its palm
+    // (the lower right one from high on its heel, `T.lift` up its side at most, so that the two roots stand level), rises
+    // `T.up` over them and comes level into the middle, its pull `T.turn` of the way in at the tip's height; the two tips
+    // `T.gap` apart, `T.fwd` before the roots (no further: the tips stood out of his side outline). Then each is worked back into its own hand's frame (the right hand is the
+    // left's mirror, so its own x is counted the other way).
+    const T = LAP_HAND.thumb, by = -0.008;
+    const toSeat = (h, v) => { const q = V3(...v).multiplyScalar(LAP_HAND.big).add(V3(...HAND_SHIFT)); q.x *= h.s; return q.applyQuaternion(h.q).add(h.wrist); };
+    const toHand = (h, w) => { const q = w.clone().sub(h.wrist).applyQuaternion(h.q.clone().invert()); q.x *= h.s; return q.sub(V3(...HAND_SHIFT)).divideScalar(LAP_HAND.big); };
+    // (the thumb is long and leaves the palm at its heel, as the owner's photograph of the seal has it)
+    const roots = {}; for (const n of ["left", "right"]) roots[n] = toSeat(out[n], [0.016, by, 0.005]);
+    const level = Math.max(roots.left.y, roots.right.y);
+    for (const n of ["left", "right"]) { const h = out[n], up = Math.min(T.lift, (level - roots[n].y) / LAP_HAND.big); roots[n] = toSeat(h, [0.016, by, 0.005 + up]); h.thumbLift = up; }
+    const meet = V3(0, level + T.up, (roots.left.z + roots.right.z) / 2 + T.fwd);
     for (const n of ["left", "right"]) {
-      const h = out[n], tip = meet.clone(); tip.x += h.s * T.gap;
-      tip.sub(h.wrist).applyQuaternion(h.q.clone().invert()); tip.x *= h.s; tip.sub(V3(...HAND_SHIFT)).divideScalar(LAP_HAND.big);
-      const reach = -tip.y, up = tip.z;
-      // (the thumb is long and leaves the palm at its heel, as the owner's photograph of the seal has it)
-      const by = -0.008;
-      // (it rises from the heel of the palm and comes into the meeting level, the pull `turn` of the way along at the tip's height, so that the two together are one arch with a level top, not a peak)
-      h.thumb = { base: [0.016, by, 0.005], joint: [0.9 * tip.x + 0.1 * 0.016, by + T.turn * (tip.y - by), tip.z * T.arch], tip: tip.toArray() };   // (the pull level with the tip: each thumb comes into the meeting level, so the two read as one arch)
+      const h = out[n], root = roots[n], tip = meet.clone(); tip.x += h.s * T.gap;
+      const pull = root.clone().lerp(tip, T.turn); pull.y = tip.y;
+      h.thumb = { base: toHand(h, root).toArray(), joint: toHand(h, pull).toArray(), tip: toHand(h, tip).toArray() };
       h.meet = meet;
     }
     return out;
@@ -628,7 +639,7 @@ export function createMonk(opts = {}) {
           palmParts.push(thumbTube(at(0), at(-0.0095), at(-0.019), 0.0076, 0.0072));
         }
         const big = mudra ? LAP_HAND.big : 1, palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(mudra ? 0 : -0.46).scale(big, big, big).translate(-0.0045, -0.002, 0);
-        const wrist = new THREE.SphereGeometry(mudra ? 0.0262 : 0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");   // (in the lap the wrist bends further, and a ball the forearm's own size flickered against its end)
+        const wrist = new THREE.SphereGeometry(mudra ? HAND_HEEL : 0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");   // (in the lap the wrist bends further, and a ball the forearm's own size flickered against its end)
         const hand = mergeGeometries([wrist, palm]);
         if (s < 0) { hand.scale(-1, 1, 1); flip(hand); }
         hand.applyMatrix4(B[n + "Hand"].matrixWorld);
