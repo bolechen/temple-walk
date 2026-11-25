@@ -111,7 +111,7 @@ export function growTree(t, far = false) {
   for (const tb of tubes) for (const ring of tb.rings) ring.pos.multiplyScalar(s).add(new THREE.Vector3(x, y - 0.2 * s, z));
   let [trunk, wood] = splitTrunk(geo, tubes[0]); trunk = ready(trunk); wood = ready(wood);
   // A bare broadleaf's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
-  if (kind === "broad") { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
+  if (kind === "broad" && h > 6) { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
   // a column (the way's arborvitae) keeps its boughs inside its needles' radius
   if (t.crownR) { const A = wood.attributes.position, R0 = t.crownR * 0.9; for (let i = 0; i < A.count; i++) { const dx = A.getX(i) - x, dz = A.getZ(i) - z, d = Math.hypot(dx, dz); if (d > R0) { A.setX(i, x + (dx * R0) / d); A.setZ(i, z + (dz * R0) / d); } } }
   const centre = new THREE.Vector3(x, y + (env ? env.base + env.ry : kind === "pine" ? h * 0.72 : kind === "cypress" ? h * 0.52 : h * 0.6), z);
@@ -246,7 +246,7 @@ export function buildFlora(M, trees, { name = "flora", far = false, cast = true,
   const mats = floraMaterials(M), group = new THREE.Group(), chunks = new Map(), census = [];
   for (const t of trees) {
     const key = chunk(t); if (!chunks.has(key)) chunks.set(key, { bark: [], pale: [], trunkBark: [], trunkPale: [], needles: [] });
-    const bins = chunks.get(key), g = growTree(t, typeof far === "function" ? far(t) : far), bark = t.kind === "poplar" ? "pale" : "bark";   // (the bare broadleaf takes the shared bark: one material, and a draw in every chunk, fewer)
+    const bins = chunks.get(key), g = growTree(t, (typeof far === "function" ? far(t) : far) || !!t.foot), bark = t.kind === "poplar" ? "pale" : "bark";   // (the bare broadleaf takes the shared bark: one material, and a draw in every chunk, fewer)
     bins[bark].push(g.wood); (walk ? bins["trunk" + bark[0].toUpperCase() + bark.slice(1)] : bins[bark]).push(g.trunk); bins.needles.push(...g.needles);   // (where nothing walks, the trunk goes in with the rest of the wood: one draw fewer)
     census.push({ kind: t.kind, at: [t.x, t.z], h: t.h, top: +g.top.toFixed(3), tris: g.tris, hash: floraHash([g.trunk, g.wood, ...g.needles]) });
   }
