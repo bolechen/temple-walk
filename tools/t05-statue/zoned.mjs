@@ -1,7 +1,7 @@
 // Thin a statue by zones (issue #701, the art director: the pained look is made by thinning: at 60k faces the brow, the eyelids and the mouth's corners are folded facets): the face keeps
 // more of the 60k than its share, the body, the back of the head and the robes give it up.
 //
-//   node tools/t05-statue/zoned.mjs <in.glb> <out.glb> [--tiers=<tiers.json>] --scale=<stage metres per file unit> --y0=<m> --y1=<m> --x=<half width m> --zmin=<depth m> [--face=24000] [--rest=36000] [--error=0.5]
+//   node tools/t05-statue/zoned.mjs <in.glb> <out.glb> [--tiers=<tiers.json>] [--member=<same figure in the pose the boxes were drawn on>] --scale=<stage metres per file unit> --y0=<m> --y1=<m> --x=<half width m> --zmin=<depth m> [--face=24000] [--rest=36000] [--error=0.5]
 //
 // The mesh is welded; every triangle whose centre lies in the face's box (stage metres: y from y0 up to y1, |x| < x, depth over zmin, in the file's own frame) is the face's; the others are
 // the rest's. Each part is simplified by meshoptimizer on its own to its own target with its borders locked (the two parts' shared edge keeps its points, so the seam stays closed), the
@@ -24,10 +24,15 @@ const pos = new Float32Array(P.getArray()), idx = new Uint32Array(I.getArray());
 // Without --tiers: one face box (the arguments above) and the rest.
 const inBox = (b, cx, cy, cz) => { const x = b.absx ? Math.abs(cx * S) : cx * S; return cy * S >= b.y0 && cy * S <= b.y1 && x >= b.x0 && x <= b.x1 && cz * S >= b.z0 && cz * S <= b.z1; };
 const cfg = tiersCfg ? tiersCfg : { tiers: [{ name: "face", boxes: [{ y0: Y0, y1: Y1, x0: 0, x1: X, absx: true, z0: ZMIN, z1: 99 }], target: FACE }], rest: REST };
+// --member=<ref.glb>: which tier a triangle belongs to is read off the same figure in another pose (its points in the same order, as repair.py keeps them), so a head that leans or bows keeps its own face in the face's tier.
+const MEM = process.argv.find((a) => a.startsWith("--member="));
+let mpos = pos;
+if (MEM) { const rd = await io.read(MEM.slice(9)); await rd.transform(weld()); const rp = rd.getRoot().listMeshes()[0].listPrimitives()[0]; mpos = new Float32Array(rp.getAttribute("POSITION").getArray()); const ri = rp.getIndices().getArray();
+  if (ri.length !== idx.length || ri.some((v, i) => v !== idx[i])) throw new Error("--member: the reference does not share this figure's faces"); }
 const parts = cfg.tiers.map(() => []); const restList = [];
 for (let t = 0; t < idx.length; t += 3) {
   const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
-  const cx = (pos[a] + pos[b] + pos[c]) / 3, cy = (pos[a + 1] + pos[b + 1] + pos[c + 1]) / 3, cz = (pos[a + 2] + pos[b + 2] + pos[c + 2]) / 3;
+  const cx = (mpos[a] + mpos[b] + mpos[c]) / 3, cy = (mpos[a + 1] + mpos[b + 1] + mpos[c + 1]) / 3, cz = (mpos[a + 2] + mpos[b + 2] + mpos[c + 2]) / 3;
   let k = cfg.tiers.findIndex((tr) => tr.boxes.some((bx) => inBox(bx, cx, cy, cz)));
   (k < 0 ? restList : parts[k]).push(idx[t], idx[t + 1], idx[t + 2]);
 }
