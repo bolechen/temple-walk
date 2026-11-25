@@ -19,7 +19,7 @@ import { MONUMENT, MONUMENT_FORM, STELE } from "./axis.js";
  * lines that may be copied: an id (kept on the page, never the words), its text as cut, and which column holds it.
  */
 export const STELE_TEXT = Object.freeze({
-  title: "義州重修大奉國寺碑",   // as 《满洲金石志》 heads it (SOURCES.md §17); the longer title with 大元國大寧路 is only second-hand
+  title: "義州重修大奉國寺碑",   // as Luo Fuyi's Manzhou jinshi zhi heads it (SOURCES.md §17); the longer title with 大元國大寧路 is only second-hand
   columns: Object.freeze(["觀其寶殿崔嵬儼居七佛", "法堂弘敞可納千僧", "遼金遺刹一炬殆盡", "獨奉國孑然而在"]),
   lines: Object.freeze([
     Object.freeze({ id: "qifo", text: "觀其寶殿崔嵬，儼居七佛", col: 0 }),
