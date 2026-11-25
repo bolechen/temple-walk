@@ -544,6 +544,9 @@ const scenarios = {
     expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
     const w = await t.page.evaluate(() => window.__walker());
     expect(w.mode !== "old" && w.bytes > 0, "T05's own baked floor should be fetched: " + JSON.stringify(w));
+    // The one line a first edition says as the walk begins: no seals, no book yet (once: it is not said again).
+    await t.until(async () => (await t.page.evaluate(() => window.__hud().tip)) === "intro", 120000, "T05's line about having no seals yet was never said: " + JSON.stringify(await t.page.evaluate(() => window.__hud())));
+    expect((await t.page.textContent("#hint")).includes("修建") && !(await t.page.textContent("#hint")).includes("云径"), "the foot line should be T05's own line: " + await t.page.textContent("#hint"));
     let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
     await t.page.evaluate(() => window.__walk([[0, 120], [0, 44], [0, 27], [0, 14.4]]));
     let lo = 9, hi = -9;
