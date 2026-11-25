@@ -9,6 +9,8 @@ const { buildSite, createWalker } = await import("../../app/src/site.js");
 const { buildInteriors } = await import("../../app/src/interior.js");
 const { createMonk } = await import("../../app/src/monk.js");
 const { createRites } = await import("../../app/src/rites.js");
+const { planRoute, nearestOpen } = await import("../../app/src/route.js");
+const { CUSHION } = await import("../../app/src/geo.js");
 const { INCENSE_HALLS, incenseId, readIncense, writeIncense } = await import("../../app/src/incense.js");
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M), rooms = buildInteriors(M, site.halls);
@@ -129,4 +131,28 @@ test("the step up to the incense stand matches the true smoothstep speed and cle
   await run;
   assert.ok(sawMove, "should have entered the step-up passage before cancelling");
   assert.equal(st.speed, null, "cancelling mid-step must clear st.speed to null");
+});
+
+// #638: the cushions before the altar are sat on, not crossed. From the door and from either side, the way to the stand where the
+// sticks are set, and the places he stands to bow and to set them, keep his soles outside every cushion's outline.
+test("the way to the incense stand never puts his shoes on a cushion", () => {
+  const walker = createWalker(site), reach = Math.max(...CUSHION.map((c) => c[0]));
+  for (const h of INCENSE_HALLS) {
+    const room = rooms.rooms[h].room, p = rooms.places[incenseId(h)], cushions = rooms.seats.filter((s) => s.room === h && s.kind === "cushion");
+    assert.ok(cushions.length >= 2, `${h}: the cushions are there`);
+    walker.setRoom(room);
+    const starts = [room.door, [p.front[0] - 2.4, p.front[1] + 1.2], [p.front[0] + 2.4, p.front[1] + 1.2]];
+    const clear = (x, z, what) => { for (const c of cushions) assert.ok(Math.hypot(x - c.at[0], z - c.at[1]) >= reach, `${h}: ${what} (${x.toFixed(2)}, ${z.toFixed(2)}) is on the cushion at ${c.at.map((v) => v.toFixed(2))}`); };
+    clear(p.at[0], p.at[1], "where he bows"); clear(p.front[0], p.front[1], "the stand's front");
+    for (const s of starts) {
+      const a = nearestOpen(walker, s[0], s[1], 3) || { x: s[0], z: s[1] };
+      const r = planRoute(walker, walker.drops || [], a, { x: p.front[0], z: p.front[1] });
+      assert.ok(r.reached, `${h}: the stand cannot be reached from ${s}`);
+      for (let i = 1; i < r.points.length; i++) {
+        const u = r.points[i - 1], v = r.points[i], n = Math.max(1, Math.ceil(Math.hypot(v.x - u.x, v.z - u.z) / 0.02));
+        for (let k = 0; k <= n; k++) clear(u.x + ((v.x - u.x) * k) / n, u.z + ((v.z - u.z) * k) / n, "the way");
+      }
+    }
+    walker.setRoom(null);
+  }
 });

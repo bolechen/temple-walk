@@ -156,7 +156,10 @@ function buildRoom(M, hall, ox, figures) {
     add(table(big ? 2.6 : 1.8, 0.7, 0.86, 0, tz), M.woodX); block(-(big ? 1.6 : 1.2), big ? 1.6 : 1.2, tz - 0.6, tz + 0.6);
     add(merge([lathe([[0, 0.02], [0.1, 0.02], [0.17, 0.08], [0.2, 0.17], [0.18, 0.22], [0.14, 0.22], [0.13, 0.18], [0, 0.16]], 24).translate(0, Y + 0.895, tz), ...[-1, 1].map((sx) => lathe([[0, 0], [0.08, 0], [0.03, 0.04], [0.025, 0.26], [0.07, 0.3], [0.07, 0.32], [0, 0.32]], 16).translate(sx * 0.6, Y + 0.895, tz))]), M.bronze, () => 0.8);
     for (const sx of [-1, 1]) flame(sx * 0.6, 1.26, tz, 0.016);
-    add(merge([-1.1, 0, 1.1].map((x) => seat(x, tz + 1.75))), M.straw, () => 0.7).userData.walk = "floor";   // the cushions before an altar are stepped onto (he bows on one, and reaches the stand from it), not walked round
+    // The two cushions before an altar are sat on and walked round, never crossed (#638: with one in the middle he walked over it from
+    // the door to the stand): the middle of the hall's width stays open as the way to the stand and the altar, where he bows
+    // (`places.incense.at`) and steps up to `front`.
+    add(merge([-1.1, 1.1].map((x) => seat(x, tz + 1.75))), M.straw, () => 0.7).userData.walk = "post";
     for (const sx of [-1, 1]) lampStand(sx * (big ? 3.3 : 2.2), tz + 0.2);
     altar.position.set(ox, Y + ah, (az0 + az1) / 2);
     if (!stand.centre) figures.then((f) => { if (!f) return; const p = f.pedestal(big ? 0.62 : 0.46), b = f.gold(big ? 3.5 : 2.5); b.position.y = big ? 0.62 : 0.46; altar.add(p, b); });
