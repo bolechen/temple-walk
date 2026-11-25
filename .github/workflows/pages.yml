@@ -193,6 +193,10 @@ jobs:
           path: app/shared/walk
       - name: Unit tests, this machine's share
         run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/4
+      - name: TEMP time the sit-down files alone (#730)
+        if: matrix.shard == 1
+        run: |
+          for f in monk-sit monk-sit-sitdown monk-sit-sitdown-60; do node -e "const t=process.hrtime.bigint(),r=require('child_process').spawnSync(process.execPath,['--test','tests/unit/$f.test.mjs'],{stdio:'ignore'});console.log('unit-time $f.test.mjs',Math.round(Number(process.hrtime.bigint()-t)/1e8)/10,r.status?'FAILED':'')"; done
 
   # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it, shared the same way.
   grid:
