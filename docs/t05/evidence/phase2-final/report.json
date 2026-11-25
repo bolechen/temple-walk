@@ -1,0 +1,2255 @@
+{
+  "started": "2026-11-25T10:30:13.881Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam02-head-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 60.2,
+      "ms": 16.61,
+      "cost": 10.11,
+      "loadMs": 9240,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 580,
+        "decodeMs": 136,
+        "prepareMs": 889,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 5100.5,
+        "spikes": [
+          5101,
+          144
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam02-base-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 57.5,
+      "ms": 17.39,
+      "cost": 10.09,
+      "loadMs": 5070,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 529,
+        "decodeMs": 134,
+        "prepareMs": 870,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1200.1,
+        "spikes": [
+          1200,
+          102
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-arrive-base-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 58.3,
+      "ms": 17.15,
+      "cost": 8.67,
+      "loadMs": 8210,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 567,
+        "decodeMs": 155,
+        "prepareMs": 848,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 4302.4,
+        "spikes": [
+          4302,
+          113
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-arrive-head-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 56.7,
+      "ms": 17.64,
+      "cost": 8.74,
+      "loadMs": 4973,
+      "tris": 328346,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 526,
+        "decodeMs": 166,
+        "prepareMs": 914,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 963.6,
+        "spikes": [
+          964
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam02-head-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 58.7,
+      "ms": 17.04,
+      "cost": 10.91,
+      "loadMs": 4657,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 520,
+        "decodeMs": 192,
+        "prepareMs": 846,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 764.9,
+        "spikes": [
+          765
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam02-base-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 58.2,
+      "ms": 17.18,
+      "cost": 11,
+      "loadMs": 4582,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 539,
+        "decodeMs": 133,
+        "prepareMs": 847,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 775.1,
+        "spikes": [
+          775
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-base-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 60.5,
+      "ms": 16.53,
+      "cost": 7.96,
+      "loadMs": 4794,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 536,
+        "decodeMs": 136,
+        "prepareMs": 869,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 929.9,
+        "spikes": [
+          930
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-head-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 59.8,
+      "ms": 16.72,
+      "cost": 8.17,
+      "loadMs": 4759,
+      "tris": 328346,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 433,
+        "decodeMs": 141,
+        "prepareMs": 905,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 949.4,
+        "spikes": [
+          949
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam02-base-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 58.2,
+      "ms": 17.18,
+      "cost": 11.19,
+      "loadMs": 4523,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 523,
+        "decodeMs": 137,
+        "prepareMs": 851,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 780.9,
+        "spikes": [
+          781
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam02-head-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 57.8,
+      "ms": 17.3,
+      "cost": 11.23,
+      "loadMs": 4670,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 569,
+        "decodeMs": 150,
+        "prepareMs": 870,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 775.9,
+        "spikes": [
+          776
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-arrive-head-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 60.3,
+      "ms": 16.58,
+      "cost": 8.64,
+      "loadMs": 4838,
+      "tris": 328346,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 576,
+        "decodeMs": 137,
+        "prepareMs": 873,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 824.8,
+        "spikes": [
+          825
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-arrive-base-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 59.1,
+      "ms": 16.92,
+      "cost": 8.5,
+      "loadMs": 4537,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 470,
+        "decodeMs": 191,
+        "prepareMs": 889,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 759.5,
+        "spikes": [
+          760
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam02-base-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 58,
+      "ms": 17.24,
+      "cost": 10.81,
+      "loadMs": 4336,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 478,
+        "decodeMs": 132,
+        "prepareMs": 862,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 658.2,
+        "spikes": [
+          658
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam02-head-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 57.1,
+      "ms": 17.51,
+      "cost": 10.77,
+      "loadMs": 4603,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 526,
+        "decodeMs": 166,
+        "prepareMs": 879,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 666.4,
+        "spikes": [
+          666
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-head-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 57.8,
+      "ms": 17.3,
+      "cost": 7.96,
+      "loadMs": 4727,
+      "tris": 328346,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 550,
+        "decodeMs": 132,
+        "prepareMs": 880,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 783.7,
+        "spikes": [
+          784
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-base-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 57.8,
+      "ms": 17.3,
+      "cost": 8.68,
+      "loadMs": 4515,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 521,
+        "decodeMs": 168,
+        "prepareMs": 877,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 806.4,
+        "spikes": [
+          806
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam02-head-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 57.9,
+      "ms": 17.27,
+      "cost": 11.03,
+      "loadMs": 4588,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 547,
+        "decodeMs": 136,
+        "prepareMs": 885,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 656.8,
+        "spikes": [
+          657
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam02-base-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 56.1,
+      "ms": 17.83,
+      "cost": 10.9,
+      "loadMs": 4519,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 524,
+        "decodeMs": 134,
+        "prepareMs": 879,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 660.1,
+        "spikes": [
+          660
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-arrive-base-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 60.1,
+      "ms": 16.64,
+      "cost": 8.53,
+      "loadMs": 4645,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 449,
+        "decodeMs": 162,
+        "prepareMs": 891,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 751.6,
+        "spikes": [
+          752
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-arrive-head-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 59.3,
+      "ms": 16.86,
+      "cost": 7.95,
+      "loadMs": 4594,
+      "tris": 328346,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 508,
+        "decodeMs": 135,
+        "prepareMs": 844,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 780.8,
+        "spikes": [
+          781
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam02-head-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 57.5,
+      "ms": 17.39,
+      "cost": 10.85,
+      "loadMs": 4644,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 558,
+        "decodeMs": 136,
+        "prepareMs": 860,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 654.8,
+        "spikes": [
+          655
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam02-base-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 57.5,
+      "ms": 17.39,
+      "cost": 10.84,
+      "loadMs": 4486,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 554,
+        "decodeMs": 155,
+        "prepareMs": 887,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 664.3,
+        "spikes": [
+          664
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-base-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 59.1,
+      "ms": 16.92,
+      "cost": 7.96,
+      "loadMs": 4640,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 521,
+        "decodeMs": 150,
+        "prepareMs": 885,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 755.1,
+        "spikes": [
+          755
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-head-r2",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 57.3,
+      "ms": 17.45,
+      "cost": 8.12,
+      "loadMs": 4633,
+      "tris": 328346,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 495,
+        "decodeMs": 130,
+        "prepareMs": 832,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 798.8,
+        "spikes": [
+          799
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam03-head-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 66.9,
+      "ms": 14.95,
+      "cost": 8.16,
+      "loadMs": 5932,
+      "tris": 83058,
+      "calls": 50,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 458,
+        "decodeMs": 180,
+        "prepareMs": 882,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 3.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1954.5,
+        "spikes": [
+          1955
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam03-base-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 67.3,
+      "ms": 14.86,
+      "cost": 7.75,
+      "loadMs": 4668,
+      "tris": 80986,
+      "calls": 50,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 536,
+        "decodeMs": 155,
+        "prepareMs": 901,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 3.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 885,
+        "spikes": [
+          885
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam07-head-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 61.7,
+      "ms": 16.21,
+      "cost": 7.36,
+      "loadMs": 4640,
+      "tris": 328342,
+      "calls": 133,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 530,
+        "decodeMs": 137,
+        "prepareMs": 858,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 830,
+        "spikes": [
+          830
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam07-base-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 59,
+      "ms": 16.95,
+      "cost": 7.33,
+      "loadMs": 4546,
+      "tris": 328438,
+      "calls": 133,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 522,
+        "decodeMs": 132,
+        "prepareMs": 873,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 780.3,
+        "spikes": [
+          780
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam03-base-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 68.1,
+      "ms": 14.68,
+      "cost": 8.04,
+      "loadMs": 4444,
+      "tris": 80986,
+      "calls": 50,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 521,
+        "decodeMs": 137,
+        "prepareMs": 868,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 3.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 693.6,
+        "spikes": [
+          694
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam03-head-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 67.6,
+      "ms": 14.79,
+      "cost": 7.96,
+      "loadMs": 4646,
+      "tris": 83058,
+      "calls": 50,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 525,
+        "decodeMs": 171,
+        "prepareMs": 872,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 3.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 724.6,
+        "spikes": [
+          725
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam07-base-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "fps": 62.3,
+      "ms": 16.05,
+      "cost": 7.22,
+      "loadMs": 4664,
+      "tris": 328438,
+      "calls": 133,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 550,
+        "decodeMs": 142,
+        "prepareMs": 891,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 803.9,
+        "spikes": [
+          804
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam07-head-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 59.9,
+      "ms": 16.69,
+      "cost": 7.41,
+      "loadMs": 4528,
+      "tris": 328342,
+      "calls": 133,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 448,
+        "decodeMs": 162,
+        "prepareMs": 891,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 769.3,
+        "spikes": [
+          769
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "t05-cam01-winter",
+      "file": "t05-cam01-winter.png",
+      "tris": 99766,
+      "calls": 73
+    },
+    {
+      "name": "t05-cam02-winter",
+      "file": "t05-cam02-winter.png",
+      "tris": 99162,
+      "calls": 70
+    },
+    {
+      "name": "t05-cam03-winter",
+      "file": "t05-cam03-winter.png",
+      "tris": 83058,
+      "calls": 50
+    },
+    {
+      "name": "t05-cam04-winter",
+      "file": "t05-cam04-winter.png",
+      "tris": 48788,
+      "calls": 42
+    },
+    {
+      "name": "t05-cam05-winter",
+      "file": "t05-cam05-winter.png",
+      "tris": 48788,
+      "calls": 42
+    },
+    {
+      "name": "t05-cam06-winter",
+      "file": "t05-cam06-winter.png",
+      "tris": 48788,
+      "calls": 42
+    },
+    {
+      "name": "t05-cam07-winter",
+      "file": "t05-cam07-winter.png",
+      "tris": 328342,
+      "calls": 133
+    },
+    {
+      "name": "t05-arrive-winter",
+      "file": "t05-arrive-winter.png",
+      "tris": 328346,
+      "calls": 135
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "8f231c9d6885b237262034dc02cc5f20a656b613",
+    "entry": "assets/index-CWpOYl09.js",
+    "files": 388,
+    "sha256": "c7e318169ec4c2b397a84e08f3913d3bca10146aaba5cb6b6c1cb33fc139e4b0"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-25T10:38:44.091Z"
+}
