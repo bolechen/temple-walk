@@ -113,8 +113,9 @@ export function growTree(t, far = false) {
   let [trunk, wood] = splitTrunk(geo, tubes[0]); trunk = ready(trunk); wood = ready(wood);
   // An old tree leaning out of the row toward the open light (`lean`, m: where its crown's middle stands off its foot, across the axis): the whole tree is
   // sheared over from its foot, the trunk tilting into the crown, so that nothing floats beside its trunk.
-  const leanX = env && t.lean ? t.lean / (env.base + env.ry) : 0;
-  if (leanX) { for (const g of [trunk, wood]) { const A = g.attributes.position; for (let i = 0; i < A.count; i++) A.setX(i, A.getX(i) + leanX * Math.max(0, A.getY(i) - y)); } for (const tb of tubes) for (const ring of tb.rings) ring.pos.x += leanX * Math.max(0, ring.pos.y - y); }
+  // (the trunk rises straight from its foot and bends over on a smooth curve, the crown's middle standing `lean` off; above that the crown keeps its offset)
+  const bend = (yy) => { const u = Math.min(1, Math.max(0, (yy - y) / (env.base + env.ry))); return t.lean * u * u * (3 - 2 * u); };
+  if (env && t.lean) { for (const g of [trunk, wood]) { const A = g.attributes.position; for (let i = 0; i < A.count; i++) A.setX(i, A.getX(i) + bend(A.getY(i))); } for (const tb of tubes) for (const ring of tb.rings) ring.pos.x += bend(ring.pos.y); }
   // A bare broadleaf's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
   if (kind === "broad" && h > 6) { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
   // a column (the way's arborvitae) keeps its boughs inside its needles' radius
