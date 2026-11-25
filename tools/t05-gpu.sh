@@ -79,6 +79,7 @@ if (process.env.SETS === "ship701") {
   // the hall (a camera 3 m toward the middle and 7.4 m out, 5.6 m up, so the lotus of the next figure leaves the foreground; the trial positions are df9)
   for (const i of [0, 1, 2, 3, 4, 5, 6]) {
     const n = N[i].replace(/-.*/, ""), H = HEAD[i];
+    if ((process.env.SKIP || "").split(",").includes(n)) continue;   // SKIP=sikhin leaves that figure out of the pictures (it stays in the hall)
     const put = (name, over, paint = { envIntensity: 0.6 }) => shots.push({ name, shoot: { paint, mood: "winter", view: "faceFrom10", over: { ...over, exp: 3.2 }, ...lamp(i) } });
     put("aisle55-" + n, { at: [+(X[i] + 3.0).toFixed(2), 5.6, -7.4], look: [X[i], 10.0, -18.1], fov: 45 });
     put("join-" + n, { at: [X[i], 4.6, -12.1], look: [X[i], H - 0.45, -18.1], fov: 16 });
