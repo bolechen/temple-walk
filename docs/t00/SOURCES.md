@@ -79,6 +79,7 @@
 | 山门竖匾「雲徑禪寺」 | `site.js` | 虚构寺名，所有者 2026-11-15 决定保留 | 所有者指定 |
 | 其余匾用字体 | `plaque.js` | 现代人题字仍在著作权期内，不能照描，改用开源字体（`JINGSHAN.md`） | 自拟取舍 |
 | 六种字体 | `shared/fonts/` | 马善政、霞鹜文楷、志莽行书、Yuji Boku、思源宋体两种，均 SIL OFL；霞鹜文楷与 Nanum Brush Script（韩文手写体）的原件声明了保留名，子集文件内部改用项目自己的名字 Yunjing Kai、Yunjing Hand KO（`tools/fonts.py` 的 `RENAMED`，`fonts.test.mjs` 检查），版权与许可记录照原样保留 | 已核许可；改名依据 OFL 第 3 条（修改版不得用保留名），#113 |
+| T05 的字体重裁（2026-11-25） | `shared/fonts/*.woff2`、`levels/t05/font-chars.json`、`tools/fonts.py`、`tools/fonts-diff.py`、`docs/t05/FONTS.md` | 原件取自 github.com/google/fonts main 与 LXGW WenKai v1.530 release，版本与 SHA-256 记在 `docs/t05/FONTS.md` 和 `asset-register.csv`；加的字来自 T05 语言文档的字表（`I18N.md` §3–§5）和寺名，重裁后原有字符的轮廓、字宽、度量、名称与改前逐一相同（`fonts-diff.py`） | 原件已下载核版本与哈希；字表是自拟（建议值，非定稿）；日韩读音未请母语者核 |
 
 ## 殿内
 
