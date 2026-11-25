@@ -11,11 +11,13 @@ const { loadLevel } = await import("../../app/src/level.js");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
 const { stairProfile, STAIR } = await import("../../app/src/geo.js");
-const { BAYS, HALL, FRONT, XS, ZS, OUTER, buildHall } = await import("../../app/levels/t05/hall.js");
+const { BAYS, HALL, FRONT, XS, ZS, OUTER, buildHall, HALL_DOORS } = await import("../../app/levels/t05/hall.js");
+// While the great hall's doors are shut (the first release, DECISIONS.md 先行版关殿门) the views inside it cannot be walked to: `site.closedViews`. One constant, hall.js `HALL_DOORS.shut`, brings them back.
+const SHUT = HALL_DOORS.shut;
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
-const level = await loadLevel("t05"), site = buildSite(M);
+const level = await loadLevel("t05"), site = buildSite(M), CLOSED = new Set(site.closedViews);
 const file = ensure(prepare(level)), decoded = decode(file.bytes, (b) => inflateRawSync(b));
 const old = createWalker(site), walker = createGridWalker(createWalker(site), gridsByPlace(decoded), { doors: site.halls });
 
@@ -34,7 +36,8 @@ test("the platform, the terrace and the flight are SITE.md's sizes, the court's 
 test("he arrives at the outer gate's place, and every named view stands where he can walk", () => {
   assert.deepEqual(site.start.slice(0, 2), ARRIVE); assert.deepEqual(ARRIVE, [0, 215]);
   assert.ok(ARRIVE[1] < WAY.zS && ARRIVE[1] > COMPOUND.zS);
-  for (const [id, v] of Object.entries(site.views)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
+  for (const [id, v] of Object.entries(site.views)) if (!CLOSED.has(id)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
+  assert.deepEqual([...CLOSED].sort(), SHUT ? ["cam04", "cam05", "cam06", "d", "e", "f", "sakya"] : [], "the views closed are the ones inside the hall, and none once it is open");
 });
 
 test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the baked floor, are reached from where he arrives, and the manifest says what the plan says", async () => {
@@ -44,6 +47,8 @@ test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the
   assert.deepEqual(Object.keys(checks.cameras.what), ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"]);
   for (const [i, id] of ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"].entries()) {
     const v = site.views[id]; assert.ok(v, id);
+    const c0 = manifest.cameras[i]; assert.equal(!!c0.closed, CLOSED.has(id), `${id}: the manifest says closed exactly when the plan does`);
+    if (CLOSED.has(id)) { assert.ok(!targets.some((x) => x.kind === "view" && x.id === id), `${id}: a closed view is not asked to be walked to`); assert.deepEqual([c0.position.length, c0.view], [3, id]); continue; }
     assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open on the baked floor`);
     const t = targets.find((x) => x.kind === "view" && x.id === id);
     assert.ok(t && t.new, `${id}: reached from the arrival on the floor baked from what is drawn`);
@@ -169,12 +174,13 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
 
 test("he walks into the hall across the threshold, to stations C, D, E and F, all on the hall's floor, and nowhere through its walls (#422)", () => {
   const targets = file.header.targets;
-  for (const id of ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
+  for (const id of SHUT ? ["c"] : ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
   for (const k of ["C", "D", "E", "F"]) assert.ok(Math.abs(walker.heightAt(...STATION[k]) - 3) < 0.03, `${k} is on the hall's floor`);
   // (the sill lies under the frame, in the wall's outer third: hall.js)
   const zWall = ZS[0] + HALL.front - HALL.wall / 2, zSill = ZS[0] + HALL.front - HALL.wall / 6, mid = (i) => (XS[i] + XS[i + 1]) / 2;
   FRONT.forEach((kind, i) => {
-    if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zSill) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
+    if (kind === "door" && SHUT) assert.ok(walker.blocked(mid(i), zWall) && old.blocked(mid(i), zWall), `door ${i} is shut: on both floors`);
+    if (kind === "door") { if (!SHUT) assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zSill) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
     else assert.ok(walker.blocked(mid(i), zWall), `the ${kind} in bay ${i} is not walked through`);
   });
   for (const [x, z] of [[XS[0] + HALL.out - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
@@ -191,6 +197,11 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
   const { FILL } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), s = buildSite(M), eye = (x, z, y = 4.6) => ({ x, y, z });
   for (const [x, z] of [STATION.A, STATION.B, [0, 9.5]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
+  if (SHUT) {   // the doors are shut (HALL_DOORS): the hall's light stays out wherever the eye is, a window's bars included (the art director's call on the first pictures), and comes back with `shut: false`
+    for (const [x, z] of [STATION.C, [0, 1], [-16.4, 1], STATION.F, STATION.E]) assert.equal(h.within(x, 4.6, z), 0, `no fill at (${x}, ${z}) while the doors are shut`);
+    for (let i = 0; i < 20; i++) assert.equal(s.tick(0.05, eye(-16.4, 1), false), 0);
+    return;
+  }
   for (const k of ["E", "D"]) assert.equal(h.within(STATION[k][0], 4.6, STATION[k][1]), 1, `the whole fill at ${k}`);
   assert.ok(h.within(...[STATION.F[0], 4.6, STATION.F[1]]) > 0.9, "nearly all of it at F, 2 m in");
   // from 9 m out to 3 m in it rises without a step: never more than 2% of it over 5 cm walked
