@@ -276,7 +276,28 @@ const monk = createMonk({ rand: TRAILER }); monk.blinking = !Q.has("shot");   //
 part("monk", () => scene.add(monk.group));
 // His opacity, for the eye going into his own eyes or out of them (#102): faded on every material he wears, and given back.
 let faded = 1;
-const fade = (a) => (faded = a, monk.group.traverse((/** @type {any} */ o) => { if (!o.isMesh) return; for (const m of [o.material].flat()) { if (m.userData.baseOpacity === undefined) m.userData.baseOpacity = m.opacity, m.userData.baseTransparent = m.transparent; m.opacity = m.userData.baseOpacity * a; const t = a < 1 || m.userData.baseTransparent; if (m.transparent !== t) { m.transparent = t; m.needsUpdate = true; } } }));
+// While he is partly drawn, only the surface of him that faces the eye may show (#632): drawn alone, his back face and his front
+// face blended one over the other showed the face through the back of the head. Each part is first drawn into the depth buffer
+// alone (a twin of the mesh as its child, sharing its skeleton, writing no colour), and its blended pass then passes only where it
+// is the nearest surface. The twins exist only while 0 < opacity < 1: at rest, and in every ordinary frame of the walk, there is no
+// second draw.
+const depthOnly = [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide].map((side) => new THREE.MeshBasicMaterial({ colorWrite: false, side }));
+const fade = (a) => {
+  faded = a; const meshes = [];
+  monk.group.traverse((/** @type {any} */ o) => { if (o.isMesh && !o.userData.fadeTwin) meshes.push(o); });
+  for (const o of meshes) {
+    let solid = true;
+    for (const m of [o.material].flat()) {
+      if (m.userData.baseOpacity === undefined) m.userData.baseOpacity = m.opacity, m.userData.baseTransparent = m.transparent;
+      m.opacity = m.userData.baseOpacity * a; if (m.userData.baseTransparent) solid = false;
+      const t = a < 1 || m.userData.baseTransparent;
+      if (m.transparent !== t) { m.transparent = t; m.needsUpdate = true; }
+    }
+    const twin = o.children.find((c) => c.userData.fadeTwin), want = a > 0 && a < 1 && solid && o !== monk.shadow;
+    if (want && !twin) { const tw = o.clone(false); tw.userData.fadeTwin = true; tw.material = depthOnly[[THREE.FrontSide, THREE.BackSide, THREE.DoubleSide].indexOf([o.material].flat()[0].side)]; tw.castShadow = false; tw.receiveShadow = false; tw.position.set(0, 0, 0); tw.quaternion.identity(); tw.scale.set(1, 1, 1); o.add(tw); }
+    else if (!want && twin) o.remove(twin);
+  }
+};
 // His own bounds in the world, the body, the hat and the beads but not his painted shadow, as the geometry's boxes put them where he
 // stands (#612), and how near the eye may come to them before he must be wholly clear: the corners of the near plane and 3 cm.
 const monkBounds = new THREE.Box3(), monkPart = new THREE.Box3();
@@ -997,7 +1018,7 @@ if (TRAILER) document.body.classList.add("trailer");
 // Into his own eyes and out of them again, the eye is moved, not cut (#102, folded into #295: a phone measured the angle of
 // view jumping 13° in a frame): from where it stood, with the angle it had, it goes over to the new view's eye on a
 // smootherstep, never more than PUSH.move metres or PUSH.fov degrees in a frame, and he fades out (or in) as it comes.
-const PUSH = { time: 0.6, move: 0.12, fov: 1.5, far: 15, fade: 0.8 };   // (far: further than the follow arm ever reaches, 11 m, is not a push but a change of place)
+const PUSH = { time: 0.6, move: 0.12, fov: 1.5, far: 15, fade: 1.5 };   // (far: further than the follow arm ever reaches, 11 m, is not a push but a change of place)
 let push = null;
 const setView = (v) => { if (upIn && v === "third") { hints.say.upView(); return; }   // up on a balcony he sees with his own eyes only (#101)
   const from = frames > 3 && v !== view && !FIXED_VIEW && !cine && !photo.on && !reducedMotion.matches ? { p: camera.position.clone(), q: camera.quaternion.clone(), fov: camera.fov, to: v } : null;
@@ -1338,7 +1359,8 @@ window.__lofts = site.lofts;
 // the raised camera, the close or the opening has the picture, and never on a page that names its own view.
 const updates = Q.has("shot") || TRAILER ? null : watchVersion({ say: () => hints.say.update(), busy: () => !document.body.classList.contains("entered") || photo.on || !!cine || !!stage || ["far", "opening", "directing"].some((c) => document.body.classList.contains(c)) });
 window.__updates = (now) => (updates ? (now ? updates.ask().then(() => updates.state()) : updates.state()) : null);
-window.__yard = () => ({ opacity: +faded.toFixed(3), monkShown: monk.group.visible, monkWorld: (() => { const b = monkWorld(); return { min: b.min.toArray().map((v) => +v.toFixed(3)), max: b.max.toArray().map((v) => +v.toFixed(3)), near: +monkNear().toFixed(3) }; })(), shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, lid: +monk.lid.value.toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], goal: (() => { const g = planning ? planGoal : route.length ? route[route.length - 1] : target; return g ? [+g.x.toFixed(2), +g.z.toFixed(2)] : null; })(), route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
+window.__fade = (/** @type {number} */ a) => (monk.group.visible = true, fade(a), faded);   // (a picture tool's hold on his opacity: the push's fade by hand, #632)
+window.__yard = () => ({ opacity: +faded.toFixed(3), fadeTwins: (() => { let n = 0; monk.group.traverse((/** @type {any} */ o) => { if (o.userData.fadeTwin) n++; }); return n; })(), monkShown: monk.group.visible, monkWorld: (() => { const b = monkWorld(); return { min: b.min.toArray().map((v) => +v.toFixed(3)), max: b.max.toArray().map((v) => +v.toFixed(3)), near: +monkNear().toFixed(3) }; })(), shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, lid: +monk.lid.value.toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], goal: (() => { const g = planning ? planGoal : route.length ? route[route.length - 1] : target; return g ? [+g.x.toFixed(2), +g.z.toFixed(2)] : null; })(), route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 // For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
 window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
