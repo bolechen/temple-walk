@@ -225,6 +225,7 @@ export function buildSite(M) {
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     corner: [12, 30, 0.36, 0.3],                       // the hall's south-east corner from the court: the eave's lift, the fanned rafters, the hip ridge and the east ornament (roof.js)
+    eave: [16, 7, 0.4, 0.7],                           // up under the front eave near its east end, from the platform: the bracket sets, the column-head beams and the rafters (dougong.js)
     back: [0, 6, Math.PI, -0.08],
     // Shakyamuni at the west end, from the worship band 9.9 m before him and a little east of his middle, raised to his lap: his left hand
     // and his lotus seat are in view, which from the west aisle within 4.4 m of his middle his own right knee and arm hide (#370, #547).
