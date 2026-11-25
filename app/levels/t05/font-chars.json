@@ -1,0 +1,14 @@
+{
+ "note": "Characters this level will write that no script or table of it holds yet, cut into the faces by tools/fonts.py (docs/t05/FONTS.md). `all`: what is drawn large (the temple's name, titles): every face of that language, including the brush and the running hand. `text`: what is read (the terms, the glossary, the draft lines of docs/t05/I18N.md §3–§5): the kai and the serif of that language only. `bang`: the name boards' hand. A character a face does not have is left out by the cutter. Add here only what a level has not yet written down; once it is in a table or a script the scan finds it. Second batch (the stele's text, kept in the kai with the traditional forms; the observation page's hand-written line and buttons, in every face): see docs/t05/FONTS.md §8.",
+ "all": {
+  "zh": "。七下九人元单台基大奉寺年庑德抄收明檐殿比灰瓦碑记间青高，",
+  "ja": "、。いきすのはめよりるを・一七九人元写基壇大奉寄寺年徳明書棟灰瓦留碑背色造重間青高",
+  "ko": " ,.7각기끼년높다단대덕두람른마명문베보봉붕비빛사아어와우원이잿적지진처칸키푸홉홑"
+ },
+ "text": {
+  "zh": "一七三上下不东两个中丹么义九也了亭人什从他以们会但体佛作侍修倒偷僧儼儿元光全其冬冷减到刹匾十千单印去县句只可台右叶后咸四国國在地坛城基堂塑墙壁外大天奉契好婆子孑宜寂察寧寶寺尊就尸层居峰崔嵬州希序庑座弘弥彩影彻律心愿手抄拱敞整斗昂明是晴暗更最有来架柱样栿梁椽槛檐殆殿每比毗没法泥深灰炉炬点焦然熙物獨瓦画畏的盡看知石矿砖碑秩窄窗站第納结继绪续绰绿義而耶胁背花营萧补西觀见观记赟赭走趺跏路边辽过还这迦道遺遼释里重金钉钟铺门间院隆雪露青面音页顺须香驼高鼓",
+  "ja": "ジペー七上下与丹亭仏代作侍倒光印去双同后咸営国坐堂塑壁壇大天太奉契宜察寺州希座廡弥彩律徹思成承抄斗施昂明架柱栱梁殿減無焦熙王画畏相県碑結綽緒義者耶背脇蕭観記贇趺跏造過遼量鋪録鐘隆雄音頂須願",
+  "ko": "가감거결공과관광국기나단당대도동들라란량록명무미방배벽보봉부불붕비사상서성소수승시쌍앙야여왕외요우웅원윤율융음의이인자작전정조종좌주지찰채천철초칠태페포하함현협화후희"
+ },
+ "bang": "奉明"
+}
