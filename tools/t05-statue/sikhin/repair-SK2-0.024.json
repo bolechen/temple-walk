@@ -1,0 +1,254 @@
+{
+ "source": "sikhin.base_model.glb (tools/out/t05/tripo-six)",
+ "turn": -90,
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.915,
+   "band": 0.03
+  },
+  {
+   "op": "headscale",
+   "note": "a face of its own among the seven (3D review risk 1): head width, depth and height scaled about its centre",
+   "c": [
+    0,
+    0.0438,
+    0.8833
+   ],
+   "s": [
+    1.02,
+    1.02,
+    1.0
+   ],
+   "z0": 0.7783,
+   "fade": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.55,
+   "k": 0.881,
+   "band": 0.05
+  },
+  {
+   "op": "snapshot",
+   "name": "pre",
+   "note": "the points before the lean and the bow"
+  },
+  {
+   "op": "tilt",
+   "note": "the figure above the lotus leaned 4.0° about the seat's rear edge (#701)",
+   "c": [
+    0,
+    0.1853,
+    0.3475
+   ],
+   "deg": 4.0,
+   "z0": 0.4633,
+   "fade": 0.139
+  },
+  {
+   "op": "tilt",
+   "note": "head bowed 10.0° about the neck (the shipping pose, #701)",
+   "c": [
+    0,
+    0.0191,
+    0.7003
+   ],
+   "deg": 10.0,
+   "z0": 0.7086,
+   "fade": 0.0353,
+   "rx": 0.1182,
+   "fx": 0.0203
+  },
+  {
+   "op": "snapshot",
+   "name": "bow",
+   "note": "the points as the bow leaves them"
+  },
+  {
+   "op": "chinshape",
+   "from": "bow",
+   "z0": 0.7529,
+   "s": 8.6329,
+   "k_groove": 0.85,
+   "k_chin": 1.0,
+   "arc_keep": 0.5,
+   "bow": 14.0,
+   "chin_behind": 0.008,
+   "chin_shift": 0.015,
+   "lip0": 0.0013900235294117649,
+   "lip1": 0.00752929411764706,
+   "gr0": 0.0013900235294117649,
+   "gr1": 0.010425176470588236,
+   "chin0": 0.0013900235294117649,
+   "chin1": 0.018533647058823533,
+   "jaw": 0.008108470588235297,
+   "bin": 0.00046334117647058834,
+   "span": 0.041700705882352945,
+   "xm": 0.0034750588235294123,
+   "x0": 0.0,
+   "x1": 0.05791764705882354,
+   "front": 0.0191,
+   "ffront": 0.012,
+   "smooth": {
+    "iter": 24,
+    "lam": 0.5
+   },
+   "dsmooth": 9,
+   "ramp": 0.25,
+   "note": "the lower profile from the lower lip to the jaw rebuilt on r3c's own: the groove at 0.85 of its depth, the chin behind the lip's tip, a wide bell across the face (#701, 自拟)"
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.6329,
+   "front": 0.0191,
+   "iter": 150,
+   "k": 0.5,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      0.155,
+      6.514375572498597
+     ],
+     "p1": [
+      0.175,
+      6.469375572498597
+     ],
+     "r": 0.016,
+     "soft": 0.02
+    },
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.155,
+      6.514375572498597
+     ],
+     "p1": [
+      -0.175,
+      6.469375572498597
+     ],
+     "r": 0.016,
+     "soft": 0.02
+    }
+   ],
+   "note": "the dimples at the lips' ends: their depth kept to this share, outside the lips (#701, 自拟)"
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.6329,
+   "front": 0.0191,
+   "iter": 400,
+   "k": 0.1,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      0.15,
+      6.439375572498598
+     ],
+     "p1": [
+      0.165,
+      6.359375572498598
+     ],
+     "r": 0.012,
+     "soft": 0.02
+    },
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.15,
+      6.439375572498598
+     ],
+     "p1": [
+      -0.165,
+      6.359375572498598
+     ],
+     "r": 0.012,
+     "soft": 0.02
+    }
+   ],
+   "note": "the lines from under the lip's corner down the chin's sides taken out (detail kept to this share, 400 passes; #701, 自拟)"
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.6329,
+   "front": 0.0191,
+   "iter": 400,
+   "k": 0.15,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.13,
+      6.189375572498598
+     ],
+     "p1": [
+      0.13,
+      6.189375572498598
+     ],
+     "r": 0.02,
+     "soft": 0.03
+    }
+   ],
+   "note": "the soft ridge across under the chin taken out (#701, 自拟)"
+  },
+  {
+   "op": "chinfill",
+   "s": 8.6329,
+   "z0": 0.7413,
+   "z1": 0.7216,
+   "sx": 0.035,
+   "k": 1.0,
+   "xs0": 0.03,
+   "xs1": 0.09,
+   "front": 0.0191,
+   "ffront": 0.03,
+   "smooth": {
+    "iter": 60,
+    "lam": 0.5
+   },
+   "note": "the chin's middle groove filled to the lobes' tops: one round face (#701, 自拟)"
+  },
+  {
+   "op": "mouthlift",
+   "s": 8.6329,
+   "z0": 0.7529,
+   "a": 0.024,
+   "x0": 0.03,
+   "x1": 0.13,
+   "x2": 0.17,
+   "x3": 0.27,
+   "sz": 0.035,
+   "front": 0.0191,
+   "note": "the lips' ends lifted (#701, 自拟)"
+  },
+  {
+   "op": "unfold",
+   "s": 8.6329,
+   "from": "pre",
+   "limit": 0.05,
+   "ring": 2,
+   "iter": 6,
+   "note": "no triangle left turned past 87 degrees from where it stood before the lean and the bow (#701)"
+  }
+ ]
+}
