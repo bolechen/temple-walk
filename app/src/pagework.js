@@ -66,17 +66,35 @@ export function drawPage(g, W, H, p) {
  * @param {() => number} rnd
  */
 export function drawStroke(g, x0, x1, y, th, k, rnd) {
-  // The brush is a bundle of hairs (`B` bands across the stroke); where the ink runs short a hair leaves the paper bare for a
-  // stretch, so the bare paper runs along the stroke in streaks, each hair's own (a slow wave at its own pace and phase).
-  const n = 140, B = 10, hair = Array.from({ length: B }, (_, j) => ({ phase: rnd() * 6.283, pace: 6 + j * 2.3 + rnd() * 3 }));
-  for (let i = 0; i < n * k; i++) {
-    const u = i / n, x = x0 + (x1 - x0) * u, w = th * (1.25 - 0.6 * u) * (0.85 + 0.3 * Math.sin(u * 17)), dry = u > 0.55 ? (u - 0.55) * 1.6 : 0;
-    for (let j = 0; j < B; j++) {
-      const h = hair[j], bare = (0.5 + 0.5 * Math.sin(u * h.pace + h.phase)) * 0.85 + rnd() * 0.15;
-      if (bare < dry) continue;
-      g.fillStyle = `rgba(24,20,17,${(0.6 + 0.35 * rnd()).toFixed(2)})`;
-      g.fillRect(x, y - w / 2 + (j / B) * w + Math.sin(u * 5) * th * 0.3, (x1 - x0) / (0.72 * n) + 1, w / B + 0.5);
+  // The brush is a bundle of hairs (`B` bands across the stroke). Each hair is laid as one continuous ribbon along the stroke,
+  // opaque and a little wider than its share so that neighbours overlap: where the ink is full they close into solid ink with
+  // no seam; where it runs short a hair lifts off the paper for a stretch (a slow wave at its own pace and phase), so the bare
+  // paper runs along the stroke in streaks. The head is rounded where the brush turned in as it landed (藏锋).
+  const n = 160, B = 10, end = Math.max(1, Math.round(n * k)), ink = "rgb(24,20,17)";
+  const hair = Array.from({ length: B }, (_, j) => ({ phase: rnd() * 6.283, pace: 6 + j * 2.3 + rnd() * 3, jit: (rnd() - 0.5) * 0.25 }));
+  const at = (i) => { const u = i / n, x = x0 + (x1 - x0) * u, land = Math.min(1, 0.55 + 0.45 * Math.sin(Math.min(1, u / 0.06) * Math.PI / 2));
+    return { u, x, w: th * (1.25 - 0.6 * u) * (0.85 + 0.3 * Math.sin(u * 17)) * land, c: y + Math.sin(u * 5) * th * 0.3, dry: u > 0.55 ? (u - 0.55) * 1.6 : 0 }; };
+  const pts = Array.from({ length: end + 1 }, (_, i) => at(i));
+  g.fillStyle = ink;
+  // The landing: a round head where the brush came down.
+  const h = pts[0]; g.beginPath(); g.ellipse(h.x, h.c, h.w * 0.42, h.w * 0.5, 0, 0, Math.PI * 2); g.fill();
+  for (let j = 0; j < B; j++) {
+    const hr = hair[j], off = (j + 0.5) / B - 0.5;
+    let run = [];
+    const flush = () => {
+      if (run.length > 1) {
+        g.beginPath();
+        run.forEach((p, i) => { const cy = p.c + (off + hr.jit / B) * p.w, hw = (p.w / B) * 0.75; i ? g.lineTo(p.x, cy - hw) : g.moveTo(p.x, cy - hw); });
+        for (let i = run.length - 1; i >= 0; i--) { const p = run[i], cy = p.c + (off + hr.jit / B) * p.w, hw = (p.w / B) * 0.75; g.lineTo(p.x, cy + hw); }
+        g.closePath(); g.fill();
+      }
+      run = [];
+    };
+    for (const p of pts) {
+      const bare = (0.5 + 0.5 * Math.sin(p.u * hr.pace + hr.phase)) * 0.85 + rnd() * 0.15;
+      if (bare < p.dry) flush(); else run.push(p);
     }
+    flush();
   }
 }
 
