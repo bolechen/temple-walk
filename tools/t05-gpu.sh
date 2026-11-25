@@ -62,6 +62,21 @@ if (process.env.SETS === "lips701") {
     shots.push({ name: tag + "-" + N[i].replace(/-.*/, ""), shoot: { paint: true, mood: "winter", view: "faceFrom10", over: { at, look: [X[i], HEAD[i], -18.1], fov, exp: 4.5 } } });
   console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [{ name: "lips", size: [1920, 1080], statues: L, shots }] } })); process.exit(0);
 }
+if (process.env.SETS === "ship701") {
+  // issue #701, the three figures as chosen (B4H10, V3, K1L, zoned, normals baked): the seven in the winter hall with no lamp; cam03, and for each of the three the face from 10 m
+  // (a little raised) and the face from 4 m, painted and as clay, and the oblique look down the aisle from 7 m at 55 degrees; files in SEVEN, east to west, as s/10..16.glb
+  const N = ["kasyapa-t05", "krakucchanda-L2", "sikhin-t05", "vipasyin-t05", "visvabhu-L2", "kanakamuni-L2", "sakyamuni-370"], X = [16.45, 11.33, 5.8, 0, -5.8, -11.33, -16.45];
+  const HT = [8.6, 8.75, 8.9, 9.0, 8.9, 8.75, 8.6], HEAD = [11.15, 11.2, 11.28, 11.48, 11.38, 11.17, 11.2];
+  const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0, ...(i === 0 || i === 6 ? { gain: 1.5 } : {}) }, paint: "clay", colour: c, ...(i === 0 || i === 6 ? { lotusGain: 1.25 } : {}), ...(i === 0 ? { innerTint: [0.97, 1, 1.03] } : {}), ...(i === 6 ? { innerTint: [0.96, 1, 1.05] } : {}) }));
+  const shots = [{ name: "cam03-winter", shoot: { paint: true, mood: "winter", view: "cam03" } }];
+  for (const i of [1, 4, 5]) {
+    const n = N[i].replace(/-.*/, "");
+    for (const [paint, t] of [[true, ""], [false, "-clay"]]) for (const [tag, at, fov] of [["mid10", [X[i], 4.6, -7.6], 11], ["front4", [X[i], 4.6, -13.6], 20]])
+      shots.push({ name: tag + t + "-" + n, shoot: { paint, mood: "winter", view: "faceFrom10", over: { at, look: [X[i], HEAD[i], -18.1], fov, exp: 4.5 } } });
+    shots.push({ name: "side7-" + n, shoot: { paint: true, mood: "winter", view: "faceFrom10", over: { at: [+(X[i] + 7 * Math.sin(55 * Math.PI / 180)).toFixed(2), 4.6, +(-18.1 + 7 * Math.cos(55 * Math.PI / 180)).toFixed(2)], look: [X[i], HEAD[i] - 0.6, -18.1], fov: 30, exp: 4.5 } } });
+  }
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [{ name: "ship", size: [1920, 1080], statues: L, shots }] } })); process.exit(0);
+}
 if (process.env.SETS === "masks370") {
   // what the masks cost (#370 round 6): the seven painted with and without their masks, inside the hall, at the high tier
   // (1920×1080, GTAO) and the low (960×540, no AO), each pair taken in turn twice over in one job
