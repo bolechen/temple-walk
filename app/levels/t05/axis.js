@@ -129,7 +129,7 @@ const grow = () => {
     if (sx > 0 && SUNWARD_GAP.includes(`${row}${k}`)) continue;   // (drawn after its numbers, so that every other tree keeps its own)
     // an east tree kept steps out until its crown stops none of the sun's rays to the archway's middle bay, its crown narrowing by the wall if it must
     const sunward = sx > 0;
-    for (let j = 0; j <= 40; j++) { const xj = Math.min(x + 0.3 * j, SUN_WALL), narrow = sunward ? Math.max(1.4, rx - Math.max(0, x + 0.3 * j - SUN_WALL) * 0.5) : rx; const t = { x: +(sx * xj).toFixed(2), z, y: SECOND.y, r, rx: +narrow.toFixed(2), ry, base, h, old: true, kind: "cypress", back: row === "outer" }; if (keptClear(t) && (!sunward || sunClear(t) || narrow <= 1.4)) { out.push(Object.freeze(t)); break; } }
+    for (let j = 0; j <= 40; j++) { const xj = Math.min(x + 0.3 * j, SUN_WALL), narrow = sunward ? Math.max(1.4, rx - Math.max(0, x + 0.3 * j - SUN_WALL) * 0.5) : rx; const t = { x: +(sx * xj).toFixed(2), z, y: SECOND.y, r, rx: +narrow.toFixed(2), ry, base, h, old: true, kind: "cypress", back: row === "outer", near: true }; if (keptClear(t) && (!sunward || sunClear(t) || narrow <= 1.4)) { out.push(Object.freeze(t)); break; } }
   }
   // North of the archway to the Wuliang hall (the same comment, from the owner's photograph 11): not rows of cypress but broad pines, scattered, their crowns
   // round, wide and layer on layer, of uneven heights, standing where no row would put them. Six, three a side, pushed out of the kept lines as the cypresses are.
@@ -148,7 +148,7 @@ export const WAY_CYPRESS = Object.freeze({ crownFrom: 2.6, radius: 1.2, height: 
 const way01 = (t) => { const v = Math.sin(t.x * 12.9898 + t.z * 78.233 + 14 * 37.719) * 43758.5453; return v - Math.floor(v); };
 export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze(t.y === 0
   ? { kind: "cypress", x: t.x, z: t.z, y: t.y, h: +(WAY_CYPRESS.height[0] + (WAY_CYPRESS.height[1] - WAY_CYPRESS.height[0]) * way01(t)).toFixed(2), r: Math.min(t.r, 0.3), crownFrom: WAY_CYPRESS.crownFrom, crownR: Math.min(WAY_CYPRESS.radius, Math.abs(t.x) - PATH.hw - 1 - 0.2) }   // (its crown's edge at least a metre from the paved path's: the lumps reach a little past the radius)
-  : { kind: t.kind || "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, back: !!t.back, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
+  : { kind: t.kind || "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, back: !!t.back, near: !!t.near, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 

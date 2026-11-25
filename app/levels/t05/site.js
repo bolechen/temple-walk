@@ -54,15 +54,6 @@ export const COURT_TREES = Object.freeze([
   Object.freeze({ kind: "pine", x: 31.8, z: 35.6, h: 8.7, r: 0.38 }),
 ]);
 /**
- * A row of thin bare trees against the brick at the foot of the terrace and the platform, 3 to 4 m high (the art director, 2026-11-25, from the owner's March
- * photograph of the temple: a row of small bare trees along the great hall's platform foot; its species unrecorded, a deciduous broadleaf, as outside the walls).
- * Along the terrace's front either side of the flight and along the platform's front where the terrace does not cover it; low enough to leave the hall's body clear in cam01. Ours.
- */
-export const FOOT_TREES = Object.freeze([
-  ...[6.6, 9.3, 12.1, 14.6, 17.2].flatMap((x, i) => [-1, 1].map((sx, j) => Object.freeze({ kind: "broad", foot: true, x: +(sx * (x + 0.3 * Math.sin(i * 1.9 + j))).toFixed(2), z: +(TERRACE.zS + 1.9 + 0.15 * Math.sin(i + j * 2.1)).toFixed(2), h: +(3.2 + 0.8 * Math.abs(Math.sin(i * 1.3 + j * 0.7))).toFixed(2), r: 0.09 }))),
-  ...[20.6, 23.4, 26.1].flatMap((x, i) => [-1, 1].map((sx, j) => Object.freeze({ kind: "broad", foot: true, x: +(sx * (x + 0.25 * Math.sin(i * 2.3 + j))).toFixed(2), z: +(PLATFORM.zS + 0.95).toFixed(2), h: +(3.4 + 0.6 * Math.abs(Math.sin(i * 0.9 + j))).toFixed(2), r: 0.09 }))),
-]);
-/**
  * Old arborvitae standing just outside the terrace's east wall, their crowns over its top (the art director, 2026-11-25, with A of #722's three: where the
  * east rows were thinned to let the sun onto the archway, the east side seen from the path is still a dark ground, but of crowns 13 m and more off the path
  * whose shadows fall short of the archway; no tall tree near the path). They stand on the town's ground, the crown from 4.6 m, over the wall's top at 4.2 m;
@@ -253,14 +244,13 @@ export function buildSite(M) {
   // The trees inside the walls (./flora.js): the axis's (./axis.js AXIS_TREES) and the court's, one set: the trunks in his way, with their written-plan
   // rectangles, the boughs and needles over his head. The court's stand in stone pits.
   const pitStones = [], pitEarth = [];
-  for (const t of FOOT_TREES) walk.solids.push({ x0: t.x - t.r - BODY, x1: t.x + t.r + BODY, z0: t.z - t.r - BODY, z1: t.z + t.r + BODY, eyeTop: 2 });
   for (const t of COURT_TREES) {
     walk.solids.push({ x0: t.x - t.r - BODY, x1: t.x + t.r + BODY, z0: t.z - t.r - BODY, z1: t.z + t.r + BODY, eyeTop: t.h * 0.42 });
     const { rim, up } = COURT_PIT, side = t.kind === "pine" || t.old ? COURT_PIT.pine : COURT_PIT.side, half = side / 2 + rim / 2, long = side + 2 * rim, h = up + 0.1, cy = up - h / 2;
     pitStones.push(box(long, h, rim, t.x, cy, t.z - half), box(long, h, rim, t.x, cy, t.z + half), box(rim, h, side, t.x - half, cy, t.z), box(rim, h, side, t.x + half, cy, t.z));
     pitEarth.push(new THREE.PlaneGeometry(side, side).rotateX(-Math.PI / 2).translate(t.x, 0.025, t.z));
   }
-  const inner = buildFlora(M, [...AXIS_TREES, ...COURT_TREES.map((t) => { const h = Math.min(t.h, eaveCap(t.x, t.z)); return t.old ? { ...t, h, env: { base: t.base, rx: t.rx, ry: (h - t.base) / 2 } } : { ...t, h }; }), ...FOOT_TREES, ...EAST_WALL_TREES], { name: "trees", cast: true, walk: true, chunk: (t) => (t.z < COMPOUND.zS + 8 ? "court" : "axis") });
+  const inner = buildFlora(M, [...AXIS_TREES, ...COURT_TREES.map((t) => { const h = Math.min(t.h, eaveCap(t.x, t.z)); return t.old ? { ...t, h, env: { base: t.base, rx: t.rx, ry: (h - t.base) / 2 } } : { ...t, h }; }), ...EAST_WALL_TREES], { name: "trees", cast: true, walk: true, chunk: (t) => (t.z < COMPOUND.zS + 8 ? "court" : "axis") });
   { const st = mesh(merge(pitStones), M.stone); st.userData.walk = "floor"; st.name = "court-pits-stones"; root.add(inner.group, st); }   // (a pit's edge stones are stood on, as a low curb is: the baked floor rises to their top within his shoes' reach)
   { const e = mesh(merge(pitEarth), dryMaterials(M).earth, { cast: false }); e.name = "court-pits-earth"; root.add(e); }   // (the pit's earth is floor, as the prologue's pits are: the edge stones are then a step with a foothold behind them, not a low thing his shoes are kept off)
   root.add(buildTreeGround([...AXIS_TREES, ...COURT_TREES]));   // fallen leaves and needles and the dark at each trunk's foot (./flora.js)

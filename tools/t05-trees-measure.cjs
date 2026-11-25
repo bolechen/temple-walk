@@ -67,6 +67,8 @@ const stats = (cs) => (cs.length ? { n: cs.length, L: med(cs.map((c) => c[0])), 
       r.hall = stats(of((q) => bay(q) && q.d > 60 && q.m !== SKY && q.mat !== "none")); r.archway = stats(of((q) => q.d > 12 && q.d < 40 && /^(woodV|woodX|beam|fascia|lattice)$/.test(q.mat) && Math.abs(q.x - w / 2) < 260));
       r.hallVsArchway = r.hall.n && r.archway.n ? +Math.abs(r.hall.L - r.archway.L).toFixed(1) : null;
       r.grass = stats(of((q) => q.mat === "dryGrass" || q.mat === "dryEarth"));
+      // the near east crowns against the light (the art director's final review: their darkest L* 8 or more): the 5th percentile and the median of their needles
+      { const Ls = res.filter((q) => q.mat === "dryNeedles" && q.x > w * 0.55 && q.d < 30).map((q) => q.c[0]).sort((p, q) => p - q); r.eastCrown = Ls.length ? { n: Ls.length, p5L: +Ls[Math.floor(Ls.length * 0.05)].toFixed(1), medL: med(Ls) } : null; }
       // the archway's middle bay (the art director's lines for A, 2026-11-25): its timber split into sun and shade at the lightness that best parts them
       // (Otsu), the share in the sun, each part's median L*, and how much of each of the two middle columns is in the sun
       const ARCH = /^(woodV|woodX|beam|fascia|lattice|plaque|bracket|paint)/, bayX = [w * 0.43, w * 0.57];
@@ -92,6 +94,8 @@ const stats = (cs) => (cs.length ? { n: cs.length, L: med(cs.map((c) => c[0])), 
     }
     if (name === "south") {
       r.poplarBark = stats(of((q) => q.mat === "paleBark"));
+      // the bark's lit face (the art director's final review: the line 55-65 is read on the face the sun is on): the 90th percentile of its lightness here
+      { const Ls = res.filter((q) => q.mat === "paleBark").map((q) => q.c[0]).sort((p, q) => p - q); r.poplarBarkLit = Ls.length ? +Ls[Math.floor(Ls.length * 0.9)].toFixed(1) : null; }
       r.nearBoughsInCorners = res.filter((q) => TREE.test(q.mat) && q.d < 5 && (q.x < w * 0.2 || q.x > w * 0.8) && (q.y < h * 0.2 || q.y > h * 0.8)).length;
     }
     r.needles = stats(of((q) => q.mat === "dryNeedles")); r.bareWood = stats(of((q) => q.mat === "treeBark"));

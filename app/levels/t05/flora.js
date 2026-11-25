@@ -95,7 +95,6 @@ function lump(out, at, sx, sy, sz, yaw, centre, crownR, detail, salt, rough = 0.
 export function growTree(t, far = false) {
   const { kind, x, z, h } = t, y = t.y ?? 0, env = t.env || null, yaw = t.yaw ?? hashAt(x, z, 9) * 6.283, rnd = mulberry(seedAt(x, z, 3));
   const r = t.r ?? h * 0.037, gen = /** @type {any} */ (new TreeGenerator(null)), P = GROW[kind](h, r, far);
-  if (t.foot) Object.assign(P, { children: [4, 3], childRadius: [0.62, 0.42] });   // (a sapling at a wall's foot: fewer, finer boughs)
   if (env) { const top = env.base + 2 * env.ry; Object.assign(P, { trunkRadius: r, rootFlare: t.old ? 0.45 : 0.3, gnarl: [t.old ? 0.02 : 0, ...P.gnarl.slice(1)], trunkLength: env.base + env.ry * (kind === "pine" ? 0.9 : 1.2), trunkClear: (env.base + 0.3) / (env.base + env.ry * (kind === "pine" ? 0.9 : 1.2)), lengthRatio: [Math.min(0.5, (env.rx * 1.05) / (env.base + env.ry)), 0.42], branchLengthFalloff: 0.3 }); P.top = top; }
   if (t.crownFrom) P.trunkClear = Math.min(0.6, (t.crownFrom + 0.2) / P.trunkLength);   // (no bough below where its needles start: he walks the earth beside it)
   const lean = env ? (t.old ? 0.025 : 0) : kind === "pine" ? 0.07 + 0.06 * hashAt(x, z, 4) : kind === "broad" ? 0.05 : 0.015;   // (a tree on the axis stands straight: its trunk is cleared against the views as an upright post)
@@ -144,29 +143,42 @@ export function growTree(t, far = false) {
     // in three or four clumps, as an old temple cypress's crown breaks up.
     const R = Math.min(t.crownR ?? Infinity, h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3))), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
     const radiusAt = (f) => { for (let i = 1; i < prof.length; i++) if (f <= prof[i][1]) { const [a, fa] = prof[i - 1], [b, fb] = prof[i]; return R * (a + ((b - a) * (f - fa)) / (fb - fa)); } return 0; };
-    const count = far ? 16 : env ? Math.round(t.old ? (t.back ? 0.7 * (28 + 3.6 * env.ry) : 4 * (34 + 4.4 * env.ry)) : 26 + 3.2 * env.ry) : 30, fine = !far && env && t.old && !t.back;   // (a near old crown: four times the tufts at half the size and a fifth of the faces each, the grain of sprays rather than of stones)   // (an old tree's tall crown takes more, smaller tufts; one of the outer row, behind the inner from the path, fewer and a little larger)   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
+    const count = far ? 16 : env ? Math.round(t.old ? (t.back && !t.near ? 0.7 * (28 + 3.6 * env.ry) : 3.4 * (34 + 4.4 * env.ry)) : 26 + 3.2 * env.ry) : 30, fine = !far && env && t.old && !(t.back && !t.near);   // (a near old crown: four times the tufts at half the size and a fifth of the faces each, the grain of sprays rather than of stones)   // (an old tree's tall crown takes more, smaller tufts; one of the outer row, behind the inner from the path, fewer and a little larger)   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
     if (env) {
       // An old cypress with its lower boughs long gone: the head broken into four or five masses held out on the boughs, the widest low and
       // spread to the ellipsoid's rim, one over the leader, with sky between them (not a ball on a pole).
       // (an old tree's tall crown: the masses stacked from its underside to its top, one or two to each storey of it, so that it is full from 3.5-4.5 m up, not a head on a pole)
-      const clumps = t.old ? Math.max(5, Math.round(env.ry * (t.back ? 1.3 : 1.8))) : 4 + (hashAt(x, z, 5) < 0.5 ? 1 : 0), cs = [];
+      const clumps = t.old ? Math.max(5, Math.round(env.ry * (t.back && !t.near ? 1.3 : 2))) : 4 + (hashAt(x, z, 5) < 0.5 ? 1 : 0), cs = [];
       for (let k = 0; k < clumps; k++) {
         const top = k === clumps - 1, a = yaw + k * 2.39996 + rnd() * 0.5;
         const d = top ? 0.1 : t.old ? 0.35 + 0.3 * rnd() : 0.55 + 0.2 * rnd(), lift = top ? 0.6 : t.old ? -0.8 + (1.4 * k) / (clumps - 1) + 0.1 * (rnd() - 0.5) : -0.35 + 0.5 * (k / clumps) + 0.15 * rnd();
         const w = Math.sqrt(Math.max(0.15, 1 - lift * lift));   // (narrower toward the crown's ends, as the ellipsoid is)
-        cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? (t.back ? 0.5 : 0.4) : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
+        cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? (t.back && !t.near ? 0.5 : 0.34) : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
       }
-      for (let i = 0; i < count; i++) {
-        const c0 = cs[i % clumps], w = c0.r * (t.old ? (t.back ? 0.46 + 0.24 * rnd() : 0.24 + 0.14 * rnd()) : 0.55 + 0.25 * rnd()), sp = t.old && !t.back ? 1.05 : 1.4, p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * sp, (rnd() - 0.5) * c0.r * (t.old ? (t.back ? 1.6 : 1.2) : 0.6), (rnd() - 0.5) * c0.r * sp));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
+      if (fine) {
+        // A near old crown is drawn as its masses, not as tufts (the art director's final review of #722: tufts read as torn black paper against the light):
+        // each mass a finely divided round body overlapping its neighbours, so that the crown is one dark mass; on each a smaller one where it faces out,
+        // so that the outline goes in bays. The material frays the rim into small round scallops and opens small windows of sky (RAGGED, WINDOWS).
+        for (const [k, c0] of cs.entries()) {
+          const R = c0.r * 1.45, p = c0.at.clone(), e = inEllipsoid(p, centre, env.rx - R * 0.55, env.ry - R * 0.5); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
+          lump(needles, p, R, R * 1.18, R, rnd() * 6.283, centre, env.rx, 2, k, 0.25, 0.5);
+          for (let m = 0; m < 2; m++) {
+            const out = p.clone().sub(centre); out.y *= 0.4; out.applyAxisAngle(new THREE.Vector3(0, 1, 0), (m ? 1 : -1) * (0.5 + 0.4 * rnd())); const ol = out.length() || 1; out.multiplyScalar(1 / ol);
+            const q = p.clone().addScaledVector(out, R * (0.6 + 0.25 * rnd())).add(new THREE.Vector3(0, (rnd() - 0.4) * R * 0.7, 0)), r2 = R * (0.38 + 0.14 * rnd()), e2 = inEllipsoid(q, centre, env.rx - r2 * 0.5, env.ry - r2 * 0.5); if (e2 > 1) q.sub(centre).multiplyScalar(1 / e2).add(centre);
+            lump(needles, q, r2, r2 * 1.1, r2, rnd() * 6.283, centre, env.rx, 1, k * 2 + m + 50, 0.25, 0.5);
+          }
+        }
+      } else for (let i = 0; i < count; i++) {
+        const c0 = cs[i % clumps], w = c0.r * (t.old ? (t.back && !t.near ? 0.46 + 0.24 * rnd() : 0.24 + 0.14 * rnd()) : 0.55 + 0.25 * rnd()), sp = t.old && !(t.back && !t.near) ? 1.6 : 1.4, p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * sp, (rnd() - 0.5) * c0.r * (t.old ? (t.back && !t.near ? 1.6 : 1.7) : 0.6), (rnd() - 0.5) * c0.r * sp));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
         const e = inEllipsoid(p, centre, env.rx - w * 0.7, env.ry - w * 0.45); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
-        if (t.old && !t.back) {
+        if (t.old && !(t.back && !t.near)) {
           // the near old crowns (#722 first art review: they read as mossy stones, smooth and round): every third tuft goes out to its clump's rim as a spray
           // reaching outward and up past the mass, ragged, so that the outline breaks into sprays with sky between them
           if (i % 3 === 0) {
             const out = p.clone().sub(c0.at); out.y *= 0.5; const ol = out.length() || 1; out.multiplyScalar(1 / ol);
-            p.copy(c0.at).addScaledVector(out, c0.r * (0.85 + 0.35 * rnd())); p.y += c0.r * 0.25 * rnd();
+            p.copy(c0.at).addScaledVector(out, c0.r * (0.8 + 0.25 * rnd())); p.y += c0.r * 0.15 * rnd();
             const e2 = inEllipsoid(p, centre, env.rx - w * 0.3, env.ry - w * 0.3); if (e2 > 1) p.sub(centre).multiplyScalar(1 / e2).add(centre);
-            lump(needles, p, w * 0.5, w * 1.4, w * 0.45, Math.atan2(out.x, out.z) + (rnd() - 0.5) * 0.6, centre, env.rx, 0, i, 0.6, 0.55);
+            lump(needles, p, w * 0.62, w * 0.78, w * 0.6, rnd() * 6.283, centre, env.rx, 0, i, 0.35, 0.45);   // (a small round bump at the rim, not a leaf: the art director's final review)
           } else lump(needles, p, w * 0.78, w * 1.15, w * 0.68, rnd() * 6.283, centre, env.rx, 0, i, 0.5, 0.5);
         } else if (t.old) lump(needles, p, w * 0.8, w * 1.15, w * 0.7, rnd() * 6.283, centre, env.rx, detail, i);   // (an arborvitae's sprays stand on edge: an old crown is a mass of upright tufts, not of pads)
         else lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
@@ -219,14 +231,14 @@ function treeBark(M) {
 // Near the eye a lump's outline is frayed: where its surface turns away from the eye, holes are cut by the world-space grain, more of them the nearer the
 // rim, so that a crown seen within some forty metres ends in sprays with sky between them rather than in a smooth arc (#722 first art review: the nearest
 // cypresses read as mossy stones). Farther off the lumps are small enough on the screen that their outline is the crown's.
-const RAGGED = "{ float nd_=abs(dot(normal,normalize(vViewPosition))), near_=1.-smoothstep(28.,45.,length(vViewPosition)); if(near_>0.){ float f_=fbm3(vWP*vec3(4.5,5.5,4.5)); if(!(f_*near_<=.4+1.3*nd_)) discard; } }";
+const RAGGED = "{ float nd_=abs(dot(normal,normalize(vViewPosition))), near_=1.-smoothstep(28.,45.,length(vViewPosition)); if(near_>0.){ float f_=fbm3(vWP*vec3(11.,13.,11.)), g_=fbm3(vWP*vec3(5.,6.,5.)+3.1); if(!(f_*near_<=.44+1.4*nd_)) discard; if(!(g_*near_<=.63)) discard; } }";   // (fine and soft: small round scallops at the rim and small windows of sky, the mass kept whole; the art director's final review of #722: not torn black paper)
 function needleMat(M) {
   const base = dryMaterials(M).cedar, m = base.clone(), was = base.onBeforeCompile;
   m.onBeforeCompile = (sh, rr) => {
     was.call(base, sh, rr); sh.uniforms.uWindN = U.uWind; sh.uniforms.uTN = U.uT;
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform vec2 uWindN; uniform float uTN;").replace("#include <begin_vertex>", `#include <begin_vertex>
       { float a_=.025+.02*min(length(uWindN),3.); transformed.x+=sin(uTN*1.1+position.x*.7+position.y*.5)*a_+uWindN.x*.012; transformed.z+=cos(uTN*.83+position.z*.6+position.y*.4)*a_+uWindN.y*.012; }`);
-    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74)*(.72+.56*fbm3(vWP*vec3(9.,2.6,9.))),step(.5,vUv2.y));\n#include <normal_fragment_begin>\n" + RAGGED);   // (an arborvitae's lump: yellower-brown)
+    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74)*(.45+.6*fbm3(vWP*vec3(9.,2.6,9.))+.45*fbm3(vWP*vec3(22.,6.,22.))),step(.5,vUv2.y));\n#include <normal_fragment_begin>\n" + RAGGED).replace("#include <lights_fragment_end>", "#include <lights_fragment_end>\nreflectedLight.indirectDiffuse*=1.7;");   // (a crown's side away from the sun takes more of the sky than a solid would: its sprays let the light in; the shaded side of a backlit crown no darker than L* 8, the art director)   // (an arborvitae's lump: yellower-brown)
   };
   m.customProgramCacheKey = () => "dryNeedles"; m.name = "dryNeedles"; return m;
 }
@@ -260,7 +272,7 @@ export function buildFlora(M, trees, { name = "flora", far = false, cast = true,
   const mats = floraMaterials(M), group = new THREE.Group(), chunks = new Map(), census = [];
   for (const t of trees) {
     const key = chunk(t); if (!chunks.has(key)) chunks.set(key, { bark: [], pale: [], trunkBark: [], trunkPale: [], needles: [] });
-    const bins = chunks.get(key), g = growTree(t, (typeof far === "function" ? far(t) : far) || !!t.foot), bark = t.kind === "poplar" ? "pale" : "bark";   // (the bare broadleaf takes the shared bark: one material, and a draw in every chunk, fewer)
+    const bins = chunks.get(key), g = growTree(t, typeof far === "function" ? far(t) : far), bark = t.kind === "poplar" ? "pale" : "bark";   // (the bare broadleaf takes the shared bark: one material, and a draw in every chunk, fewer)
     bins[bark].push(g.wood); (walk ? bins["trunk" + bark[0].toUpperCase() + bark.slice(1)] : bins[bark]).push(g.trunk); bins.needles.push(...g.needles);   // (where nothing walks, the trunk goes in with the rest of the wood: one draw fewer)
     census.push({ kind: t.kind, at: [t.x, t.z], h: t.h, top: +g.top.toFixed(3), tris: g.tris, hash: floraHash([g.trunk, g.wood, ...g.needles]) });
   }
