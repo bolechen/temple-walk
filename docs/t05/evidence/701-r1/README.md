@@ -32,3 +32,5 @@ f2 的 lipH 与 sulcus 对不上毗婆尸 r8A（0.323、0.079）：这一尊的�
 ## 复现
 
 `pip install bpy==5.3.0 trimesh scipy rtree networkx xatlas`；原件放 `tools/out/t05/tripo-six/`；`python3 tools/t05-statue/face-build.py krakucchanda f2 --tilt=10`；图 `python3 tools/t05-statue/lip-views.py <glb> <前缀> tools/t05-statue/<尊>/face.json [--mouth=<倾后嘴高>]`（需要 `apt install libegl1`）。
+
+> 第二轮（`../701-r2/`）更正：锚点缺 `eyeL` 的原因已查清并修了；改脸的闸已写；调下巴试了五次没有变样。

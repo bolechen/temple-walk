@@ -18,6 +18,7 @@
 | `backfaces.py <glb> <out.json> [--turn=-90] [--window=0.8]` | 像按白盒殿站好（8.2 m，按包围盒），从访客机位向手腕附近的窗发 41×41 条线，数第一下打到面背的条数 |
 | `raycompare.py <glb> <rays.json> <out.json>` / `--make-grid <rays.json>` | 同一组射线逐条记命中面号、几何法线与顶点法线两种判法、焊后块号 |
 | `loops.py <glb> <原件.glb> <out.json> [--png=]` | 框内开口边：哪些是原件自己表面上的（`cut`）、哪些是编辑加的（`made`），各成几圈 |
+| `face-gate.py <before.glb> <after.glb> <face.json>` | 只改了脸的闸（#701）：两份全模共用点序，脸区（颈 z0 减 fade）以下位移 ≤ 1 mm、面数不变、开口边/非流形/碎块不比改前多、六机位背面射线不比改前多。**和 `gate.py` 的区别：`gate.py` 拿改手的释迦对原件，要 `varada.json` 与 `varada-check3`，且要求三个机位背面为 0；`face-gate.py` 只比改前改后两份文件，不要求 0，只禁止增加（r3 本身有 210 条开口边，闸不修，也不让它变多）**。单测 `tests/unit/face-gate.test.mjs` |
 | `classify.py` | 背面射线按命中的面分类（游离碎片、两层贴片、加的几何、原件的面） |
 | `gate.py <varada.json> <out dir>` | 上面几项串成一张表 |
 | `repro-sweep.py <glb>` | 站高、位置、窗口、机位各取几种，看背面条数会不会变（一次性，复现 #529 用） |

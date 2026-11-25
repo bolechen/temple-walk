@@ -1,6 +1,6 @@
 # One figure's face, from its generated original to a baked statue and its paint anchors, in one command (issue #463):
 #
-#   python3 tools/t05-statue/face-build.py <name> <tag> [--tilt=10] [--anchors-from=<anchors.json>] [--colour=<anchor file name>] [--anchors-only]
+#   python3 tools/t05-statue/face-build.py <name> <tag> [--tilt=10] [--anchors-from=<anchors.json>] [--colour=<anchor file name>] [--anchors-only] [--quick] [--recipe=<face-recipe.json>]
 #
 # Reads tools/t05-statue/<name>/repair.json for the figure's own fixes (whatever is not a face op: squeeze, zband,
 # xband, smoothing of a cuff), adds the face's ops in order — the bow (`tilt`, deg from --tilt), the brow's knit and the
@@ -52,6 +52,7 @@ final = os.path.join(D, f"{name}-{tag}.glb"); j = os.path.join(here, name, f"rep
 if not only:
   fops = json.loads(run(os.path.join(here, "face-ops.py"), pre, pj, f"--recipe={opt.get('recipe', os.path.join(here, 'face/recipe.json'))}"))
   j = repair(base_ops + [tilt_op] + small + fops, final)
+  if "quick" in opt: print(json.dumps({"repair": j, "glb": final})); sys.exit(0)   # --quick: the full-detail mesh only, for tuning a recipe by eye (no levels, no bake, no anchors)
   for t, e in (("60000", "0.02"), ("20000", "0.05"), ("6000", "0.1")):
     subprocess.run(["node", os.path.join(root, "tools/t05-statue.mjs"), final, os.path.join(D, f"{name}-{tag}.{t}.glb"), f"--tris={t}", f"--error={e}"], check=True, capture_output=True)
   run(os.path.join(here, "bake.py"), final, os.path.join(D, f"{name}-{tag}.60000.glb"), os.path.join(D, f"{name}-{tag}b.60000.glb"), "--size=2048", "--uv=xatlas",
@@ -61,6 +62,7 @@ if "anchors-from" in opt:
   src = json.load(open(opt["anchors-from"])); a = src["anchors"]; mouth0 = list(a["mouth"])
   # only the face's named points turn with the head; the boxes' corners (far behind the face, they would rise when turned
   # and open a gap of robe colour across the cheeks) move down with the mouth instead
+  eyes0 = {k: a[k][:2] for k in ("eyeL", "eyeR") if k in a}   # the eyes before the bow turns them
   for k in ("neckFront", "neckBack", "hairFront", "hairBack", "earL", "earR", "eyeL", "eyeR", "mouth", "urna", "neckB", "lobeL", "lobeR"):
     if k in a: a[k] = [round(q, 3) for q in bowed(a[k])]
   drop = a["mouth"][1] - mouth0[1]
@@ -71,6 +73,8 @@ if "anchors-from" in opt:
     if k in a: a[k][1] = round(a[k][1] + drop, 3)
   eyes = {"eyeL": a["eyeL"][:2], "eyeR": a["eyeR"][:2]}
   pts2 = {**pts, "eyes": eyes}; json.dump(pts2, open(pj, "w")); r = json.loads(run(os.path.join(here, "face-ratios.py"), "mesh", final, pj))
+  if not all(k in r["eyes"] for k in ("eyeL", "eyeR")):   # #701: face-ratios looks for the carved lid in the frame the bow is turned back to; where the bow carries the eye out of its search window (Krakucchanda: lids at 7.01 m, bowed guess 6.87) the guess is where the eye stood before the bow
+    pts2 = {**pts, "eyes": eyes0}; json.dump(pts2, open(pj, "w")); r = json.loads(run(os.path.join(here, "face-ratios.py"), "mesh", final, pj))
   e = r["eyes"]; a["lidL"] = [a["eyeL"][0], e["eyeL"]["y"], e["eyeL"]["rise"]]; a["lidR"] = [a["eyeR"][0], e["eyeR"]["y"], e["eyeR"]["rise"]]
   c = r["corners"]; a["lipHalf"] = round((abs(c["L"]) + abs(c["R"])) / 2, 3)
   # the lip's paint covers the carved lips, from 2.5 cm over the upper lip's foremost point to 1.5 cm under the lower's, and
