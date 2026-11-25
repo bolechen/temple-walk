@@ -1,5 +1,5 @@
 // Measures T05's grown trees on J01 against the art director's lines of 2026-11-25 (docs/t05/DECISIONS.md, 真树与远景): in each judged framing
-// (cam01, cam07, the arrival looking south) every 6 px of the picture is asked what lies there (`__pick`) and the colour under it is read as CIE
+// (cam01, cam07, the arrival looking south) every 8 px of the picture is asked what lies there (`__pick`) and the colour under it is read as CIE
 // Lab (D65). Reported: the needles in the sun (L* ≥ 30) and in the shade, with the darkest tenth (the crowns' undersides, L* ≥ 12 asked); the bare
 // wood (L* 20–30 asked against the sky); the poplars' pale bark (L* 55–65 asked); in each half of the picture, the share of its width where a tree
 // stands against the sky (cam01: a quarter or less each side); and the highest tree pixel against the great hall's eave (cam01: no tree top above
@@ -35,7 +35,7 @@ const stats = (list) => (list.length ? { n: list.length, L: q(list.map((c) => c[
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 });
     await page.waitForTimeout(1500);
     const png = await page.screenshot({ path: path.join(out, `${name}.png`) });
-    const S = 6, samples = await page.evaluate(async ([b64, S]) => {
+    const S = 8, samples = await page.evaluate(async ([b64, S]) => {
       const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob());
       const c = new OffscreenCanvas(img.width, img.height), x2 = c.getContext("2d"); x2.drawImage(img, 0, 0);
       const d = x2.getImageData(0, 0, img.width, img.height).data, res = [];
@@ -60,6 +60,7 @@ const stats = (list) => (list.length ? { n: list.length, L: q(list.map((c) => c[
     const eave = Math.max(...res.filter((s) => s.m === roofMat && s.x > w * 0.4 && s.x < w * 0.6 && s.d < 120).map((s) => s.y));
     report[name] = { needlesSun: stats(sun), needlesShade: stats(shade), bareWood: stats(bark), poplarBark: stats(pale), treeAgainstSky: { left: half(-1), right: half(1) }, treeTopRow: treeTop, eaveRow: Number.isFinite(eave) ? eave : null, treeOverEave: Number.isFinite(eave) ? treeTop < eave : null };
     console.log(name, JSON.stringify(report[name]));
+    fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1));   // (after each view, so that a slow run keeps what it has)
   }
   fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1));
   await br.close(); srv.close();
