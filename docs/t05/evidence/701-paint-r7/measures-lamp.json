@@ -1,0 +1,713 @@
+{
+ "cam03": {},
+ "cam06": {},
+ "face10": {
+  "kasyapa": {
+   "cheek": {
+    "rgb": [
+     153.4,
+     109.9,
+     70.7
+    ],
+    "hue_sat": [
+     28.5,
+     0.539
+    ],
+    "luma": 116.3
+   },
+   "head_luma": 114.3,
+   "lip": {
+    "rgb": [
+     142.8,
+     91,
+     53.5
+    ],
+    "hue_sat": [
+     25.2,
+     0.625
+    ],
+    "luma": 99.3,
+    "px": 2251
+   },
+   "lip_minus_cheek_sat": 0.086,
+   "lip_over_head_luma": 0.87,
+   "lip_over_cheek_luma": 0.85,
+   "lip_dL": 5.5,
+   "lip_dC": 4.3,
+   "衣缘描金": {
+    "luma": 28.7,
+    "ofHead": 0.25,
+    "px": 2441
+   },
+   "背光": {
+    "luma": 91.7,
+    "ofHead": 0.8,
+    "px": 588
+   },
+   "头光与光环": {
+    "luma": 60.6,
+    "ofHead": 0.53,
+    "px": 245387
+   }
+  },
+  "krakucchanda": {
+   "cheek": {
+    "rgb": [
+     189.0,
+     146.2,
+     101.6
+    ],
+    "hue_sat": [
+     30.6,
+     0.462
+    ],
+    "luma": 152.1
+   },
+   "head_luma": 123.1,
+   "lip": {
+    "rgb": [
+     172.4,
+     116.6,
+     71.2
+    ],
+    "hue_sat": [
+     26.9,
+     0.587
+    ],
+    "luma": 125.2,
+    "px": 4339
+   },
+   "lip_minus_cheek_sat": 0.125,
+   "lip_over_head_luma": 1.02,
+   "lip_over_cheek_luma": 0.82,
+   "lip_dL": -1.4,
+   "lip_dC": 7.9,
+   "衣缘描金": {
+    "luma": 38,
+    "ofHead": 0.31,
+    "px": 1041
+   },
+   "头光与光环": {
+    "luma": 66.1,
+    "ofHead": 0.54,
+    "px": 203582
+   }
+  },
+  "sikhin": {
+   "cheek": {
+    "rgb": [
+     163.2,
+     122.1,
+     84.2
+    ],
+    "hue_sat": [
+     28.8,
+     0.484
+    ],
+    "luma": 128.1
+   },
+   "head_luma": 118.7,
+   "lip": {
+    "rgb": [
+     165.4,
+     112.3,
+     71.9
+    ],
+    "hue_sat": [
+     25.9,
+     0.565
+    ],
+    "luma": 120.7,
+    "px": 964
+   },
+   "lip_minus_cheek_sat": 0.081,
+   "lip_over_head_luma": 1.02,
+   "lip_over_cheek_luma": 0.94,
+   "lip_dL": -1.3,
+   "lip_dC": 7.1,
+   "衣缘描金": {
+    "luma": 34.7,
+    "ofHead": 0.29,
+    "px": 379
+   },
+   "背光": {
+    "luma": 79.9,
+    "ofHead": 0.67,
+    "px": 330
+   },
+   "头光与光环": {
+    "luma": 68.8,
+    "ofHead": 0.58,
+    "px": 227715
+   }
+  },
+  "vipasyin": {
+   "cheek": {
+    "rgb": [
+     158.1,
+     119.6,
+     84.8
+    ],
+    "hue_sat": [
+     28.5,
+     0.464
+    ],
+    "luma": 125.3
+   },
+   "head_luma": 116.8,
+   "lip": {
+    "rgb": [
+     119.8,
+     79.1,
+     52
+    ],
+    "hue_sat": [
+     24.0,
+     0.566
+    ],
+    "luma": 85.8,
+    "px": 1445
+   },
+   "lip_minus_cheek_sat": 0.102,
+   "lip_over_head_luma": 0.73,
+   "lip_over_cheek_luma": 0.68,
+   "lip_dL": 12.3,
+   "lip_dC": 0.3,
+   "衣缘描金": {
+    "luma": 108.2,
+    "ofHead": 0.93,
+    "px": 15283
+   },
+   "背光": {
+    "luma": 80.6,
+    "ofHead": 0.69,
+    "px": 14
+   },
+   "头光与光环": {
+    "luma": 69.9,
+    "ofHead": 0.6,
+    "px": 213458
+   }
+  },
+  "visvabhu": {
+   "cheek": {
+    "rgb": [
+     184.1,
+     142.8,
+     101.1
+    ],
+    "hue_sat": [
+     30.1,
+     0.451
+    ],
+    "luma": 148.6
+   },
+   "head_luma": 126.4,
+   "lip": {
+    "rgb": [
+     175.7,
+     122.3,
+     78
+    ],
+    "hue_sat": [
+     27.2,
+     0.556
+    ],
+    "luma": 130.5,
+    "px": 4331
+   },
+   "lip_minus_cheek_sat": 0.105,
+   "lip_over_head_luma": 1.03,
+   "lip_over_cheek_luma": 0.88,
+   "lip_dL": -2.1,
+   "lip_dC": 7.8,
+   "衣缘描金": {
+    "luma": 58,
+    "ofHead": 0.46,
+    "px": 4015
+   },
+   "头光与光环": {
+    "luma": 69.8,
+    "ofHead": 0.55,
+    "px": 164554
+   }
+  },
+  "kanakamuni": {
+   "cheek": {
+    "rgb": [
+     192.4,
+     149.9,
+     105.2
+    ],
+    "hue_sat": [
+     30.8,
+     0.453
+    ],
+    "luma": 155.7
+   },
+   "head_luma": 126.5,
+   "lip": {
+    "rgb": [
+     174,
+     120.5,
+     75.4
+    ],
+    "hue_sat": [
+     27.4,
+     0.567
+    ],
+    "luma": 128.6,
+    "px": 4381
+   },
+   "lip_minus_cheek_sat": 0.114,
+   "lip_over_head_luma": 1.02,
+   "lip_over_cheek_luma": 0.83,
+   "lip_dL": -1.3,
+   "lip_dC": 6.7,
+   "衣缘描金": {
+    "luma": 67.5,
+    "ofHead": 0.53,
+    "px": 2825
+   },
+   "背光": {
+    "luma": 82.5,
+    "ofHead": 0.65,
+    "px": 727
+   },
+   "头光与光环": {
+    "luma": 67.2,
+    "ofHead": 0.53,
+    "px": 228161
+   }
+  },
+  "sakyamuni": {
+   "cheek": {
+    "rgb": [
+     147.4,
+     105.0,
+     67.3
+    ],
+    "hue_sat": [
+     28.2,
+     0.543
+    ],
+    "luma": 111.3
+   },
+   "head_luma": 108.2,
+   "lip": {
+    "rgb": [
+     148.5,
+     93.9,
+     54.3
+    ],
+    "hue_sat": [
+     25.2,
+     0.634
+    ],
+    "luma": 102.6,
+    "px": 173
+   },
+   "lip_minus_cheek_sat": 0.091,
+   "lip_over_head_luma": 0.95,
+   "lip_over_cheek_luma": 0.92,
+   "lip_dL": 1.5,
+   "lip_dC": 7.4,
+   "衣缘描金": {
+    "luma": 47.3,
+    "ofHead": 0.44,
+    "px": 3723
+   },
+   "背光": {
+    "luma": 93,
+    "ofHead": 0.86,
+    "px": 3039
+   },
+   "头光与光环": {
+    "luma": 60.3,
+    "ofHead": 0.56,
+    "px": 286024
+   }
+  }
+ },
+ "face10d": {
+  "kasyapa": {
+   "cheek": {
+    "rgb": [
+     158.7,
+     128.7,
+     93.7
+    ],
+    "hue_sat": [
+     32.3,
+     0.409
+    ],
+    "luma": 132.6
+   },
+   "head_luma": 116.4,
+   "lip": {
+    "rgb": [
+     157.2,
+     113.1,
+     73.3
+    ],
+    "hue_sat": [
+     28.5,
+     0.534
+    ],
+    "luma": 119.6,
+    "px": 2251
+   },
+   "lip_minus_cheek_sat": 0.125,
+   "lip_over_head_luma": 1.03,
+   "lip_over_cheek_luma": 0.9,
+   "lip_dL": -1.8,
+   "lip_dC": 7.7,
+   "衣缘描金": {
+    "luma": 122,
+    "ofHead": 1.05,
+    "px": 2441
+   },
+   "背光": {
+    "luma": 129.1,
+    "ofHead": 1.11,
+    "px": 588
+   },
+   "头光与光环": {
+    "luma": 91.9,
+    "ofHead": 0.79,
+    "px": 245387
+   }
+  },
+  "krakucchanda": {
+   "cheek": {
+    "rgb": [
+     147.4,
+     116.4,
+     82.4
+    ],
+    "hue_sat": [
+     31.4,
+     0.441
+    ],
+    "luma": 120.6
+   },
+   "head_luma": 113.4,
+   "lip": {
+    "rgb": [
+     116.9,
+     78.5,
+     48
+    ],
+    "hue_sat": [
+     26.6,
+     0.589
+    ],
+    "luma": 84.5,
+    "px": 4339
+   },
+   "lip_minus_cheek_sat": 0.148,
+   "lip_over_head_luma": 0.75,
+   "lip_over_cheek_luma": 0.7,
+   "lip_dL": 11.4,
+   "lip_dC": 3.6,
+   "衣缘描金": {
+    "luma": 120.4,
+    "ofHead": 1.06,
+    "px": 1041
+   },
+   "头光与光环": {
+    "luma": 95.5,
+    "ofHead": 0.84,
+    "px": 203582
+   }
+  },
+  "sikhin": {
+   "cheek": {
+    "rgb": [
+     156.5,
+     126.3,
+     91.5
+    ],
+    "hue_sat": [
+     32.1,
+     0.415
+    ],
+    "luma": 130.2
+   },
+   "head_luma": 114.1,
+   "lip": {
+    "rgb": [
+     152.2,
+     108.6,
+     69.9
+    ],
+    "hue_sat": [
+     28.2,
+     0.541
+    ],
+    "luma": 115.1,
+    "px": 964
+   },
+   "lip_minus_cheek_sat": 0.126,
+   "lip_over_head_luma": 1.01,
+   "lip_over_cheek_luma": 0.88,
+   "lip_dL": -0.9,
+   "lip_dC": 7.5,
+   "衣缘描金": {
+    "luma": 119.7,
+    "ofHead": 1.05,
+    "px": 379
+   },
+   "背光": {
+    "luma": 100.2,
+    "ofHead": 0.88,
+    "px": 330
+   },
+   "头光与光环": {
+    "luma": 92,
+    "ofHead": 0.81,
+    "px": 227715
+   }
+  },
+  "vipasyin": {
+   "cheek": {
+    "rgb": [
+     161.1,
+     131.1,
+     95.8
+    ],
+    "hue_sat": [
+     32.4,
+     0.405
+    ],
+    "luma": 134.9
+   },
+   "head_luma": 116.5,
+   "lip": {
+    "rgb": [
+     172.3,
+     127.9,
+     85.4
+    ],
+    "hue_sat": [
+     29.3,
+     0.504
+    ],
+    "luma": 134.3,
+    "px": 1445
+   },
+   "lip_minus_cheek_sat": 0.099,
+   "lip_over_head_luma": 1.15,
+   "lip_over_cheek_luma": 1.0,
+   "lip_dL": -7.4,
+   "lip_dC": 8.2,
+   "衣缘描金": {
+    "luma": 99.8,
+    "ofHead": 0.86,
+    "px": 15283
+   },
+   "背光": {
+    "luma": 99.2,
+    "ofHead": 0.85,
+    "px": 14
+   },
+   "头光与光环": {
+    "luma": 92.6,
+    "ofHead": 0.79,
+    "px": 213458
+   }
+  },
+  "visvabhu": {
+   "cheek": {
+    "rgb": [
+     140.5,
+     109.8,
+     76.9
+    ],
+    "hue_sat": [
+     31.1,
+     0.453
+    ],
+    "luma": 114.0
+   },
+   "head_luma": 114,
+   "lip": {
+    "rgb": [
+     114,
+     76,
+     46
+    ],
+    "hue_sat": [
+     26.5,
+     0.596
+    ],
+    "luma": 81.9,
+    "px": 4331
+   },
+   "lip_minus_cheek_sat": 0.143,
+   "lip_over_head_luma": 0.72,
+   "lip_over_cheek_luma": 0.72,
+   "lip_dL": 12.7,
+   "lip_dC": 3.3,
+   "衣缘描金": {
+    "luma": 100.5,
+    "ofHead": 0.88,
+    "px": 4015
+   },
+   "头光与光环": {
+    "luma": 95,
+    "ofHead": 0.83,
+    "px": 164554
+   }
+  },
+  "kanakamuni": {
+   "cheek": {
+    "rgb": [
+     148.4,
+     117.6,
+     83.6
+    ],
+    "hue_sat": [
+     31.5,
+     0.437
+    ],
+    "luma": 121.7
+   },
+   "head_luma": 114.6,
+   "lip": {
+    "rgb": [
+     120,
+     81.5,
+     50.2
+    ],
+    "hue_sat": [
+     26.9,
+     0.582
+    ],
+    "luma": 87.4,
+    "px": 4381
+   },
+   "lip_minus_cheek_sat": 0.145,
+   "lip_over_head_luma": 0.76,
+   "lip_over_cheek_luma": 0.72,
+   "lip_dL": 10.7,
+   "lip_dC": 3.8,
+   "衣缘描金": {
+    "luma": 108.6,
+    "ofHead": 0.95,
+    "px": 2825
+   },
+   "背光": {
+    "luma": 102,
+    "ofHead": 0.89,
+    "px": 727
+   },
+   "头光与光环": {
+    "luma": 94.6,
+    "ofHead": 0.83,
+    "px": 228161
+   }
+  },
+  "sakyamuni": {
+   "cheek": {
+    "rgb": [
+     157.2,
+     127.1,
+     92.2
+    ],
+    "hue_sat": [
+     32.2,
+     0.414
+    ],
+    "luma": 131.0
+   },
+   "head_luma": 120.2,
+   "lip": {
+    "rgb": [
+     150.4,
+     106.8,
+     68.5
+    ],
+    "hue_sat": [
+     28.1,
+     0.545
+    ],
+    "luma": 113.3,
+    "px": 173
+   },
+   "lip_minus_cheek_sat": 0.131,
+   "lip_over_head_luma": 0.94,
+   "lip_over_cheek_luma": 0.86,
+   "lip_dL": 2.2,
+   "lip_dC": 7.1,
+   "衣缘描金": {
+    "luma": 113.8,
+    "ofHead": 0.95,
+    "px": 3723
+   },
+   "背光": {
+    "luma": 128.1,
+    "ofHead": 1.07,
+    "px": 3039
+   },
+   "头光与光环": {
+    "luma": 92.2,
+    "ofHead": 0.77,
+    "px": 286024
+   }
+  }
+ },
+ "cam03_mouth": {
+  "kasyapa": {
+   "off_screen": true
+  },
+  "krakucchanda": {
+   "lip_min": 64.7,
+   "box_min": 28.9,
+   "box_min_at": [
+    8,
+    -12
+   ],
+   "lip_is_darkest": false
+  },
+  "sikhin": {
+   "lip_min": 72.6,
+   "box_min": 30.8,
+   "box_min_at": [
+    -10,
+    -26
+   ],
+   "lip_is_darkest": false
+  },
+  "vipasyin": {
+   "lip_min": 46.1,
+   "box_min": 28.4,
+   "box_min_at": [
+    -5,
+    -28
+   ],
+   "lip_is_darkest": false
+  },
+  "visvabhu": {
+   "lip_min": 93.6,
+   "box_min": 50.2,
+   "box_min_at": [
+    -14,
+    -20
+   ],
+   "lip_is_darkest": false
+  },
+  "kanakamuni": {
+   "lip_min": 77.6,
+   "box_min": 48.5,
+   "box_min_at": [
+    -8,
+    -14
+   ],
+   "lip_is_darkest": false
+  },
+  "sakyamuni": {
+   "off_screen": true
+  }
+ }
+}
