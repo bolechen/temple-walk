@@ -8,6 +8,7 @@ import { drawJoyaCard } from "./joya-card.js";
 import { farBell } from "./audio.js";
 import { track } from "./analytics.js";
 import { t, lang } from "./i18n.js";
+import { saidNow } from "./temple.js";
 
 /** @param {{ y: any, ui: any, say: (text: string, secs?: number) => void, query: URLSearchParams, bench: boolean }} o */
 export function createJoya({ y, ui, say, query, bench }) {
@@ -75,10 +76,10 @@ export function createJoya({ y, ui, say, query, bench }) {
   }
   take.addEventListener("click", async () => {
     const { blob, url } = await makeCard();
-    $("joyaImg").src = url; $("joyaImg").alt = t("除夕撞钟的卡片"); $("joyaSave").href = url; $("joyaSave").download = t("云径禅寺-除夕撞钟.jpg"); $("joyaSave").textContent = t("保存");
+    $("joyaImg").src = url; $("joyaImg").alt = t("除夕撞钟的卡片"); $("joyaSave").href = url; $("joyaSave").download = saidNow("云径禅寺-除夕撞钟.jpg"); $("joyaSave").textContent = t("保存");
     $("joyaClose").textContent = t("合上"); const file = new File([blob], "yunjing-joya.jpg", { type: "image/jpeg" });
     $("joyaShare").textContent = t("分享"); $("joyaShare").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
-    $("joyaShare").onclick = async () => { try { await navigator.share({ files: [file], title: t("云径禅寺 · 除夕撞钟") }); track("demo.share", { from: "joya", method: "share" }); } catch {} };
+    $("joyaShare").onclick = async () => { try { await navigator.share({ files: [file], title: saidNow("云径禅寺 · 除夕撞钟") }); track("demo.share", { from: "joya", method: "share" }); } catch {} };
     ui.open("joyaCard"); track("joya.card", { year: ev.year, mine: tally.snapshot().mine });
   });
 

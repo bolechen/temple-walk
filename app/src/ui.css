@@ -188,6 +188,8 @@ body.photo #bookBtn, body.bare #bookBtn, body:not(.entered) #bookBtn { display: 
 body:not(.seasons) .need-seasons { display: none !important; }
 /* What shows once a temple has been closed, and there is another to go to (行脚图, #449; game.js sets body.pilgrim). */
 body:not(.pilgrim) .need-pilgrim { display: none !important; }
+/* A level without the book of seals (Level.book; T05's first release): its button, the goal line, the way to the next place and the key card's B. */
+body.nobook :is(#bookBtn, #goal, #way, .need-book) { display: none !important; }
 #goal span { display: grid; gap: 4px; font: 400 21px/1 var(--kai); letter-spacing: var(--track); }
 #goal small { font-size: var(--t-xs); letter-spacing: .2em; color: var(--on-2); }
 /* The way there: the same small seal on the picture where it lies, or at the edge toward it, with how far. */
