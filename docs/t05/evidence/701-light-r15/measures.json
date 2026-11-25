@@ -1,0 +1,142 @@
+{
+ "kasyapa": {
+  "old": {
+   "lotus_luma": 151.5,
+   "robe_luma": 118.1,
+   "chest_luma": 103.6,
+   "face_luma": 94.4
+  },
+  "new": {
+   "lotus_luma": 25.5,
+   "robe_luma": 28.8,
+   "chest_luma": 36.1,
+   "face_luma": 41.1
+  },
+  "d1": {
+   "lotus_luma": 25.6,
+   "robe_luma": 28.9,
+   "chest_luma": 36.2,
+   "face_luma": 41.3
+  }
+ },
+ "krakucchanda": {
+  "old": {
+   "lotus_luma": 144.9,
+   "robe_luma": 121.6,
+   "chest_luma": 121.9,
+   "face_luma": 102.6
+  },
+  "new": {
+   "lotus_luma": 42.4,
+   "robe_luma": 53.1,
+   "chest_luma": 78.2,
+   "face_luma": 75.8
+  },
+  "d1": {
+   "lotus_luma": 42.4,
+   "robe_luma": 53.2,
+   "chest_luma": 78.2,
+   "face_luma": 76
+  }
+ },
+ "sikhin": {
+  "old": {
+   "lotus_luma": 149.6,
+   "robe_luma": 125.7,
+   "chest_luma": 95.2,
+   "face_luma": 105.8
+  },
+  "new": {
+   "lotus_luma": 55.9,
+   "robe_luma": 69.3,
+   "chest_luma": 93,
+   "face_luma": 85.5
+  },
+  "d1": {
+   "lotus_luma": 56,
+   "robe_luma": 69.4,
+   "chest_luma": 93.1,
+   "face_luma": 85.7
+  }
+ },
+ "vipasyin": {
+  "old": {
+   "lotus_luma": 154.9,
+   "robe_luma": 121.7,
+   "chest_luma": 104.5,
+   "face_luma": 103.2
+  },
+  "new": {
+   "lotus_luma": 61.5,
+   "robe_luma": 71.9,
+   "chest_luma": 106.2,
+   "face_luma": 94.4
+  },
+  "d1": {
+   "lotus_luma": 61.6,
+   "robe_luma": 72,
+   "chest_luma": 106.2,
+   "face_luma": 94.6
+  }
+ },
+ "visvabhu": {
+  "old": {
+   "lotus_luma": 148.9,
+   "robe_luma": 122,
+   "chest_luma": 91.1,
+   "face_luma": 107.7
+  },
+  "new": {
+   "lotus_luma": 55.9,
+   "robe_luma": 69.2,
+   "chest_luma": 80.7,
+   "face_luma": 83.1
+  },
+  "d1": {
+   "lotus_luma": 56,
+   "robe_luma": 69.3,
+   "chest_luma": 80.7,
+   "face_luma": 83.3
+  }
+ },
+ "kanakamuni": {
+  "old": {
+   "lotus_luma": 139.8,
+   "robe_luma": 117.1,
+   "chest_luma": 116.7,
+   "face_luma": 105.6
+  },
+  "new": {
+   "lotus_luma": 42.2,
+   "robe_luma": 49.9,
+   "chest_luma": 74.5,
+   "face_luma": 68.3
+  },
+  "d1": {
+   "lotus_luma": 42.3,
+   "robe_luma": 50.1,
+   "chest_luma": 74.6,
+   "face_luma": 68.6
+  }
+ },
+ "sakyamuni": {
+  "old": {
+   "lotus_luma": 156.9,
+   "robe_luma": 140.1,
+   "chest_luma": null,
+   "face_luma": 84.5
+  },
+  "new": {
+   "lotus_luma": 26.8,
+   "robe_luma": 32.1,
+   "chest_luma": null,
+   "face_luma": 40.9
+  },
+  "d1": {
+   "lotus_luma": 26.9,
+   "robe_luma": 32.3,
+   "chest_luma": null,
+   "face_luma": 41.1
+  }
+ }
+}
