@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "scene_id": "T00",
-  "generated_at": "2026-11-25T13:24:59.063Z",
+  "generated_at": "2026-11-25T13:37:56.691Z",
   "repository": "https://github.com/bolechen/temple-walk",
   "source": {
-    "sha": "74b22f39580461d6723432b09e7ff0dec5f936c1",
-    "url": "https://github.com/bolechen/temple-walk/commit/74b22f39580461d6723432b09e7ff0dec5f936c1"
+    "sha": "a00455033dbbdbf0a0b8a673adf5a22c1f519c40",
+    "url": "https://github.com/bolechen/temple-walk/commit/a00455033dbbdbf0a0b8a673adf5a22c1f519c40"
   },
   "delivery": {
     "analytics": {
@@ -582,10 +582,10 @@
     "kind": "developer_report"
   },
   "verification": {
-    "status": "completed",
-    "conclusion": "success",
-    "run_id": 45622513025,
-    "url": "https://github.com/bolechen/temple-walk/actions/runs/45622513025",
+    "status": "in_progress",
+    "conclusion": null,
+    "run_id": 45625511888,
+    "url": "https://github.com/bolechen/temple-walk/actions/runs/45625511888",
     "checks": {
       "syntax": "pending",
       "unit": "pending",
@@ -596,7 +596,7 @@
     ]
   },
   "deployment": {
-    "status": "deployed",
+    "status": "not_current",
     "sha": "74b22f39580461d6723432b09e7ff0dec5f936c1",
     "target": "canary",
     "url": "https://temple-walk-canary.bole-chen.workers.dev/",
