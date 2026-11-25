@@ -141,6 +141,8 @@ export function buildSite(M) {
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
+  // The shut doors' leaves face the court: they take the open air's light, not the inside's (hall.js, HALL_DOORS).
+  if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodX, { ao: () => 1 }));
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
   // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner

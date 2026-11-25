@@ -196,6 +196,11 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
   const { FILL } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), s = buildSite(M), eye = (x, z, y = 4.6) => ({ x, y, z });
   for (const [x, z] of [STATION.A, STATION.B, [0, 9.5]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
+  if (SHUT) {   // the doors are shut (HALL_DOORS): the hall's light stays out wherever the eye is, a window's bars included (the art director's call on the first pictures), and comes back with `shut: false`
+    for (const [x, z] of [STATION.C, [0, 1], [-16.4, 1], STATION.F, STATION.E]) assert.equal(h.within(x, 4.6, z), 0, `no fill at (${x}, ${z}) while the doors are shut`);
+    for (let i = 0; i < 20; i++) assert.equal(s.tick(0.05, eye(-16.4, 1), false), 0);
+    return;
+  }
   for (const k of ["E", "D"]) assert.equal(h.within(STATION[k][0], 4.6, STATION[k][1]), 1, `the whole fill at ${k}`);
   assert.ok(h.within(...[STATION.F[0], 4.6, STATION.F[1]]) > 0.9, "nearly all of it at F, 2 m in");
   // from 9 m out to 3 m in it rises without a step: never more than 2% of it over 5 cm walked
