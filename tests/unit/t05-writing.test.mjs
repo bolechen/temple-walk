@@ -12,6 +12,7 @@ const { PAGE } = await import("../../app/levels/t05/page.js");
 const { STELE_TEXT } = await import("../../app/levels/t05/stele.js");
 const { createMonk } = await import("../../app/src/monk.js");
 const { createRites } = await import("../../app/src/rites.js");
+const { HOLD } = await import("../../app/src/writing.js");
 const { dressed } = await import("./novice-glb.mjs");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -90,7 +91,7 @@ test("posed at once and then turned to the place, the leaf is held before him wi
   for (let i = 0; i < 3; i++) { now += 50; for (const f of ticks) f(); G.updateMatrixWorld(true); }
   let leaf = null; scene.traverse((o) => { if (!leaf && o.userData.part === "writing" && o.parent === scene) leaf = o; });
   const local = G.worldToLocal(leaf.position.clone());
-  assert.ok(local.distanceTo(new THREE.Vector3(0.03, 0.8, 0.25)) < 0.02, `the board stands where he holds it, before his chest: ${local.toArray().map((v) => v.toFixed(3))}`);
+  assert.ok(local.distanceTo(new THREE.Vector3(...HOLD.board)) < 0.02, `the board stands where he holds it, before his chest: ${local.toArray().map((v) => v.toFixed(3))}`);
   const up = new THREE.Vector3(0, 0, 1).applyQuaternion(leaf.quaternion), toHim = new THREE.Vector3(0, 0, -1).applyQuaternion(G.quaternion);
   assert.ok(up.y > 0.5 && up.dot(toHim) > 0.2, `its paper faces up and toward him (${up.toArray().map((v) => v.toFixed(2))})`);
   rites.rest(); assert.ok(!leaf.visible, "rest() puts it away");
@@ -106,4 +107,32 @@ test("the paper lies a millimetre clear of the board's face, and the brush's tip
   const gap = paper.geometry.boundingBox.min.z - board.geometry.boundingBox.max.z;
   assert.ok(gap >= 0.0008, `the paper is ${(gap * 1000).toFixed(2)} mm above the board's face`);
   assert.ok(0.005 - paper.geometry.boundingBox.max.z >= 0.0005, "the brush's tip (5 mm off the leaf's middle) is above the paper");
+});
+
+// #744 (the art director's final review on #728): seen in the copy's shot, over his left shoulder, the hand that writes lay on
+// his left ear, as if he scratched it. Through the whole of the writing, on both bodies, the hand stays clear of the ear in a
+// 1920×1080 picture: its centre at least 45 px from the ear's (the ear is about 42 px tall there, the hand about 36 px across).
+const { shotPose } = await import("../../app/src/director.js");
+for (const [name, make] of BODIES) test(`in the copy's shot the hand that writes stays clear of his ear (${name})`, async () => {
+  const monk = await make(), G = monk.group, scene = new THREE.Scene(); scene.add(G);
+  monk.update(0, 0, "bind", 0, () => 0, {}); G.updateMatrixWorld(true);
+  let ear = null;   // the left ear: the skin's farthest point to his left at ear height in the bind pose, kept in the head bone's frame
+  for (const m of Object.values(monk.parts)) { const P = m.geometry?.attributes?.position; if (!P) continue; for (let i = 0; i < P.count; i++) { const y = P.getY(i), x = P.getX(i); if (y > 0.93 && y < 1.03 && (!ear || x > ear.x)) ear = new THREE.Vector3(x, y, P.getZ(i)); } }
+  ear.x -= 0.012; const earAt = monk.bones.head.worldToLocal(ear.clone());
+  const p = site.places.copy, floor = walker.heightAt(p.at[0], p.at[1]);
+  G.position.set(p.at[0], floor, p.at[1]); G.rotation.y = p.face; G.updateMatrixWorld(true);
+  const ticks = [], rites = createRites({ monk, scene, site, M, onTick: (f) => ticks.push(f), strike: () => {}, direct: () => {}, directed: () => false, directArrived: () => false, directOut: () => 1 });
+  const o = shotPose(p, p.shot, floor, 0, 16 / 9), cam = new THREE.PerspectiveCamera(o.fov, 16 / 9, 0.05, 500); cam.position.copy(o.p); cam.quaternion.copy(o.q); cam.updateMatrixWorld();
+  const px = (v) => { const q = v.clone().project(cam); return new THREE.Vector2((q.x + 1) * 960, (1 - q.y) * 540); };
+  const frame = () => { now += 50; for (const f of ticks) f(); G.updateMatrixWorld(true); monk.update(0.05, 0, null, now / 1000, () => floor, { act: rites.act }); G.updateMatrixWorld(true); };
+  for (let i = 0; i < 20; i++) frame();
+  let done = false; rites.writing.copyLine(() => true, { text: STELE_TEXT.lines[0].text }).then(() => { done = true; });
+  let nearest = Infinity, seen = 0;
+  for (let i = 0; i < 1200 && !done; i++) {
+    frame(); await Promise.resolve(); await Promise.resolve();
+    if (!rites.state().writing.writing) continue;
+    seen++; nearest = Math.min(nearest, px(monk.bones.head.localToWorld(earAt.clone())).distanceTo(px(monk.bones.rightHand.getWorldPosition(new THREE.Vector3()))));
+  }
+  assert.ok(seen > 100, `the writing was watched (${seen} frames)`);
+  assert.ok(nearest >= 45, `the hand came within ${nearest.toFixed(1)} px of his ear`);
 });
