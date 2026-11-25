@@ -21,6 +21,7 @@ import * as THREE from "three";
 import { box, merge, mesh } from "../../src/geo.js";
 import { SECOND, LANE, AXIS } from "./axis.js";
 import { HALL } from "./hall.js";
+import { dryMaterials } from "./dry.js";
 
 /** The ceilings the art director set (#548: her comments 7068262688 and 7069444907) and the great hall's eave line. */
 export const LIMITS = Object.freeze({
@@ -332,7 +333,7 @@ export function buildSurround(M, C) {
     const m = mesh(merge(list), material, { cast }); m.userData.surround = name; m.userData.walk = false; m.name = mname; group.add(m);
   };
   const add = (set, name, cast) => {
-    for (const [key, material] of [["trunk", M.bark], ["crown", M.cedar]]) put(set[key], material, name, cast, `surround-${name}-${key}`);
+    for (const [key, material] of [["trunk", M.bark], ["crown", dryMaterials(M).cedar]]) put(set[key], material, name, cast, `surround-${name}-${key}`);
     set.walls.forEach((list, i) => put(list, wall[i], name, cast, i ? `surround-${name}-${WALL_TONES[i].name}-walls` : `surround-${name}-walls`));   // (the walls, a draw to each tier)
     set.roofs.forEach((list, i) => put(list, tile[i], name, cast, `surround-${name}-${TILE_TONES[i].name}-roofs`));   // (the roofs, a draw to each tone of tile)
   };
