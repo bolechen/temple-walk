@@ -1,0 +1,122 @@
+// T05's own observances and the eye that goes to their shots (src/director.js): the copy of the stele and the two places where
+// the observation's stroke is written (app/levels/t05/stele.js, page.js). The same holds as for the prologue's (director.test.mjs),
+// on T05's own plan: every shot stands clear of what is built and of the ground through its drift; he, the leaf and the brush in
+// his hands, and the stele's face he reads, stay inside the picture's safe area (NDC drawn in by a tenth) on a wide screen, a
+// laptop's and a phone held either way; resting, the eye turns no more than a degree a second; and from twelve directions round
+// each place the swing there and back is made, never cut, within the turn and speed limits, and through nothing.
+import test from "node:test";
+import assert from "node:assert/strict";
+import "./dom-stub.mjs";
+import * as THREE from "three";
+import { buildSite, createWalker } from "../../app/levels/t05/site.js";
+import { PAGE } from "../../app/levels/t05/page.js";
+import { followEye } from "../../app/src/eye.js";
+import { DIRECT, shotPose, createDirector, placePoint, turnBetween, durations } from "../../app/src/director.js";
+
+const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
+const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
+const site = buildSite(M), walker = createWalker(site);
+for (const [k, p] of Object.entries(PAGE.places)) site.places[k] ??= { ...p, r: 0 };   // as src/levelpage.js adds them
+const IDS = ["copy", ...Object.keys(PAGE.places)];
+const DT = 1 / 60, SAFE = 0.9;
+const at = (p) => walker.heightAt(p.at[0], p.at[1]);
+function follower(p, foot, yaw) {
+  const e = followEye(walker, { x: p.at[0], z: p.at[1], foot, eyeY: walker.eyeAt(p.at[0], p.at[1]), yaw, pitch: 0.04, side: 1.2, reach: 6.2 });
+  const cam = new THREE.PerspectiveCamera(50, 16 / 9, 0.05, 500); cam.position.fromArray(e.at(e.d)); cam.rotation.set(0.04, -yaw, 0, "YXZ"); cam.updateMatrixWorld();
+  return cam;
+}
+const centreOf = (p, foot) => new THREE.Vector3(p.at[0], foot + 0.85, p.at[1]);
+
+test("every one of T05's observances has a shot and a view, and stands where he can stand", () => {
+  for (const id of IDS) {
+    const p = site.places[id], s = p.shot; assert.ok(s, `${id}: no shot`);
+    for (const k of ["at", "look", "keep"]) assert.ok(Array.isArray(s[k]), `${id}: shot.${k}`);
+    const d = durations(s); assert.equal(d.in, s.in, `${id}: shot.in outside 1.6–2.4 s`); assert.equal(d.out, s.out, `${id}: shot.out outside 0.8–1.2 s`);
+    assert.ok(site.views[`shot-${id}`], `${id}: no shot-${id} view`);
+    assert.ok(!walker.blocked(p.at[0], p.at[1]), `${id}: he cannot stand at ${p.at}`);
+  }
+  assert.ok(site.places.copy.stele && site.places.copy.act === "抄碑" && site.places.copy.r > 0.5, "the stele's place is offered with E");
+  for (const id of Object.keys(PAGE.places)) assert.equal(site.places[id].r, 0, `${id}: the observation's place is offered only once its looks are met, never by standing there`);
+});
+
+test("no shot stands in anything or at the ground, from its first moment to the end of its drift", () => {
+  for (const id of IDS) {
+    const p = site.places[id], foot = at(p), s = p.shot;
+    for (const t of [0, (s.drift?.for ?? 20) / 2, s.drift?.for ?? 20]) {
+      const o = shotPose(p, s, foot, t);
+      assert.ok(!walker.eyeShut(o.p.x, o.p.y, o.p.z, foot), `${id} at ${t} s: the eye is inside something at ${o.p.toArray().map((v) => v.toFixed(2))}`);
+      assert.ok(o.p.y > walker.landAt(o.p.x, o.p.z) + 0.15, `${id} at ${t} s: the eye is at the ground`);
+    }
+  }
+});
+
+test("he, what his hands hold and the stele's face stay inside the safe area at 16:9, 4:3, 9:16 and 19.5:9", () => {
+  for (const id of IDS) {
+    const p = site.places[id], foot = at(p), s = p.shot;
+    for (const aspect of [16 / 9, 4 / 3, 9 / 16, 19.5 / 9]) for (const t of [0, s.drift?.for ?? 20]) {
+      const o = shotPose(p, s, foot, t, aspect), cam = new THREE.PerspectiveCamera(o.fov, aspect, 0.05, 500);
+      cam.position.copy(o.p); cam.quaternion.copy(o.q); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+      for (const k of s.keep) {
+        const w = placePoint(p, foot, k), v = w.clone().project(cam), ahead = w.clone().applyMatrix4(cam.matrixWorldInverse).z < 0;
+        assert.ok(ahead && Math.abs(v.x) <= SAFE && Math.abs(v.y) <= SAFE, `${id} (${aspect.toFixed(2)}, ${t} s): [${k}] falls at (${v.x.toFixed(2)}, ${v.y.toFixed(2)})`);
+      }
+    }
+  }
+});
+
+test("resting on a shot, the eye turns of itself no more than a degree a second", () => {
+  for (const id of IDS) {
+    const p = site.places[id], foot = at(p), s = p.shot;
+    let prev = shotPose(p, s, foot, 0), prevP = prev.p.clone();
+    for (let t = 0.5; t <= (s.drift?.for ?? 20) + 1; t += 0.5) {
+      const o = shotPose(p, s, foot, t);
+      assert.ok(THREE.MathUtils.radToDeg(turnBetween(prev.q, o.q)) <= 0.5 + 1e-6, `${id}: turned faster than 1°/s at ${t} s`);
+      assert.ok(o.p.distanceTo(prevP) <= DIRECT.glide * 0.5 + 1e-6, `${id}: glided faster than ${DIRECT.glide} m/s at ${t} s`);
+      prev = o; prevP = o.p.clone();
+    }
+  }
+});
+
+function run(director, cam, centre, frames, onFrame = () => {}) {
+  const base = { p: cam.position.clone(), q: cam.quaternion.clone() };
+  for (let i = 0; i < frames; i++) { cam.position.copy(base.p); cam.quaternion.copy(base.q); director.apply(cam, DT, centre, 50); onFrame(i, cam); }
+  cam.position.copy(base.p); cam.quaternion.copy(base.q);
+}
+const TURN = THREE.MathUtils.radToDeg(DIRECT.rate.in) * DT + 0.05, TURN_BACK = THREE.MathUtils.radToDeg(DIRECT.rate.out) * DT + 0.05, MOVE = DIRECT.speed * DT + 0.01;
+const deep = (v, foot) => [[0, 0], [0.03, 0], [-0.03, 0], [0, 0.03], [0, -0.03]].every(([dx, dz]) => walker.eyeShut(v.x + dx, v.y, v.z + dz, foot) === true);
+const grazes = (v) => walker.railNear(v.x, v.y, v.z, 0.1);
+function planned(d, cam, centre, check) { let n = 0; do { run(d, cam, centre, 1, check); n++; } while (d.state().planning && n < 600); return n; }
+
+test("every swing there and back is made, never cut: within the turn and speed limits, and never through anything", () => {
+  for (const id of IDS) {
+    const p = site.places[id], foot = at(p), centre = centreOf(p, foot);
+    for (let k = 0; k < 12; k++) {
+      const yaw = (k / 12) * Math.PI * 2, cam = follower(p, foot, yaw), start = cam.position.clone();
+      let veil = 0, last = null, lastQ = null;
+      const d = createDirector({ walker, veil: (v) => { veil = Math.max(veil, v); } });
+      assert.ok(d.go(id, p, foot));
+      const check = (i, c) => {
+        if (last) {
+          const turn = THREE.MathUtils.radToDeg(turnBetween(lastQ, c.quaternion)), move = c.position.distanceTo(last), lim = d.state().phase === "out" ? TURN_BACK : TURN;
+          assert.ok(turn <= lim && move <= MOVE, `${id} from yaw ${k * 30}°: the picture moved ${turn.toFixed(2)}° / ${move.toFixed(3)} m in a frame (${JSON.stringify(d.state().route)})`);
+        }
+        if (d.state().w > 0 && d.state().w < 0.95 && c.position.distanceTo(start) > DIRECT.near + 0.05) {
+          assert.ok(!deep(c.position, foot), `${id} from yaw ${k * 30}°: the swing passed through something at ${c.position.toArray().map((v) => v.toFixed(2))} (${JSON.stringify(d.state().route)})`);
+          assert.ok(!grazes(c.position), `${id} from yaw ${k * 30}°: the swing passed by a railing at ${c.position.toArray().map((v) => v.toFixed(2))}`);
+        }
+        last = c.position.clone(); lastQ = c.quaternion.clone();
+      };
+      const waited = planned(d, cam, centre, check), secs = d.state().in;
+      assert.ok(waited < 600, `${id} from yaw ${k * 30}°: the way was never worked out`);
+      assert.ok(secs <= 6, `${id} from yaw ${k * 30}°: a swing of ${secs.toFixed(1)} s is too slow`);
+      run(d, cam, centre, Math.ceil((secs + 0.2) / DT), check);
+      const st = d.state(); assert.equal(st.phase, "hold", `${id} from yaw ${k * 30}°: not on the shot`);
+      assert.ok(!st.blocked, `${id} from yaw ${k * 30}°: no clear route round him`);
+      d.back(); planned(d, cam, centre, check); const home = d.state().out;
+      assert.ok(home <= 6, `${id} from yaw ${k * 30}°: a way back of ${home.toFixed(1)} s is too slow`);
+      run(d, cam, centre, Math.ceil((home + 0.2) / DT), check);
+      assert.equal(d.state().phase, "idle", `${id} from yaw ${k * 30}°: not back with him`);
+      assert.equal(d.state().cuts, 0, `${id} from yaw ${k * 30}°: a swing was cut`); assert.equal(veil, 0, "the ink was drawn");
+    }
+  }
+});

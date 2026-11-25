@@ -232,7 +232,7 @@ export function buildAxis(M, { C, W }) {
     mesh(merge(pwood), M.woodX),
     mesh(merge([new THREE.ConeGeometry(PAV.eave * Math.SQRT2, PAV.roofH, 4, 1).rotateY(Math.PI / 4).translate(mx, ceil + 0.1 + PAV.roofH / 2, mz), new THREE.ConeGeometry(0.22, 0.6, 8).translate(mx, ceil + 0.1 + PAV.roofH + 0.25, mz)]), M.tile),
   );
-  walk.solids.push({ x0: M0.x0 - BODY, x1: M0.x1 + BODY, z0: M0.z0 - BODY, z1: M0.z1 + BODY, eyeTop: M0.y + PAV.base + PAV.column + 0.3 + PAV.beam + 0.1 + PAV.roofH + 0.85 });
+  // (What the written plan says of the pavilion, its base a floor reached by three steps, its columns and the stele in the way, is ./stele.js's.)
   const L = LAMP, table = mesh(merge([box(L.w, L.h, L.d, L.x, L.y + L.h / 2, L.z)]), M.woodX);
   group.add(table);
   walk.solids.push({ x0: L.x - L.w / 2 - BODY, x1: L.x + L.w / 2 + BODY, z0: L.z - L.d / 2 - BODY, z1: L.z + L.d / 2 + BODY, eyeTop: L.y + L.h });
