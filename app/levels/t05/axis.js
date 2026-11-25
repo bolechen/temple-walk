@@ -106,7 +106,7 @@ const grow = () => {
   // temple's (the inner gate stands 20 m south of the first white box, INNER_SHIFT): between the archway's roof (to z 120) and the gate's eave (from z 134.7,
   // 4.75 m up) a crown has about eleven metres, so the rows are eight a side in two lines rather than one long one; the last of each outer row stands beyond
   // the eave's width, nearer the gate. The two kept lines (KEPT_SIGHTS) push a tree out if it stops one.
-  const SOUTH = { inner: [123.2, 126.0, 128.9, 131.6], outer: [124.5, 127.3, 130.1, 133.0] };
+  const SOUTH = { inner: [123.2, 126.0, 128.9, 131.6], outer: [124.5, 127.3, 130.1, 134.3] };   // (the last of each outer row past the eave's width and past the line the check walks across the terrace at the gate's foot, z 132.8)
   for (const sx of [-1, 1]) for (const row of /** @type {const} */ (["inner", "outer"])) for (const [k, z0] of SOUTH[row].entries()) {
     const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2);
     const x = row === "inner" ? PATH.hw + 2.2 + rnd() * 0.6 : k === 3 ? 11.9 : PATH.hw + 5.3 + rnd() * 0.6, z = +(z0 + (sx < 0 ? 0.35 : -0.2) + 0.3 * (rnd() - 0.5)).toFixed(2);

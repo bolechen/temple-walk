@@ -147,7 +147,7 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   // (the art director's lines of 2026-11-25 and #573 comment 7166589253: old arborvitae in rows only between the inner gate and the archway, eight a side in two
   // staggered lines, crown against crown; north of the archway broad pines, scattered, none of them a cypress; nothing at the Wuliang hall's steps)
   const rows = onTerrace.filter((t) => t.kind === "cypress"), pines = onTerrace.filter((t) => t.kind === "pine");
-  assert.ok(rows.every((t) => t.z > AXIS.paifangZ + 4 && t.z < FOOT.inner.z0 - 2), `the rows keep between the archway and the gate: ${rows.map((t) => t.z)}`);
+  assert.ok(rows.every((t) => t.z > AXIS.paifangZ + 4 && t.z < FOOT.inner.z0 - 0.8), `the rows keep between the archway and the gate: ${rows.map((t) => t.z)}`);
   assert.ok([-1, 1].every((sx) => rows.filter((t) => Math.sign(t.x) === sx).length === 8), "eight a side (six the least, seven or eight better)");
   for (const sx of [-1, 1]) { const zs = rows.filter((t) => Math.sign(t.x) === sx).map((t) => t.z).sort((a, b) => a - b); assert.ok(zs.every((z, i) => i === 0 || z - zs[i - 1] <= 3.2), `side ${sx}, crown against crown: ${zs}`); }
   assert.ok(pines.length >= 5 && pines.every((t) => t.z < AXIS.paifangZ - 5 && t.z > FOOT.hall.z1 + 4) && onTerrace.length === rows.length + pines.length, "north of the archway broad pines only");

@@ -72,6 +72,8 @@ const stats = (cs) => (cs.length ? { n: cs.length, L: med(cs.map((c) => c[0])), 
       r.frontShade = stats(of((q) => /^(woodV|lattice|plaster|woodX)$/.test(q.mat) && q.d > 35 && q.d < 75 && q.c[0] < 45));
       const treeCol = (x) => res.some((q) => q.x === x && TREE.test(q.mat) && q.d < 80);
       r.treesWidth = { left: +(cols.filter((x) => x < w / 2 && treeCol(x)).length / cols.length).toFixed(3), right: +(cols.filter((x) => x >= w / 2 && treeCol(x)).length / cols.length).toFixed(3) };
+      const crownCol = (x) => res.some((q) => q.x === x && q.mat === "dryNeedles" && q.d < 80);   // the framing crowns alone (the bare saplings along the terrace's foot left out)
+      r.crownsWidth = { left: +(cols.filter((x) => x < w / 2 && crownCol(x)).length / cols.length).toFixed(3), right: +(cols.filter((x) => x >= w / 2 && crownCol(x)).length / cols.length).toFixed(3) };
       const top = Math.min(...res.filter((q) => TREE.test(q.mat) && q.d < 80).map((q) => q.y)), eave = Math.max(...res.filter((q) => q.mat === "tile" && Math.abs(q.x - w / 2) < w * 0.15).map((q) => q.y));
       r.treeTopRow = Number.isFinite(top) ? top : null; r.eaveRow = Number.isFinite(eave) ? eave : null; r.treeOverEave = Number.isFinite(top) && Number.isFinite(eave) ? top < eave : null;
     }
