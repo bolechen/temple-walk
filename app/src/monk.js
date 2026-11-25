@@ -105,11 +105,15 @@ export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, 
 // toward the other hand and `out` forward; the thumbs rise from the far edge of the palms and meet over the middle,
 // `thumb.up` over the left palm and `thumb.fwd` before the palms' middle (each rising to `arch` of that height within
 // `turn` of its way in), so that thumbs and fingers close round an open oval. How high the hands lie is not written here: they are let down onto the cloth as the lap has it
-// (`layHands`), each lying no steeper than `tip`. `elbow` is the way the elbows are drawn.
-export const LAP_HAND = { x: 0.03, z: 0.166, out: 0.2, tip: 0.04, stack: 0.016, elbow: [1, -1, -0.6], thumb: { up: 0.023, fwd: 0.03, gap: 0.004, turn: 0.2, arch: 1.15 } };
+// (`layHands`), each lying no steeper than `tip`. In the lap the hands are drawn `big` times their standing size and
+// plump (the sheet's are a small child's mitts), `x` being where the middle of each hand's length lies: the two lie
+// deep over each other, the left's fingers on the right's fingers and palm, so that from before him there is little
+// more than one hand's width to see. `elbow` is the way the elbows are drawn.
+export const LAP_HAND = { x: 0.011, z: 0.163, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.012, fwd: 0.03, gap: 0.004, turn: 0.5, arch: 1.0, thick: 1.25 } };
 // A hand lying palm up, as rods along its fingers' way from the wrist's middle: how far along, how thick it is there
 // (the wrist's ball, the palm, the knuckles, the fingertips) and how far to either side it reaches.
-const HAND_ROD = [[0, 0.027, 0], [0.03, 0.013, 0.022], [0.052, 0.0105, 0.018], [0.082, 0.0105, 0.014]];
+const HAND_ROD = [[0, 0.027, 0], [0.03, 0.013, 0.022], [0.052, 0.0115, 0.018], [0.082, 0.0115, 0.014]].map(([d, r, w], i) => (i ? [d * LAP_HAND.big, r * LAP_HAND.big, w * LAP_HAND.big] : [d, r, w]));
+const HAND_MID = 0.045 * LAP_HAND.big;   // from the wrist to the middle of the hand's length
 const HAND_SHIFT = [-0.0045, -0.002, 0];   // how the palm and its fingers are set against the wrist's bone (buildHand)
 const SKULL = V3(0, 1.049, 0.006), R = 0.131;
 // The light under his chin (#664): the skull's normals that look more than `from` downward keep only `keep` of the rest
@@ -435,18 +439,18 @@ export function createMonk(opts = {}) {
     const out = {}, under = [];
     for (const [n, s] of /** @type {[string, number][]} */ ([["right", -1], ["left", 1]])) {
       const hx = -s / Math.hypot(1, LAP_HAND.out), hz = LAP_HAND.out / Math.hypot(1, LAP_HAND.out), px = s * LAP_HAND.x, pz = LAP_HAND.z;
-      const floorAt = (x, z) => { let y = clothTop(x, z); for (const u of under) { const d = (x - u.wrist.x) * u.f.x + (z - u.wrist.z) * u.f.z, side = Math.abs((x - u.wrist.x) * u.f.z - (z - u.wrist.z) * u.f.x); if (d > -0.02 && d < 0.09 && side < 0.03) y = Math.max(y, u.wrist.y + u.f.y * d + (d < 0.015 ? 0.027 : d < 0.045 ? 0.013 : 0.009)); } return y; };
+      const floorAt = (x, z) => { let y = clothTop(x, z); for (const u of under) { const d = (x - u.wrist.x) * u.f.x + (z - u.wrist.z) * u.f.z, side = Math.abs((x - u.wrist.x) * u.f.z - (z - u.wrist.z) * u.f.x); if (d > -0.02 && d < 0.09 * LAP_HAND.big && side < 0.03 * LAP_HAND.big) y = Math.max(y, u.wrist.y + u.f.y * d + (d < 0.015 ? 0.027 : (d < 0.045 * LAP_HAND.big ? 0.013 : 0.0115) * LAP_HAND.big)); } return y; };
       let best = null;
       for (let sl = -LAP_HAND.tip; sl <= LAP_HAND.tip + 1e-9; sl += 0.02) {
         const l = Math.hypot(1, sl), f = V3(hx / l, sl / l, hz / l), cosl = 1 / l; let wy = -9;
         // (the wrist's plan place: the palm's middle is 0.03 along the hand from it)
-        const wx = px - f.x * 0.03, wz = pz - f.z * 0.03;
+        const wx = px - f.x * HAND_MID, wz = pz - f.z * HAND_MID;
         for (const [d, r, side] of HAND_ROD) for (const k of side ? [-1, 0, 1] : [0]) {
           const x = wx + f.x * d + hz * k * side, z = wz + f.z * d - hx * k * side;
           wy = Math.max(wy, floorAt(x, z) + r / cosl + 0.003 - f.y * d);
         }
-        const palm = wy + f.y * 0.03;
-        if (!best || palm + 0.004 * Math.abs(sl) < best.score) best = { score: palm + 0.004 * Math.abs(sl), wrist: V3(wx, wy, wz), f, palm: V3(wx + f.x * 0.03, palm, wz + f.z * 0.03) };
+        const palm = wy + f.y * HAND_MID;
+        if (!best || palm + 0.004 * Math.abs(sl) < best.score) best = { score: palm + 0.004 * Math.abs(sl), wrist: V3(wx, wy, wz), f, palm: V3(wx + f.x * HAND_MID, palm, wz + f.z * HAND_MID) };
       }
       // the hand's own frame there: fingers toward -y, the palm up along +z as nearly as the fingers' way lets it
       const y = best.f.clone().negate(), z = V3(0, 1, 0).addScaledVector(best.f, -best.f.y).normalize(), x = V3().crossVectors(y, z);
@@ -458,12 +462,12 @@ export function createMonk(opts = {}) {
     const T = LAP_HAND.thumb, meet = V3(0, out.left.palm.y + T.up, (out.left.palm.z + out.right.palm.z) / 2 + T.fwd);
     for (const n of ["left", "right"]) {
       const h = out[n], tip = meet.clone(); tip.x += h.s * T.gap;
-      tip.sub(h.wrist).applyQuaternion(h.q.clone().invert()); tip.x *= h.s; tip.sub(V3(...HAND_SHIFT));
+      tip.sub(h.wrist).applyQuaternion(h.q.clone().invert()); tip.x *= h.s; tip.sub(V3(...HAND_SHIFT)).divideScalar(LAP_HAND.big);
       const reach = -tip.y, up = tip.z;
-      // (the free thumb leaves the palm's far edge about half way along it)
-      const by = -Math.min(0.03, Math.max(0.012, reach - 0.036));
+      // (the thumb is long and leaves the palm at its heel, as the owner's photograph of the seal has it)
+      const by = -0.008;
       // (and rises steeply before it turns in, so that the two together are an arch with a level top, not a peak)
-      h.thumb = { base: [0.021, by, 0.004], joint: [Math.max(tip.x, 0.021) + 0.004, by - T.turn * (reach + by), up * T.arch], tip: tip.toArray() };
+      h.thumb = { base: [0.016, by, 0.005], joint: [Math.max(tip.x, 0.018) + 0.004, by - T.turn * (reach + by), up * T.arch], tip: tip.toArray() };
       h.meet = meet;
     }
     return out;
@@ -555,9 +559,9 @@ export function createMonk(opts = {}) {
       // Also build the hand as it lies in the lap (法界定印, a morph): fingers flat and only a little cupped, the thumb in two joints.
       const buildHand = (mudra) => {
         /** @type {THREE.BufferGeometry[]} */
-        const palmParts = [new THREE.SphereGeometry(1, 14, 10).scale(mudra ? 0.026 : 0.0245, mudra ? 0.03 : 0.0285, mudra ? 0.012 : 0.015).translate(0, -0.026, mudra ? 0.001 : 0.002)];
+        const palmParts = [new THREE.SphereGeometry(1, 14, 10).scale(mudra ? 0.0215 : 0.0245, mudra ? 0.03 : 0.0285, mudra ? 0.0135 : 0.015).translate(0, -0.026, mudra ? 0.001 : 0.002)];
         [[0.0135, 0.026], [0.0045, 0.032], [-0.0048, 0.03], [-0.0138, 0.024]].forEach(([fx, len], k) =>
-          palmParts.push(new THREE.CapsuleGeometry(mudra ? 0.0084 - k * 0.0003 : 0.0064 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(mudra ? -0.3 : -0.18 - k * 0.03).rotateZ(mudra ? 0 : fx * 1.6).translate(mudra ? fx * 0.9 : fx, mudra ? -0.05 : -0.048, mudra ? 0.0015 : 0.003)));
+          palmParts.push(new THREE.CapsuleGeometry(mudra ? 0.0084 - k * 0.0003 : 0.0064 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(mudra ? -0.3 : -0.18 - k * 0.03).rotateZ(mudra ? 0 : fx * 1.6).translate(mudra ? fx * 0.8 : fx, mudra ? -0.05 : -0.048, mudra ? 0.0015 : 0.003)));
         // The thumb. In the lap (法界定印) it rises off the far edge of the palm and comes over toward the other hand, so that
         // the two tips meet in the middle over the fingers and the thumbs and the fingers below them close round an open
         // oval, not a peak. Where each tip must be for that is worked out with the hands' places (layHands).
@@ -565,14 +569,14 @@ export function createMonk(opts = {}) {
           const t = lapHands[s > 0 ? "left" : "right"].thumb;
           // laid along a curve from the base through the joint's pull to the tip, in three pieces, so the arch is round
           const at = (u) => t.base.map((b, i) => (1 - u) * (1 - u) * b + 2 * (1 - u) * u * t.joint[i] + u * u * t.tip[i]);
-          palmParts.push(seg(at(0), at(1 / 3), 0.0088), seg(at(1 / 3), at(2 / 3), 0.0083), seg(at(2 / 3), at(1), 0.0078));
+          const K = LAP_HAND.thumb.thick; palmParts.push(seg(at(0), at(1 / 3), 0.0088 * K), seg(at(1 / 3), at(2 / 3), 0.0083 * K), seg(at(2 / 3), at(1), 0.0078 * K));
         } else {
           // Standing, the thumb is one straight piece, laid as three so that the hand has as many points as the lap's (a
           // morph moves each point by its number: a count that differed pulled the right arm's skin into spikes).
           const at = (y) => V3(0, y, 0).applyAxisAngle(ZV, 0.24).applyAxisAngle(XV, -0.55).add(V3(0.012, -0.018, 0.009)).toArray();
           palmParts.push(seg(at(0), at(-0.0063), 0.0074), seg(at(-0.0063), at(-0.0127), 0.0074), seg(at(-0.0127), at(-0.019), 0.0074));
         }
-        const palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(mudra ? 0 : -0.46).translate(-0.0045, -0.002, 0);
+        const big = mudra ? LAP_HAND.big : 1, palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(mudra ? 0 : -0.46).scale(big, big, big).translate(-0.0045, -0.002, 0);
         const wrist = new THREE.SphereGeometry(mudra ? 0.0262 : 0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");   // (in the lap the wrist bends further, and a ball the forearm's own size flickered against its end)
         const hand = mergeGeometries([wrist, palm]);
         if (s < 0) { hand.scale(-1, 1, 1); flip(hand); }
@@ -1038,7 +1042,7 @@ export function createMonk(opts = {}) {
   return {
     group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat, straps }, steps,
     /** Seated on a cushion, in the seat's frame (x to his left, y up from the cushion's crown, z the way he faces): each hand's wrist, palm, the way its fingers run and its thumb, where the thumbs meet, and `clothTop(x, z)`, how high the lap's cloth lies. */
-    lap: { hands: lapHands, clothTop, legs: seatRods },
+    lap: { hands: lapHands, clothTop, legs: seatRods, handMid: HAND_MID },
     get dressed() { return dressed; },
     /** How many of the robe's points, from its first, are its body (trunk and skirt); the sleeves, collar and sash come after them. */
     get robeBody() { return dressed ? robe.geometry.attributes.position.count : torsoCount; },

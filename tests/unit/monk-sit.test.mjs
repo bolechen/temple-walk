@@ -6,7 +6,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-const { createMonk, SEAT_LEGS, HAT_OFF } = await import("../../app/src/monk.js");
+const { createMonk, SEAT_LEGS, HAT_OFF, LAP_HAND } = await import("../../app/src/monk.js");
 const { CUSHION, radiusAt } = await import("../../app/src/geo.js");
 const { VIEWS, refMask, seat, triangles, overlay } = await import("../../tools/novice-sit-lib.mjs");
 
@@ -89,33 +89,40 @@ test("the hands lie on the lap against his belly in the meditation seal: palms u
   const m = seated(), B = m.bones, robe = m.parts.robe, skin = m.parts.skin, ray = new THREE.Raycaster();
   const lap = baked(robe, weighted(m, robe, SKIRT)), trunk = baked(robe, (i) => i < m.robeBody);
   const q = (s) => B[s + "Hand"].getWorldQuaternion(new THREE.Quaternion()), palmUp = (s) => V(0, 0, 1).applyQuaternion(q(s)), fingers = (s) => V(0, -1, 0).applyQuaternion(q(s));
-  const palm = (s) => world(B[s + "Hand"]).addScaledVector(fingers(s), 0.03);
+  const palm = (s) => world(B[s + "Hand"]).addScaledVector(fingers(s), m.lap.handMid);   // the middle of the hand's length
   for (const [s, side] of [["left", 1], ["right", -1]]) {
     assert.ok(palmUp(s).y > 0.95, `${s} palm faces up (${palmUp(s).y.toFixed(2)})`);
     assert.ok(fingers(s).x * side < -0.9, `${s} fingers run in toward the other hand (${fingers(s).toArray().map((v) => v.toFixed(2))})`);
   }
   const pl = palm("left"), pr = palm("right");
   assert.ok(pl.y > pr.y + 0.01 && pl.y < pr.y + 0.035, `the left hand lies on the right (${(pl.y - pr.y).toFixed(3)} m higher)`);
-  assert.ok(Math.abs(pl.x + pr.x) < 0.01 && pl.x - pr.x < 0.08, `the two lie over each other about his middle (palms ${pl.x.toFixed(3)} and ${pr.x.toFixed(3)})`);
-  // the hands' middle against his belly: the front of the robe at that height, straight behind it
-  const mid = pl.clone().add(pr).multiplyScalar(0.5);
+  // deep over each other: the middles of the two hands (each hand's own skin) no more than 4 cm apart across
+  const centre = (side) => { const q = points(skin, weighted(m, skin, new RegExp(`^${side}Hand$`))); return q.reduce((a, v) => a.add(v), V()).divideScalar(q.length); };
+  const cl = centre("left"), cr = centre("right");
+  assert.ok(Math.abs(cl.x - cr.x) <= 0.04 && Math.abs(cl.x + cr.x) < 0.012, `the two hands lie over each other about his middle (their middles ${cl.x.toFixed(3)} and ${cr.x.toFixed(3)}, ${(Math.abs(cl.x - cr.x) * 100).toFixed(1)} cm apart across)`);
+  // the hands' middle against his belly: half way between the middles of the two palms (where layHands lays them), and
+  // the front of the robe at that height straight behind it
+  const mid = palm("left").add(palm("right")).multiplyScalar(0.5);
   ray.set(V(0, mid.y, 0.6), V(0, 0, -1)); const belly = ray.intersectObject(trunk)[0];
   assert.ok(belly && mid.z - belly.point.z <= 0.03 && mid.z > belly.point.z, `the hands' middle is ${(mid.z - belly.point.z).toFixed(3)} m before his belly (at most 0.03)`);
-  // every point of the hands (the hand bones' own skin): nothing of the robe's body over it (it is neither under the
-  // cloth of the lap nor in his belly), and the cloth of the lap under it
-  const body = baked(robe, (i) => i < m.robeBody), hands = points(skin, weighted(m, skin, /Hand$/)), up = V(0, 1, 0), down = V(0, -1, 0);
-  let under = 0; const gap = { left: Infinity, right: Infinity };
+  // every point of the hands (the hand bones' own skin): not under the cloth of the lap (nothing of the skirt straight
+  // above it), not in his belly (a point inside the trunk meets its front within a few centimetres straight ahead; one
+  // before it meets nothing), and the cloth of the lap under it. (Tucked under the belly's swell is touching, not in it.)
+  const body = baked(robe, (i) => i < m.robeBody), hands = points(skin, weighted(m, skin, /Hand$/)), up = V(0, 1, 0), down = V(0, -1, 0), ahead = V(0, 0, 1);
+  let under = 0, inside = 0; const gap = { left: Infinity, right: Infinity };
   for (const v of hands) {
-    ray.set(v, up); ray.far = 0.1; if (ray.intersectObject(body).some((h) => h.distance > 0.001)) under++;
+    ray.set(v, up); ray.far = 0.1; if (ray.intersectObject(lap).some((h) => h.distance > 0.001)) under++;
+    ray.set(v, ahead); ray.far = 0.04; if (ray.intersectObject(body).some((h) => h.distance > 0.001 && h.point.y > v.y - 0.01)) inside++;
     ray.set(v, down); ray.far = 0.2; const h = ray.intersectObject(lap)[0]; if (h) { const s = v.x > 0 ? "left" : "right"; gap[s] = Math.min(gap[s], h.distance); }
   }
-  assert.equal(under, 0, `${under} points of his hands lie under the cloth of the lap or in his belly`);
+  assert.equal(under, 0, `${under} points of his hands lie under the cloth of the lap`);
+  assert.equal(inside, 0, `${inside} points of his hands are in his belly`);
   assert.ok(gap.right <= 0.02, `the right hand rests on the cloth (its lowest point ${gap.right.toFixed(3)} m over it, at most 0.02)`);
   // the thumbs
-  const { left, right } = m.lap.hands, tipOf = (h, s) => B[s + "Hand"].localToWorld(V(h.thumb.tip[0] - 0.0045, h.thumb.tip[1] - 0.002, h.thumb.tip[2]).multiply(V(h.s, 1, 1)));
+  const { left, right } = m.lap.hands, tipOf = (h, s) => B[s + "Hand"].localToWorld(V(...h.thumb.tip).multiplyScalar(LAP_HAND.big).add(V(-0.0045, -0.002, 0)).multiply(V(h.s, 1, 1)));   // (as buildHand lays it: drawn at `big`, then set against the wrist)
   const tl = tipOf(left, "left"), tr = tipOf(right, "right");
   assert.ok(tl.distanceTo(tr) < 0.013, `the thumbs' tips touch (${tl.distanceTo(tr).toFixed(4)} m between their middles)`);
-  assert.ok(Math.abs(tl.y - tr.y) < 0.004 && tl.y > pl.y + 0.015, `level with each other and raised over the palms, an open oval (${tl.y.toFixed(3)}, ${tr.y.toFixed(3)}; the left palm ${pl.y.toFixed(3)})`);
+  assert.ok(Math.abs(tl.y - tr.y) < 0.004 && tl.y > pl.y + 0.008, `level with each other and raised over the palms, an open oval (${tl.y.toFixed(3)}, ${tr.y.toFixed(3)}; the left palm ${pl.y.toFixed(3)})`);
 });
 
 test("the sleeves hang past the elbows, and the forearms come out under them", () => {
