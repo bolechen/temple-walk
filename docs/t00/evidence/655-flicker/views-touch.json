@@ -1,0 +1,116 @@
+{
+ "touch": true,
+ "size": [
+  390,
+  844
+ ],
+ "frames": 12,
+ "errors": [
+  "HTTP 404: http://127.0.0.1:43115/shared/doorways/t00.json",
+  "console: Failed to load resource: the server responded with a status of 404 (Not Found) (http://127.0.0.1:43115/shared/doorways/t00.json:0)"
+ ],
+ "report": [
+  {
+   "name": "01-MeshStandardMaterial-stone",
+   "at": [
+    1.617,
+    2.855,
+    54.6
+   ],
+   "eye": [
+    0.98,
+    1.6,
+    19
+   ],
+   "gap_mm": {
+    "min": 1,
+    "max": 1
+   },
+   "area_m2": 30.555,
+   "a": "site/MeshStandardMaterial",
+   "b": "site/stone",
+   "views": {
+    "36m": {
+     "flicker": 0,
+     "points": 48
+    },
+    "18m": {
+     "flicker": 0,
+     "points": 48
+    },
+    "9m": {
+     "flicker": 0,
+     "points": 48
+    }
+   }
+  },
+  {
+   "name": "02-ShaderMaterial-ShaderMaterial",
+   "at": [
+    33.199,
+    9.598,
+    -58.267
+   ],
+   "eye": [
+    0,
+    3.48,
+    -33
+   ],
+   "gap_mm": {
+    "min": 0,
+    "max": 0
+   },
+   "area_m2": 558.8,
+   "a": "backdrop/ShaderMaterial",
+   "b": "backdrop/ShaderMaterial",
+   "views": {
+    "42m": {
+     "flicker": 0.021,
+     "points": 48
+    },
+    "21m": {
+     "flicker": 0,
+     "points": 48
+    },
+    "11m": {
+     "flicker": 0,
+     "points": 48
+    }
+   }
+  },
+  {
+   "name": "03-MeshStandardMaterial-woodV",
+   "at": [
+    -12.558,
+    4.472,
+    14.375
+   ],
+   "eye": [
+    0,
+    1.6,
+    25.11
+   ],
+   "gap_mm": {
+    "min": 1,
+    "max": 1
+   },
+   "area_m2": 1.783,
+   "a": "site/MeshStandardMaterial",
+   "b": "site/woodV",
+   "views": {
+    "17m": {
+     "flicker": 0,
+     "points": 48
+    },
+    "8m": {
+     "flicker": 0,
+     "points": 48
+    },
+    "4m": {
+     "flicker": 0,
+     "points": 48
+    }
+   }
+  }
+ ]
+}
