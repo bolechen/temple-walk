@@ -8,11 +8,14 @@
 //   node tools/ci/unit-shard.cjs run i/N [node options…]   runs machine i's files with `node --test` (the grid job adds
 //                                           `--import ./tools/walk/swap.mjs`); a share with no file says so and exits 0, because
 //                                           `node --test` given no files would run the whole suite.
+//   node tools/ci/unit-shard.cjs time i/N [node options…]  runs machine i's files one at a time, each alone, and prints the seconds it took
+//                                           (`unit-time <file> <secs>`, then one JSON line): how tests/unit/durations.json is measured
+//                                           on a CI machine (#697), since node's own report names no file.
 const fs = require("fs"), path = require("path");
 const DIR = path.join(__dirname, "../../tests/unit");
 const SHARDS = 4;
 /** Longest a machine's share may be counted at, seconds: the PR's checks are held to three minutes from first check to `verify`. Four machines plan about 124 s each (#697), leaving a new test 15 s or more before this is reached. */
-const BUDGET = 140;   // (166 on three machines, raised twice from 160 for single tests; #697 added the fourth machine and gave it back)
+const BUDGET = 150;   // (166 on three machines, raised twice from 160 for single tests; #697 added the fourth machine and gave it back)
 
 const files = () => fs.readdirSync(DIR).filter((f) => f.endsWith(".test.mjs")).sort();
 const durations = () => JSON.parse(fs.readFileSync(path.join(DIR, "durations.json"), "utf8")).files;
@@ -39,6 +42,16 @@ module.exports = { plan, files, durations, testArgs, shareOf, SHARDS, BUDGET };
 if (require.main === module) {
   const [a, b] = process.argv.slice(2);
   if (a === "plan") { const n = Number(b || SHARDS), { parts, loads } = plan(files(), n); parts.forEach((p, i) => console.log(`shard ${i + 1}/${n}: ${loads[i].toFixed(1)} s  ${p.length} files  ${p.slice(0, 4).join(" ")}…`)); }
+  else if (a === "time") {
+    const share = shareOf(b); if (!share) { console.error("usage: unit-shard.cjs time i/N [node options…]"); process.exit(2); }
+    const out = {}, extra = process.argv.slice(4);
+    for (const f of share) {
+      const t0 = process.hrtime.bigint(), r = require("child_process").spawnSync(process.execPath, [...extra, "--test", `tests/unit/${f}`], { stdio: "ignore" });
+      out[f] = Math.round(Number(process.hrtime.bigint() - t0) / 1e8) / 10;
+      console.log(`unit-time ${f} ${out[f]}${r.status ? " FAILED" : ""}`);
+    }
+    console.log("unit-times-json " + JSON.stringify(out));
+  }
   else if (a === "run") {
     const share = shareOf(b); if (!share) { console.error("usage: unit-shard.cjs run i/N [node options…]"); process.exit(2); }
     const args = testArgs(share, process.argv.slice(4));

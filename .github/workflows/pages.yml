@@ -193,6 +193,8 @@ jobs:
           path: app/shared/walk
       - name: Unit tests, this machine's share
         run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/4
+      - name: TEMPORARY (#697) each file alone, to measure durations.json on CI
+        run: node tools/ci/unit-shard.cjs time ${{ matrix.shard }}/4
 
   # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it, shared the same way.
   grid:
@@ -217,6 +219,8 @@ jobs:
           path: app/shared/walk
       - name: The same unit tests on the walker over the baked floor (#265), this machine's share
         run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/4 --import ./tools/walk/swap.mjs
+      - name: TEMPORARY (#697) each file alone, to measure durations.json on CI
+        run: WALKER=mesh node tools/ci/unit-shard.cjs time ${{ matrix.shard }}/4 --import ./tools/walk/swap.mjs
 
   # The site as the browser gets it: built once, and the very same dist/ driven through by `quick` and handed on for publication
   # or the preview.
