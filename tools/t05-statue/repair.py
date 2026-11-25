@@ -233,6 +233,26 @@ for _k, op in enumerate(spec["ops"]):
         acc = np.zeros_like(co); np.add.at(acc, ed[:, 0], co[ed[:, 1]]); np.add.at(acc, ed[:, 1], co[ed[:, 0]]); mean = acc / np.maximum(cnt, 1)[:, None]; co += sp["lam"] * (w > 0)[:, None] * w[:, None] * (mean - co)
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "chinfill", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "moved_max_stage_mm": round(float(mv.max()) * sc_ * 1000, 1)}); print(json.dumps(log[-1])); continue
+  if op["op"] == "unfold":
+    # {"s", "from", "limit", "ring", "iter"}: after the other operations, any triangle whose normal has turned further than `limit` (a cosine, 0.05: 87 degrees) from the one it had in the snapshot `from` (the figure before the lean and the bow) is worked
+    # out and its points, and those within `ring` rings of them, are relaxed toward the mean of their neighbours (`iter` passes, easing out with the ring), until none is left. The bow's weight can turn
+    # a thin triangle in the neck's easing band by a hair past a right angle (Sikhin's, behind the ear lobe); this undoes that one and its neighbours and nothing else.
+    if "_tri" not in globals(): globals()["_tri"] = np.array([list(pl.vertices) for pl in me.polygons], dtype=np.int64)
+    def _nr(c):
+      a_, b_, c_ = c[_tri[:, 0]], c[_tri[:, 1]], c[_tri[:, 2]]; x_ = np.cross(b_ - a_, c_ - a_); return x_ / np.maximum(np.linalg.norm(x_, axis=1, keepdims=True), 1e-30)
+    n0 = _nr(globals()["_snaps"][op.get("from", "pre")]); before = co.copy(); passes = 0; fixed = 0
+    for _ in range(8):
+      bad = np.nonzero((_nr(co) * n0).sum(1) < op.get("limit", 0.05))[0]
+      if not len(bad): break
+      fixed = max(fixed, len(bad)); ring = np.full(len(co), 99); ring[_tri[bad].ravel()] = 0
+      for k_ in range(1, op.get("ring", 3) + 1):
+        a_, b_ = ring[ed[:, 0]], ring[ed[:, 1]]; g_ = (a_ == k_ - 1) & (b_ == 99); ring[ed[g_, 1]] = k_; g_ = (b_ == k_ - 1) & (a_ == 99); ring[ed[g_, 0]] = k_
+      w = np.where(ring <= op.get("ring", 3), 1 - ring / (op.get("ring", 3) + 1.0), 0.0); cnt = np.bincount(ed.ravel(), minlength=len(co)).astype(float)
+      for _ in range(op.get("iter", 30)):
+        acc = np.zeros_like(co); np.add.at(acc, ed[:, 0], co[ed[:, 1]]); np.add.at(acc, ed[:, 1], co[ed[:, 0]]); co += 0.5 * w[:, None] * (acc / np.maximum(cnt, 1)[:, None] - co)
+      passes += 1
+    mv = np.linalg.norm(co - before, axis=1); left = int(((_nr(co) * n0).sum(1) < op.get("limit", 0.05)).sum())
+    log.append({"op": "unfold", "note": op.get("note", ""), "triangles_turned": int(fixed), "passes": passes, "left": left, "points": int((mv > 1e-9).sum()), "moved_max_stage_mm": round(float(mv.max()) * op.get("s", 1.0) * 1000, 3)}); print(json.dumps(log[-1])); continue
   if op["op"] == "lowerback":
     # {"d", "z0", "z1", "fz", "x0", "x1", "front", "ffront", "smooth": {"iter", "lam"}}: the lower face (lower lip, chin and jaw as one mass)
     # pressed back by up to d (+y: away from the viewer), whole between z1 and z0 (z0 the slit's side), easing to nothing over fz below z1

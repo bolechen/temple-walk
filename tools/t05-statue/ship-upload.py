@@ -24,6 +24,7 @@ new[1] = (f"hf://buckets/bolechen/temple-walk-render/keep/t05-six-buddhas/ship-7
           f"baked/: {files['baked/'][0]} {ab(H[files['baked/'][0]])} ({S[files['baked/'][0]]/1e6:.1f} MB), .png-meshopt.glb {ab(H[files['baked/'][1]])} ({S[files['baked/'][1]]/1e6:.1f} MB), .webp-meshopt.glb {ab(H[files['baked/'][2]])} ({S[files['baked/'][2]]/1e6:.1f} MB); full list in SHA256-{name}.txt beside them")
 new[3] = f"本项目 ship-701 流程的 {name}：{what}"; new[12] = "2026-11-26"
 buf = io.StringIO(); csv.writer(buf, lineterminator="\n").writerow(new)
-txt = open(f"{root}/docs/t05/asset-register.csv").read()
-if f"STATUE-t05-{name}-ship-701," not in txt: open(f"{root}/docs/t05/asset-register.csv", "a").write(buf.getvalue())
+txt = open(f"{root}/docs/t05/asset-register.csv").read().split("\n")
+txt = [l for l in txt if not l.startswith(f"STATUE-t05-{name}-ship-701,")]   # a figure made again replaces its own row
+open(f"{root}/docs/t05/asset-register.csv", "w").write("\n".join(txt).rstrip("\n") + "\n" + buf.getvalue())
 print(json.dumps({"sizes_MB": {f: round(S[f] / 1e6, 2) for f in S}, "sha": {f: H[f][:12] for f in H}}))

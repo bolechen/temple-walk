@@ -48,6 +48,11 @@
    "band": 0.05
   },
   {
+   "op": "snapshot",
+   "name": "pre",
+   "note": "the points before the lean and the bow"
+  },
+  {
    "op": "tilt",
    "note": "the figure above the lotus leaned 4.0° about the seat's rear edge (#701)",
    "c": [
@@ -127,6 +132,15 @@
     "lam": 0.5
    },
    "note": "the chin's middle groove filled to the lobes' tops: one round face (#701, 自拟)"
+  },
+  {
+   "op": "unfold",
+   "s": 8.6329,
+   "from": "pre",
+   "limit": 0.05,
+   "ring": 2,
+   "iter": 6,
+   "note": "no triangle left turned past 87 degrees from where it stood before the lean and the bow (#701)"
   }
  ]
 }
