@@ -106,5 +106,7 @@ test("the hook is the workbench's: not in a visitor's page, and not without ?rev
   assert.equal(reviewOn({ dev: false, hostname: "temple-walk-canary.bole-chen.workers.dev", search: "?review=1" }), false);
   assert.equal(reviewOn({ dev: true, hostname: "127.0.0.1", search: "" }), false);
   assert.equal(reviewOn({ dev: false, hostname: "pr-0-temple-walk-preview.test", search: "?review=1" }), true);
-  assert.match(fs.readFileSync(new URL("../../app/yard.js", import.meta.url), "utf8"), /installReview\(\{ monk, camera, dev: !!import\.meta\.env\.DEV/);
+  const y = fs.readFileSync(new URL("../../app/yard.js", import.meta.url), "utf8");
+  assert.match(y, /review"\) === "1" && onBench\(\{ dev: !!import\.meta\.env\.DEV, hostname: location\.hostname \}\)\) import\("\.\/src\/review\.js"\)/, "yard.js opens the module only inside both gates");
+  assert.doesNotMatch(y, /^import .*review\.js/m, "and never imports it statically");
 });
