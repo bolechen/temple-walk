@@ -7,7 +7,7 @@
 //   cam01: the sunlit platform (b* +1 or more) and the hall's front in shade (b* -4 or less), the trees at each side (8-15% of the width), the highest tree
 //          against the eave;
 //   south: the poplars' bark (L* 55-65), and any bough within 5 m of the eye in the picture's corners (none).
-// usage: node tools/t05-trees-measure.cjs <outdir> [--query=k=v&…] [--views=cam01,cam07,south]
+// usage: node tools/t05-trees-measure.cjs <outdir> [--query=k=v&…] [--views=cam01,cam07,south] [--colors=<dir of <view>.png at 1280×720>]
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const { site, serve } = require("./site.cjs");
@@ -37,7 +37,9 @@ const stats = (cs) => (cs.length ? { n: cs.length, L: med(cs.map((c) => c[0])), 
     await page.goto(`${base}?level=t05&shot=1&q=high&season=winter&time=day&view=first&${VIEWS[name]}${extra ? "&" + extra : ""}`, { waitUntil: "commit", timeout: 180000 });
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 });
     await page.waitForTimeout(1500);
-    const png = await page.screenshot({ path: path.join(out, `${name}.png`) });
+    // `--colors=<dir>`: the colours read from another renderer's picture of the same view at the same size (`<dir>/<view>.png`, e.g. a T4's), the mask still this page's `__pick`
+    const colors = (process.argv.find((a) => a.startsWith("--colors=")) || "").slice(9);
+    const shot = await page.screenshot({ path: path.join(out, `${name}.png`) }), png = colors ? fs.readFileSync(path.join(colors, `${name}.png`)) : shot;
     const S = 8, { w, h, res } = await page.evaluate(async ([b64, S]) => {
       const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob());
       const c = new OffscreenCanvas(img.width, img.height), x2 = c.getContext("2d"); x2.drawImage(img, 0, 0);
