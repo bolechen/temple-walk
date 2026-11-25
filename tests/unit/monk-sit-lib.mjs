@@ -37,7 +37,6 @@ export function sitDownCase(dts) {
         ray.set(v, V(0, 0, 1)); if (ray.intersectObject(cloth).length) continue;                               // or before it
         bare++;
       }
-      if (process.env.SIT_LOG) { console.log(`bare dt=${(1/dt).toFixed(0)} f=${f} ${bare}`); continue; }
       assert.equal(bare, 0, `at ${(f * dt).toFixed(2)} s (frames of ${(dt * 1000).toFixed(0)} ms) ${bare} points of his legs stand out of the robe`);
     }
   }
