@@ -14,7 +14,8 @@
       "app/loading.js：首次加载失败上报 demo.load_error，失败一次只记一次",
       "tests/unit/analytics.test.mjs、tests/unit/loading.test.mjs",
       "pnpm run check、pnpm run typecheck、229 项单元测试与 pnpm run e2e:quick 通过；本地与预览域名不上报",
-      "Issue #655：docs/t00/evidence/655-flush-faces/collage.jpg（手机尺寸、低档、软件渲染，改前改后；山门额枋改前有可见的共面锯齿线，改后干净；匾和照壁在软件渲染下本来不闪，只证明没有变样）；node --test tests/unit/flush-faces.test.mjs 改前三关红、改后绿"
+      "Issue #655：docs/t00/evidence/655-flush-faces/collage.jpg（手机尺寸、低档、软件渲染，改前改后；山门额枋改前有可见的共面锯齿线，改后干净；匾和照壁在软件渲染下本来不闪，只证明没有变样）；node --test tests/unit/flush-faces.test.mjs 改前三关红、改后绿",
+      "Issue #655 第二批：docs/t00/evidence/655-flush-faces-b/collage.jpg（手机尺寸、低档、软件渲染，改前/改后/差图：御碑亭、凌霄阁檐下、四殿藻井）；node --test tests/unit/flush-faces.test.mjs 绿，整套 pnpm test 1215 项 0 失败"
     ],
     "events": [
       "demo.ready",
@@ -50,7 +51,8 @@
       "tests/unit/community.test.mjs（新增）：相对图片地址、精确到期、关闭、非法配置与非 http(s) 图片",
       "tests/e2e/run.cjs 新增 community 场景：拦截 R2 请求返回固定数据，覆盖叠在菜单上、Esc 只关卡片、关后释放图片、过期不显示、503 后重试",
       ".gitignore：app/local-community/（本地调试用的二维码与配置）",
-      "Issue #655 修复项 A/B/C（草稿 PR）：匾面、照壁画面的材质加 polygonOffset（plaque.js；原先只比底板高 1 mm，手机 16 位深度下 2.6 m 外就分不出先后）；山门门洞天花两头的系梁去掉、小格条在平板内面收住（building.js；与额枋、平板共面）；flush-faces.known.json 去掉 t00 的 19 行并改一行，t05 同一座门的 4 行改 2 行、_probe 去 1 行。开发方陈述"
+      "Issue #655 修复项 A/B/C（草稿 PR）：匾面、照壁画面的材质加 polygonOffset（plaque.js；原先只比底板高 1 mm，手机 16 位深度下 2.6 m 外就分不出先后）；山门门洞天花两头的系梁去掉、小格条在平板内面收住（building.js；与额枋、平板共面）；flush-faces.known.json 去掉 t00 的 19 行并改一行，t05 同一座门的 4 行改 2 行、_probe 去 1 行。开发方陈述",
+      "Issue #655 第二批（草稿 PR）：御碑亭上层楼板边缩进 2 cm（platOut -0.02，不再与下层白灰带共面）；藻井口立板往里挪 3/6 cm（framing.js）；building.js 里柱头垫板、平座垫板、檐桁、边板、梁在角上并排不穿过（边梁在前梁面上停住，缺角补小块）；flush-faces.known.json 去掉 t00 的 47 行、t05 的 8 行并换 3 个键，证据 docs/t00/evidence/655-flush-faces-b。开发方陈述"
     ],
     "known_issues": [
       "没有在真实微信里扫码或从相册识别过；iOS Safari、安卓浏览器的长按保存未在真机试过",
@@ -542,7 +544,8 @@
     "#213：nearplane、edges、T4 并排图、六个锁定机位并排未做（见 PR）；匾的实物挂法没有查到出处",
     "#265：格子 walker 在手机真机上的载入、内存（页面留 5.2 MB，打开时短暂 21.5 MB）未测，交 #188",
     "#331：山声在真机和耳机上没有人听过，只有离线和无头 Chromium 的数；殿外压低按 balance 的「平均 RMS」口径，配乐平均随句子运气每次差约 2 dB，各场景在 −3.0 到 −7.3 dB 之间，合并平均 −5.3 dB（见 docs/t00/MUSIC.md）；山声滑杆默认值没动",
-    "#655：没有在 16 位深度的真手机上看过；匾面和照壁的“不闪”只由几何测试和深度精度算式担保；改到 building.js 和 plaque.js 是共用代码，T05 的山门系梁同样去掉，等 T05 主创签"
+    "#655：没有在 16 位深度的真手机上看过；匾面和照壁的“不闪”只由几何测试和深度精度算式担保；改到 building.js 和 plaque.js 是共用代码，T05 的山门系梁同样去掉，等 T05 主创签",
+    "#655 第二批：没有在 16 位深度的真手机上看过；御碑亭白灰带改前木灰混着、改后稳定白灰，待美术初审；building.js、framing.js 是共用代码，T05 名单 8 行消失、2 行换键，T05 的画面没拍对照，等 T05 签"
   ],
   "hosting": {
     "provider": "Cloudflare Workers",

@@ -6,6 +6,7 @@ import { buildSite, createWalker, COMPOUND, WAY } from "./site.js";
 import ja from "./locales/ja.js";
 import en from "./locales/en.js";
 import ko from "./locales/ko.js";
+import { XS, HALL } from "./hall.js";
 
 // J01, the first look of T05: an early-winter morning, clear and cold, no snow (docs/t05/ART.md §4.2, PRD.md §4). The sun is
 // where #280's white box worked it out for 9:45 on a day in early December at 41.5° N: 17° up, 152° from north (a calculation, not a record), which in
@@ -41,7 +42,11 @@ export default {
   backdrop: null,
   grove: null,
   propsAt: 0,
-  zones: null,
+  // Its sound field (docs/t05/SOUND.md §1; PRD.md §8): two layers, no melody. The court is everywhere; the great hall's box is the
+  // inside of its walls, from its own numbers: the end and back walls' inner faces (a wall's thickness in from the outer face, which
+  // lies `out` beyond the column line) and the front wall's (its outer face just behind the front column line, a thickness in). The
+  // shell stands on its platform, so he is "in" it by where he stands, not by a door into a room (score.js `layerOf`).
+  zones: { layers: { hall: { x0: XS[0] - HALL.out + HALL.wall, x1: XS[XS.length - 1] + HALL.out - HALL.wall, z0: -HALL.depth - HALL.out + HALL.wall, z1: HALL.front - HALL.wall } } },
   groveSound: () => 0,
   // Everything built that the following eye may meet: the compound and the way, with room round them.
   eyeBox: { x0: -COMPOUND.x - 20, x1: COMPOUND.x + 20, y0: -20, y1: 60, z0: COMPOUND.zN - 20, z1: WAY.zS + 20 },

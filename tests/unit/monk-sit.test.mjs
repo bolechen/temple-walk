@@ -2,12 +2,12 @@
 // His outline from the front and from his side lies over the sheet's (tools/novice-sit-lib.mjs); there are legs under
 // the robe, knees out as high as the hips, and the robe lies on them down to the cushion's rim; the hands lie on that
 // cloth against his belly, palms up, the left on the right, the thumbs' tips together; the sleeves hang past the elbows;
-// the hat is off his back and beside the cushion, and goes back when he gets up.
+// the hat stays on his back (the owner, 2026-11-25).
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
 const { TOP, V, baked } = await import("./monk-sit-lib.mjs");
-const { createMonk, SEAT_LEGS, HAT_OFF, LAP_HAND } = await import("../../app/src/monk.js");
+const { createMonk, SEAT_LEGS, LAP_HAND } = await import("../../app/src/monk.js");
 const { CUSHION, radiusAt } = await import("../../app/src/geo.js");
 const { VIEWS, refMask, seat, triangles, overlay } = await import("../../tools/novice-sit-lib.mjs");
 
@@ -133,64 +133,36 @@ test("the sleeves hang past the elbows, and the forearms come out under them", (
   }
 });
 
-test("seated on a cushion his hat is off his back and stands on its rim beside the cushion; when he gets up it is on his back again", () => {
-  const m = createMonk(), hat = m.parts.hat, box = (k = m) => { k.group.updateMatrixWorld(true); return new THREE.Box3().setFromObject(k.parts.hat, true); };
-  const stand = (n) => { for (let i = 0; i < n; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {}); };
-  stand(30); const onBack = box(), backAt = onBack.getCenter(V());
-  assert.ok(backAt.z < -0.05 && backAt.y > 0.5 && m.parts.straps.visible, "standing, the hat hangs on his back by its straps");
-  // sat down on a cushion: the group stands on its crown, the floor a cushion's height below
+test("seated on a cushion his hat stays on his back by its straps, as standing (the owner, 2026-11-25: 「改回去」)", () => {
+  const m = createMonk(), box = () => { m.group.updateMatrixWorld(true); return new THREE.Box3().setFromObject(m.parts.hat, true); };
+  for (let i = 0; i < 30; i++) m.update(1 / 30, 0, false, i / 30, () => 0, {});
+  const standing = box().getCenter(V()).sub(world(m.bones.chest));
   m.group.position.y = TOP; for (let i = 0; i < 120; i++) m.update(1 / 30, 0, "sit", i / 30, () => 0, {});
-  const laid = box(), at = laid.getCenter(V()), rim = Math.max(...CUSHION.map(([r]) => r));
-  assert.ok(Math.abs(laid.min.y) < 0.012, `its rim is on the floor (${laid.min.y.toFixed(3)} m)`);
-  assert.ok(laid.max.y - laid.min.y < 0.17 && laid.max.x - laid.min.x > 0.38, "it stands on its rim, crown up");
-  assert.ok(Math.hypot(at.x, at.z) - 0.2 > rim + 0.01 && Math.hypot(at.x, at.z) < 0.7 && at.x * Math.sign(HAT_OFF.x) > 0, `beside the cushion, clear of it, within reach (${at.x.toFixed(2)}, ${at.z.toFixed(2)})`);
-  assert.equal(m.parts.straps.visible, false, "its straps are not drawn while it is off");
-  // where no floor is given, or the floor beside the seat is a drop, it lies a cushion's height under the seat
-  for (const floor of [undefined, () => -3]) { const k = createMonk(); k.group.position.y = 2; for (let i = 0; i < 120; i++) k.update(1 / 30, 0, "sit", i / 30, floor, {}); assert.ok(Math.abs(box(k).min.y - (2 - TOP)) < 0.012, "the hat lies a cushion's height under the seat"); }
-  // on a stool it stays on his back
-  const c = createMonk(); for (let i = 0; i < 100; i++) c.update(1 / 30, 0, "chair", i / 30, () => -0.44, {});
-  assert.ok(box(c).getCenter(V()).z < -0.05 && c.parts.straps.visible, "on a stool the hat stays on his back");
-  // up again
-  m.group.position.y = 0; stand(90); const again = box().getCenter(V());
-  assert.ok(again.distanceTo(backAt) < 0.01 && m.parts.straps.visible, `standing again, the hat is on his back (${again.distanceTo(backAt).toFixed(3)} m from where it hung)`);
+  const at = box().getCenter(V()), off = at.clone().sub(world(m.bones.chest));
+  assert.ok(m.parts.straps.visible, "its straps are drawn");
+  assert.ok(off.z < -0.05 && off.distanceTo(standing) < 0.06, `it hangs behind his chest as it does standing (${off.toArray().map((v) => v.toFixed(3))}, standing ${standing.toArray().map((v) => v.toFixed(3))})`);
+  assert.ok(box().min.y > TOP + 0.02, `it is clear of the cushion (its lowest ${box().min.y.toFixed(3)} m, the cushion's crown ${TOP} m)`);
 });
 
-test("asked to, he lays the hat at his left; and beside every cushion of the level the side the page chooses is clear of everything drawn there, and so is his robe", async () => {
-  const m = createMonk(); m.group.position.y = TOP; for (let i = 0; i < 120; i++) m.update(1 / 30, 0, "sit", i / 30, () => 0, { hat: 1 });
-  m.group.updateMatrixWorld(true); assert.ok(new THREE.Box3().setFromObject(m.parts.hat, true).getCenter(V()).x > 0.4, "the hat is at his left");
-  const { buildSite, createWalker } = await import("../../app/src/site.js"), { buildInteriors } = await import("../../app/src/interior.js"), { hatSide } = await import("../../app/src/hatside.js");
+test("beside every cushion of the level, his robe as he sits there passes into nothing drawn", async () => {
+  const { buildSite } = await import("../../app/src/site.js"), { buildInteriors } = await import("../../app/src/interior.js");
   const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
-  const site = buildSite(M), walker = createWalker(site), rooms = buildInteriors(M, site.halls), meshes = [];
+  const site = buildSite(M), rooms = buildInteriors(M, site.halls), meshes = [];
   for (const g of [site.root, rooms.group]) { g.updateMatrixWorld(true); g.traverse((o) => { if (o.isMesh && o.geometry?.attributes?.position) { o.geometry.boundingBox || o.geometry.computeBoundingBox(); meshes.push([o, o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld)]); } }); }
-  const a = V(), b = V(), c = V(), tri = new THREE.Box3(); let cushions = 0, lefts = 0;
-  for (const s of [...site.seats, ...rooms.seats]) {
-    if (s.kind !== "cushion") continue; cushions++;
-    walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
-    const axis = s.room ? rooms.rooms[s.room].room.cx : 0, side = hatSide(walker, s.at[0], s.at[1], s.face, axis), lx = -side * HAT_OFF.x; if (side > 0) lefts++;
-    const x = s.at[0] + lx * Math.cos(s.face) + HAT_OFF.z * Math.sin(s.face), z = s.at[1] - lx * Math.sin(s.face) + HAT_OFF.z * Math.cos(s.face), floor = s.top - TOP;
-    // the hat's own space over the floor: a hand's breadth inside its rim, from just over the floor to its crown
-    const space = new THREE.Box3(V(x - 0.17, floor + 0.03, z - 0.17), V(x + 0.17, floor + 0.15, z + 0.17)); let hits = 0;
-    for (const [o, box] of meshes) { if (!box.intersectsBox(space)) continue; const p = o.geometry.attributes.position, ix = o.geometry.index?.array, n = ix ? ix.length : p.count;
-      for (let k = 0; k < n; k += 3) { a.fromBufferAttribute(p, ix ? ix[k] : k).applyMatrix4(o.matrixWorld); b.fromBufferAttribute(p, ix ? ix[k + 1] : k + 1).applyMatrix4(o.matrixWorld); c.fromBufferAttribute(p, ix ? ix[k + 2] : k + 2).applyMatrix4(o.matrixWorld); if (tri.makeEmpty().expandByPoint(a).expandByPoint(b).expandByPoint(c).intersectsBox(space)) hits++; } }
-    // before the great hall's altar the two cushions lie either side of the way to it: the west one's hat goes on its outer
-    // side, out of the way (beside the east one stands the offering box, so its hat is laid on the inner side)
-    if (s.room === "main" && s.at[0] < axis) assert.ok(x < s.at[0], `in the great hall the west cushion's hat lies on the side away from the way to the altar (cushion at ${s.at[0].toFixed(2)}, hat at ${x.toFixed(2)}, the middle ${axis})`);
-    assert.equal(hits, 0, `beside the cushion at (${s.at.map((q) => q.toFixed(2))}) in ${s.room || "the open"}, something drawn stands where the hat is laid (at his ${side > 0 ? "left" : "right"})`);
-  }
-  walker.setRoom(null);
+  let cushions = 0;
   // and the robe, as he sits on each, passes into nothing drawn beside it (#664: the tea house's corner cushions lay so
   // near its wall that the lap went 4 cm into it): a point inside a closed thing meets it an odd number of times going
   // straight up within 0.8 m (a roof higher than that is not asked).
   const seated0 = createMonk(); for (let i = 0; i < 120; i++) seated0.update(1 / 30, 0, "sit", i / 30, () => -TOP, {}); seated0.group.updateMatrixWorld(true);
   const lapPts = points(seated0.parts.robe, (i) => i < seated0.robeBody).filter((q) => q.y < 0.12), ray = new THREE.Raycaster(), up = V(0, 1, 0);
   for (const s of [...site.seats, ...rooms.seats]) {
-    if (s.kind !== "cushion") continue;
+    if (s.kind !== "cushion") continue; cushions++;
     const c = Math.cos(s.face), sn = Math.sin(s.face), at = lapPts.map((q) => V(s.at[0] + q.x * c + q.z * sn, s.top + q.y, s.at[1] - q.x * sn + q.z * c)), box = new THREE.Box3().setFromPoints(at);
     const near = meshes.filter(([, b]) => b.intersectsBox(box) && !(b.max.y - b.min.y < 0.12 && Math.hypot((b.min.x + b.max.x) / 2 - s.at[0], (b.min.z + b.max.z) / 2 - s.at[1]) < 0.05)).map(([o]) => o);
     let inside = 0; for (const p of at) { ray.set(p, up); ray.far = 0.8; if (ray.intersectObjects(near, false).length % 2) inside++; }
     assert.equal(inside, 0, `seated on the cushion at (${s.at.map((q) => q.toFixed(2))}) in ${s.room || "the open"}, ${inside} points of his robe are inside something drawn there`);
   }
-  assert.ok(cushions >= 30 && lefts >= 3, `${cushions} cushions, the hat at his left beside ${lefts} of them`);
+  assert.ok(cushions >= 30, `${cushions} cushions`);
 });
 
 test("where the robe comes down onto the cushion it is pressed into a crease and its hem rolls up (the art review's relief, #666)", () => {
