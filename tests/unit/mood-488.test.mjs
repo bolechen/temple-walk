@@ -13,9 +13,18 @@ const plain = (m) => JSON.parse(JSON.stringify(m));   // the fixture went throug
 test("a level that says nothing gets the table main had, for all sixteen seasons and hours", () => {
   for (const s of SEASONS) for (const t of TIMES) { assert.deepEqual(plain(moodOf(s, t)), before[`${s}-${t}`], `${s} ${t}`); assert.deepEqual(plain(moodOf(s, t, undefined)), before[`${s}-${t}`]); }
 });
-test("T05 has no say: its autumn dusk, and every other mood, is main's, to the last number", () => {
-  assert.equal(t05.moodFor, undefined, "T05 must not change the hours");
-  for (const s of SEASONS) for (const t of TIMES) assert.deepEqual(plain(moodOf(s, t, t05.moodFor)), before[`${s}-${t}`], `${s} ${t}`);
+test("T05 says only its winter day (J01): every other season and hour is main's, to the last number", () => {
+  assert.equal(typeof t05.moodFor, "function");
+  for (const s of SEASONS) for (const t of TIMES) {
+    const now = plain(moodOf(s, t, t05.moodFor));
+    if (s === "winter" && t === "day") {
+      assert.equal(now.snow, 0, "J01 has no snow"); assert.equal(now.wet, 0); assert.equal(now.drift, "none", "nothing falls in the air");
+      const [x, y, z] = now.sun, len = Math.hypot(x, y, z);
+      assert.ok(y / len >= 0.25 && y / len <= 0.35, `the sun's y ${(y / len).toFixed(3)} stands low, 0.25 to 0.35`);
+      assert.ok(z > 0 && x > 0, "from the south-south-east, toward the walker coming north");
+      assert.ok(now.cloud <= 0.2, "clear");
+    } else assert.deepEqual(now, before[`${s}-${t}`], `${s} ${t}`);
+  }
 });
 test("the prologue changes autumn dusk's sun (direction, strength) and the glow round it, and nothing else, and no other season or hour at all", () => {
   assert.equal(typeof t00.moodFor, "function");

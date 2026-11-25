@@ -56,6 +56,7 @@ export async function dataKeys() {
   for (const [text, from] of VERSES) { keys.add(text); keys.add(from); }
   for (const k of Object.values(NAMES)) keys.add(k);
   for (const pair of Object.values(LINES)) for (const k of pair) keys.add(k);
+  keys.add((await import("../../app/levels/t05/level.js")).default.moodFor("winter", "day").line);   // T05's J01 carries a verse of its own (no snow to be deep)
   // The leaves in the halls and the empty frame: title and text, read from the source (interior.js needs a page).
   const interior = read("src/interior.js");
   for (const m of interior.matchAll(/title: "([^"]+)", text: "([^"]+)"/g)) { keys.add(m[1]); keys.add(m[2]); }
