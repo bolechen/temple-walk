@@ -70,10 +70,10 @@ if (process.env.SETS === "ship701") {
   const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0, ...(i === 0 || i === 6 ? { gain: 1.5 } : {}) }, paint: "clay", colour: c, ...(i === 0 || i === 6 ? { lotusGain: 1.25 } : {}), ...(i === 0 ? { innerTint: [0.97, 1, 1.03] } : {}), ...(i === 6 ? { innerTint: [0.96, 1, 1.05] } : {}) }));
   // winter by day, the altar lamp as the review specs set it (45, a little to the right of the figure and before it), on every shot
   // the hall light as the sky and light session set it (#754): no altar lamp over the lotus (D0, the main pictures), the floor fill off and two
-  // wide key spots from high before the figures (keyI, candela each, tuned in software, lt2); D1=1 adds one small warm lamp on the altar
+  // wide key spots from high before the figures (keyI, candela each, aimed at x +-keyAim; 260 and 12 tuned in software, lt3 and lt4); D1=1 adds one small warm lamp on the altar
   // table edge, lit to 2 m, for the director to choose whether the table wants a little warm light
-  const KEY = +(process.env.KEYI || 200), D1 = process.env.D1 === "1";
-  const lamp = (i) => (D1 ? { lamp: 1.5, lampAt: [X[i], 4.12, -15.75], lampColor: 0xffb070, lampDist: 2.0, noFloor: true, keyI: KEY } : { lamp: 0, noFloor: true, keyI: KEY });
+  const KEY = +(process.env.KEYI || 260), AIM = +(process.env.KEYAIM || 12), D1 = process.env.D1 === "1";
+  const lamp = (i) => (D1 ? { lamp: 1.5, lampAt: [X[i], 4.12, -15.75], lampColor: 0xffb070, lampDist: 2.0, noFloor: true, keyI: KEY, keyAim: AIM } : { lamp: 0, noFloor: true, keyI: KEY, keyAim: AIM });
   const shots = [{ name: "cam03-winter", shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "cam03", ...lamp(3) } }];
   for (const i of [0, 1, 2, 3, 4, 5, 6]) {
     const n = N[i].replace(/-.*/, ""), H = HEAD[i], sx = +(X[i] + 7 * Math.sin(55 * Math.PI / 180)).toFixed(2), sz = +(-18.1 + 7 * Math.cos(55 * Math.PI / 180)).toFixed(2);
