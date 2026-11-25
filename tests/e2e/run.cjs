@@ -2762,38 +2762,47 @@ const scenarios = {
     const ev = JSON.stringify(await events()); expect(!/demo\.complete/.test(ev.split("demo.ending.replay").slice(1).join("")), "watching again sent demo.complete");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // The line at the foot of the view breaks between its phrases (hints.js `phrases`); where it breaks, the middle dot between two phrases
-  // must not be left hanging at the end of the first line (it reads as one dot too many): in each language, on a phone 390 wide.
+  // The line at the foot of the view breaks between its phrases (hints.js `phrases`, `unhang`): in each language, the two sentences it says most
+  // (how to walk, and, when the book is shut, the hour), each in its two shapes (a thumb, and keys), on screens from 260 to 360 wide in steps of 4:
+  // wherever two phrases are on one line the dot is between them, wherever they are on two lines the dot is put away and the break is real
+  // (never two phrases run together on a line, and never a dot left at the end of a line); and a line set while it was hidden (the photograph) is right when it is back.
   "hint-break": { tier: 2, async run(b, base) {
+    const K = (...k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
+    const LINES = {
+      zh: ["推左下的圆盘行走　·　拖动画面环顾", `${K("W", "S")}行走，${K("A", "D")}转身　·　按住拖动画面环顾，点地面走去　·　${K("V")}换视角　·　${K("H")}键位`, "山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换", `山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　${K("T")}时节`],
+      ja: ["左下の円を押して歩く　·　画面をドラッグして見回す", `${K("W", "S")}で歩く、${K("A", "D")}で向きを変える　·　ドラッグで見回し、地面を押すとそこへ歩く　·　${K("V")}視点を変える　·　${K("H")}キー`, "山の刻は今のあなたの刻に合わせた　·　季節と刻は撮影と休憩のメニューで変えられる", `山の刻は今のあなたの刻に合わせた　·　季節と刻は撮影と休憩のメニューで変えられる　·　${K("T")}で季節`],
+      en: ["Push the circle at lower left to walk · drag to look around", `${K("W", "S")} walk, ${K("A", "D")} turn · drag to look around, click the ground to go there · ${K("V")} change view · ${K("H")} keys`, "The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest", `The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest · ${K("T")} seasons`],
+      ko: ["왼쪽 아래 원을 밀어 걷기 · 화면을 끌어 둘러보기", `${K("W", "S")} 걷기, ${K("A", "D")} 몸 돌리기 · 끌어서 둘러보기, 땅을 누르면 그리로 걷기 · ${K("V")} 시점 바꾸기 · ${K("H")} 키`, "산의 시각이 지금 당신의 시각을 따른다 · 계절과 시각은 사진과 쉼에서 바꿀 수 있다", `산의 시각이 지금 당신의 시각을 따른다 · 계절과 시각은 사진과 쉼에서 바꿀 수 있다 · ${K("T")} 계절`],
+    };
+    // for every pair of neighbouring phrases: on one line (the dot shown, between them) or on two (the dot away, the break shown)
+    const READ = () => { const line = document.getElementById("hint"), ps = [...line.querySelectorAll(".phrase")], dots = [...line.querySelectorAll(".dot")], brs = [...line.querySelectorAll(".brk")], bad = [];
+      const shown = (e) => e.getClientRects().length > 0;
+      for (let i = 0; i + 1 < ps.length; i++) { const a = ps[i].getBoundingClientRect(), c = ps[i + 1].getBoundingClientRect(), same = c.top < a.bottom - 1;
+        if (same && !(shown(dots[i]) && !shown(brs[i]))) bad.push({ i, why: "two phrases on a line with no dot between them", dot: shown(dots[i]), br: shown(brs[i]), a: [a.left, a.top, a.width], c: [c.left, c.top, c.width] });
+        if (!same && !(!shown(dots[i]) && shown(brs[i]))) bad.push({ i, why: "a break with the dot not put away, or no break", dot: shown(dots[i]), br: shown(brs[i]), a: [a.left, a.top, a.width], c: [c.left, c.top, c.width] }); }
+      return { bad, sig: dots.map((d) => (shown(d) ? 1 : 0)).join(""), text: line.textContent }; };
     for (const lang of ["zh", "ja", "en", "ko"]) {
-      const t = await open(b, base, `q=low&lang=${lang}&view=third`, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      const t = await open(b, base, `q=low&lang=${lang}&view=third`, { viewport: { width: 390, height: 640 }, hasTouch: true, isMobile: true });
       await t.until(async () => (await t.page.evaluate(() => window.__hud().tip)) === "walk", 60000, `${lang}: the line about walking was never said`);
-      const r = await t.page.evaluate(() => {
-        const line = document.getElementById("hint"), rows = [], w = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
-        const phrases = [...line.querySelectorAll(".phrase")].map((e) => e.getBoundingClientRect()), lines = new Set(phrases.map((p) => Math.round(p.top)));
-        for (let n; (n = w.nextNode());) { if (n.parentElement.closest(".phrase")) continue; const i = n.data.indexOf("·"); if (i < 0) continue; const g = document.createRange(); g.setStart(n, i); g.setEnd(n, i + 1); const dot = g.getBoundingClientRect(); if (!dot.width) continue; rows.push({ top: dot.top, bottom: dot.bottom, next: phrases.find((p) => p.left > dot.left - 1 && Math.abs(p.top - dot.top) < 60 || p.top > dot.top)?.top ?? null }); }
-        return { lines: lines.size, dots: rows, text: line.textContent, on: line.classList.contains("on") };
-      });
-      const hung = r.dots.filter((d) => d.next !== null && d.next >= d.bottom - 1);
-      expect(hung.length === 0, `${lang}: a middle dot hangs at the end of a line: ` + JSON.stringify(r));
-      // the longest line there is (the one said when the book is shut, in its two shapes: touch, and with keys), set into the line as hints.js sets it:
-      // it breaks only between its phrases, each stays whole on a line of its own, and no dot is left at a line's end (a line that breaks inside a phrase leaves an orphan word)
-      const LONG = { zh: "山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　T时节", ja: "山の刻は今のあなたの刻に合わせた　·　季節と刻は撮影と休憩のメニューで変えられる　·　Tで季節", en: "The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest · T seasons", ko: "산의 시각이 지금 당신의 시각을 따른다 · 계절과 시각은 사진과 쉼에서 바꿀 수 있다 · T 계절" };
-      for (const text of [LONG[lang].replace(/[\s\u3000]+·[\s\u3000]+[^·]*$/, ""), LONG[lang]]) {
-        const g = await t.page.evaluate((text) => {
-          const line = document.getElementById("hint"); line.innerHTML = text.split(/([\s\u3000]+·[\s\u3000]+)/).map((p, i) => (i % 2 ? p.replace("·", '<span class="dot">·</span>') : `<span class="phrase">${p}</span>`)).join(""); line.classList.add("on"); window.dispatchEvent(new Event("resize"));
-          const lh = parseFloat(getComputedStyle(line).lineHeight) || 20, ps = [...line.querySelectorAll(".phrase")].map((e) => { const q = e.getBoundingClientRect(); return { w: Math.round(q.width), h: Math.round(q.height), top: Math.round(q.top) }; });
-          const dots = [...line.querySelectorAll(".dot")].map((d, i) => ({ hidden: d.hidden, broke: ps[i + 1].top >= ps[i].top + ps[i].h - 1 }));
-          return { ps, dots, lh, avail: line.clientWidth - 32 };
-        }, text);
-        expect(g.ps.every((p) => p.h <= g.lh * 1.6 || p.w >= g.avail - 2), `${lang}: a phrase that fits a line was broken inside: ` + JSON.stringify(g));
-        if (lang === "zh" && g.ps.length === 2) expect(g.ps[1].top > g.ps[0].top && g.ps[1].h <= g.lh * 1.6, "zh: the line said when the book is shut should be two lines, the second beginning at 季节与时辰, whole: " + JSON.stringify(g));
-        if (text === LONG[lang]) {   // a face that arrives late: the dots are set right again when the fonts say so (not only on a resize)
-          const again = await t.page.evaluate(() => { for (const d of document.querySelectorAll("#hint .dot")) d.hidden = !d.hidden; document.fonts.dispatchEvent(new Event("loadingdone")); const ps = [...document.querySelectorAll("#hint .phrase")].map((e) => e.getBoundingClientRect()); return [...document.querySelectorAll("#hint .dot")].every((d, i) => d.hidden === (ps[i + 1].top >= ps[i].top + ps[i].height - 1)); });
-          expect(again, `${lang}: the dots were not set right again when the fonts finished loading`);
+      const settle = () => t.page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+      const failures = [];
+      for (let w = 260; w <= 360; w += 4) {
+        await t.page.setViewportSize({ width: w, height: 640 });
+        for (const [n, html] of LINES[lang].entries()) {
+          const r = await t.page.evaluate(([h, read]) => { window.__hintSet(h); return eval(`(${read})`)(); }, [html, READ.toString()]); if (r.bad.length) failures.push({ w, line: n, bad: r.bad.slice(0, 2), text: r.text });
         }
-        expect(g.dots.every((d) => d.hidden === d.broke), `${lang}: a dot is shown at a break or hidden where the line goes on: ` + JSON.stringify(g));
       }
+      expect(failures.length === 0, `${lang}: ${failures.length} widths where a line has two phrases and no dot, or a dot at a break: ` + JSON.stringify(failures.slice(0, 3)));
+      // a line set while it was hidden (the photograph) and shown again is as it was set: not a dot gone, and not a dot where there is a break
+      await t.page.setViewportSize({ width: 320, height: 640 });
+      for (const html of [LINES[lang][0], LINES[lang][3]]) {   // (the shortest and the longest)
+        await t.page.evaluate((h) => window.__hintSet(h), html); await settle(); const before = await t.page.evaluate(READ);
+        await t.page.evaluate(() => { document.body.classList.add("photo"); window.dispatchEvent(new Event("resize")); }); await settle();
+        await t.page.evaluate(() => document.body.classList.remove("photo")); await settle();
+        const after = await t.page.evaluate(READ);
+        expect(after.bad.length === 0 && after.sig === before.sig, `${lang}: the line was not the same after the photograph: ` + JSON.stringify({ before, after }));
+      }
+      // the line, hidden, is not measured at zero: a resize meanwhile puts no dot away
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },
