@@ -333,9 +333,10 @@ export function buildSite(M) {
   LEVELS.forEach((L, i) => {
     const y0 = i ? LEVELS[i - 1].y : 0, rise = L.y - y0, st = stairGeo(L.stair, rise);
     const bottom = i === 2 ? 4 : y0 - 0.2 < 0 ? 0 : y0 - 0.2;
-    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN, 0, (L.y + bottom) / 2, (L.zS + L.zN) / 2)); flights.push(flightAt(L.stair, rise, placed(0, y0, L.zS)));
+    stone.push(box(L.x * 2, L.y - bottom, L.zS - L.zN + 0.003, 0, (L.y + bottom) / 2, (L.zS + L.zN - 0.003) / 2)); flights.push(flightAt(L.stair, rise, placed(0, y0, L.zS)));
     // The summit's edge is the low plaster wall built below (the same line), not a second, stone one under its tiles.
-    if (i < 2) for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42; stone.push(box(w, 0.95, 0.26, sx * (L.x - w / 2), L.y + 0.475, L.zS - 0.13)); }
+    // (The parapet stops at the side wall's inner face: carried on into the wall, its front shared the plane of the wall's end, #688.)
+    if (i < 2) for (const sx of [-1, 1]) { const w = L.x - L.stair / 2 - 0.42 - 0.21; stone.push(box(w, 0.95, 0.26, sx * (L.x - 0.21 - w / 2), L.y + 0.475, L.zS - 0.13)); }
     paving.push({ level: i + 1, y: L.y + 0.012, x: L.x, zS: L.zS, zN: L.zN });
     const pad = BODY + 0.02;   // the treads are walked clear of the cheek stones by his own width
     walk.ramps.push({ x0: -L.stair / 2 + pad, x1: L.stair / 2 - pad, z0: L.zS - 0.8, z1: L.zS + st.run + 0.3, base: y0,   // a little past its foot, so no sliver of ground is left without a height; and past its head, through the parapet's keep
@@ -347,13 +348,15 @@ export function buildSite(M) {
   });
   // Where the summit flight leaves the Guanyin terrace for the hill, the earth is cut back for the stair: a block of the
   // terrace's own stone fills under its lowest two metres, so its cheeks stand on stone and not over a slot (#272).
-  { const hw = TOP.stair / 2 + cheekProfile(TOP.y - T2.y).width; stone.push(box(hw * 2, 1.4, 2.6, 0, T2.y - 0.7, T2.zN - 1.3)); }
+  { const hw = TOP.stair / 2 + cheekProfile(TOP.y - T2.y).width - 0.003; stone.push(box(hw * 2, 1.4, 2.6, 0, T2.y - 0.7, T2.zN - 1.3)); }   // (a hair inside the cheeks' outer faces, whose plane it shared, #688)
   walk.solids.push({ x0: -60, x1: 60, z0: HILL.zN, z1: HILL.zS - 0.05, open: true });   // the hillside itself: not to be walked on, but open air above it
   {   // the approach: lower landing, a flight west to the half-way pavilion, a turn, a flight north to the forecourt
     const A = APPROACH, yA = -A.rise, yB = -A.rise - A.rise2, pad = 0.3, clear = BODY + 0.02;   // `clear`: the treads are walked this far inside the cheek stones
     flights.push(flightAt(A.w, A.rise, placed(0, yA, A.top)), flightAt(A.zA1 - A.zA0 - 0.6, A.rise2, placed(A.xTurn, yB, A.zMid, Math.PI / 2)));
-    stone.push(box(A.xTurn + A.w / 2 + 0.4, 0.4, A.zA1 - A.zA0, (A.xTurn - A.w / 2 - 0.4) / 2 + 0.2, yA - 0.2, A.zMid),
-      box(A.xB1 - A.xB0, 0.4, A.zA1 - A.zA0, (A.xB0 + A.xB1) / 2, yB - 0.2, A.zMid));
+    // (The upper landing stops where the next flight's head begins: carried on under its top tread and cheeks, its top and side
+    // shared their planes, #688. Both are a hair shallower than the cheeks' feet beside them, whose underside they shared.)
+    stone.push(box(A.xTurn + A.w / 2 + 0.4 - 0.2, 0.397, A.zA1 - A.zA0, (A.xTurn - A.w / 2 - 0.4) / 2 + 0.1, yA - 0.1985, A.zMid),
+      box(A.xB1 - A.xB0, 0.397, A.zA1 - A.zA0, (A.xB0 + A.xB1) / 2, yB - 0.1985, A.zMid));
     walk.ramps.push({ x0: -A.w / 2 + clear, x1: A.w / 2 - clear, z0: A.top - 0.4, z1: A.zA0 + 0.2, base: yA, h: A.rise, low: [0, A.zA0], high: [0, A.top] },
       { x0: A.xTurn - 0.2, x1: A.xB0 + 0.2, z0: A.zA0 + 0.3 + clear, z1: A.zA1 - 0.3 - clear, base: yB, h: A.rise2, low: [A.xB0, A.zMid], high: [A.xTurn, A.zMid] });
     // The cheeks of the three flights, closed to him where they stand on a landing or beside a tread.
@@ -366,7 +369,7 @@ export function buildSite(M) {
     walk.decks.push({ x0: -A.w / 2 + pad, x1: A.xTurn + 0.2, z0: A.zA0 - 0.05, z1: A.zA1 - pad, h: yA }, { x0: A.xB0, x1: A.xB1 - pad, z0: A.zA0 + pad, z1: A.zA1 + 0.2, h: yB });
     // Below that, a third flight coming up from the south, from the landing where the walk begins.
     const yC = yB - A.rise3;
-    flights.push(flightAt(A.w, A.rise3, placed(A.xC, yC, A.zA1))); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.4, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.2, (A.zC0 + A.zC1) / 2));
+    flights.push(flightAt(A.w, A.rise3, placed(A.xC, yC, A.zA1))); stone.push(box(A.xB1 + 5.2 - A.xB0, 0.397, A.zC1 - A.zC0, (A.xB0 + A.xB1 + 5.2) / 2, yC - 0.1985, (A.zC0 + A.zC1) / 2));   // (a hair shallower than the cheeks' feet, as above)
     walk.ramps.push({ x0: A.xC - A.w / 2 + clear, x1: A.xC + A.w / 2 - clear, z0: A.zA1 - 0.4, z1: A.zC0 + 0.2, base: yC, h: A.rise3, low: [A.xC, A.zC0], high: [A.xC, A.zA1] });
     walk.decks.push({ x0: A.xB0 + pad, x1: A.xB1 + 2.9 - 2.3 - stairGeo(1, 0.3).run - 0.02, z0: A.zC0, z1: A.zC1 - pad, h: yC });   // (as far as the foot of the river-view pavilion's steps)
     walk.solids.push({ x0: -80, x1: 80, z0: A.top + 0.3, z1: A.end + 8, open: true });   // the grove either side of the path: no way through, but nothing solid
@@ -405,7 +408,7 @@ export function buildSite(M) {
   }
 
   // ---- Walls ----
-  const body = [[], [], [], []], ridge = [], capPos = [], capUv = [], capIdx = [], T = 0.42;
+  const body = [[], [], [], []], ridge = [], capPos = [], capUv = [], capIdx = [], T = 0.42, SHY = 0.003;
   function wall(x0, z0, x1, z1, lvl = 0, H = SITE.wallH) {
     const y = lvl ? LEVELS[lvl - 1].y : 0, alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0), len = alongX ? Math.abs(x1 - x0) : Math.abs(z1 - z0);
     // The tiles sit on the wall: at the wall's two faces their underside is H + 0.338 above its foot, so the plaster is
@@ -415,7 +418,7 @@ export function buildSite(M) {
     ridge.push(box(alongX ? len : 0.16, 0.14, alongX ? 0.16 : len, (x0 + x1) / 2, y + H + 0.5, (z0 + z1) / 2));
     for (const s of [-1, 1]) {   // two tiled slopes
       const b = capPos.length / 3;
-      for (const [l, yy, o] of [[0, H + 0.46, 0], [len, H + 0.46, 0], [len, H + 0.1, s * 0.62], [0, H + 0.1, s * 0.62]]) {
+      for (const [l, yy, o] of [[-SHY, H + 0.46, 0], [len + SHY, H + 0.46, 0], [len + SHY, H + 0.1, s * 0.62], [-SHY, H + 0.1, s * 0.62]]) {
         capPos.push(alongX ? Math.min(x0, x1) + l : x0 + o, y + yy, alongX ? z0 + o : Math.min(z0, z1) + l); capUv.push(l, o === 0 ? 0.72 : 0);
       }
       capIdx.push(b, b + 1, b + 2, b, b + 2, b + 3);
@@ -423,9 +426,9 @@ export function buildSite(M) {
     // The two ends of the tiled roof are shut with a gable, as every wall's end is in life (#288): without it the hollow under
     // the slopes shows as a black triangle to anyone who stands level with the end, as he now may at the summit's stair head.
     for (const l of [0, len]) {
-      const b = capPos.length / 3;
+      const b = capPos.length / 3, e = l + (l ? SHY : -SHY);   // (the tiles reach a hair past the wall's end, so that the gable is not on the plane of the plaster under it, #688)
       for (const [yy, o] of [[H + 0.46, 0], [H + 0.1, 0.62], [H + 0.1, -0.62]]) {
-        capPos.push(alongX ? Math.min(x0, x1) + l : x0 + o, y + yy, alongX ? z0 + o : Math.min(z0, z1) + l); capUv.push(o + 0.625, o === 0 ? 0.72 : 0);   // (its tile rows run across it, not along the wall: a constant u would sit in the gutter between two rows, and be black)
+        capPos.push(alongX ? Math.min(x0, x1) + e : x0 + o, y + yy, alongX ? z0 + o : Math.min(z0, z1) + e); capUv.push(o + 0.625, o === 0 ? 0.72 : 0);   // (its tile rows run across it, not along the wall: a constant u would sit in the gutter between two rows, and be black)
       }
       // Wound to face out along the wall's line: the tile shader paints a back face dark, so a gable that faced inward would look no better than the gap.
       if (alongX === (l === len)) capIdx.push(b, b + 1, b + 2); else capIdx.push(b, b + 2, b + 1);

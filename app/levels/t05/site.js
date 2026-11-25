@@ -100,7 +100,7 @@ export function buildSite(M) {
   const wall = (x0, z0, x1, z1, h, t) => {
     const along = z0 === z1 ? "x" : "z", len = along === "x" ? x1 - x0 : z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     plaster.push(along === "x" ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
-    stone.push(along === "x" ? box(len + 0.2, 0.35, t + 0.2, cx, 0.175, cz) : box(t + 0.2, 0.35, len + 0.2, cx, 0.175, cz));
+    stone.push(along === "x" ? box(len + 0.2, 0.355, t + 0.2, cx, 0.1725, cz) : box(t + 0.2, 0.355, len + 0.2, cx, 0.1725, cz));   // (the plinth goes 5 mm into the ground, so that its foot and the wall's are not two faces on one plane, #688)
     const r = along === "x" ? { x0, x1, z0: cz - t / 2, z1: cz + t / 2 } : { x0: cx - t / 2, x1: cx + t / 2, z0, z1 };
     walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, eyeTop: h + 0.3 });
     shade[along === "z" || z0 < 62 ? 0 : 1].push(r);
