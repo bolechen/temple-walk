@@ -13,8 +13,10 @@ import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
 import { buildAltar, benchFigures } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 import { buildTower } from "./tower.js";
+import { buildStele } from "./stele.js";
 import { buildSurround } from "./surround.js";
 import { dryMaterials } from "./dry.js";
+import { ridgeMaterials } from "./ridge.js";
 import { debugGate } from "../../src/debuggate.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
@@ -140,7 +142,13 @@ export function buildSite(M) {
   const sh = { ao: inside };   // inside the walls the sky's light is mostly shut out (hall.js)
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
   root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
-    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shBoard), mesh(merge(hp.ridge), M.ridge));
+    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, { ...shBoard, cast: false }), mesh(merge(hp.ridge), ridgeMaterials(M).ridge));   // (the eave's underside casts nothing the tiles over it do not: #742)   // (T05's own ridge clay, ./ridge.js)
+  // The eave (./roof.js): the board along its edge and the small one at the flying rafters' end, the two layers of rafters and
+  // the corner beams, in the shade the roof gives them; the round end tiles and the drip tiles along the edge, of the ridges' clay
+  // and in the eave's shade as the rafters are (an end tile is the head of a tile, not a lamp: #742's art review).
+  const eaveAo = { ao: hall.roof.ao, cast: false };
+  root.add(mesh(merge([...hp.fascia, ...hp.step]), M.fascia, { ao: () => 0.8 }), mesh(merge([...hp.rafters, ...hp.flyers]), M.woodZ, eaveAo), mesh(merge(hp.beams), M.woodX, eaveAo),
+    mesh(merge([...hp.ends, ...hp.drips]), ridgeMaterials(M).ends, eaveAo));
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
@@ -188,6 +196,10 @@ export function buildSite(M) {
   };
 
   root.add(ax.group);
+  // The stele in the monument pavilion, the steps up to it and the place where a line of it is copied (./stele.js; PRD.md §1.3 (a)).
+  const st = buildStele(M); root.add(st.group);
+  for (const k of ["solids", "decks", "ramps", "posts"]) walk[k].push(.../** @type {any} */ (st.walk)[k]);
+  (root.userData.flights ||= []).push(...st.group.userData.flights);
   const surround = buildSurround(M, C, { bench }); root.add(surround); if (hooks) hooks.houses = surround.userData.houses;   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
   // The old town's pagoda far to the west-south-west (./tower.js, #548 step two): a part of its own, left out by ?off=tower, nothing else reads it.
   const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
@@ -207,8 +219,12 @@ export function buildSite(M) {
     e: [STATION.E[0], STATION.E[1], 0, 1.15],          // under the roof, raised 66° (cam05; the art director, #549: from 3 m further south the heads of the three keep to the picture's lowest 18%)
     f: [STATION.F[0], STATION.F[1], 0, 0.17],
     ...ax.views,
+    ...st.views,
+    // The observation's two places, where its stroke is written (./page.js): his frame there and the eye on its shot (`?show=shot-p1a`).
+    "shot-p1a": [STATION.A[0], STATION.A[1], 0, 0.05], "shot-p1b": [STATION.B[0], STATION.B[1], 0, 0.05],
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
+    corner: [12, 30, 0.36, 0.3],                       // the hall's south-east corner from the court: the eave's lift, the fanned rafters, the hip ridge and the east ornament (roof.js)
     back: [0, 6, Math.PI, -0.08],
     // Shakyamuni at the west end, from the worship band 9.9 m before him and a little east of his middle, raised to his lap: his left hand
     // and his lotus seat are in view, which from the west aisle within 4.4 m of his middle his own right knee and arm hide (#370, #547).
@@ -220,7 +236,7 @@ export function buildSite(M) {
   Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
     root, walk, shade, closed: [...ax.closed, ...hall.closed], closedViews: HALL_DOORS.shut ? [...INSIDE_VIEWS] : [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
-    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
+    places: { ...st.places }, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }
 
