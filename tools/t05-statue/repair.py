@@ -49,7 +49,7 @@ mw = ob.matrix_world.copy(); ob.parent = None; ob.matrix_world = Matrix.Identity
 me.transform(Matrix.Rotation(math.radians(spec.get("turn", 0)), 4, "Z"))
 # Tripo writes each point once per UV island; weld them, or an edit opens cracks along the seams
 import bmesh
-bm = bmesh.new(); bm.from_mesh(me); nv = len(bm.verts); bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6); print(json.dumps({"weld": [nv, len(bm.verts)]})); bm.to_mesh(me); bm.free()
+bm = bmesh.new(); bm.from_mesh(me); nv = len(bm.verts); bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-8)   # 1e-8, not 1e-6 (#701): at 1e-6 the weld joins points of different seams that are a few micrometres apart, collapsing 210 faces of the 1.46 million and opening 210 edges (non-manifold too); at 1e-8 only the points a seam shares exactly are joined, and the original stays closed; print(json.dumps({"weld": [nv, len(bm.verts)]})); bm.to_mesh(me); bm.free()
 co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3)
 mn, mx = co.min(0), co.max(0); co -= [(mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, mn[2]]
 ed = np.empty(len(me.edges) * 2, dtype=np.int64); me.edges.foreach_get("vertices", ed); ed = ed.reshape(-1, 2)

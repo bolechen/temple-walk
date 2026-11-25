@@ -1,0 +1,36 @@
+{
+ "turn": -90,
+ "source": "vipasyin.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.916,
+   "band": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.47,
+   "k": 0.902,
+   "band": 0.05
+  }
+ ],
+ "about": "Vipasyin's r3 recipe: the four ops the r3 file was made with (its log in keep/t05-six-buddhas/r3/vipasyin-r3.glb.log.json); repair.json has since taken the face ops of #463 (#701)."
+}
