@@ -16,9 +16,9 @@
 //   material), at least `minArea` (a 5 cm square).
 // - Drawn: a mesh that is not visible, a material that is see-through, does not write depth, is not drawn or is pushed
 //   off its plane on purpose (polygonOffset) is left out; those are overlays, and their order is chosen.
-// - Something to see: two parts drawn with the same material take the colour of the same place in the world whichever
-//   wins (procMat works the pattern out from world position), so their tie shows little; those pairs are counted as
-//   `matching` and listed apart from the rest, not as faults.
+// - Something to see: two faces drawn with the same material and facing one way take the colour of the same place in the
+//   world whichever wins (procMat works the pattern out from world position), so their tie shows little; such triangle
+//   pairs are not measured.
 //
 // What is not done here, as in Kiln: no test of whether something else hides the pair. A face behind a wall still counts.
 //
@@ -136,15 +136,14 @@ function clipArea(s, c, centre) {
 
 /**
  * The pairs of parts whose faces fight, from `gatherTriangles`' soup. Each pair: the two parts' names, the area they share
- * (m²), the triangle pairs, the plane's normal, a point on the largest shared patch, and whether the two are drawn with the
- * same material (`matching`).
+ * (m²), the triangle pairs, the plane's normal and a point on the largest shared patch.
  */
 export function flushFaces(soup, opt = {}) {
   const { gap, sameFacing, minArea, band } = { ...FLUSH, ...opt };
   const { corner: C, normal: N, owner: O, parts, count } = soup;
   // Buckets by the normal (to a twentieth in each component) and the plane's offset (to `band`); a triangle is filed once
   // and looked for in the neighbouring buckets of both, so nothing near a bucket's edge is missed.
-  const Q = 20, buckets = new Map(), key = (qx, qy, qz, qd) => `${qx},${qy},${qz},${qd}`;
+  const Q = 5, buckets = new Map(), key = (qx, qy, qz, qd) => ((qx + 21) * 43 + qy + 21) * 43 + qz + 21 + 79507 * (qd + 1e6);
   const offset = new Float64Array(count);
   for (let t = 0; t < count; t++) {
     const nx = N[t * 3], ny = N[t * 3 + 1], nz = N[t * 3 + 2];
@@ -155,44 +154,52 @@ export function flushFaces(soup, opt = {}) {
   // Triangles facing exactly the other way are found too (for a face drawn on both sides): a bucket also meets the one
   // whose normal and offset are its own negated.
   const tol = 0.0175, near = (x) => { const lo = Math.round((x - tol) * Q), hi = Math.round((x + tol) * Q); return lo === hi ? [lo] : [lo, hi]; };
-  const B = new Float64Array(count * 6);
+  const B = new Float64Array(count * 6), P = parts.map((p) => p.material);
   for (let t = 0; t < count; t++) for (let k = 0; k < 3; k++) {
     const a = C[t * 9 + k], b = C[t * 9 + 3 + k], c = C[t * 9 + 6 + k];
     B[t * 6 + k] = Math.min(a, b, c); B[t * 6 + 3 + k] = Math.max(a, b, c);
   }
-  const found = new Map(), flatI = new Float64Array(6), flatJ = new Float64Array(6), ctr = [0, 0], seen = new Set();
-  let tests = 0, matching = 0;
+  const found = new Map(), flatI = new Float64Array(6), flatJ = new Float64Array(6), ctr = [0, 0], seen = new Map();
+  let tests = 0;
   const fights = [], contact = new Float64Array(count);
   for (const [k, list] of buckets) {
-    const [qx, qy, qz, qd] = k.split(",").map(Number);
+    const qd = Math.floor(k / 79507) - 1e6;
     const t0 = list[0], nx = N[t0 * 3], ny = N[t0 * 3 + 1], nz = N[t0 * 3 + 2];
     const others = new Set();
     for (const sgn of [1, -1]) for (const ax of near(sgn * nx)) for (const ay of near(sgn * ny)) for (const az of near(sgn * nz)) for (const dd of [-1, 0, 1]) {
       const k2 = key(ax, ay, az, (sgn === 1 ? qd : Math.floor(-offset[t0] / band)) + dd);
       if (buckets.has(k2)) others.add(k2);
     }
-    void qx; void qy; void qz;
     for (const k2 of others) {
-      const pk = k < k2 ? `${k}|${k2}` : `${k2}|${k}`; if (seen.has(pk)) continue; seen.add(pk);
+      const lo = Math.min(k, k2), hi = Math.max(k, k2); let met = seen.get(lo); if (!met) seen.set(lo, (met = new Set())); if (met.has(hi)) continue; met.add(hi);
       const same = k === k2, L2 = buckets.get(k2);
-      // Sweep along x over the boxes of both lists: a triangle meets only those whose x-extent it overlaps.
-      const all = same ? Int32Array.from(list) : Int32Array.from([...list, ...L2.map((t) => ~t)]);
-      const id = (s) => (s < 0 ? ~s : s);
-      all.sort((p, q) => B[id(p) * 6] - B[id(q) * 6]);
-      let active = [];
-      for (let n = 0; n < all.length; n++) {
-        const si = all[n], ti = id(si), x0 = B[ti * 6] - gap;
-        if (active.length > 64) active = active.filter((s) => B[id(s) * 6 + 3] >= x0);
-        for (let w = 0; w < active.length; w++) {
-          const sj = active[w], tj = id(sj);
-          if (B[tj * 6 + 3] < x0) continue;
-          if (!same && (si < 0) === (sj < 0)) continue;
-          if (B[ti * 6 + 1] > B[tj * 6 + 4] + gap || B[tj * 6 + 1] > B[ti * 6 + 4] + gap) continue;
-          if (B[ti * 6 + 2] > B[tj * 6 + 5] + gap || B[tj * 6 + 2] > B[ti * 6 + 5] + gap) continue;
+      // A grid laid in the plane (over the two axes the normal leans on least): each triangle is filed in the cells its
+      // box covers, and a pair is measured in the one cell that holds the low corner of where their boxes overlap.
+      const A = Math.abs(nx) >= Math.abs(ny) && Math.abs(nx) >= Math.abs(nz) ? 0 : Math.abs(ny) >= Math.abs(nz) ? 1 : 2, U = (A + 1) % 3, V = (A + 2) % 3;
+      const members = same ? list : list.concat(L2);
+      let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity;
+      for (const t of members) { u0 = Math.min(u0, B[t * 6 + U]); u1 = Math.max(u1, B[t * 6 + 3 + U]); v0 = Math.min(v0, B[t * 6 + V]); v1 = Math.max(v1, B[t * 6 + 3 + V]); }
+      const cell = Math.min(50, Math.max(0.1, 2 * Math.sqrt(((u1 - u0) * (v1 - v0)) / members.length) || 1));
+      const cu = (x) => Math.floor((x - u0 + gap) / cell), cv = (x) => Math.floor((x - v0 + gap) / cell), nu = cu(u1 + gap) + 2;
+      const grid = new Map(), mine = same ? null : new Set(list);
+      for (const t of members) {
+        const a1 = cu(B[t * 6 + 3 + U] + gap), b1 = cv(B[t * 6 + 3 + V] + gap);
+        for (let i = cu(B[t * 6 + U] - gap); i <= a1; i++) for (let j = cv(B[t * 6 + V] - gap); j <= b1; j++) { const c = j * nu + i; let l = grid.get(c); if (!l) grid.set(c, (l = [])); l.push(t); }
+      }
+      for (const [c, all] of grid) {
+        // Within one bucket every pair in a cell; between two, only a triangle of each.
+        const l = same ? all : all.filter((t) => mine.has(t)), r = same ? all : all.filter((t) => !mine.has(t));
+        if (!l.length || !r.length) continue;
+        for (let p = 0; p < l.length; p++) for (let q = same ? p + 1 : 0; q < r.length; q++) {
+          const ti = l[p], tj = r[q];
+          // Two faces of one material facing one way are not measured: they take the colour of the same place in the world
+          // whichever wins. (Facing each other they are still measured, for whether a face is buried.)
+          if (P[O[ti]] === P[O[tj]] && N[ti * 3] * N[tj * 3] + N[ti * 3 + 1] * N[tj * 3 + 1] + N[ti * 3 + 2] * N[tj * 3 + 2] > 0) continue;
+          if (B[ti * 6] > B[tj * 6 + 3] + gap || B[tj * 6] > B[ti * 6 + 3] + gap || B[ti * 6 + 1] > B[tj * 6 + 4] + gap || B[tj * 6 + 1] > B[ti * 6 + 4] + gap || B[ti * 6 + 2] > B[tj * 6 + 5] + gap || B[tj * 6 + 2] > B[ti * 6 + 5] + gap) continue;
+          if (cv(Math.max(B[ti * 6 + V], B[tj * 6 + V]) - gap) * nu + cu(Math.max(B[ti * 6 + U], B[tj * 6 + U]) - gap) !== c) continue;
           tests++;
           fight(ti, tj);
         }
-        active.push(si);
       }
     }
   }
@@ -220,7 +227,6 @@ export function flushFaces(soup, opt = {}) {
     const flat = clipArea(flatI, flatJ, ctr); if (!(flat > 1e-9)) return;
     const area = flat / Math.abs(ni[ax]);
     if (facing === "contact") { contact[i] += area; contact[j] += area; return; }
-    if (O[i] === O[j] || pi.material === pj.material) { matching += area; return; }
     const at = [0, 0, 0]; at[u] = ctr[0]; at[v] = ctr[1]; at[ax] = (offset[i] - ni[u] * at[u] - ni[v] * at[v]) / ni[ax];
     fights.push({ i, j, area, at, normal: ni, facing, worst });
   }
@@ -234,7 +240,7 @@ export function flushFaces(soup, opt = {}) {
     let rec = found.get(pk);
     if (!rec) found.set(pk, (rec = { a, b, area: 0, tris: 0, largest: 0, at: f.at, normal: f.normal, facing: f.facing, gap: 0 }));
     rec.area += f.area; rec.tris++; if (f.worst > rec.gap) rec.gap = f.worst;
-    if (f.area > rec.largest) { rec.largest = f.area; rec.at = f.at; rec.normal = f.normal; rec.facing = f.facing; }
+    if (f.area > rec.largest + 1e-9 || (Math.abs(f.area - rec.largest) <= 1e-9 && f.at.join() < rec.at.join())) { rec.largest = f.area; rec.at = f.at; rec.normal = f.normal; rec.facing = f.facing; }
   }
   const r2 = (x) => Math.round(x * 100) / 100;
   const pairs = [...found.values()].filter((r) => r.area >= minArea).map((r) => ({
@@ -242,7 +248,7 @@ export function flushFaces(soup, opt = {}) {
     area: Math.round(r.area * 1e4) / 1e4, trianglePairs: r.tris, gap: Math.round(r.gap * 1e5) / 1e5,
     normal: r.normal.map((x) => Math.round(x * 1000) / 1000), at: r.at.map(r2),
   })).sort((p, q) => q.area - p.area || (label(p) < label(q) ? -1 : 1));
-  return { triangles: count, tests, pairs, matching: Math.round(matching * 100) / 100, hidden: Math.round(hidden * 100) / 100 };
+  return { triangles: count, tests, pairs, hidden: Math.round(hidden * 100) / 100 };
 }
 
 /** A pair's line in a report and in the test's allowance: the two parts, sorted, and where, to the decimetre. */
@@ -259,6 +265,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   const t0 = Date.now(), { scene } = await drawnScene(lv), soup = gatherTriangles(scene), t1 = Date.now(), r = flushFaces(soup), t2 = Date.now();
   console.log(`${soup.count} triangles in ${soup.parts.length} parts gathered in ${t1 - t0} ms, ${r.tests} triangle pairs measured in ${t2 - t1} ms`);
-  console.log(`${r.pairs.length} pairs of parts fight; left out: ${r.matching} m² between faces of one material, ${r.hidden} m² buried against a face pointing the other way`);
+  console.log(`${r.pairs.length} pairs of parts fight; left out: ${r.hidden} m² buried against a face pointing the other way`);
   for (const p of r.pairs) console.log(`${p.area.toFixed(4).padStart(9)} m²  ${p.facing === "opposite" ? "[双面相背] " : ""}${label(p)}  n=${p.normal.join(",")}  gap=${p.gap * 1000}mm  ${p.trianglePairs} 对三角形`);
 }

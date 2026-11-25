@@ -29,7 +29,6 @@ test("the measurement finds two boxes laid face to face, and not two that only t
   assert.equal(r.pairs.length, 1, JSON.stringify(r.pairs, null, 1));
   assert.ok(Math.abs(r.pairs[0].area - 0.25) < 1e-6, `the shared area is the board's top: ${r.pairs[0].area}`);
   assert.deepEqual(r.pairs[0].normal, [0, 1, 0]);
-  assert.ok(r.matching > 0, "the same-material tie is counted apart");
 });
 
 for (const id of Object.keys(LEVELS)) {
