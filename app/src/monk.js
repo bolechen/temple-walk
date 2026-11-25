@@ -1328,7 +1328,10 @@ export function createMonk(opts = {}) {
             // While he folds in (or the ground-reaching legs are still his), the ankle is moved from where it stood on the
             // floor to where the seat has it, and the leg solved for that point: blending the joints' turns instead can
             // carry the shoe through the floor halfway.
-            if (legsShown && w < 1) { ankW.lerpVectors(targets[i], ankW, w); pole.lerp(tv.set(s * 0.15, 0, 1).applyQuaternion(gq), 1 - w); }
+            // (Onto a cushion the feet stay down until the hips have come most of the way: drawn up to the seat's height
+            // while he was still standing over it, the shins folded his knees up past his hips and out through the
+            // robe's front, the second art review's C, #680.)
+            if (legsShown && w < 1) { const wa = !onStool && lapSeat ? Math.min(w, down * down) : w; ankW.lerpVectors(targets[i], ankW, wa); pole.lerp(tv.set(s * 0.15, 0, 1).applyQuaternion(gq), 1 - wa); }
             reach(up, lo, THIGH, SHIN, ankW, pole, 1);
           }
           ft.quaternion.setFromAxisAngle(XV, onStool ? 0.45 : 1.0);   // the feet hang, toes a little down; folded, they lie along the shin
@@ -1391,7 +1394,9 @@ export function createMonk(opts = {}) {
       // (Sitting down onto a cushion the knees come up as the legs fold, and the skirt's bones would lift the cloth with
       // them into a ring held out at the height of his lap; the robe built here is laid over the folded legs by its
       // own shape there, so the knees do not lift it, #664.)
-      const kneeK = !dressed ? 1 - smooth(0, 0.25, seat) : 1;
+      // (Until the lap's own shape has taken the cloth, the knees still lift it, as on a stair: let go of at once, they
+      // came out through it, #680.)
+      const kneeK = !dressed ? 1 - smooth(LAP.sitFrom, 1, seat) : 1;
       const fwd = kneeK * kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1]) * kneeK), lf = kneeK * kneeLift(thigh[0], SKIRT_SIDE), rt = kneeK * kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt drapes smoothly over his lap and thighs, the sides open over his knees, the back rests on the seat.
       // Climbing stairs: a high knee pushes the code robe's cloth over it forward without lifting the whole hem into a flat board (#615, #642).

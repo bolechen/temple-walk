@@ -6,6 +6,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
+import { MeshBVH } from "three-mesh-bvh";
 const { createMonk, SEAT_LEGS, HAT_OFF, LAP_HAND } = await import("../../app/src/monk.js");
 const { CUSHION, radiusAt } = await import("../../app/src/geo.js");
 const { VIEWS, refMask, seat, triangles, overlay } = await import("../../tools/novice-sit-lib.mjs");
@@ -220,4 +221,29 @@ test("seated on a cushion his shadow lies on the floor under it, not through his
   // 「袍下段一圈台阶折痕」)
   const m = seated(); const y = m.shadow.getWorldPosition(V()).y, robe = points(m.parts.robe, (i) => i < m.robeBody), low = Math.min(...robe.map((v) => v.y));
   assert.ok(y < low - 0.01 && y > -TOP, `the shadow at ${y.toFixed(3)} m, the robe's lowest ${low.toFixed(3)} m, the floor ${-TOP} m`);
+});
+
+test("sitting down onto a cushion, nothing of his legs comes out through the robe on the way (the second art review's C: frames 4–8 had his knees through its front)", () => {
+  // Frame by frame from standing, at 30 and at 60 frames a second: a point of the trousers that can be seen from in front,
+  // from either side or from above, and has the robe's cloth below it, has come through the cloth (one below the hem has
+  // none under it: his shins show under a skirt the knees lift, as on a stair). (Rays against a bounding volume tree.)
+  const eyes = [V(0, 0.4, 1.5), V(0, 0.9, 1.4), V(1, 0.5, 1), V(-1, 0.5, 1), V(0, 1.5, 0.8)], side = THREE.DoubleSide, down = V(0, -1, 0), r = new THREE.Ray();
+  const tree = (...meshes) => { const gs = meshes.map((k) => baked(k).geometry), n = gs.reduce((a, g) => a + g.attributes.position.count, 0), pos = new Float32Array(n * 3), idx = []; let o = 0;
+    for (const g of gs) { pos.set(g.attributes.position.array, o * 3); for (const i of g.index.array) idx.push(i + o); o += g.attributes.position.count; }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setIndex(idx); return new MeshBVH(g); };
+  for (const fps of [30, 60]) {
+    const m = createMonk(); let worst = { n: 0 };
+    for (let f = 1; f <= fps * 0.8; f++) {
+      m.update(1 / fps, 0, "sit", f / fps, () => -TOP, {}); m.group.updateMatrixWorld(true); m.skeleton.update();
+      const robe = tree(m.parts.robe), cover = tree(m.parts.robe, m.parts.skin); let n = 0, high = -1;
+      for (const v of points(m.parts.legs)) for (const e of eyes) {
+        const d = v.clone().sub(e), far = d.length() - 0.003; r.set(e, d.normalize());
+        const hit = cover.raycastFirst(r, side); if (hit && hit.distance < far) continue;
+        r.set(v, down); if (robe.raycastFirst(r, side)) { n++; high = Math.max(high, v.y); }
+        break;
+      }
+      if (n > worst.n) worst = { n, f, high };
+    }
+    assert.equal(worst.n, 0, `at ${fps} frames a second, ${worst.n} points of his legs come through the robe at frame ${worst.f} (up to ${worst.high?.toFixed(3)} m over the cushion)`);
+  }
 });
