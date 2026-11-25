@@ -104,6 +104,9 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
   vec2 m = (q - uFace[1].xy) / vec2(uFace[3].w, uFace[4].x);
   float le = aa * 2. + .002 / max(uFace[4].x, .01);   // the lip's edge soft over about 2 mm (#463, the 3D review's third round)
   lip = 1. - smoothstep(1. - le, 1. + le, length(m));
+  // the lip colour only on the surface of the lips that faces the eye: not on the underside of the upper lip nor on the walls of the
+  // seam, whose darkness is the shading's own (issue #701, the art director's second round: the mouth was read as an open dark spot)
+  lip *= smoothstep(.3, .6, n.z) * smoothstep(-.3, .0, n.y);
   urna = 1. - smoothstep(uFace[4].y - aa, uFace[4].y + aa, length(q - uFace[1].zw));
   return ink;
 }
