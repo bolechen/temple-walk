@@ -717,6 +717,7 @@ const scenarios = {
     expect(pg.writing.nearest !== null && pg.writing.nearest >= 0.3, "his hands, the leaf and the brush kept 0.3 m and more off the stele's face: " + pg.writing.nearest);
     await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown on a slip after the copy");
     expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬，儼居七佛", "the slip should carry the line copied");
+    expect(!(await t.page.isVisible("#slip .seal-mark")), "T05's page carries no vermilion seal (CHECKPOINTS.md §4.2)");
     const d = await D(); expect((d.cuts || 0) === cuts0, "the eye went to the stele and back without a cut: " + JSON.stringify(d));
     const heard = await t.page.evaluate(() => window.__shots?.() || null);
     expect(!heard || heard.brush > 0, "the brush on the paper should have been heard: " + JSON.stringify(heard));
