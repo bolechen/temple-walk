@@ -2840,7 +2840,8 @@ const scenarios = {
     const R = () => t.page.evaluate(() => window.__rites().closing);
     await t.page.keyboard.press("Escape"); await t.until(async () => (await R()) === false, 60000, "the eye did not come home from the far view");
     // with the eye home the slips are on the picture: the veil's class hides them and nothing else does, and they come back when it goes (#726)
-    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
+    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); for (let i = 0; i < 60 && op() === "0"; i++) await new Promise((r) => setTimeout(r, 250));   /* (the slips fade back in once the eye is home) */
+      const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
       expect(o.on === "0" && o.after !== "0" && o.before !== "0", "the veil's class should hide the slips and give them back: " + JSON.stringify(o)); }
     await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookMoreBtn"); await t.until(() => shown("#bookMore"), 10000, "更多"); await t.page.click("#bookReplay");
     await t.until(async () => (await R()) === true, 120000, "the close did not play again");
