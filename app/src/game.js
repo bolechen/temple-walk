@@ -490,6 +490,10 @@ export function createGame(y) {
     $("blessCopy").textContent = t("复制链接");
     ui.open("bless", { onClose: () => { if (blessed) URL.revokeObjectURL(blessed.pic); blessed = null; } });
   }
+  // The link is carried, not read (#639): the sheet shows only where it goes, cut short; the whole address is kept in `data-link`,
+  // and is what the copy and share buttons hand on. It is written out in full only where the clipboard cannot be written to,
+  // so that it can be selected by hand.
+  const showLink = (url, full = false) => { const el = $("blessLink"); el.dataset.link = url; el.classList.toggle("full", full); el.textContent = full ? url : new URL(url).host + "/…"; };
   $("blessList")?.addEventListener("click", async (e) => {
     const b = /** @type {HTMLElement} */ (e.target).closest("[data-wish]"); if (!b) return;
     const i = +b.getAttribute("data-wish"), m = mood0(), url = lampLink({ wish: i, season: m.season, time: m.time }, lang); if (!url) return;
@@ -498,13 +502,13 @@ export function createGame(y) {
     const blob = /** @type {Blob} */ (await new Promise((r) => card.toBlob(r, "image/jpeg", 0.92))); if (!ui.isOpen("bless")) return;
     if (blessed) URL.revokeObjectURL(blessed.pic);
     const pic = URL.createObjectURL(blob), file = new File([blob], "yunjing-lamp.jpg", { type: "image/jpeg" }); blessed = { url, pic, file };
-    $("blessImg").src = pic; $("blessImg").alt = t(WISHES[i]); $("blessLink").textContent = url; $("blessSave").href = pic; $("blessSave").download = t("云径禅寺-点灯.jpg");
+    $("blessImg").src = pic; $("blessImg").alt = t(WISHES[i]); showLink(url); $("blessSave").href = pic; $("blessSave").download = t("云径禅寺-点灯.jpg");
     for (const id of ["blessCard", "blessLink", "blessActs", "blessSave"]) $(id).hidden = false;
     $("blessShare").hidden = !navigator.share; $("blessCopy").textContent = t("复制链接");
     $("blessCard").scrollIntoView?.({ block: "nearest", behavior: "smooth" });   // the card and its buttons are below the list: bring them into the paper
     track("lamp.link", { wish: i, season: m.season, time: m.time });
   });
-  $("blessCopy")?.addEventListener("click", async () => { if (!blessed) return; try { await navigator.clipboard.writeText(blessed.url); $("blessCopy").textContent = t("已复制"); } catch { const r = document.createRange(); r.selectNodeContents($("blessLink")); const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r); } });
+  $("blessCopy")?.addEventListener("click", async () => { if (!blessed) return; try { await navigator.clipboard.writeText(blessed.url); $("blessCopy").textContent = t("已复制"); } catch { showLink(blessed.url, true); const r = document.createRange(); r.selectNodeContents($("blessLink")); const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r); } });
   $("blessShare")?.addEventListener("click", async () => {
     if (!blessed) return; const data = /** @type {ShareData} */ ({ title: t("云径禅寺 · 点灯"), text: t("有人在此为你点了一盏灯。"), url: blessed.url });
     if (navigator.canShare && navigator.canShare({ files: [blessed.file] })) data.files = [blessed.file];
