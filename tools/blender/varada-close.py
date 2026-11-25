@@ -55,52 +55,93 @@ for f0_ in newf:
   pieces.append(comp)
 # (varada.py's log says how many faces the sheet has, `close.sheet_faces`; the hand and the forearm's new faces are bigger pieces)
 pieces.sort(key=lambda x: abs(len(x) - C["sheet_faces"])); sheet = pieces[0]
-# where the robe is: the old faces of the box seen from the front (x, y of the hall), drawn into a picture at `cell_mm`
 from PIL import Image, ImageDraw
 cell = C["cell_mm"] / 1000; ox, oy = Kb[0, 0], Kb[1, 0]; W = int((Kb[0, 1] - ox) / cell) + 1; Hh = int((Kb[1, 1] - oy) / cell) + 1
-img = Image.new("L", (W, Hh), 0); dr = ImageDraw.Draw(img)
+log["knee"] = {"sheet_faces": len(sheet), "pieces": [len(x) for x in pieces[:5]]}
+# the robe the sheet lies over goes: old faces whose front view falls in the sheet's footprint and which lie within `cover_cm` of it
+sheet_set = set(sheet)
+sh_tree = BVHTree.FromPolygons([v.co.copy() for v in bm.verts], [tuple(v.index for v in f.verts) for f in sheet], epsilon=0.0)
+fimg = Image.new("L", (W, Hh), 0); fd = ImageDraw.Draw(fimg)
+for f in sheet: fd.polygon([((q[0] - ox) / cell, (q[1] - oy) / cell) for q in hall(np.array([v.co[:] for v in f.verts]))], fill=255)
+foot = np.array(fimg) > 0; covered = []
 for f in bm.faces:
   if not all(OLD[v] for v in f.verts): continue
-  hp = hall(np.array([v.co[:] for v in f.verts]))
-  if not np.all((hp.mean(0) >= Kb[:, 0] - 0.05) & (hp.mean(0) <= Kb[:, 1] + 0.05)): continue
-  dr.polygon([((q[0] - ox) / cell, (q[1] - oy) / cell) for q in hp], fill=255)
-robe = np.array(img) > 0
-from scipy.ndimage import binary_erosion
-hole = ~robe
-band = []; core = []
-for f in sheet:
-  c = hall(fc(f))[0]; i = int((c[0] - ox) / cell); j = int((c[1] - oy) / cell)
-  (core if (0 <= i < W and 0 <= j < Hh and hole[j, i]) else band).append(f)
-log["knee"] = {"sheet_faces": len(sheet), "pieces": [len(x) for x in pieces[:5]], "under_robe": len(band), "in_the_hole": len(core)}
-bmesh.ops.delete(bm, geom=band, context="FACES")
+  hp = hall(fc(f))[0]
+  if not np.all((hp >= Kb[:, 0]) & (hp <= Kb[:, 1])): continue
+  i = int((hp[0] - ox) / cell); j = int((hp[1] - oy) / cell)
+  if not (0 <= i < W and 0 <= j < Hh and foot[j, i]): continue
+  near = sh_tree.find_nearest(Vector(fc(f)))
+  if near[0] is not None and near[3] * K * 100 <= C["cover_cm"]: covered.append(f)
+bmesh.ops.delete(bm, geom=covered, context="FACES")
 bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
 bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); bm.faces.ensure_lookup_table()
 OLD = {v: o for v, o in zip(bm.verts, old_mask())}
-# the robe's cut edges (boundary, both ends old) and the core's border points (boundary, a new end), inside the box
 rim = [e for e in bm.edges if e.is_boundary and all(OLD[v] for v in e.verts) and in_knee(np.mean([v.co[:] for v in e.verts], axis=0))]
-border = {v for e in bm.edges if e.is_boundary for v in e.verts if not OLD[v] and in_knee(np.array(v.co[:]))}
-log["knee"].update({"rim_edges": len(rim), "border_points": len(border)})
-tol = C["zip_mm"] / 1000 / K
-# nearest rim edge to each border point (a KD-tree over the edges' midpoints, then the exact point on the few nearest)
-mid = np.array([np.mean([v.co[:] for v in e.verts], axis=0) for e in rim]); kt = cKDTree(mid); zipped = 0
-for s in sorted(border, key=lambda v: v.index):
-  if not s.is_valid: continue
-  p = np.array(s.co[:]); best = None
-  for j in kt.query(p, k=min(6, len(rim)))[1]:
-    e = rim[j]
-    if not e.is_valid: continue
-    a, b = np.array(e.verts[0].co[:]), np.array(e.verts[1].co[:]); ab = b - a; t = np.clip((p - a) @ ab / max(ab @ ab, 1e-18), 0, 1); q = a + t * ab; d = np.linalg.norm(q - p)
-    if best is None or d < best[0]: best = (d, e, t, q)
-  if best is None or best[0] > tol: continue
-  d, e, t, q = best
-  if t < 0.15 or t > 0.85:           # at an end of the edge: join to that end point
-    r = e.verts[0] if t < 0.5 else e.verts[1]
-  else:
-    ne, r = bmesh.utils.edge_split(e, e.verts[0], t); r.co = Vector(q)
-  if r is not s: bmesh.ops.pointmerge(bm, verts=[s, r], merge_co=r.co.copy()); zipped += 1
-log["knee"]["zipped"] = zipped
+log["knee"]["robe_faces_under_the_sheet"] = len(covered); log["knee"]["rim_edges"] = len(rim)
+def cycles_of(es):
+  """the ordered closed loops of a set of boundary edges, and what was not a simple loop"""
+  adj = defaultdict(list)
+  for e in es: adj[e.verts[0]].append(e.verts[1]); adj[e.verts[1]].append(e.verts[0])
+  seen = set(); loops = []; odd = []
+  for v0 in adj:
+    if v0 in seen: continue
+    comp = []; st = [v0]; seen.add(v0)
+    while st:
+      u = st.pop(); comp.append(u)
+      for w in adj[u]:
+        if w not in seen: seen.add(w); st.append(w)
+    if all(len(adj[u]) == 2 for u in comp):
+      order = [comp[0]]; prev = None; cur = comp[0]
+      while True:
+        nxt = [w for w in adj[cur] if w is not prev]; nxt = nxt[0] if prev is not None or True else nxt[0]
+        if nxt is order[0]: break
+        order.append(nxt); prev, cur = cur, nxt
+        if len(order) > len(comp): break
+      loops.append(order)
+    else: odd.append(len(comp))
+  return loops, odd
+rim_loops, rim_odd = cycles_of(rim)
+log["knee"]["rim_loops"] = [len(l) for l in rim_loops]; log["knee"]["rim_not_simple"] = rim_odd
+# the sheet's core: what lies `band_cm` or more from the robe's cut edge
+rimv = np.array([v.co[:] for l in rim_loops for v in l]) if rim_loops else np.zeros((0, 3)); rk = cKDTree(rimv) if len(rimv) else None
+drop = [f for f in sheet if rk is not None and rk.query(fc(f))[0] * K * 100 < C["band_cm"][0]]
+bmesh.ops.delete(bm, geom=drop, context="FACES")
+bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
 bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); bm.faces.ensure_lookup_table()
-bmesh.ops.dissolve_degenerate(bm, dist=1e-9, edges=bm.edges)
+OLD = {v: o for v, o in zip(bm.verts, old_mask())}
+inner = [e for e in bm.edges if e.is_boundary and not all(OLD[v] for v in e.verts) and in_knee(np.mean([v.co[:] for v in e.verts], axis=0))]
+in_loops, in_odd = cycles_of(inner)
+log["knee"]["core_dropped_near_rim"] = len(drop); log["knee"]["inner_loops"] = [len(l) for l in in_loops]; log["knee"]["inner_not_simple"] = in_odd
+# a ladder between each rim loop and the inner loop nearest it
+def face_normal_at(e):
+  return np.array(e.link_faces[0].normal[:]) if e.link_faces else np.zeros(3)
+bands = 0; thin = 0
+for A in rim_loops:
+  if not in_loops: break
+  ca = np.mean([v.co[:] for v in A], axis=0); B = min(in_loops, key=lambda L: np.linalg.norm(np.mean([v.co[:] for v in L], axis=0) - ca))
+  if len(B) < 8: continue
+  pa = np.array([v.co[:] for v in A]); pb = np.array([v.co[:] for v in B])
+  # same sense: the loops' turning about their common middle seen from the front (x, y)
+  def turn(p): q = p[:, [0, 2]] - p[:, [0, 2]].mean(0); return np.sum(q[:-1, 0] * q[1:, 1] - q[1:, 0] * q[:-1, 1])
+  if turn(pa) * turn(pb) < 0: B = B[::-1]; pb = pb[::-1]
+  j0 = int(np.argmin(np.linalg.norm(pb - pa[0], axis=1))); B = B[j0:] + B[:j0]; pb = np.roll(pb, -j0, axis=0)
+  n, m = len(A), len(B); i = j = 0; tris = []
+  while i < n or j < m:
+    a0, a1, b0, b1 = A[i % n], A[(i + 1) % n], B[j % m], B[(j + 1) % m]
+    adv_a = j >= m or (i < n and np.linalg.norm(np.array(a1.co[:]) - np.array(b0.co[:])) <= np.linalg.norm(np.array(a0.co[:]) - np.array(b1.co[:])))
+    if adv_a: tris.append((a0, a1, b0)); i += 1
+    else: tris.append((b0, b1, a0)); j += 1
+  for t in tris:
+    q = np.array([v.co[:] for v in t]); nn = np.cross(q[1] - q[0], q[2] - q[0])
+    ref = np.zeros(3)
+    for u, w in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
+      e = bm.edges.get((u, w))
+      if e is not None and e.link_faces: ref = ref + np.array(e.link_faces[0].normal[:])
+    vs = list(t) if nn @ ref >= 0 else [t[0], t[2], t[1]]
+    try: bm.faces.new(vs); bands += 1
+    except ValueError: pass
+log["knee"]["band_faces"] = bands
+bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); bm.faces.ensure_lookup_table()
 # --- small gaps: closed loops of few edges ---
 box = np.array(C["box"]).reshape(3, 2)
 def inbox(e): m = hall(np.mean([v.co[:] for v in e.verts], axis=0))[0]; return bool(np.all((m >= box[:, 0]) & (m <= box[:, 1])))
