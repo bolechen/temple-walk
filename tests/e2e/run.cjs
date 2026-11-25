@@ -688,6 +688,82 @@ const scenarios = {
     for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} byte for byte: ${kept[k]}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // T05's own page (PRD.md §1.3 (a), CHECKPOINTS.md §2.2; src/levelpage.js, src/writing.js): the stele copied once through, at a visitor's
+  // pace, and the observation's two looks held and its stroke written. Walked by __walk up the axis and the flight and onto the monument
+  // pavilion's base by its new steps; E pressed at the stele: the eye swings to the place's shot (no cut), his hands take the leaf and the brush,
+  // write the line a character at a time and stop, every hand and the brush 0.3 m and more off the stone's face; the line is kept under
+  // yunjing.levels.v1 and shown on a slip; then at C01 the view is held on the whole front 3 s and at C02 raised till the front eave is in
+  // the upper part of the picture for 2 s,
+  // 记下 is offered, pressed, and the stroke is on the page. The prologue's keys lie in the browser all the while, byte for byte.
+  "t05-page": { tier: 2, async run(b, base) {
+    const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, label: "大殿前", at: 5 }), "yunjing.settings.v1": JSON.stringify({ fov: 5 }) };
+    const mine = () => t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
+    const t = await open(b, base, "level=t05&q=low&fast=1" + BARE, { init: `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) if (localStorage.getItem(k) === null) localStorage.setItem(k, p[k]); })()` });
+    const P = () => t.page.evaluate(() => window.__page()), D = () => t.page.evaluate(() => window.__director());
+    let pg = await P(); expect(pg && Object.keys(pg.page).length === 0, "T05's page should start empty: " + JSON.stringify(pg));
+    // Up the axis and the flight, and onto the pavilion's base by its steps, to the stele.
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 24], [0, 14], [-16, 14], [-16, 11.4]]));
+    await t.until(async () => (await P()).near === "copy", 900000, "he never came to the stele, or 抄碑 was not offered there");
+    expect((await t.page.textContent("#act span")) === "抄碑", "the button before the stele should say 抄碑");
+    const cuts0 = (await D()).cuts || 0;
+    // The eye's weight on the stele's shot, kept every frame in the page: on a quick page it may arrive, rest its beat and go home between two looks from here.
+    await t.page.evaluate(() => { window.__copyEye = 0; const look = () => { const d = window.__director(); if (d.id === "copy") window.__copyEye = Math.max(window.__copyEye, d.w); requestAnimationFrame(look); }; requestAnimationFrame(look); });
+    await t.page.keyboard.press("e");
+    await t.until(async () => (await P()).writing.writing, 120000, "pressing E at the stele did not set him writing");
+    pg = await P(); expect(pg.writing.leaf && pg.writing.brush, "he should hold the leaf and the brush: " + JSON.stringify(pg.writing));
+    await t.until(async () => (await t.page.evaluate(() => window.__copyEye)) > 0.95, 60000, "the eye never went to the stele's shot");
+    await t.until(async () => (await P()).page.stele, 300000, "the copied line was never put on the page");
+    pg = await P();
+    expect(pg.page.stele.line === "qifo" && pg.view.copy === "觀其寶殿崔嵬，儼居七佛", "the first line copied is the seven Buddhas' line, as cut: " + JSON.stringify(pg.view));
+    expect(pg.writing.marks >= 10 && pg.writing.copied === "觀其寶殿崔嵬儼居七佛", "every character written, one mark each: " + JSON.stringify(pg.writing));
+    expect(pg.writing.nearest !== null && pg.writing.nearest >= 0.3, "his hands, the leaf and the brush kept 0.3 m and more off the stele's face: " + pg.writing.nearest);
+    await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown on a slip after the copy");
+    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬儼居七佛", "the slip should carry the line copied");
+    expect(!(await t.page.isVisible("#slip .seal-mark")), "T05's page carries no vermilion seal (CHECKPOINTS.md §4.2)");
+    expect(!(await t.page.isVisible("#slip .page-stroke")), "before the observation the page has no stroke of ink");
+    // The line copied from the stone is written as cut, in the regular hand that holds its traditional forms, not the running hand of a note (which has none).
+    const cutFace = await t.page.evaluate(() => getComputedStyle(document.getElementById("slipText")).fontFamily);
+    expect(/^"?Yunjing Kai"?(,|$)/.test(cutFace), "the copied line on the slip is set in Yunjing Kai alone: " + cutFace);
+    const d = await D(); expect((d.cuts || 0) === cuts0, "the eye went to the stele and back without a cut: " + JSON.stringify(d));
+    const heard = await t.page.evaluate(() => window.__shots?.() || null);
+    expect(!heard || heard.brush > 0, "the brush on the paper should have been heard: " + JSON.stringify(heard));
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#slip")), 10000, "the slip did not go away");
+    // The observation: C01, the whole front, three seconds; C02, the eaves, raised 25° and more, two seconds; then 记下.
+    await t.page.evaluate(() => window.__walk([[-16, 14], [0, 14], [0, 24], [0, 44]]));
+    await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 44) < 0.8; }, 600000, "he never came to C01");
+    pg = await P(); expect(pg.met.length === 0, "nothing is met by walking past: " + JSON.stringify(pg.met));
+    await t.page.evaluate(() => { const s = window.__yard(); window.__pose(s.x, s.z, 0, 0.08); });
+    await t.until(async () => (await P()).met.includes("c01"), 120000, "holding the view on the whole front at C01 did not count");
+    expect((await P()).near !== "p1a", "with one look met nothing is offered");
+    await t.page.evaluate(() => window.__walk([[0, 27]]));
+    await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 27) < 0.8; }, 300000, "he never came to C02");
+    // From behind him the view raised as far as it goes (0.45): the front eave comes into the upper part of the picture.
+    await t.page.evaluate(() => { const s = window.__yard(); window.__pose(s.x, s.z, 0, 0.45); });
+    await t.until(async () => (await P()).met.includes("c02"), 120000, "raising the view to the eaves at C02 did not count: " + JSON.stringify(await P()));
+    await t.until(async () => (await P()).near === "p1b", 30000, "记下 was not offered once both looks were met");
+    expect((await t.page.textContent("#act span")) === "记下", "the button should say 记下");
+    await t.page.keyboard.press("e");
+    await t.until(async () => (await P()).page.p1, 300000, "the stroke was never put on the page");
+    pg = await P(); expect(pg.view.stroke === 1 && pg.view.note === "九间，单檐庑殿，青灰瓦。台基比人高。" && pg.view.copy, "the page holds the stroke, its line and the copy: " + JSON.stringify(pg.view));
+    await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown after the stroke");
+    // The note is laid in its phrases, one to a column (九间， / 单檐庑殿， / 青灰瓦。 / 台基比人高。), never a word split across two.
+    expect(await t.page.isVisible("#slip .page-stroke"), "the observation's page carries its stroke of ink across the top, as the leaf did");
+    const noteCols = await t.page.evaluate(() => document.getElementById("slipText").innerText.split("\n").filter(Boolean));
+    expect(JSON.stringify(noteCols) === JSON.stringify(["九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "the note's phrases each have a column: " + JSON.stringify(noteCols));
+    const stored = await t.page.evaluate(() => JSON.parse(localStorage.getItem("yunjing.levels.v1")).page.t05);
+    expect(stored.p1 && stored.stele && stored.stele.line === "qifo", "both marks are kept under yunjing.levels.v1: " + JSON.stringify(stored));
+    expect(JSON.stringify(await mine()) === JSON.stringify(PROLOGUE), "the prologue's keys changed: " + JSON.stringify(await mine()));
+    expect((await D()).cuts === cuts0, "no cut through the whole of it");
+    // The pause menu's 这一页 shows the page again; the prologue (no page of its own) never shows the row.
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#slip")), 10000, "the slip did not go away");
+    await t.page.click("#menuBtn"); await t.until(() => t.page.isVisible("#menu"), 10000, "the menu did not open");
+    expect(await t.page.isVisible("#menuPage"), "这一页 should be in the menu once the page has something on it");
+    await t.page.click("#menuPage"); await t.until(() => t.page.isVisible("#slip"), 10000, "这一页 did not show the page");
+    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬儼居七佛", "the page shown again leads with the copied line");
+    const fromCols = await t.page.evaluate(() => document.getElementById("slipFrom").innerText.split("\n").filter(Boolean));
+    expect(JSON.stringify(fromCols) === JSON.stringify(["元大德七年碑", "九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "beside the copy, where it is from and the note a phrase to a column: " + JSON.stringify(fromCols));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // A named view's own lens (`site.lens`, app/yard.js `baseFov`; T05's cam06 is 65° from his eyes, 50° from behind him): `?show=<name>` takes it, a view with no
   // entry and the prologue's views keep the fixed views' 52° and 44°, `?cam=` is a pose, not a view, so it never takes one, and a picture held upright is the fixed
   // views' few degrees wider (+16° from his eyes, +14° from behind him, as 52 and 44 become 68 and 58). Built, not drawn.
@@ -2684,6 +2760,63 @@ const scenarios = {
     const now = await t.page.evaluate(() => localStorage.getItem("yunjing.journey.v1")); const bare = (x) => JSON.stringify({ ...JSON.parse(x), told: 0 });   // (the line about the seasons being open is said once when the book is first seen full: not the close's doing)
     expect(bare(now) === bare(kept), "watching again changed the book: " + kept + " -> " + now);
     const ev = JSON.stringify(await events()); expect(!/demo\.complete/.test(ev.split("demo.ending.replay").slice(1).join("")), "watching again sent demo.complete");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // #726: the first time the book is shut after the close, the hour turns to the visitor's own and one line says so with the
+  // seasons being open; shutting it again, and watching the close again from the summit mat, do neither.
+  "hour-after-book": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&seed=4" + BARE, { init: () => {
+      // a summer night at home (22:30), and six seals kept with the close not yet seen
+      const Real = Date, off = new Real(2026, 6, 15, 22, 30).getTime() - Real.now();
+      window.Date = class extends Real { constructor(...a) { if (a.length) super(...a); else super(Real.now() + off); } static now() { return Real.now() + off; } };
+      if (!localStorage.getItem("test.seeded")) { localStorage.setItem("test.seeded", "1"); localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(["bell", "incense", "tea", "sutra", "well", "lamp"].map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: null, opened: null, told: false, closed: null, closedSeason: null, stamped: null })); }
+    } });
+    const P = () => t.page.evaluate(() => { const p = window.__probe(); return { time: p.time, follow: p.follow, lamp: p.lamp }; });
+    const hud = () => t.page.evaluate(() => window.__hud());
+    const shown = (sel) => t.page.isVisible(sel);
+    let p = await P(); expect(p.time === "day" && p.follow === false && p.lamp < 0.05, "the prologue is walked by day, not following the clock: " + JSON.stringify(p));
+    const pos = await t.page.evaluate(() => { const q = window.__places.sit; window.__poseNear(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); });
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 30000, "sitting was not offered on the summit"); await t.page.click("#act");
+    await t.until(async () => (await t.journey()).seals.sit > 0, 120000, "no seal for sitting");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended");
+    p = await P(); expect(p.time === "day" && p.follow === false, "the hour must not turn before the book is shut: " + JSON.stringify(p));
+    await t.page.keyboard.press("b"); await t.until(() => shown("#book"), 90000, "the book never opened after the close");
+    p = await P(); expect(p.time === "day" && p.follow === false, "the hour must not turn while the book is open: " + JSON.stringify(p));
+    // Every frame from here is read: from the first one the book is gone the hour is the visitor's own and the ink is shut over it, never a frame of the old hour.
+    await t.page.evaluate(() => { const tag = () => document.getElementById("moodTag").textContent, leaf = () => document.querySelector("#curtain i").style.transform;
+      window.__frames = []; window.__dayWords = tag(); const f = () => { window.__frames.push({ open: document.getElementById("book").open, words: tag(), ink: leaf(), veiled: document.body.classList.contains("veiled"), rail: getComputedStyle(document.querySelector(".rail")).opacity, stick: getComputedStyle(document.getElementById("stick")).opacity, hint: getComputedStyle(document.getElementById("hint")).opacity }); requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    await t.page.click("#bookClose");
+    await t.until(async () => (await P()).time === "night", 30000, "the hour never turned to the visitor's own when the book was shut");
+    await t.until(async () => t.page.evaluate(() => window.__frames.length > 0 && window.__frames.at(-1).ink === ""), 60000, "the ink never opened again");
+    { const fr = await t.page.evaluate(() => ({ f: window.__frames, day: window.__dayWords })), after = fr.f.filter((x) => !x.open);
+      expect(after.length > 1 && after.every((x) => x.words !== fr.day), "a frame after the book showed the old hour: " + JSON.stringify(after.slice(0, 4)));
+      // what floats over the picture steps aside while the ink is on it, and comes back when it has opened (#726)
+      const inked = after.filter((x) => x.ink !== "");
+      expect(inked.length > 0 && inked.every((x) => x.veiled && x.rail === "0" && x.stick === "0"), "the slips and the stick were on the ink: " + JSON.stringify(inked.find((x) => !(x.veiled && x.rail === "0" && x.stick === "0"))));
+      expect(after.at(-1).ink === "" && !after.at(-1).veiled, "the veil's class stayed after the ink opened: " + JSON.stringify(after.at(-1)));
+      expect(/scaleY\(1(\.0+)?\)/.test(after[0].ink), "the ink was not shut over the first frame after the book: " + JSON.stringify(after[0])); }
+    p = await P(); expect(p.follow === true && p.lamp > 0, "after the book the hour should follow the clock, lamps lit: " + JSON.stringify(p));
+    await t.until(async () => (await hud()).tip === "seasons", 30000, "the line was not said: " + JSON.stringify(await hud()));
+    const line = await t.page.evaluate(() => document.getElementById("hint").textContent);
+    expect(/山中时辰已随你此刻/.test(line) && !/时节已开/.test(line), "one sentence, the hour and the seasons together: " + line);
+    { const r = await t.page.evaluate(() => { const e = document.getElementById("hint").getBoundingClientRect(); return { l: e.left, r: e.right, b: e.bottom, w: innerWidth, h: innerHeight }; });
+      expect(r.l >= 0 && r.r <= r.w && r.b <= r.h, "the line runs off a phone's screen: " + JSON.stringify(r)); }
+    expect((await t.journey()).told === true, "it was not kept as said");
+    // shut it again: nothing turns, nothing is said (a hand has chosen dawn meanwhile)
+    await t.page.evaluate(() => window.__mood("summer", "dawn")); await t.frames(2);
+    await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book did not open again"); await t.page.click("#bookClose"); await t.frames(5);
+    p = await P(); expect(p.time === "dawn" && p.follow === false, "the second shutting of the book changed the hour: " + JSON.stringify(p));
+    // 山顶再坐一回 (from the book's small paper, as a visitor does) and then the book once more
+    const R = () => t.page.evaluate(() => window.__rites().closing);
+    await t.page.keyboard.press("Escape"); await t.until(async () => (await R()) === false, 60000, "the eye did not come home from the far view");
+    // with the eye home the slips are on the picture: the veil's class hides them and nothing else does, and they come back when it goes (#726)
+    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
+      expect(o.on === "0" && o.after !== "0" && o.before !== "0", "the veil's class should hide the slips and give them back: " + JSON.stringify(o)); }
+    await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookMoreBtn"); await t.until(() => shown("#bookMore"), 10000, "更多"); await t.page.click("#bookReplay");
+    await t.until(async () => (await R()) === true, 120000, "the close did not play again");
+    await t.page.mouse.move(120, 120); await t.page.mouse.down(); await t.until(async () => (await R()) === false, 30000, "the close did not end"); await t.page.mouse.up();
+    await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookClose"); await t.frames(5);
+    p = await P(); expect(p.time === "dawn" && p.follow === false, "watching the close again turned the hour: " + JSON.stringify(p));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // The opening after 入山 (src/opening.js, issue #110): a first visitor sees the summit and is brought down the mountain
