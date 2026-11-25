@@ -49,8 +49,10 @@ const SIT_DROP = 0.41;   // seated on a stool, how far he comes down: his hip jo
 // figure is 2.7 heads from the cushion to his crown (#664), and a cushion gives under him.
 const CUSHION_DROP = 0.44;
 // Seated on a cushion, the sleeves (#664): how far the cuff is drawn up the arm on the side the forearm leaves by (`cut`),
-// how far it hangs on past the elbow behind it (`hang`) and at the two sides between (`side`), and how much wider it opens.
-export const SLEEVE_SIT = { cut: 0.07, hang: 0.055, side: 0.012, open: 0.05 };
+// how far it hangs on past the elbow behind it (`hang`, the same all across the back from `round` of the way round, so that
+// its hem is a broad curve there and not a point, the second art review's D) and at the two sides between (`side`), and how
+// much wider it opens.
+export const SLEEVE_SIT = { cut: 0.07, hang: 0.04, side: 0.012, open: 0.05, round: 0.7 };
 // Seated on a cushion, where his folded legs lie (#664, refs/monk-poses-v6-2026-11-23-sitting.webp), in the seat's frame:
 // x to his left, y up from the cushion's crown, z the way he faces, his hips over the origin (the cushion's middle is
 // `back` before them). The knees are out to the
@@ -79,7 +81,7 @@ const rodsOf = () => {
 let seatRods = rodsOf();
 // Cloth over a rod of radius r, at a distance d to the side of its middle line: round over the top, then falling away
 // at the slope it has where the round is left (LAP.cap of the radius out), as cloth hangs from a knee.
-export const LAP = { cap: 0.9, sharp: 95, belly: 10, back: 9, pool: 0.034, tail: 0.03, lie: 0.02, thick: 0.004, taut: 0.6, hollow: 0.9, droop: 0.006, trail: 0.018, hem: 0.008, roll: 0.005, press: 0.03, sitFrom: 0.1, sitTo: 0.9, soft: 4 };
+export const LAP = { cap: 0.9, sharp: 95, belly: 10, back: 9, pool: 0.034, tail: 0.03, lie: 0.02, thick: 0.004, taut: 0.6, hollow: 0.9, droop: 0.006, past: 0.25, trail: 0.018, hem: 0.008, roll: 0.005, press: 0.03, sitFrom: 0.1, sitTo: 0.9, soft: 4 };
 const overRod = (d, r) => { const c = LAP.cap, e = c * r; return d < e ? Math.sqrt(r * r - d * d) : r * Math.sqrt(1 - c * c) - (c / Math.sqrt(1 - c * c)) * (d - e); };
 /** How high the folded legs hold the cloth at a point of the seat's frame (above the cushion's crown); far from them it falls below any floor. */
 export function legsTop(x, z) {
@@ -111,7 +113,7 @@ export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, 
 // plump (the sheet's are a small child's mitts), `x` being where the middle of each hand's length lies: the two lie
 // deep over each other, the left's fingers on the right's fingers and palm, so that from before him there is little
 // more than one hand's width to see. `elbow` is the way the elbows are drawn.
-export const LAP_HAND = { x: 0.002, z: 0.1624, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.02, fwd: 0.012, gap: 0.006, turn: 0.6, lift: 0.024, thick: 1.25 } };
+export const LAP_HAND = { x: 0.002, z: 0.1624, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.016, fwd: 0.006, gap: 0.006, turn: 0.6, lift: 0.024, thick: 1.25 } };
 // In the lap the wrist's ball is no bigger than the heel of the hand it ends in (the second art review's A: a ball
 // larger than the palm read as a puppet's joint); `HAND_HEEL` is its radius.
 const HAND_HEEL = 0.018;
@@ -406,7 +408,10 @@ export function createMonk(opts = {}) {
       if (pooled < 0 && h < LAP.pool && rho > 0.02) pooled = rho;
       if (pooled >= 0) h = Math.min(Math.max(h, 0), LAP.pool) * Math.exp(-(rho - pooled) / LAP.tail);
       pts.push({ rho, x, z, y: ground + Math.max(0, h), len: 0 });
-      if (pooled >= 0 && rho > pooled + LAP.lie + LAP.trail * smooth(-0.3, -0.9, c)) break;   // (behind him it trails a little further)
+      // (behind him it trails a little further; out past the cushion's crown, over his knees, it ends soon after it is
+      // down, `LAP.past` of the way: there is nothing under it there, and lain out it read as a plate's rim, #680 B)
+      const off = smooth(0.262, 0.292, Math.hypot(x, z - SEAT_LEGS.back));
+      if (pooled >= 0 && rho > pooled + (LAP.lie + LAP.trail * smooth(-0.3, -0.9, c)) * (1 - (1 - LAP.past) * off)) break;
     }
     // Cloth does not follow every hollow: between the waist and the knees, and from a knee to the cushion, it is drawn
     // nearly straight over whatever stands highest (`taut` of the way from where it would lie to that straight line).
@@ -684,7 +689,7 @@ export function createMonk(opts = {}) {
     // covers it, and the whole cuff is opened wider, as the drawing has a sleeve that reaches the lap.
     const sleeve = (sit) => grid(srows.length, NC + 1, (i, j) => {
       const th = Math.PI + (TAU * j) / NC, c = Math.cos(th), sn = Math.sin(th), row = srows[i], fore = s * sn;
-      const tEnd = 0.214 + 0.016 * Math.pow(Math.max(0, -c), 1.4) + sit * (SLEEVE_SIT.hang * Math.sqrt(Math.max(0, 0.5 - 0.5 * fore)) + SLEEVE_SIT.side * (1 - fore * fore) - SLEEVE_SIT.cut * Math.max(0, fore));
+      const tEnd = 0.214 + 0.016 * Math.pow(Math.max(0, -c), 1.4) + sit * (SLEEVE_SIT.hang * smooth(0, SLEEVE_SIT.round, 0.5 - 0.5 * fore) + SLEEVE_SIT.side * (1 - fore * fore) - SLEEVE_SIT.cut * Math.max(0, fore));
       const t = -0.032 + (tEnd + 0.032) * row.v - row.back, vv = clamp((t + 0.032) / 0.255, 0, 1);
       const open = 1 + sit * SLEEVE_SIT.open * smooth(0.35, 1, row.v);
       const rO = (0.053 + 0.02 * smooth(0, 1, vv)) * row.k * (1 - 0.14 * Math.max(0, -c) * smooth(0.15, 0.8, vv)) * open;
