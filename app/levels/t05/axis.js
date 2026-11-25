@@ -105,7 +105,7 @@ export const HALL_HALF = FOOT.hall.x1;
 /** The monument pavilion's form (white box, own sizes: SOURCES.md): base height, column height and radius, their span centre to centre, the tie-beam's depth, how far the roof's edge reaches from the middle, and the pyramid's height. */
 export const MONUMENT_FORM = Object.freeze({ base: 0.45, column: 3.0, colR: 0.17, span: 3.1, beam: 0.3, eave: 2.5, roofH: 2.0 });
 /**
- * The monument's stele (docs/t05/SOURCES.md): the shaft and the head in the Yingzao Fashi's proportions for a 赑屃鳌坐碑 (chapter 3: the shaft 4/10 wide and 1.5/10 thick
+ * The monument's stele (docs/t05/SOURCES.md): the shaft and the head in the Yingzao Fashi's proportions for a bixi aozuo stele (chapter 3: the shaft 4/10 wide and 1.5/10 thick
  * to every unit of its length, the head 0.44 square-wide and 0.18 thick, under it a cloud plate 0.15 of the shaft's width high: read), with no tortoise. The shaft's
  * length is kept at the 2.3 m the white box had; the head's crown (a plain block under a low arch, in place of the six
  * entwined dragons and the seal-script panel) and its height are the white box's own.
