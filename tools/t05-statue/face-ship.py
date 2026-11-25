@@ -2,7 +2,7 @@
 # tall face from 1.2 m; real great figures bow their heads a little): r3c's own ops, the head bowed `--tilt` degrees, the lips as r3c has them (nothing of the f2 face ops), the lips' ends
 # lifted (mouthlift), the nasolabial folds and the lines down the chin's sides softened outside the lips (flatblocks), and the chin rebuilt (chinshape, L4's numbers).
 #
-#   python3 tools/t05-statue/face-ship.py <name> <tag> --tilt=10 [--chin-shift=0.015] [--lift=0.024] [--lift-up=0] [--lift-sz=0.035] [--no-furrows] [--no-lift] [--cleft] [--lean=4 (the whole figure above the lotus leaned forward about the seat's back edge, the head's --tilt then added to it)] [--out=<repair.json>]
+#   python3 tools/t05-statue/face-ship.py <name> <tag> --tilt=10 [--chin-shift=0.015] [--lift=0.024] [--lift-up=0] [--lift-sz=0.035] [--no-furrows] [--no-lift] [--corners=0.5] [--mar=0.1] [--ridge=0.15 --ridge-dz=-0.31] [--lips=0.85 (the lips' relief kept to this share)] [--fill=1 (--fill-sx=0.035: fill the chin's middle groove up to the lobes)] [--cleft [--cleft-k=0.3 --cleft-r=0.012 --cleft-soft=0.035]] [--bell=1 (the chin's bell wider by this factor)] [--lean=4 (the whole figure above the lotus leaned forward about the seat's back edge, the head's --tilt then added to it)] [--out=<repair.json>]
 #
 # Writes tools/t05-statue/<name>/repair-<tag>.json; run repair.py on it as for any figure. Positions are the bowed figure's, worked out from face.json the way face-build.py works them out.
 import sys, json, os, math
@@ -29,18 +29,23 @@ slit = bowed([0, F["mouth"][1], F["mouth"][2]])[1]   # the bowed slit's height, 
 front = round(-neck["c"][1] / s, 4); m = 1 / s; C = rec["chinshape"]
 chin = {"op": "chinshape", "from": "bow", "z0": round(slit / s, 4), "s": round(s, 4), "k_groove": C["k_groove"], "k_chin": C["k_chin"], "arc_keep": C["arc_keep"], "bow": tilt + lean, "chin_behind": face.get("chinBehind", 0.009), "chin_shift": shift,
         "lip0": C["lip0"] * m, "lip1": C["lip1"] * m, "gr0": C["gr0"] * m, "gr1": C["gr1"] * m, "chin0": C["chin0"] * m, "chin1": C["chin1"] * m, "jaw": C["jaw"] * m, "bin": C["bin"] * m, "span": C["span"] * m, "xm": C["xm"] * m,
-        "x0": C["x0"] * m, "x1": 0.40 * m, "front": front, "ffront": C["ffront"], "smooth": {"iter": C["iter"], "lam": C["lam"]}, "dsmooth": C["dsmooth"], "ramp": C["ramp"],
+        "x0": C["x0"] * m * float(opt.get("bell", 1.0)), "x1": 0.40 * m * float(opt.get("bell", 1.0)), "front": front, "ffront": C["ffront"], "smooth": {"iter": C["iter"], "lam": C["lam"]}, "dsmooth": C["dsmooth"], "ramp": C["ramp"],
         "note": "the lower profile from the lower lip to the jaw rebuilt on r3c's own: the groove at 0.85 of its depth, the chin behind the lip's tip, a wide bell across the face (#701, 自拟)"}
-fb = lambda k, bl, note: {"op": "flatblocks", "s": round(s, 4), "front": front, "iter": 150, "k": k, "blocks": bl, "note": note}
+fb = lambda k, bl, note, it=150: {"op": "flatblocks", "s": round(s, 4), "front": front, "iter": it, "k": k, "blocks": bl, "note": note}
 # outside the lips: the lips (|x| < 0.145 m, from 4.5 cm under to 4.5 cm over the slit) are r3c's, whole; the blocks start and end outside that box and ease out over 2 cm
 nl = [{"kind": "capsule", "p0": [sg * 0.115, slit + 0.13], "p1": [sg * 0.135, slit + 0.06], "r": 0.012, "soft": 0.02} for sg in (1, -1)]
 mar = [{"kind": "capsule", "p0": [sg * 0.15, slit - 0.06], "p1": [sg * 0.165, slit - 0.14], "r": 0.012, "soft": 0.02} for sg in (1, -1)]
 lift = {"op": "mouthlift", "s": round(s, 4), "z0": round((slit + float(opt.get("lift-up", 0.0))) / s, 4), "a": float(opt.get("lift", 0.024)), "x0": 0.03, "x1": 0.13, "x2": 0.17, "x3": 0.27, "sz": float(opt.get("lift-sz", 0.035)), "front": front, "note": "the lips' ends lifted (#701, 自拟)"}
-cleft = fb(0.3, [{"kind": "capsule", "p0": [0.0, slit - 0.10], "p1": [0.0, slit - 0.26], "r": 0.012, "soft": 0.035}], "the chin's middle groove (r3c's, where the chin has one) softened: detail kept to 0.3 (#701, 自拟)")
+cleft = fb(float(opt.get("cleft-k", 0.3)), [{"kind": "capsule", "p0": [0.0, slit - 0.10], "p1": [0.0, slit - 0.26], "r": float(opt.get("cleft-r", 0.012)), "soft": float(opt.get("cleft-soft", 0.035))}], "the chin's middle groove (r3c's, where the chin has one) softened: detail kept to 0.3 (#701, 自拟)", int(opt.get("cleft-iter", 150)))
 lean_op = {"op": "tilt", "note": f"the figure above the lotus leaned {lean}° about the seat's rear edge (#701)", "c": [0, round(LD / s, 4), round(LP / s, 4)], "deg": lean, "z0": round(LB / s, 4), "fade": round((LB - LA) / s, 4)}
 ops = base + ([lean_op] if lean else []) + [tilt_op, {"op": "snapshot", "name": "bow", "note": "the points as the bow leaves them"}, chin]
 if "no-furrows" not in opt: ops += [fb(0.4, nl, "the nasolabial folds from the nose's wing to above the lip's corner: detail kept to 0.4, outside the lips (#701, 自拟)"),
                                     fb(0.4, mar, "the lines from under the lip's corner down the chin's sides: detail kept to 0.4, outside the lips (#701, 自拟)")]
 if "cleft" in opt: ops += [cleft]
+if "corners" in opt: ops += [fb(float(opt["corners"]), [{"kind": "capsule", "p0": [sg * 0.155, slit + 0.015], "p1": [sg * 0.175, slit - 0.03], "r": 0.016, "soft": 0.02} for sg in (1, -1)], "the dimples at the lips' ends: their depth kept to this share, outside the lips (#701, 自拟)")]
+if "mar" in opt: ops += [fb(float(opt["mar"]), mar, "the lines from under the lip's corner down the chin's sides taken out (detail kept to this share, 400 passes; #701, 自拟)", 400)]
+if "ridge" in opt: ops += [fb(float(opt["ridge"]), [{"kind": "capsule", "p0": [-0.13, slit + float(opt.get("ridge-dz", -0.31))], "p1": [0.13, slit + float(opt.get("ridge-dz", -0.31))], "r": float(opt.get("ridge-r", 0.02)), "soft": 0.03}], "the soft ridge across under the chin taken out (#701, 自拟)", 400)]
+if "lips" in opt: ops += [fb(float(opt["lips"]), [{"kind": "capsule", "p0": [-0.12, slit], "p1": [0.12, slit], "r": 0.045, "soft": 0.02}], "both lips' relief over the surface round them kept to this fraction (depth only: the slit, the outline and the corners stay where they are; #701, 自拟)")]
+if "fill" in opt: ops += [{"op": "chinfill", "s": round(s, 4), "z0": round((slit - 0.10) / s, 4), "z1": round((slit - 0.27) / s, 4), "sx": float(opt.get("fill-sx", 0.035)), "k": float(opt.get("fill", 1.0)), "xs0": 0.03, "xs1": 0.09, "front": front, "ffront": 0.03, "smooth": {"iter": 60, "lam": 0.5}, "note": "the chin's middle groove filled to the lobes' tops: one round face (#701, 自拟)"}]
 if "no-lift" not in opt: ops += [lift]
 out = os.path.join(here, name, f"repair-{tag}.json"); json.dump({**{k: v for k, v in spec.items() if k != "ops"}, "ops": ops}, open(out, "w"), ensure_ascii=False, indent=1); print(out, "slit (bowed)", round(slit, 3))

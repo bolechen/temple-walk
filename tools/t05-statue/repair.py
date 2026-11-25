@@ -212,6 +212,27 @@ for _k, op in enumerate(spec["ops"]):
                                "snapshot_lip": round(float(Ps[sL]) * sc_ * 1000, 1), "snapshot_groove": round(float(Ps[sG]) * sc_ * 1000, 1), "snapshot_chin": round(float(Ps[sC]) * sc_ * 1000, 1), "snapshot_jaw": round(float(Ps[sJ]) * sc_ * 1000, 1),
                                "groove_depth_snapshot": round(float(-rs[sG]) * sc_ * 1000, 1), "chin_bulge_snapshot": round(float(rs[sC]) * sc_ * 1000, 1), "delta_max": round(float(np.abs(delta).max()) * sc_ * 1000, 1)}})
     print(json.dumps(log[-1])); continue
+  if op["op"] == "chinfill":
+    # {"s", "z0", "z1", "sx", "k", "xs0", "xs1", "front", "ffront", "smooth": {"iter", "lam"}}: a groove down the middle of the chin that two lobes stand either side of (Visvabhu's, #701: the
+    # chin read as split in two) filled up to the lobes: for each height between z0 and z1 the depth at the middle (|x| < 0.01 m) is compared with the mean depth where the lobes stand (xs0..xs1 metres
+    # from the middle), and the middle is brought forward by `k` of the difference, in a bell of half-width `sx` metres across (stage metres), the amounts smoothed along the height.
+    sc_ = op["s"]; zz = co[:, 2]; xx = np.abs(co[:, 0]) * sc_; m_ = (zz >= op["z1"] - 0.03 / sc_) & (zz <= op["z0"] + 0.03 / sc_) & (co[:, 1] < op["front"])
+    bins = np.linspace(op["z1"], op["z0"], 60); dep = np.full(len(bins) - 1, np.nan); sid = np.full(len(bins) - 1, np.nan)
+    for i in range(len(bins) - 1):
+      h = m_ & (zz >= bins[i]) & (zz < bins[i + 1]); a_ = h & (xx < 0.01); b_ = h & (xx > op["xs0"]) & (xx < op["xs1"])
+      if a_.any() and b_.any(): dep[i] = co[a_, 1].min(); sid[i] = np.mean(np.sort(co[b_, 1])[:max(3, int(b_.sum() * 0.2))])   # front-most fifth: the lobes' own tops
+    dlt = np.nan_to_num(np.maximum(dep - sid, 0.0)) * op.get("k", 1.0); dlt = np.convolve(np.pad(dlt, 4, mode="edge"), np.ones(9) / 9, mode="same")[4:-4]
+    bc = 0.5 * (bins[:-1] + bins[1:]); d_ = np.interp(zz, bc, dlt, left=0.0, right=0.0)
+    wz = np.clip(np.minimum((zz - op["z1"]) / (0.02 / sc_), (op["z0"] - zz) / (0.02 / sc_)), 0, 1); wz = wz * wz * (3 - 2 * wz)
+    wx = np.exp(-(xx / op["sx"]) ** 2); wf = np.clip((op["front"] - co[:, 1]) / op["ffront"], 0, 1); wf = wf * wf * (3 - 2 * wf); w = wz * wx * wf
+    before = co.copy(); co[:, 1] -= d_ * w
+    sp = op.get("smooth")
+    if sp:
+      cnt = np.bincount(ed.ravel(), minlength=len(co)).astype(float)
+      for _ in range(sp["iter"]):
+        acc = np.zeros_like(co); np.add.at(acc, ed[:, 0], co[ed[:, 1]]); np.add.at(acc, ed[:, 1], co[ed[:, 0]]); mean = acc / np.maximum(cnt, 1)[:, None]; co += sp["lam"] * (w > 0)[:, None] * w[:, None] * (mean - co)
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "chinfill", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "moved_max_stage_mm": round(float(mv.max()) * sc_ * 1000, 1)}); print(json.dumps(log[-1])); continue
   if op["op"] == "lowerback":
     # {"d", "z0", "z1", "fz", "x0", "x1", "front", "ffront", "smooth": {"iter", "lam"}}: the lower face (lower lip, chin and jaw as one mass)
     # pressed back by up to d (+y: away from the viewer), whole between z1 and z0 (z0 the slit's side), easing to nothing over fz below z1
