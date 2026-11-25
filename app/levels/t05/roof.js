@@ -172,10 +172,10 @@ export function buildRoof(o) {
     for (let x = cx + sx * gap / 2; Math.abs(x) < EX - 0.12; x += sx * gap) fan(x, ez);
     for (let z = cz + sz * gap / 2; Math.abs(z - zm) < half - 0.12; z += sz * gap) fan(ex, z);
     // The corner beam: out along the diagonal from over the corner column to past the eave's corner, its head turned up.
-    const a = [cx, 0, cz], b = [ex + sx * 0.35, 0, ez + sz * 0.35];
+    const a = [cx, 0, cz], b = [ex + sx * 0.12, 0, ez + sz * 0.12];
     a[1] = heightAt(cx, cz) - R.deck - R.flyer.h - 0.35; b[1] = heightAt(ex, ez) - R.deck + 0.1;
     stick(beams, a, b, (L) => new THREE.BoxGeometry(0.3, 0.42, L));
-    const tip = [b[0] + sx * 0.32, b[1] + 0.32, b[2] + sz * 0.32];
+    const tip = [b[0] + sx * 0.16, b[1] + 0.22, b[2] + sz * 0.16];   // (short: from the court a longer one read as a spike past the eave)
     stick(beams, [b[0] - sx * 0.2, b[1] + 0.05, b[2] - sz * 0.2], tip, (L) => new THREE.BoxGeometry(0.24, 0.3, L));
   }
 
