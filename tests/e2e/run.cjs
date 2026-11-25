@@ -2748,7 +2748,7 @@ const scenarios = {
   // The close's eye, for every season and both pictures (#498): from the first frame to the far view, the sphere the near plane's
   // corners make, set at every tenth of a second of the route, touches nothing drawn (a crown, a baluster, a rail); the trees are
   // drawn (no BARE), since the eye's hierarchy holds only what is built. The route is asked of the page, the hierarchy of the page.
-  "ending-eye": { tier: 2, async run(b, base) {
+  "ending-eye": { tier: 3, async run(b, base) {
     const SHAPES = process.env.ENDING_SHAPE ? { [process.env.ENDING_SHAPE]: { upright: { width: 390, height: 844 }, wide: { width: 960, height: 540 } }[process.env.ENDING_SHAPE] } : { upright: { width: 390, height: 844 }, wide: { width: 960, height: 540 } };
     const bad = [], Q = process.env.ENDING_Q || "low", SEASONS = (process.env.ENDING_SEASONS || "spring,summer,autumn,winter").split(",");
     for (const season of SEASONS) for (const [shape, viewport] of Object.entries(SHAPES)) {
@@ -2801,6 +2801,7 @@ const scenarios = {
       await t.until(async () => t.page.evaluate(() => +getComputedStyle(document.getElementById("endingTitle")).opacity >= 0.99), 60000, "the title did not come");
       const read = () => t.page.evaluate(() => { const hold = document.getElementById("endingHold"); hold.style.visibility = "hidden"; const out = [...document.querySelectorAll("#endingTitle > *")].map((e) => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return { tag: e.tagName, text: e.textContent, x: r.x, y: r.y, w: r.width, h: r.height, color: c.color, opacity: +c.opacity }; }); return { out, w: innerWidth, h: innerHeight }; });
       const lines = await read();
+      require("fs").mkdirSync("tools/out/ending-title", { recursive: true }); await t.page.screenshot({ path: `tools/out/ending-title/${shape}-${lang}.png` });
       await t.page.addStyleTag({ content: "#endingTitle > * { visibility: hidden !important; }" });
       const png = (await t.page.screenshot()).toString("base64");
       const lum = await t.page.evaluate(async ([b64, lines]) => {
@@ -2821,8 +2822,7 @@ const scenarios = {
         if (e.x < 0 || e.x + e.w > lines.w || e.y < 0 || e.y + e.h > lines.h) bad.push(`${shape} ${lang}: "${e.text}" is not inside the picture`);
       });
       await t.page.evaluate(() => document.getElementById("endingHold").style.removeProperty("visibility"));
-      require("fs").mkdirSync("tools/out/ending-title", { recursive: true });
-      await t.page.reload().catch(() => {}); await t.close();
+      await t.close();
     }
     console.log(rows.join("\n"));
     expect(bad.length === 0, bad.join("\n     "));
