@@ -30,7 +30,6 @@ const J01 = {
 export default {
   id: "t05",
   name: "奉明寺",   // docs/t05/DECISIONS.md §2, I18N.md: Fengming Temple
-  names: { ja: "奉明寺", en: "Fengming Temple", ko: "봉명사" },   // docs/t05/I18N.md §1; here and not in app/locales, which production bundles whole
   seal: "奉明",
   cardLink: false,   // no address or code on its pictures until the public page lists it (the lead, 2026-11-25); add it back when it does
   ownVerse: true,    // the card prints J01's own line in early winter by day, and no verse at any other hour (the art review, 2026-11-25)
