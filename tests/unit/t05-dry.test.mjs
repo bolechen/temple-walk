@@ -13,10 +13,17 @@ test("T05 has its own earth and crown materials, made once, named with letters o
   for (const m of [d.earth, d.cedar]) assert.ok(/^[a-zA-Z]+$/.test(m.customProgramCacheKey()), `${m.customProgramCacheKey()}: letters only, so that __pick names it`);
   assert.notEqual(d.earth.customProgramCacheKey(), M.earth.customProgramCacheKey());
   // the shader: the shared one's own hook runs, then the copy multiplies by the leaf colour only where wetness and snow are both nought
-  const sh = { uniforms: {}, vertexShader: "", fragmentShader: "#include <common>\nvoid main(){ diffuseColor.rgb=col; }" };
+  const sh = { uniforms: {}, vertexShader: "", fragmentShader: "#include <common>\nvoid main(){ diffuseColor.rgb=col;\n#include <lights_fragment_end>\n}" };
   d.earth.onBeforeCompile(sh, {});
   assert.ok(sh.uniforms.uLeafD && sh.uniforms.uWetD && sh.uniforms.uSnowD, "it reads three uniforms the page already holds");
   assert.ok(/smoothstep\(0\., \.05, uWetD \+ uSnowD\)/.test(sh.fragmentShader) && /pow\(max\(uLeafD/.test(sh.fragmentShader), "and gates the tint on a dry day without snow");
+  // the sun's own light on it is drawn toward grey, by the same gate, and the lit colour still reaches the page
+  assert.equal(sh.fragmentShader.match(/smoothstep\(0\., \.05, uWetD \+ uSnowD\)/g).length, 2, "the pale of the low sun has the same gate");
+  assert.ok(/reflectedLight\.directDiffuse = mix\(s_, .*0\.400 \* g_\)/.test(sh.fragmentShader) && /#include <lights_fragment_end>/.test(sh.fragmentShader));
+  // the crowns take a fixed olive, not the leaf colour
+  const sc = { uniforms: {}, vertexShader: "", fragmentShader: "#include <common>\nvoid main(){ diffuseColor.rgb=col;\n#include <lights_fragment_end>\n}" };
+  d.cedar.onBeforeCompile(sc, {});
+  assert.ok(/vec3 t_ = vec3\(1\.200, 1\.000, 0\.640\)/.test(sc.fragmentShader) && !/pow\(max\(uLeafD/.test(sc.fragmentShader), "the crowns' olive is their own");
 });
 
 test("T05's site draws its ground and crowns with those copies, so no draw is added", () => {
