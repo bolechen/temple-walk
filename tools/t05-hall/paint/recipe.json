@@ -516,26 +516,46 @@
       ]
      },
      {
-      "half": {
-       "through": [
-        "@hairFront",
-        "@hairBack"
-       ]
-      }
+      "or": [
+       {
+        "half": {
+         "through": [
+          "@hairFront",
+          "@hairBack"
+         ]
+        }
+       },
+       {
+        "and": [
+         {
+          "half": {
+           "p": "@napeP",
+           "n": "@napeN"
+          }
+         },
+         {
+          "half": {
+           "p": "@napeFloorP",
+           "n": "@napeFloorN"
+          }
+         }
+        ]
+       }
+      ]
      },
      {
       "not": {
        "or": [
         {
          "ell": {
-          "c": "@earL",
-          "r": "@earR_"
+          "c": "@earHL",
+          "r": "@earH_"
          }
         },
         {
          "ell": {
-          "c": "@earR",
-          "r": "@earR_"
+          "c": "@earHR",
+          "r": "@earH_"
          }
         }
        ]

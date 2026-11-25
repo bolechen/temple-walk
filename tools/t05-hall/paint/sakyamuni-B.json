@@ -24,12 +24,12 @@
   ],
   "hairFront": [
    0.0,
-   7.452,
+   7.382,
    0.3
   ],
   "hairBack": [
    0.0,
-   6.911,
+   6.611,
    -1.212
   ],
   "earL": [
@@ -236,6 +236,41 @@
    1.08,
    1.08,
    1.08
+  ],
+  "earHL": [
+   0.656,
+   6.96,
+   -0.567
+  ],
+  "earHR": [
+   -0.64,
+   6.957,
+   -0.552
+  ],
+  "earH_": [
+   0.205,
+   0.467,
+   0.15
+  ],
+  "napeP": [
+   0,
+   0,
+   -0.787
+  ],
+  "napeN": [
+   0,
+   0,
+   -1
+  ],
+  "napeFloorP": [
+   0,
+   6.71,
+   0
+  ],
+  "napeFloorN": [
+   0,
+   1,
+   0
   ]
  },
  "note_514": "round 2: the forearm carried 0.26 m forward and the hand hanging along the knee (tools/t05-statue/sakyamuni/varada.json)",
