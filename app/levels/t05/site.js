@@ -15,7 +15,7 @@ import { buildAxis, HALL_HALF, LANE, AXIS_TREES } from "./axis.js";
 import { buildTower } from "./tower.js";
 import { buildDistance } from "./distance.js";
 import { buildSurround, eaveCap } from "./surround.js";
-import { buildFlora } from "./flora.js";
+import { buildFlora, buildTreeGround } from "./flora.js";
 import { dryMaterials } from "./dry.js";
 import { debugGate } from "../../src/debuggate.js";
 
@@ -216,6 +216,7 @@ export function buildSite(M) {
   const inner = buildFlora(M, [...AXIS_TREES, ...COURT_TREES.map((t) => ({ ...t, h: Math.min(t.h, eaveCap(t.x, t.z)) }))], { name: "trees", cast: true, walk: true, chunk: (t) => (t.z < COMPOUND.zS + 8 ? "court" : "axis") });
   { const st = mesh(merge(pitStones), M.stone); st.userData.walk = "floor"; st.name = "court-pits-stones"; root.add(inner.group, st); }   // (a pit's edge stones are stood on, as a low curb is: the baked floor rises to their top within his shoes' reach)
   { const e = mesh(merge(pitEarth), dryMaterials(M).earth, { cast: false }); e.name = "court-pits-earth"; root.add(e); }   // (the pit's earth is floor, as the prologue's pits are: the edge stones are then a step with a foothold behind them, not a low thing his shoes are kept off)
+  root.add(buildTreeGround([...AXIS_TREES, ...COURT_TREES]));   // fallen leaves and needles and the dark at each trunk's foot (./flora.js)
   const surround = buildSurround(M, C, { bench }); root.add(surround);
   // What was grown, for the tests and for the page (the `t05-treeseed` scenario compares the page's with Node's).
   const flora = { inner: { tris: inner.tris, hash: inner.hash, count: inner.census.length }, surround: { tris: surround.userData.flora.tris, hash: surround.userData.flora.hash, count: surround.userData.flora.census.length }, census: [...inner.census, ...surround.userData.flora.census] };

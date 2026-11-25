@@ -263,3 +263,47 @@ export function buildFlora(M, trees, { name = "flora", far = false, cast = true,
   let hv = 2166136261; for (const ch of census.map((c) => c.hash).join(",")) { hv ^= ch.charCodeAt(0); hv = Math.imul(hv, 16777619) >>> 0; }
   return { group, census, tris, hash: hv.toString(16) };
 }
+
+/**
+ * The ground under the trees inside the walls: a soft dark ring where each trunk goes into the earth (the shade and the damp a trunk's foot
+ * keeps), and a patch of what has fallen reaching out under its crown, a pagoda tree's dry leaves wide and warm, a pine's or an arborvitae's
+ * needles narrower and darker; broken into leaves by the material, not a felt. One transparent mesh laid a finger over the earth or the paving,
+ * one draw; under snow it is gone (`uSnow`). Ours.
+ * @param {any[]} trees as for `growTree` @param {number} [lift] how far over the ground (m)
+ */
+export function buildTreeGround(trees, lift = 0.03) {
+  const pos = [], col = [], idx = [];
+  const disc = (x, y, z, r0, rgb, alphas, radii, seed) => {   // rings of vertices at `radii` (shares of r0) with `alphas`, wandering a little at the edge
+    const R = 28, base = pos.length / 3; pos.push(x, y, z); col.push(...rgb, alphas[0]);
+    for (let i = 1; i < radii.length; i++) for (let k = 0; k < R; k++) { const a = (k / R) * 6.283, rr = r0 * radii[i] * (1 + 0.08 * Math.sin(a * 3 + seed) + 0.05 * Math.sin(a * 7 + seed * 2)); pos.push(x + Math.cos(a) * rr, y - 0.0005 * i, z + Math.sin(a) * rr); col.push(...rgb, alphas[i]); }
+    for (let k = 0; k < R; k++) idx.push(base, base + 1 + ((k + 1) % R), base + 1 + k);
+    for (let i = 1; i < radii.length - 1; i++) for (let k = 0; k < R; k++) { const n = (k + 1) % R, a = base + 1 + (i - 1) * R, b = base + 1 + i * R; idx.push(a + k, a + n, b + k, a + n, b + n, b + k); }
+  };
+  trees.forEach((t, i) => {
+    const y = (t.y ?? 0) + lift, r = t.r ?? 0.3, seed = hashAt(t.x, t.z, 21) * 6.283;
+    const reach = t.kind === "huai" ? 3.4 : t.kind === "pine" ? 2.6 : t.crownR ? t.crownR + 0.5 : 1.6, warm = t.kind === "huai";
+    // the litter first, the dark ring over it (later in the mesh: drawn over it)
+    disc(t.x, y, t.z, reach, warm ? [0.5, 0.4, 0.26] : [0.36, 0.31, 0.22], [0.85, 0.85, 0.7, 0.3, 0], [0, 0.35, 0.65, 0.88, 1], seed + i);
+    disc(t.x, y + 0.002, t.z, r + 1.0, [0.03, 0.025, 0.02], [0.75, 0.75, 0.4, 0], [0, (r + 0.2) / (r + 1.0), 0.7, 1], seed + 3);
+  });
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 4)); g.setIndex(idx); g.computeVertexNormals();
+  const N = g.attributes.normal; for (let i = 0; i < N.count; i++) N.setXYZ(i, 0, 1, 0);
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, depthWrite: false, roughness: 1, envMapIntensity: 0.1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uSnowG = U.uSnow;
+    sh.vertexShader = "varying vec3 vGroundP;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n  vGroundP = position;");
+    sh.fragmentShader = "varying vec3 vGroundP;\nuniform float uSnowG;\n" + sh.fragmentShader.replace("#include <color_fragment>", `#include <color_fragment>
+      { float lum = dot(diffuseColor.rgb, vec3(.33));
+        if (lum > .08) {   // the litter (the dark ring is left whole): scattered leaves, denser where the patch is denser
+          vec2 q = vGroundP.xz * 7.0, cell = floor(q); float n1 = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453), n2 = fract(sin(dot(cell, vec2(39.346, 11.135))) * 24634.6345), n3 = fract(sin(dot(cell, vec2(73.156, 52.235))) * 31415.9265);
+          vec2 f = fract(q) - vec2(.25 + .5 * n1, .25 + .5 * n2); float an = n3 * 6.2832; f = vec2(cos(an) * f.x + sin(an) * f.y, -sin(an) * f.x + cos(an) * f.y);
+          float leaf = step(length(vec2(f.x, f.y / .5)), .18 + .14 * n3), here = step(fract(n1 * 5.17 + n2 * 3.31), .5 + diffuseColor.a * .9);
+          diffuseColor.rgb *= .8 + .45 * n2; diffuseColor.a = leaf * here * min(1., diffuseColor.a * 1.4);
+        }
+        diffuseColor.a *= 1. - smoothstep(.05, .4, uSnowG); }`);
+  };
+  m.customProgramCacheKey = () => "treeGround"; m.name = "treeGround";
+  const mesh = new THREE.Mesh(g, m); mesh.name = "tree-ground"; mesh.receiveShadow = true; mesh.castShadow = false; mesh.renderOrder = 0;
+  mesh.userData.walk = false; mesh.userData.keep = true; mesh.userData.soft = true;   // (a painted layer of leaves: nothing he walks into, tools/edges.mjs leaves it out)
+  return mesh;
+}
