@@ -3,7 +3,7 @@
 // text under 12 px, anything that runs off the screen, and whether the page scrolls or zooms when it should not.
 // It also lists a label broken onto a second line inside itself (a button's word, or a phrase of the line at the foot of
 // the view that would have fitted whole on one line).
-//   node tools/mobile-audit.cjs [out dir] [--lang=ja|en] [--shapes=upright,small] [--drawn]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
+//   node tools/mobile-audit.cjs [out dir] [--lang=ja|en|ko] [--level=<id>] [--shapes=upright,small] [--drawn]   → tools/out/mobile/*.png and report.json; exits 1 if anything is listed
 //   (#614: the page is opened built but not drawn, since what is measured is the interface's DOM, and every wait is for a condition, not for seconds;
 //   a surface that lists anything is then opened again with the scene drawn and photographed as `<shape>-<surface>-drawn.png`, the evidence a person looks at.
 //   --shapes names the screens to measure, so that several machines can share them (upright, side, small, large); with none, all four, on one machine.
@@ -13,9 +13,11 @@
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--lang=")) || "").slice(7) || "zh");
+// --level=<id> audits that level's page (`?level=`; the prologue when it is left out, and then exactly what it was).
+const LEVEL = (ARGS.find((a) => a.startsWith("--level=")) || "").slice(8);
 const ONLY = (ARGS.find((a) => a.startsWith("--only=")) || "").slice(7).split(",").filter(Boolean).length ? (ARGS.find((a) => a.startsWith("--only="))).slice(7).split(",") : null;
 const SHAPE_ARG = (ARGS.find((a) => a.startsWith("--shapes=")) || "").slice(9).split(",").filter(Boolean), DRAWN = ARGS.includes("--drawn");
-const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", LANG === "zh" ? "mobile" : `mobile-${LANG}`);
+const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", `mobile${LEVEL ? `-${LEVEL}` : ""}${LANG === "zh" ? "" : `-${LANG}`}`);
 const { serve } = require("./site.cjs");
 let srv;
 // The place built but not drawn (tests/e2e/run.cjs, BARE): `?off=` hides parts and unbuilds none, so everything the interface asks of the walk is there.
@@ -25,6 +27,9 @@ const HELPERS = () => {
   window.__auditFrames = (n) => new Promise((r) => { let i = 0; const f = () => (++i >= n ? r() : requestAnimationFrame(f)); f(); });
   window.__auditUntil = async (cond, ms = 90000) => { const t0 = performance.now(); while (!cond()) { if (performance.now() - t0 > ms) throw new Error(`audit: waited ${ms} ms for ${cond}`); await new Promise((r) => requestAnimationFrame(r)); } };
 };
+// What only the prologue has to show, which another level's page does not bring up (its works, its lamp, its mat, its close, its slip of the
+// library, its gate's title, its offering box): not measured under --level=<other>, and said so in the output, never skipped in silence.
+const PROLOGUE_ONLY = new Set(["prologue", "piece", "slip", "offering", "bless", "sit", "sitsay", "ending"]);
 // A surface that is only reached from another one's state.
 const NEEDS = { sitsay: "sit", clip: "clipping" };
 // A surface whose putting away is the way into the next one: the film being made is stopped, and its sheet is what comes up (the sheet is the next surface, `clip`).
@@ -174,10 +179,10 @@ const badOf = (m, vw) => m.small.length + m.tiny.length + m.off.length + m.bare.
 async function pass(b, [shape, vw, vh], names, bare, tag, report) {
   const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
   const p = await ctx.newPage(), errs = []; await p.addInitScript(HELPERS); p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
-  await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${LEVEL ? `&level=${LEVEL}` : ""}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
   let bad = 0, seen = 0;
-  for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n))) {
+  for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n) && !(LEVEL && LEVEL !== "t00" && PROLOGUE_ONLY.has(n)))) {
     if (process.env.AUDIT_DEBUG) console.log("   [debug] before", name, JSON.stringify(await p.evaluate(() => window.__ui())));
     if (open) await p.evaluate(async (c) => { await (0, eval)(c); }, open);   // (awaited: an opening script that waits for a state holds the audit with it)
     await settle(p, name);
@@ -198,6 +203,7 @@ async function pass(b, [shape, vw, vh], names, bare, tag, report) {
   srv = await serve(root); fs.mkdirSync(out, { recursive: true });
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] }), report = {}; let bad = 0;
   const wanted = SURFACES.map(([n]) => n).filter((n) => !ONLY || ONLY.includes(n));
+  if (LEVEL && LEVEL !== "t00") console.log(`level ${LEVEL}: not measured, being the prologue's alone: ${[...PROLOGUE_ONLY].join(", ")}`);
   for (const shape of SHAPES) {
     const t0 = Date.now(), before = Object.keys(report).length;
     bad += await pass(b, shape, wanted, !DRAWN, "", report);
