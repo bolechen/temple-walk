@@ -1,0 +1,36 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 280324,
+   "sha256": "7d1d27b1fd4aaa0c274bd547f86efaa316487e3b1b20795cfa976da717501314",
+   "rev": "dc173dc43293b88bea82eb04eff6162eaa35cd5b"
+  },
+  {
+   "path": "png/fix1-hand-kanakamuni.jpg",
+   "bytes": 124654,
+   "sha256": "f70c787f6a542e992854a80c89e1798f7901788d6fe01b42beb23561cf9c44ca",
+   "rev": "dc173dc43293b88bea82eb04eff6162eaa35cd5b"
+  },
+  {
+   "path": "png/fix2-scratches-kanakamuni.jpg",
+   "bytes": 50046,
+   "sha256": "4c2839a8dee36ffb04d46bc844fe75a63a0adce7444d9a2c1c5a3db2a0f8af54",
+   "rev": "dc173dc43293b88bea82eb04eff6162eaa35cd5b"
+  },
+  {
+   "path": "png/fix3-neck-green.jpg",
+   "bytes": 150347,
+   "sha256": "b038a7f77d1bb8f2e5085c422b1ccf3147149ae05b022648e5d7345f385a4b92",
+   "rev": "dc173dc43293b88bea82eb04eff6162eaa35cd5b"
+  },
+  {
+   "path": "png/mid10-paint-vs-grey.jpg",
+   "bytes": 243233,
+   "sha256": "50c92c4b8adfda9e01009f2faa939e550e4966016214d006687bc4a6bc735a30",
+   "rev": "dc173dc43293b88bea82eb04eff6162eaa35cd5b"
+  }
+ ]
+}
