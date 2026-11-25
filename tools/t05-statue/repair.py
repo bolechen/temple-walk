@@ -126,9 +126,22 @@ for _k, op in enumerate(spec["ops"]):
     # the snapshot's deviations from its own line, laid on the present figure's line (by the fraction of the way from the lip to the jaw)
     line = lambda P, iL, iJ: np.interp(np.arange(len(P)), [iL, iJ], [P[iL], P[iJ]])
     Bs = line(Ps, sL, sJ); rs = Ps - Bs; Bn = line(Pn, nL, nJ); T = Pn.copy()
+    # the lip's own arc (from its foremost point down toward the groove's bottom) is kept as the snapshot had it, whole to `arc_keep` of the way (0.5: the front half), and the
+    # groove's depth eases to `k_groove` of the snapshot's from there; the chin's tip is put `chin_behind` metres (upright, stage) behind the lip's tip by a bump added at the chin
+    # where the snapshot's own bulge does not reach it (some figures' chins do not stand out of the lip-to-jaw line at all)
+    arc = op.get("arc_keep", 0.5); a_b = np.radians(op.get("bow", 0.0)); sc0 = op.get("s", 1.0)
     for i in range(nL, nJ + 1):
       t = (i - nL) / max(nJ - nL, 1); j = sL + t * (sJ - sL); rj = float(np.interp(j, np.arange(len(rs)), rs))
-      T[i] = Bn[i] + (op["k_groove"] * rj if rj < 0 else op["k_chin"] * rj)
+      if rj < 0:
+        u = float(np.clip((j - sL) / max(sG - sL, 1), 0, 1)); wg = sm_(float(np.clip((u - arc) / max(1 - arc, 1e-6), 0, 1))) if j <= sG else 1.0
+        kk = 1 - (1 - op["k_groove"]) * wg
+      else: kk = op["k_chin"]
+      T[i] = Bn[i] + kk * rj
+    if "chin_behind" in op:
+      yl_, yc_ = zs[nL] * sc0, zs[nC] * sc0   # heights in metres of the stage
+      want = Pn[nL] + (((yc_ - yl_) * np.sin(a_b) - op["chin_behind"]) / np.cos(a_b)) / sc0   # the chin's depth (file units) that stands chin_behind behind the lip's tip when upright
+      sig = op.get("chin_sigma", 0.04) / sc0; extra = want - T[nC]
+      T[nL:nJ + 1] += extra * np.exp(-((zs[nL:nJ + 1] - zs[nC]) / sig) ** 2)
     delta = np.zeros(len(zs)); delta[nL:nJ + 1] = T[nL:nJ + 1] - Pn[nL:nJ + 1]   # + : forward (toward the viewer)
     # c1 at both ends: ease the first and last tenth of the span
     ramp = np.ones(len(zs)); n_ = max(nJ - nL, 1); e_ = max(int(op.get("ramp", 0.15) * n_), 2)

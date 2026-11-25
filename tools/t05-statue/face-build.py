@@ -60,7 +60,7 @@ if not only:
                     "front": round(-neck["c"][1] / s, 4), "ffront": L["ffront"], "smooth": {"iter": L["iter"], "lam": L["lam"]}}]
   if _R.get("chinshape"):   # #701: the lower profile rebuilt (repair.py `chinshape`): a soft groove, a round chin behind the lip
     C = _R["chinshape"]; m_ = 1 / s
-    fops = fops + [{"op": "chinshape", "from": "bow", "z0": round(pts["mouth"][1] / s, 4), "s": round(s, 4), "k_groove": C["k_groove"], "k_chin": C["k_chin"], "lip0": C["lip0"] * m_, "lip1": C["lip1"] * m_, "gr0": C["gr0"] * m_, "gr1": C["gr1"] * m_,
+    fops = fops + [{"op": "chinshape", "from": "bow", "z0": round(pts["mouth"][1] / s, 4), "s": round(s, 4), "k_groove": C["k_groove"], "k_chin": C["k_chin"], "arc_keep": C.get("arc_keep", 0.5), "bow": tilt, "chin_behind": face.get("chinBehind", C.get("chin_behind", 0.009)), "lip0": C["lip0"] * m_, "lip1": C["lip1"] * m_, "gr0": C["gr0"] * m_, "gr1": C["gr1"] * m_,
                     "chin0": C["chin0"] * m_, "chin1": C["chin1"] * m_, "jaw": C["jaw"] * m_, "bin": C["bin"] * m_, "span": C["span"] * m_, "xm": C["xm"] * m_, "x0": C["x0"] * m_, "x1": C["x1"] * m_,
                     "front": round(-neck["c"][1] / s, 4), "ffront": C["ffront"], "smooth": {"iter": C["iter"], "lam": C["lam"]}, "dsmooth": C["dsmooth"], "ramp": C["ramp"],
                     "note": f"the lower profile from the lower lip to the jaw rebuilt: the groove under the lip at {C['k_groove']} of r3c's depth, the chin at {C['k_chin']} of r3c's bulge over the lip-to-jaw line (#701, 自拟)"}]
