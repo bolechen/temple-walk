@@ -513,14 +513,15 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
     // masks cost a frame (#370 round 6)
-    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "");
+    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "");
+    const rec = o.folds === false ? { ...recipe, folds: { ...recipe.folds, hollow: 0, edge: 0 } } : recipe;
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
     const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
     // one material for each normal map the file carries (a head baked on a map of its own is its own primitive, #463)
     for (const mesh of f.meshes) {
       const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
-      f.painted[k2] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+      f.painted[k2] ??= paintMaterial(rec, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
       f.painted[k2].userData.update(); if (o.envIntensity) f.painted[k2].envMapIntensity = o.envIntensity;
       mesh.material = f.painted[k2];
     }
@@ -591,11 +592,13 @@ function zoneIds() {
   for (let y = 1; y < Hd - 1; y++) for (let x = 1; x < Wd - 1; x++) {
     const k = (y * Wd + x) * 4, c = code(k); if (!c) continue;
     if (code(k + 4) !== c || code(k - 4) !== c || code(k + Wd * 4) !== c || code(k - Wd * 4) !== c) continue;
-    const a = (acc[c] ??= [0, 0, 0, 0]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2];
+    const a = (acc[c] ??= [0, 0, 0, 0, new Uint32Array(256)]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2]; a[4][Math.round(0.2126 * shown[k] + 0.7152 * shown[k + 1] + 0.0722 * shown[k + 2])]++;
   }
   const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光"; names[15] = "头光与光环";
   const out = figures.map(() => ({}));
-  for (const [c, [n, r, g, b]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)) }; }
+  // the 10th, 50th and 90th percentile of each zone's luma (0–255), for how much light and shade the zone holds on screen
+  const pct = (h, n, q) => { let t = 0; for (let i = 0; i < 256; i++) { t += h[i]; if (t >= n * q) return i; } return 255; };
+  for (const [c, [n, r, g, b, h]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)), q: [0.1, 0.5, 0.9].map((q) => pct(h, n, q)) }; }
   return out;
 }
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }

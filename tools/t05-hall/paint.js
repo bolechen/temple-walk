@@ -241,7 +241,7 @@ ${zoneCode}
       // the zone's number (the lips 14) over 16, green the figure's
       .replace("#include <dithering_fragment>", "#include <dithering_fragment>\n  if (uIdMode > .5) gl_FragColor = vec4(mix(zone, 14., step(.5, lip_ * onFace)) / 16., (uFig + 1.) / 16., 0., 1.);");
   };
-  m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N;
+  m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N + ":" + fh + ":" + fe;
   const upd = () => { pivot.updateMatrixWorld(true); U.uToFig.value.copy(pivot.matrixWorld).invert(); };
   upd(); m.userData.update = upd;
   // a normal map baked from the repaired full-detail surface (tools/t05-statue/bake.py, #463) is worn by the paint too
