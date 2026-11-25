@@ -6,7 +6,7 @@ import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 import { inflateRawSync } from "node:zlib";
 const { buildSite, createWalker, STATION } = await import("../../app/levels/t05/site.js");
-const { HALL, XS, ZS, buildHall } = await import("../../app/levels/t05/hall.js");
+const { HALL, XS, ZS, buildHall, HALL_DOORS } = await import("../../app/levels/t05/hall.js");
 const { ALTAR, FIGURES, SEAT, ATTEND, KING, buildAltar } = await import("../../app/levels/t05/altar.js");
 const { loadLevel } = await import("../../app/src/level.js");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
@@ -113,7 +113,11 @@ test("on the baked floor the altar, the figures and the kings stop him, and from
   while (queue.length) { const [i, j] = queue.pop(); for (const [a, b] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]]) { const k = key(a, b); if (!seen.has(k) && open(a, b)) { seen.add(k); queue.push([a, b]); } } }
   const reached = (x, z) => seen.has(key(Math.round(x / step), Math.round(z / step)));
   for (const [x, z, what] of [[0, ALTAR.zF + 1, "before Vipashyin"], [0, ALTAR.zF + 9, "the band of worship's south edge"], [16.45, ALTAR.zF + 2, "before Kasyapa"], [-16.45, ALTAR.zF + 2, "before Shakyamuni"],
-    [21.4, -17, "the east aisle"], [-21.4, -17, "the west aisle"], [0, ALTAR.zB - 2.5, "behind the altar"], ...["D", "E", "F"].map((k) => [...STATION[k], k])]) assert.ok(reached(x, z), `${what} (${x}, ${z}) reached from the threshold`);
+    [21.4, -17, "the east aisle"], [-21.4, -17, "the west aisle"], [0, ALTAR.zB - 2.5, "behind the altar"], ...["D", "E", "F"].map((k) => [...STATION[k], k])]) {
+    // (while the doors are shut, the first release: nothing inside is reached from the threshold, which is the point; HALL_DOORS in hall.js)
+    if (HALL_DOORS.shut) assert.ok(!reached(x, z), `${what} (${x}, ${z}) is not reached from the threshold: the doors are shut`);
+    else assert.ok(reached(x, z), `${what} (${x}, ${z}) reached from the threshold`);
+  }
 });
 
 test("from cam03's three eyes the faces of the middle three are seen past every column, and the lowest beam is still over every head", () => {

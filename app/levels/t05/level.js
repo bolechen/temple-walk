@@ -3,6 +3,10 @@
 // county is flat (docs/t05/SITE.md §4.1): no far hills, no bamboo, no censer. It keeps no place, plays no opening and
 // raises no title of its own yet, and the prologue's music is not played here (score.js zoneOf with no zones).
 import { buildSite, createWalker, COMPOUND, WAY } from "./site.js";
+import ja from "./locales/ja.js";
+import en from "./locales/en.js";
+import ko from "./locales/ko.js";
+import { XS, HALL } from "./hall.js";
 
 // J01, the first look of T05: an early-winter morning, clear and cold, no snow (docs/t05/ART.md §4.2, PRD.md §4). The sun is
 // where #280's white box worked it out for 9:45 on a day in early December at 41.5° N: 17° up, 152° from north (a calculation, not a record), which in
@@ -25,16 +29,29 @@ const J01 = {
 /** @type {import("../../src/level.js").Level} */
 export default {
   id: "t05",
+  name: "奉明寺",   // docs/t05/DECISIONS.md §2, I18N.md: Fengming Temple
+  names: { ja: "奉明寺", en: "Fengming Temple", ko: "奉明寺" },   // docs/t05/I18N.md §1 gives the Hangul reading; it is not in the Korean faces yet, so the hanja stand until tools/fonts.py --lang ko is run with the original TTFs (T05 lead);  here and not in app/locales, which production bundles whole
+  seal: "奉明",
+  cardLink: false,   // no address or code on its pictures until the public page lists it (the lead, 2026-11-25); add it back when it does
+  ownVerse: true,    // the card prints J01's own line in early winter by day, and no verse at any other hour (the art review, 2026-11-25)
   build: buildSite,
   createWalker,
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
+  // One line said once as the walk begins, in the foot line: the first edition has no seals and no book yet (the lead's and the owner's step one, 2026-11-25). No temple's name in it.
+  intro: "这座寺还在修建，眼下没有朱印，也没有朱印帐。慢慢走一走就好。",
+  tr: { ja, en, ko },   // its own words in the other languages, kept with the level
+  keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4); no book yet
   writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level
   backdrop: null,
   grove: null,
   propsAt: 0,
-  zones: null,
+  // Its sound field (docs/t05/SOUND.md §1; PRD.md §8): two layers, no melody. The court is everywhere; the great hall's box is the
+  // inside of its walls, from its own numbers: the end and back walls' inner faces (a wall's thickness in from the outer face, which
+  // lies `out` beyond the column line) and the front wall's (its outer face just behind the front column line, a thickness in). The
+  // shell stands on its platform, so he is "in" it by where he stands, not by a door into a room (score.js `layerOf`).
+  zones: { layers: { hall: { x0: XS[0] - HALL.out + HALL.wall, x1: XS[XS.length - 1] + HALL.out - HALL.wall, z0: -HALL.depth - HALL.out + HALL.wall, z1: HALL.front - HALL.wall } } },
   groveSound: () => 0,
   // Everything built that the following eye may meet: the compound and the way, with room round them.
   eyeBox: { x0: -COMPOUND.x - 20, x1: COMPOUND.x + 20, y0: -20, y1: 60, z0: COMPOUND.zN - 20, z1: WAY.zS + 20 },

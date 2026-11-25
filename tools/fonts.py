@@ -51,7 +51,7 @@ def used(skip=()):
 
 TABLES = {l: f"app/locales/{l}.js" for l in ("ja", "en", "ko")}
 # The works' cards in each language (levels/t00/locales/*.js) are written in the same faces.
-WORK_TABLES = {l: f"app/levels/t00/locales/{l}.js" for l in ("ja", "en", "ko")}
+WORK_TABLES = {l: sorted(glob.glob(f"{ROOT}/app/levels/*/locales/{l}.js")) for l in ("ja", "en", "ko")}   # every level's own (T00's works, T05's name)
 # The language buttons are each written in their own language, so each language's cut holds its own name.
 OWN_NAME = {"ja": "日本語", "en": "English", "ko": "한국어"}
 
@@ -68,7 +68,7 @@ def table_chars(lang, works=True):
     (works=False) leave them out; the page's title, which is drawn in the brush, is not among the credits' own lines."""
     import re
     skip = set() if works else credits_keys()
-    src = "".join(open(f"{ROOT}/{t[lang]}", encoding="utf-8").read() for t in ((TABLES, WORK_TABLES) if works else (TABLES,)))
+    src = open(f"{ROOT}/{TABLES[lang]}", encoding="utf-8").read() + ("".join(open(q, encoding="utf-8").read() for q in WORK_TABLES[lang]) if works else "")
     values = "".join(json.loads(f'"{v}"') for k, v in re.findall(r'^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$', src, re.M) if json.loads(f'"{k}"') not in skip)
     return "".join(sorted(set(ALWAYS + "‘’“”–—…·「」『』" + values + OWN_NAME[lang])))
 
