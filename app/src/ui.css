@@ -311,7 +311,7 @@ html.crossing.crossing-open::before, html.crossing.crossing-open::after { animat
 }
 /* The shutter: two leaves of ink close over the view and open again, and behind them the view has stopped. */
 #curtain { position: absolute; inset: 0; pointer-events: none; display: none; }
-#curtain i { position: absolute; left: 0; right: 0; height: 50%; background: var(--ink); transform: scaleY(0); }
+#curtain i { position: absolute; left: 0; right: 0; height: calc(50% + 1px); background: var(--ink); transform: scaleY(0); }   /* (a pixel past the middle: where the two leaves meet, fully shut, no thin line of the picture shows between them, #726) */
 #curtain i:first-child { top: 0; transform-origin: top; } #curtain i:last-child { bottom: 0; transform-origin: bottom; }
 #curtain.shut { display: block; } #curtain.shut i { animation: leaf .2s var(--ease) both; }
 @keyframes leaf { 0% { transform: scaleY(0); } 35% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
