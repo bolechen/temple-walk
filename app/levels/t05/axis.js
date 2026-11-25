@@ -227,16 +227,19 @@ export function buildAxis(M, { C, W }) {
     box(2 * PAV.eave, 0.1, 2 * PAV.eave, mx, ceil + 0.05, mz),   // the ceiling plate, seen from below
     ...[-1, 1].flatMap((sg) => [box(2 * PAV.eave, 0.25, 0.12, mx, ceil + 0.12, mz + sg * PAV.eave), box(0.12, 0.25, 2 * PAV.eave, mx + sg * PAV.eave, ceil + 0.12, mz)]),   // the fascia
   ];
-  const pstone = [box(mw, PAV.base, mw, mx, M0.y + PAV.base / 2, mz), box(1.6, 0.45, 0.95, mx, by + 0.225, mz), box(STELE.w, STELE.L, STELE.t, mx, by + 0.45 + STELE.L / 2, mz),   // the base, the stele's plinth and the shaft
+  const pstone = [box(mw, PAV.base, mw, mx, M0.y + PAV.base / 2, mz), box(1.6, 0.45, 0.95, mx, by + 0.225, mz)];   // the base and the stele's plinth, coursed stone
+  // The stele itself, shaft and head, is one piece cut from one block (the Yingzao Fashi cuts it so: 碑身 and 碑首 each of a stone): the monolith's grain a little darker (M.steleMono), no courses, no joints
+  const pstele = [box(STELE.w, STELE.L, STELE.t, mx, by + 0.45 + STELE.L / 2, mz),   // the shaft
     box(STELE.headW, STELE.cloud, STELE.headT, mx, by + 0.45 + STELE.L + STELE.cloud / 2, mz), box(STELE.headW, STELE.block, STELE.headT, mx, by + 0.45 + STELE.L + STELE.cloud + STELE.block / 2, mz),   // the head: its cloud plate and its block
     new THREE.CylinderGeometry(STELE.headW / 2, STELE.headW / 2, STELE.headT, 24, 1, false, Math.PI / 2, Math.PI).rotateX(Math.PI / 2).scale(1, STELE.arch / (STELE.headW / 2), 1).translate(mx, by + 0.45 + STELE.L + STELE.cloud + STELE.block, mz)];   // and the low arch over it
   group.add(
     mesh(merge(pstone), M.stone),
+    mesh(merge(pstele), M.steleMono),
     mesh(merge(pwood), M.woodX),
     // (The roof is open underneath: its base lay on the ceiling plate's top, one face on another, #688.)
     mesh(merge([new THREE.ConeGeometry(PAV.eave * Math.SQRT2, PAV.roofH, 4, 1, true).rotateY(Math.PI / 4).translate(mx, ceil + 0.1 + PAV.roofH / 2, mz), new THREE.ConeGeometry(0.22, 0.6, 8).translate(mx, ceil + 0.1 + PAV.roofH + 0.25, mz)]), M.tile),
   );
-  walk.solids.push({ x0: M0.x0 - BODY, x1: M0.x1 + BODY, z0: M0.z0 - BODY, z1: M0.z1 + BODY, eyeTop: M0.y + PAV.base + PAV.column + 0.3 + PAV.beam + 0.1 + PAV.roofH + 0.85 });
+  // (What the written plan says of the pavilion, its base a floor reached by three steps, its columns and the stele in the way, is ./stele.js's.)
   const L = LAMP, table = mesh(merge([box(L.w, L.h, L.d, L.x, L.y + L.h / 2, L.z)]), M.woodX);
   group.add(table);
   walk.solids.push({ x0: L.x - L.w / 2 - BODY, x1: L.x + L.w / 2 + BODY, z0: L.z - L.d / 2 - BODY, z1: L.z + L.d / 2 + BODY, eyeTop: L.y + L.h });

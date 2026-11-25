@@ -13,6 +13,7 @@ import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
 import { buildAltar, benchFigures } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 import { buildTower } from "./tower.js";
+import { buildStele } from "./stele.js";
 import { buildSurround } from "./surround.js";
 import { dryMaterials } from "./dry.js";
 import { debugGate } from "../../src/debuggate.js";
@@ -188,6 +189,10 @@ export function buildSite(M) {
   };
 
   root.add(ax.group);
+  // The stele in the monument pavilion, the steps up to it and the place where a line of it is copied (./stele.js; PRD.md §1.3 (a)).
+  const st = buildStele(M); root.add(st.group);
+  for (const k of ["solids", "decks", "ramps", "posts"]) walk[k].push(.../** @type {any} */ (st.walk)[k]);
+  (root.userData.flights ||= []).push(...st.group.userData.flights);
   const surround = buildSurround(M, C, { bench }); root.add(surround); if (hooks) hooks.houses = surround.userData.houses;   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
   // The old town's pagoda far to the west-south-west (./tower.js, #548 step two): a part of its own, left out by ?off=tower, nothing else reads it.
   const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
@@ -207,6 +212,9 @@ export function buildSite(M) {
     e: [STATION.E[0], STATION.E[1], 0, 1.15],          // under the roof, raised 66° (cam05; the art director, #549: from 3 m further south the heads of the three keep to the picture's lowest 18%)
     f: [STATION.F[0], STATION.F[1], 0, 0.17],
     ...ax.views,
+    ...st.views,
+    // The observation's two places, where its stroke is written (./page.js): his frame there and the eye on its shot (`?show=shot-p1a`).
+    "shot-p1a": [STATION.A[0], STATION.A[1], 0, 0.05], "shot-p1b": [STATION.B[0], STATION.B[1], 0, 0.05],
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
@@ -220,7 +228,7 @@ export function buildSite(M) {
   Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
     root, walk, shade, closed: [...ax.closed, ...hall.closed], closedViews: HALL_DOORS.shut ? [...INSIDE_VIEWS] : [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
-    places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
+    places: { ...st.places }, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }
 
