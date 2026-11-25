@@ -2,7 +2,7 @@
 // and hands over to the hall interior at the main hall's door.
 import { TRAILER } from "./src/trailer-boot.js";   // first: in trailer mode (#610) it replaces the page's clock before anything reads it
 import { mulberry32 } from "./src/blink.js";   // (the trailer's seeded air and cloth, #610)
-import { debugGate } from "./src/debuggate.js";
+import { debugGate, onBench } from "./src/debuggate.js";
 import { MAIN, photoUrl } from "./src/goshuin.js";
 import * as THREE from "three";
 import { FOG_DENSITY, U } from "./src/glsl.js";
@@ -38,7 +38,7 @@ import { gatherEye, eyeBoxes } from "./src/eyegather.js";
 import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
 import { clearOfCenser } from "./src/censer.js";
-import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { moodOf, moodNow, hourFollow, startMood, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { eventFor } from "./src/joya.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
@@ -302,11 +302,10 @@ const nowMood = moodNow();
 // visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
 const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
 const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
-const state = { hand: false, follow: false, season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
-                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
+const state = { hand: false, ...startMood({ query: Q, now: nowMood, prologueDay, firstMood: L.firstMood, keepsPlace: !!L.keepsPlace }) };
 // After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
 // choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
-state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
+// (A level may say how it looks the first time, Level.firstMood: T05 opens in early winter by day, J01; startMood in mood.js.)
 // The year-end bell (#341): on that night (or on the workbench with ?event=joya) the mountain is a winter night, unless the
 // address names a season, an hour or a fixed view. A hand that picks one later keeps it (`state.hand`).
 const joyaNight = () => eventFor({ query: Q, bench: import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname) }).open && !(SEASONS.includes(Q.get("season")) || TIMES.includes(Q.get("time")) || Q.has("shot") || Q.has("show") || Q.has("cam"));
@@ -1342,6 +1341,7 @@ window.__updates = (now) => (updates ? (now ? updates.ask().then(() => updates.s
 window.__yard = () => ({ opacity: +faded.toFixed(3), monkShown: monk.group.visible, monkWorld: (() => { const b = monkWorld(); return { min: b.min.toArray().map((v) => +v.toFixed(3)), max: b.max.toArray().map((v) => +v.toFixed(3)), near: +monkNear().toFixed(3) }; })(), shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, lid: +monk.lid.value.toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], goal: (() => { const g = planning ? planGoal : route.length ? route[route.length - 1] : target; return g ? [+g.x.toFixed(2), +g.z.toFixed(2)] : null; })(), route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 // For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
 window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
+if (Q.get("review") === "1" && onBench({ dev: !!import.meta.env.DEV, hostname: location.hostname })) import("./src/review.js").then((m) => m.installReview({ monk, camera, dev: !!import.meta.env.DEV, hostname: location.hostname, search: location.search }));   // tools/review-sheet.cjs: the workbench only, and only with ?review=1; the module is a chunk a visitor never fetches
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // The address of the view he has now, for the console: where he stands and looks, the mood, the hall or balcony he is
 // in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and

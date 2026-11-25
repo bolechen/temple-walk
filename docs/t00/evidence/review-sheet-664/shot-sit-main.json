@@ -1,0 +1,208 @@
+{
+ "readings": {
+  "kneeHeight": 0.0747,
+  "shoulderHeight": 0.3938,
+  "headHeight": 0.4957,
+  "hemFrontHeight": 0.1728,
+  "hemAboveKnee": 0.0981,
+  "hatWidth": 0.411,
+  "shoulderWidth": 0.152,
+  "hatOverShoulder": 2.704
+ },
+ "measure": {
+  "origin": [
+   0,
+   21.004,
+   -123
+  ],
+  "facing": [
+   0,
+   0,
+   1
+  ],
+  "bones": {
+   "leftUpperLeg": [
+    0.086,
+    21.094,
+    -123
+   ],
+   "rightUpperLeg": [
+    -0.086,
+    21.094,
+    -123
+   ],
+   "leftLowerLeg": [
+    0.2366,
+    21.0801,
+    -122.8402
+   ],
+   "rightLowerLeg": [
+    -0.2513,
+    21.0774,
+    -122.8558
+   ],
+   "leftUpperArm": [
+    0.076,
+    21.3978,
+    -122.9922
+   ],
+   "rightUpperArm": [
+    -0.076,
+    21.3978,
+    -122.9922
+   ],
+   "leftLowerArm": [
+    0.1321,
+    21.2089,
+    -122.9581
+   ],
+   "rightLowerArm": [
+    -0.1291,
+    21.2079,
+    -122.9592
+   ],
+   "leftHand": [
+    0.012,
+    21.191,
+    -122.87
+   ],
+   "rightHand": [
+    -0.012,
+    21.179,
+    -122.87
+   ],
+   "head": [
+    0,
+    21.4997,
+    -122.9862
+   ],
+   "hips": [
+    0,
+    21.124,
+    -123
+   ]
+  },
+  "hemFront": {
+   "y": 21.1768,
+   "z": 0.3511,
+   "n": 37
+  },
+  "hatWidth": 0.411
+ },
+ "views": [
+  {
+   "id": "asked",
+   "parts": {
+    "skin": 15819,
+    "hand": 20,
+    "robe": 35278,
+    "legs": 5252,
+    "shoes": 903,
+    "other": 7665
+   },
+   "handAlone": 3998,
+   "handVisible": 20,
+   "handHidden": 3978,
+   "handHiddenFraction": 0.995,
+   "lapBox": [
+    334,
+    352,
+    662,
+    613
+   ],
+   "lapHand": 20,
+   "lapRobe": 31263,
+   "camera": {
+    "position": [
+     -0.8222,
+     21.5464,
+     -121.849
+    ],
+    "fov": 44
+   }
+  },
+  {
+   "id": "side",
+   "parts": {
+    "skin": 11817,
+    "hand": 71,
+    "robe": 22436,
+    "legs": 5819,
+    "shoes": 119,
+    "other": 7800
+   },
+   "handAlone": 2363,
+   "handVisible": 71,
+   "handHidden": 2292,
+   "handHiddenFraction": 0.97,
+   "lapBox": [
+    331,
+    309,
+    581,
+    534
+   ],
+   "lapHand": 71,
+   "lapRobe": 19656,
+   "camera": {
+    "position": [
+     1.268,
+     21.554,
+     -122.0942
+    ],
+    "fov": 44
+   }
+  },
+  {
+   "id": "top",
+   "parts": {
+    "skin": 13948,
+    "hand": 75,
+    "robe": 24594,
+    "legs": 18,
+    "shoes": 0,
+    "other": 2918
+   },
+   "handAlone": 2445,
+   "handVisible": 75,
+   "handHidden": 2370,
+   "handHiddenFraction": 0.969,
+   "lapBox": [
+    364,
+    227,
+    634,
+    480
+   ],
+   "lapHand": 75,
+   "lapRobe": 24594,
+   "camera": {
+    "position": [
+     -0.4529,
+     22.8035,
+     -122.366
+    ],
+    "fov": 44
+   }
+  }
+ ],
+ "verdict": {
+  "bestHandVisibleFraction": 0.031,
+  "handsBuried": true,
+  "hemAboveKnee": 0.0981,
+  "hemHigh": true,
+  "ok": false
+ },
+ "meta": {
+  "what": "shot-sit",
+  "commit": "cdc3bb4908c832fc2448cc594e5ce65fc0c99363",
+  "body": "code",
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "size": [
+   960,
+   540
+  ],
+  "season": "summer",
+  "time": "day"
+ }
+}

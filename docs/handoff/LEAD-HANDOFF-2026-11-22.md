@@ -51,7 +51,7 @@
 **关卡主创和评审**（闲着时不花钱，只有叫醒才花）
 | 会话 | 角色 | 现状 |
 |---|---|---|
-| `session_01Cq65vJyJgCA8yZgDh5jo55` | T00 主创 | 维护 #572；T00 的开发会话只对它汇报 |
+| `session_01Cq65vEug3TFxjsh2gYxj57`（11-25 接任） | T00 主创 | 维护 #572；T00 的开发会话只对它汇报 |
 | `session_01Cq65vJaidrNYmuEkYhCvsm` | T05 主创 | 维护 #573；试用 Sonnet 一天，11-23 01:00 UTC 评估（send_later trig_01U6cVE9CXoxEqwcTbyf4sGR 会叫醒本会话；如果本会话已停，新总主创自己评估） |
 | `session_01Cq65vEhGAf3gZq6wx85Hzo` | 美术总监（Fable） | 手上没有待判的 |
 | `session_01Cq65vG81EZC5oMHbwEyY95` | 美术审图二（Fable，T00 画面） | 状态显示 failed，最后一轮是 04:52 判完 #589。#593 等它判；叫不醒就开一个 Fable 的新审图会话，给它 skills/art-gate |
