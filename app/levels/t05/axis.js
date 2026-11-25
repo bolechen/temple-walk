@@ -128,7 +128,7 @@ export function slabAround(rect, holes, top) {
     const za = zs[i], zb = zs[i + 1], zm = (za + zb) / 2;
     let open = [[rect.x0, rect.x1]];
     for (const h of holes) if (zm > h.z0 && zm < h.z1) open = open.flatMap(([a, b]) => (h.x1 <= a || h.x0 >= b ? [[a, b]] : [[a, Math.min(b, h.x0)], [Math.max(a, h.x1), b]])).filter(([a, b]) => b - a > 1e-6);
-    for (const [a, b] of open) out.push(box(b - a, top, zb - za, (a + b) / 2, top / 2, zm));
+    for (const [a, b] of open) out.push(box(b - a, top + 0.005, zb - za, (a + b) / 2, (top - 0.005) / 2, zm));   // (5 mm into the ground, below the walls' feet, #688)
   }
   return out;
 }
@@ -156,7 +156,7 @@ export function buildAxis(M, { C, W }) {
       }
       plaster.push(box(x1 - a, h, t, (a + x1) / 2, h / 2, cz));
     } else plaster.push(alongX ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
-    stone.push(alongX ? box(len + 0.2, 0.35, t + 0.2, cx, 0.175, cz) : box(t + 0.2, 0.35, len + 0.2, cx, 0.175, cz));
+    stone.push(alongX ? box(len + 0.2, 0.355, t + 0.2, cx, 0.1725, cz) : box(t + 0.2, 0.355, len + 0.2, cx, 0.1725, cz));   // (the plinth goes 5 mm into the ground, so that its foot and the wall's are not two faces on one plane, #688)
     // a coping on the wall's top (art director's review of #457: the wall takes a cap, not bays)
     stone.push(alongX ? box(len + 0.1, 0.16, t + 0.24, cx, h + 0.08, cz) : box(t + 0.24, 0.16, len + 0.1, cx, h + 0.08, cz));
     const r = alongX ? { x0, x1, z0: cz - t / 2, z1: cz + t / 2 } : { x0: cx - t / 2, x1: cx + t / 2, z0, z1 };
@@ -165,7 +165,10 @@ export function buildAxis(M, { C, W }) {
   };
   // ---- The second terrace: the slab, the two platforms cut out of it, and their steps ----
   const T = { x0: -SECOND.hw, x1: SECOND.hw, z0: SECOND.zN, z1: AXIS.innerZ + SECOND.wallT / 2 };
-  stone.push(...slabAround(T, [FOOT.hall, FOOT.inner], top));
+  // (Under the walls the slab stops a hair short of their outer faces and of the side walls' ends, and it reaches a hair into the
+  // platforms it is cut round: on those planes it flickered against the walls' own faces and ends, #688.)
+  const into = (f) => ({ x0: f.x0 + 0.003, x1: f.x1 - 0.003, z0: f.z0 + 0.003, z1: f.z1 - 0.003 });
+  stone.push(...slabAround({ ...T, z0: T.z0 - 0.003, z1: T.z1 - 0.003 }, [into(FOOT.hall), into(FOOT.inner)], top));
   walk.decks.push({ ...T, h: top, floor: "stone" });
   // The three buildings (./gates.js): each on its own platform, which the slab is cut round; the hall's back steps lead down into
   // the court, the inner gate's front steps down into the way.
@@ -233,7 +236,8 @@ export function buildAxis(M, { C, W }) {
     mesh(merge(pstone), M.stone),
     mesh(merge(pstele), M.steleMono),
     mesh(merge(pwood), M.woodX),
-    mesh(merge([new THREE.ConeGeometry(PAV.eave * Math.SQRT2, PAV.roofH, 4, 1).rotateY(Math.PI / 4).translate(mx, ceil + 0.1 + PAV.roofH / 2, mz), new THREE.ConeGeometry(0.22, 0.6, 8).translate(mx, ceil + 0.1 + PAV.roofH + 0.25, mz)]), M.tile),
+    // (The roof is open underneath: its base lay on the ceiling plate's top, one face on another, #688.)
+    mesh(merge([new THREE.ConeGeometry(PAV.eave * Math.SQRT2, PAV.roofH, 4, 1, true).rotateY(Math.PI / 4).translate(mx, ceil + 0.1 + PAV.roofH / 2, mz), new THREE.ConeGeometry(0.22, 0.6, 8).translate(mx, ceil + 0.1 + PAV.roofH + 0.25, mz)]), M.tile),
   );
   walk.solids.push({ x0: M0.x0 - BODY, x1: M0.x1 + BODY, z0: M0.z0 - BODY, z1: M0.z1 + BODY, eyeTop: M0.y + PAV.base + PAV.column + 0.3 + PAV.beam + 0.1 + PAV.roofH + 0.85 });
   const L = LAMP, table = mesh(merge([box(L.w, L.h, L.d, L.x, L.y + L.h / 2, L.z)]), M.woodX);

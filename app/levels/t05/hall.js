@@ -62,6 +62,15 @@ export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 /** Which bays of the front are doors, which windows, which wall (ARCHITECTURE.md §4.2: three doors, four windows, the end bays walls). */
 export const FRONT = Object.freeze(["wall", "window", "window", "door", "door", "door", "window", "window", "wall"]);
 
+/**
+ * The great hall's doors in the first release (docs/t05/DECISIONS.md, 先行版关殿门, 2026-11-25): the three middle doors are shut, the seven Buddhas' faces
+ * (#701) not being ready. `shut: false` is the hall as it was and as it will be when #701 is done and the seven enter the level: the openings
+ * empty, the hall walked. `gap` is the width, in metres, of the slit left between a door's two leaves (0 = none); he is never let through it
+ * (a gap narrower than his body, and the openings are solids in the walk data while shut). The one place the switch lives: the plan, the
+ * baked floor, the views the checks walk and the tests all read it from here.
+ */
+export const HALL_DOORS = Object.freeze({ shut: true, gap: 0 });
+
 /** The gongyan board between the bracket sets: its thickness (the Yingzao Fashi, chapter 7: 1.2 cun of 3.12 cm = 3.7 cm) and how far behind the wall's outer face it stands. */
 export const BOARD = Object.freeze({ t: 0.037, back: 0.35 });
 
@@ -78,7 +87,7 @@ export const RIDGE = (() => { const EX = XS[XS.length - 1] + HALL.overhang, EF =
 export function buildHall(M) {
   const H = HALL, y0 = H.floor, top = y0 + H.column, X = XS[XS.length - 1], zB = ZS[ZS.length - 1];
   const wallIn = H.wall - H.out;   // how far the wall's inner face lies inside the column line
-  const ring = new Set(), plaster = [], wood = [], woodZ = [], dark = [], mural = [], walk = { solids: [], decks: [], posts: [] };
+  const ring = new Set(), plaster = [], wood = [], woodZ = [], dark = [], mural = [], leaves = [], ledges = [], iron = [], windowShade = [], walk = { solids: [], decks: [], posts: [] }, closed = [];
   /** The wall ring's timber (door and window frames, tie-beams, cap boards, bracket sets, the eave purlins) takes the walls' share of the sky, not the roof timber's (TIMBER.ring). */
   const rw = (/** @type {THREE.BufferGeometry} */ g) => { wood.push(g); ring.add(g); };
   // The hall's own floor, a thin course laid over the platform's top within the walls: the platform's top is one face from
@@ -109,14 +118,39 @@ export function buildHall(M) {
     const l = a + J, r = b - J, w = r - l;
     for (const [x0, x1] of [[a, l], [r, b]]) {
       rw(box(x1 - x0, head + J, FD + 0.04, (x0 + x1) / 2, y0 + (head + J) / 2, zFr));        // the jamb
-      plaster.push(box(x1 - x0, head + J, RD, (x0 + x1) / 2, y0 + (head + J) / 2, zRv));            // and the wall behind it
+      plaster.push(box(x1 - x0, head + J, RD - 0.02, (x0 + x1) / 2, y0 + (head + J) / 2, zRv - 0.01));   // and the wall behind it, up to the jamb's back (into it, their sides shared a plane, #688)
       solid(x0, x1, fz0, fz1);
     }
     rw(box(w, J, FD + 0.04, mid, y0 + head + J / 2, zFr));                                      // the head
-    plaster.push(box(w, J, RD, mid, y0 + head + J / 2, zRv));                                          // and the wall's soffit behind it
+    plaster.push(box(w, J, RD - 0.02, mid, y0 + head + J / 2, zRv - 0.01));                            // and the wall's soffit behind it
     along(a, b, zcF, head + J, H.column);                                                               // the wall over it
     if (kind === "door") {
       rw(box(w, H.door.sill, FD, mid, y0 + H.door.sill / 2, zFr));                               // the sill, under the frame
+      if (HALL_DOORS.shut) {
+        // Two plank leaves close the opening, set back in the reveal, their faces just behind the frame's (a leaf set deeper showed a 5 cm strip of the reveal's pale plaster down each jamb: the white hairline), with three ledges across them and a bar down
+        // the meeting stile; the written plan is told the opening is solid (the baked floor sees the leaves themselves).
+        const g = HALL_DOORS.gap, lw = (w - g) / 2, lz = zFr - FD / 2 - 0.07, lh = head - H.door.sill, y1 = y0 + H.door.sill, ly = y1 + lh / 2, zFace = lz + 0.06;
+        for (const s of [-1, 1]) {
+          const cx = mid + s * (g / 2 + lw / 2), x0 = mid + s * g / 2, x1 = x0 + s * lw;
+          leaves.push(box(lw + 0.1, lh, 0.12, cx + s * 0.05, ly, lz));   // (reaching 0.1 m into the reveal's plaster: a leaf flush with the jamb let a hairline of light round it)
+          for (const f of [0.18, 0.5, 0.82]) ledges.push(box(lw - 0.1, 0.16, 0.06, cx, y1 + lh * f, zFace + 0.03));   // three ledges across the planks
+          // The planks' joints: a shallow dark line every 0.36 m down each leaf (the art director's pass on the first picture: a leaf of plain brown board read as a wall), and the meeting stile, a dark seam that lets no light through.
+          const n = Math.round(lw / 0.36);
+          for (let k = 1; k < n; k++) dark.push(box(0.014, lh - 0.04, 0.01, x0 + s * (lw * k) / n, ly, zFace + 0.003));
+          dark.push(box(0.05, lh - 0.04, 0.02, x0, ly, zFace + 0.005));
+          // A ring on a boss at a grown man's breast, either side of the meeting stile, and rows of studs on the leaf (three rows of five between the ledges).
+          const rx = x0 + s * 0.34, ry = y1 + 1.35;
+          iron.push(new THREE.CylinderGeometry(0.075, 0.075, 0.03, 12).rotateX(Math.PI / 2).translate(rx, ry, zFace + 0.07), new THREE.TorusGeometry(0.1, 0.014, 6, 16).translate(rx, ry - 0.07, zFace + 0.095));
+          for (const f of [0.34, 0.66, 0.9]) for (let k = 0; k < 5; k++) iron.push(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 8).rotateX(Math.PI / 2).translate(x0 + s * (lw * (k + 0.5)) / 5 + s * 0.02, y1 + lh * f, zFace + 0.05));
+        }
+        // A dark fillet down each side where the leaf meets the jamb, so that no seam of the reveal's pale plaster shows between them from far off.
+        for (const s of [-1, 1]) dark.push(box(0.06, lh - 0.04, 0.05, mid + s * (w / 2 - 0.02), ly, zFace));   // (a little short at both ends: flush with the leaf's own top and foot it would be a pair of faces lying on one another, tools/flush-faces.mjs)
+        solid(l, r, fz0, fz1);
+        // The sill under a shut door is no step (nothing lies beyond it to step to), but the bake finds a foothold on its top and lets his shoes
+        // come up to its face: a strip before each door, as far out as his shoes reach (0.32 m) and a little more, is kept clear, so that he stands
+        // before the door and never half into the threshold (`pnpm run edges`, below the knee).
+        closed.push({ x0: a, x1: b, z0: fz1, z1: fz1 + 0.36, why: "the sill of a shut door: he stands before it, not on it (HALL_DOORS)" });
+      }
       walk.decks.push({ x0: l, x1: r, z0: zFr - FD / 2, z1: zFr + FD / 2, h: y0 + H.door.sill, floor: "wood" });
       walk.decks.push({ x0: l, x1: r, z0: fz0, z1: zFr - FD / 2, h: y0, floor: "stone" });             // the reveal's floor inside it
     } else {
@@ -124,6 +158,8 @@ export function buildHall(M) {
       along(l, r, zcF, 0, s); solid(l, r, fz0, fz1);
       rw(box(w, 0.2, FD + 0.04, mid, y0 + s + 0.1, zFr));                                        // the window's sill board
       for (let k = 0; k < n; k++) rw(box(0.1, wh, 0.1, l + ((k + 0.5) * w) / n, y0 + s + wh / 2, zFr));
+      // Shut: the low winter sun must not come through the bars onto the floor inside and show it from outside, a pale patch striped with the bars' shadows (the first review): an unseen sheet in the window casts the shadow of a closed window (site.js).
+      if (HALL_DOORS.shut) windowShade.push(box(w, wh, 0.02, mid, y0 + s + wh / 2, zFr - FD / 2 - 0.05));
     }
   });
   // The back wall, its middle bay a door kept shut (the way round behind the altar is not opened, PRD.md §1.5); the two end walls.
@@ -175,7 +211,15 @@ export function buildHall(M) {
     const put = (list, w, h, d, u, y, v) => list.push(ax ? box(w, h, d, u, y, v) : box(d, h, w, v, y, u));
     const list = { push: (/** @type {THREE.BufferGeometry} */ g) => { (ax ? wood : woodZ).push(g); ring.add(g); } };
     put(list, len, lt, 0.4, mid, top - lt / 2, face + out * 0.1);                       // the tie-beam, proud of the wall
-    put(list, len + 0.8, 0.2, H.wall + 0.3, mid, top + 0.1, at + out * (off - H.wall / 2 + 0.15));   // the cap board
+    // The cap board. Along the ends it is laid in pieces between and beyond the front and back boards, not through them, so that where
+    // they cross there is one top and one bottom: two faces on one plane flicker (#688).
+    const capAt = (o, f) => o + (o === ZS[0] ? 1 : -1) * (f - H.wall / 2 + 0.15), capD = H.wall + 0.3;
+    if (ax) put(list, len + 0.8, 0.2, capD, mid, top + 0.1, at + out * (off - H.wall / 2 + 0.15));
+    else {
+      const cuts = [capAt(ZS[0], H.front), capAt(zB, H.out)].map((c) => [c - capD / 2, c + capD / 2]).sort((p, q) => p[0] - q[0]);
+      let u0 = mid - (len + 0.8) / 2; const u1 = mid + (len + 0.8) / 2;
+      for (const [c0, c1] of [...cuts, [u1, u1]]) { if (c0 > u0 + 1e-6) put(list, Math.min(c0, u1) - u0, 0.2, capD, (u0 + Math.min(c0, u1)) / 2, top + 0.1, at + out * (off - H.wall / 2 + 0.15)); u0 = Math.max(u0, c1); }
+    }
     // The wall between the bracket sets is a thin board, as the Yingzao Fashi's gongyan boards are (chapter 7: BOARD.t, SOURCES.md),
     // set back behind the outer tiers so that the sets stand out from it; each set keeps a core of wood the wall's thickness deep, so
     // that its out- and in-reaching blocks read as one member. The board rises to the roof's underside over its own line (over the
@@ -190,13 +234,16 @@ export function buildHall(M) {
       put(mural, g1 - g0, wallUp - y0, 0.04, (g0 + g1) / 2, (y0 + wallUp) / 2, at - out * (H.wall - off + 0.05));
     }
     const sets = []; pos.forEach((p, i) => { sets.push(p); if (i < pos.length - 1) sets.push((p + pos[i + 1]) / 2); });
+    // (Along the ends every block is 6 mm less tall, 3 mm off top and bottom: at the corners the two sides' sets cross, and their
+    // tops and bottoms lay on one plane and flickered, #688.)
+    const shy = ax ? 0 : 0.006;
     for (const u of sets) {
       for (let k = 0; k < BR.tiers; k++) {                                               // out under the eave
         const o = BR.out[k], w = BR.w + 0.3 * k;
-        put(list, w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face + out * (o / 2 - 0.3 + 0.3));
+        put(list, w, BR.h * 0.85 - shy, o, u, cap + BR.h * (k + 0.5), face + out * (o / 2 - 0.3 + 0.3));
       }
-      put(list, BR.w, BR.h * BR.tiers * 0.85, T, u, cap + (BR.h * BR.tiers) / 2, face - out * (T / 2));   // the set's core, through the wall's depth
-      BR.inn.forEach((o, k) => put(list, BR.w, BR.h * 0.85, o, u, cap + BR.h * (k + 0.5), face - out * (T + o / 2)));   // and in over the floor
+      put(list, BR.w, BR.h * BR.tiers * 0.85 - shy, T, u, cap + (BR.h * BR.tiers) / 2, face - out * (T / 2));   // the set's core, through the wall's depth
+      BR.inn.forEach((o, k) => put(list, BR.w, BR.h * 0.85 - shy, o, u, cap + BR.h * (k + 0.5), face - out * (T + o / 2)));   // and in over the floor
     }
     const eaveBeamOut = BR.out[BR.tiers - 1] + 0.15, yE = cap + BR.h * BR.tiers - 0.05;
     put(list, len + 2 * eaveBeamOut, 0.3, 0.35, mid, yE, face + out * eaveBeamOut);        // the eave purlin the outermost tier carries
@@ -259,8 +306,9 @@ export function buildHall(M) {
   return {
     // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
     // not a box's own 0 to 1, which laid the damp line slanting across every wall (the diagonal band the art review saw).
-    parts: { plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
+    parts: { leaves, ledges, iron, windowShade, plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
     walk,
+    closed,
     columns,
     inner,
     // How much of the sky reaches a point: under the roof and inside the walls, little (the white box's stand-in for the
@@ -295,6 +343,7 @@ export function buildHall(M) {
     // threshold, then rising smoothly to FILL.depth metres in (PRD.md §2.1's "how far inside", its cheapest form).
     within: (x, y, z) => {
       const zF = ZS[0] + H.front, xIn = X + H.out - H.wall, zIn = zB - H.out + H.wall;
+      if (HALL_DOORS.shut) return 0;   // shut: the hall's own light stays out, so that the bars of a window show a deep dark and no grey block of a figure
       if (Math.abs(x) > xIn || z < zIn || z > zF + FILL.out || y < y0 - 0.5 || y > H.ridge) return 0;
       const t = Math.min(1, Math.max(0, (zF + FILL.out - z) / (FILL.out + FILL.depth)));
       return t * t * (3 - 2 * t);

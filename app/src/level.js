@@ -14,6 +14,12 @@ import t00 from "../levels/t00/level.js";
  * What a level hands the engine.
  * @typedef {object} Level
  * @property {string} id the folder's name under app/levels/, and the name of its baked floor (shared/walk/<id>.bin)
+ * @property {string} [name] the temple's name, in Chinese, as a photograph, a saved file and a share sheet say it (temple.js; the locale tables translate it); the prologue's when left out
+ * @property {Record<string, string>} [names] the name in the other languages (ja, en, ko), kept with the level so that a build that does not list the level carries none of it; the prologue's are lines of the locale tables
+ * @property {boolean} [cardLink] false: a photograph's card, a film's mark and the picture handed to the share sheet carry no address or code of the public page (T05: that page has no T05 yet, so a scan would walk the reader into the prologue). Left out, they carry it, as the prologue's always did
+ * @property {boolean} [ownVerse] true: a photograph prints only the verse this level itself gives its season and hour (`moodFor`'s `line`), and none where it gives none; left out, the hours' own verse (T05: no bamboo, no summer rain)
+ * @property {boolean} [book] the level keeps the book of seals (the small seal at the top left, the way to the next place, the key B): the prologue. Left out, those are hidden (`body.nobook`), not drawn for this level (T05's first release has no seals)
+ * @property {string} [seal] the two characters its seal is cut with, as PLACES has them
  * @property {(M: any) => any} build builds the place (buildSite)
  * @property {(site: any) => any} createWalker the walker of the written plan, which the baked floor's walker wraps
  * @property {(x: number, z: number) => number} land the height of the land outside the walls (the plan's terrain)

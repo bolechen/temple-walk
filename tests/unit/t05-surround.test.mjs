@@ -15,7 +15,8 @@ import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker, COMPOUND } = await import("../../app/levels/t05/site.js");
 const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE, SHED_RISE, WALL_TONES, WALL_AT_ARRIVAL, house } = await import("../../app/levels/t05/surround.js");
 const { HALL_HALF, LANE, SECOND } = await import("../../app/levels/t05/axis.js");
-const { HALL } = await import("../../app/levels/t05/hall.js");
+const { HALL, HALL_DOORS } = await import("../../app/levels/t05/hall.js");
+const SHUT = HALL_DOORS.shut;   // (the great hall's doors are shut in the first release: station F, inside it, cannot be judged, DECISIONS.md 先行版关殿门)
 const { default: checks } = await import("../../app/levels/t05/checks.js");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
@@ -53,7 +54,7 @@ function share(place, bearing, span = 30) {
   const n = out + sky + own; return { out, sky, own, free: (out + sky) / n, fill: out / Math.max(1, out + sky) };
 }
 const PLACES = Object.fromEntries(checks.horizon.places.map((p) => [p[0].replace(/^station /, ""), p]));   // (the table is the level's own, from PLAN.md item 11: the arrival, the axis's three passages and the six stations, each 1.6 m over its floor)
-const JUDGED = { arrival: ["east", "south", "west"], A: ["east", "west"], B: ["east", "west"], C: ["east", "south", "west"], F: ["south"] };   // (what the issue asks for: the arrival east, south and west, A and B east and west, C and F south)
+const JUDGED = { arrival: ["east", "south", "west"], A: ["east", "west"], B: ["east", "west"], C: ["east", "south", "west"], F: SHUT ? [] : ["south"] };   // (what the issue asks for: the arrival east, south and west, A and B east and west, C and F south)
 const BEARING = { east: 90, south: 180, west: 270 };
 
 test("over the wall tops, 0.5° to 3° up, 40% to 80% of what is not the temple's own is the town's: from the arrival east, south and west, A and B east and west, C and F south", () => {
@@ -66,7 +67,7 @@ test("over the wall tops, 0.5° to 3° up, 40% to 80% of what is not the temple'
     assert.ok(s.fill >= 0.4, `${name} ${dir}: ${(s.fill * 100).toFixed(0)}% of the band over the wall is the town's, under the 40% the art director set`);
     assert.ok(s.fill <= 0.8, `${name} ${dir}: ${(s.fill * 100).toFixed(0)}% is the town's, over the 80% (a hedge, not a band of trees)`);
   }
-  assert.equal(table.length, 11, table.join("\n"));
+  assert.equal(table.length, SHUT ? 10 : 11, table.join("\n"));
 });
 
 test("the great hall's eave line is kept where the roof stands (all of cam01's picture, within 12° of the axis in cam07's), no tree is over 13 m, and the trees beside the hall (z < +15) stand no higher than 10 m", () => {

@@ -1,0 +1,126 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 283784,
+   "sha256": "b2fb64310bf7707184817b21ae1ee4f7e9f7b20a795c3f56b3ce22a5829cc2fd",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-cam03-winter.png",
+   "bytes": 1149002,
+   "sha256": "854435f56d72a30f2e53d4899283477ed47fdc1ecf68396a2d635cd97021614a",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-front4-kanakamuni.png",
+   "bytes": 705978,
+   "sha256": "b32b47be6ecdda7d4c22ab8075faa9f200f1406f33860b6cacba9cf2090ee877",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-front4-krakucchanda.png",
+   "bytes": 619270,
+   "sha256": "e303cf9b091ef38f0f844b00fc9aa1c42da483c6748e2552a6895b7fe6ad034e",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-front4-vipasyin.png",
+   "bytes": 680618,
+   "sha256": "a6a10b16666c2399796727764990774a28e0bbf860ff9c19084b063109d60d4e",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-front4-visvabhu.png",
+   "bytes": 634704,
+   "sha256": "77bdcdef58caa79062b1e50a5d3d340bbf758b3f1a4906603c3a80c6310f79c8",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-mid10-kanakamuni.png",
+   "bytes": 846275,
+   "sha256": "ad2858234d996f86bcd46fae2ad95a98602b5bd0de9dc926559da9219616c167",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-mid10-krakucchanda.png",
+   "bytes": 791705,
+   "sha256": "367c66a0ba638c35bb768a911cd58d792727d12cd155c4c94fbdbf87390cd635",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-mid10-vipasyin.png",
+   "bytes": 896080,
+   "sha256": "00fb4e054eccdebf7f44cb0ceee2d704629d2cc3edbb9a488ba3200af6a81826",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/L2-lips-mid10-visvabhu.png",
+   "bytes": 855895,
+   "sha256": "5b394b7faf74740e55ffcdfd6c4f423ebdc67249bb904894704ec107801612c2",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/cam03-mouths.jpg",
+   "bytes": 98714,
+   "sha256": "c8231f0c9e130bf0abf25f42c8163a3523657d3bd554f3a01f8d136352df045b",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-cam03-winter.png",
+   "bytes": 1148651,
+   "sha256": "75d7c1037544cef6b772150e0166d17e6bb58d4fae73bae2ffbf23f658bd9dac",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-front4-kanakamuni.png",
+   "bytes": 688674,
+   "sha256": "2d809d4dc08654ab7d904316d174289bc875045ce7f03e2d545353a7ad282b04",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-front4-krakucchanda.png",
+   "bytes": 598710,
+   "sha256": "7a9db956a989dafdd0e5354fe3fd3e77fb81629f4d7b90345fc18664f0213809",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-front4-vipasyin.png",
+   "bytes": 682333,
+   "sha256": "75658139e43b1e8f80eb7a1a7c638064b9f089669907766d36f137c6bf9e7a4d",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-front4-visvabhu.png",
+   "bytes": 620228,
+   "sha256": "93a9892ca0b9b78a6fb2187e56020c90c6d23a150bae22ccf6c190d67c1a0cfe",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-mid10-kanakamuni.png",
+   "bytes": 853173,
+   "sha256": "3ce6341d70b470a9f4939fe0133183bfdbaae3796662582e601e5b5662a0b5c4",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-mid10-krakucchanda.png",
+   "bytes": 794338,
+   "sha256": "cb1fdb5900027909f9880613f1b3472734881e184888e74f8050a3730fc61842",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-mid10-vipasyin.png",
+   "bytes": 898167,
+   "sha256": "967ae47cdb91ab44d7cc619635d9291a837c79aa20bce5e87360dff4047fec59",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  },
+  {
+   "path": "png/r3c-lips-mid10-visvabhu.png",
+   "bytes": 864613,
+   "sha256": "c780d00046e8e90b2a06c599cb590a14344797f9134f71e78e0ccc102fe759f1",
+   "rev": "6453b279b3a57666931c28b3270165edba55767e"
+  }
+ ]
+}
