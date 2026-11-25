@@ -116,11 +116,16 @@
 - `tools/novice-sit-iou.mjs`（`novice-sit-ref.mjs` 抠设定图，存 `refs/monk-v6-sit/`）、`tools/novice-sit-collage.py`、`tools/novice-posehash.mjs`（每个姿势每个部件的点哈希，用来证明站姿没动）、`tools/review-sheet.cjs sit:@<n>`（坐到第 n 个座位）、`tools/novice-views.cjs` 的 `坐下途中`。
 - 改了站姿手以后要重量他的外廓：`node tools/walk/outline.mjs`，否则 CI 的 walk-bake 测试红。
 
+### 美术初审之后（`9fa4b32`）
+
+- 拇指：`LAP_HAND.thumb` 的 `root`（左右各自从掌的上下起）、`lean`（向前倾）、`gap`；腕球 `LAP_HAND.wrist`。手怎么放（`layHands`）很敏感：小腹前的布很陡，手往里挪半毫米就高 4 毫米，几条单测（离小腹 ≤3 厘米、两手中心、左腕不高出肘太多、侧面 IoU）互相顶着，动 `LAP_HAND.x/z` 要整套 `monk-sit.test.mjs` 一起看。
+- 坐下：`DRAPE`（布）先、`LEG_FOLD`（腿）后；单测「sitting down, his knees never come out」逐帧量。只让布大幅领先会变成一口钟浮在半空、直腿吊在下面，别那样调。
+- 袍摆：`LAP.droop` 再大，IoU 的比例尺（头顶到最低的下摆）就跟着变，侧面会掉到 0.90 以下。
+- 页面里逐帧拍坐下：不能用 `?shot=1`（时间停住）；在页面里每个 rAF 把画布抄到 2D 画布上量（做法见证据说明的 `page-sitting-down-9fa4b32`）。
+
 ### 还不像的（按影响大小）
 
 1. 腿面上看不出两个膝头（设定图两膝各有一个鼓包）。
-2. 袖子下后角还有点尖。
-3. 坐下途中有一两帧膝头探出袍外。
-4. 侧面 IoU 0.9005，刚过线；动腿或布之前先跑 `node tools/novice-sit-iou.mjs`。
-5. 袍子在两膝处搭出蒲团边几厘米；设定图的蒲团按比例大约 13%，放大蒲团不在这个 PR。
-6. 取笠没有手的动作。
+2. 侧面 IoU 0.901，刚过线；动腿或布之前先跑 `node tools/novice-sit-iou.mjs`。
+3. 袍子在两膝处搭出蒲团边几厘米；设定图的蒲团按比例大约 13%，放大蒲团不在这个 PR。
+4. 取笠没有手的动作。

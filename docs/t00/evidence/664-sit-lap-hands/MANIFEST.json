@@ -9,6 +9,18 @@
    "rev": "6044c31e05043698c629bcc73c706b2baa0a3891"
   },
   {
+   "path": "hands-8a1bfa2-same-views.jpg",
+   "bytes": 134606,
+   "sha256": "edac5a885bb4c18308044bcddb1f27ac80e642c2d269adde9f4339f3b62c02ff",
+   "rev": "826782d337ed498affc4fa41184dd174bc5676a6"
+  },
+  {
+   "path": "hands-9fa4b32.jpg",
+   "bytes": 134108,
+   "sha256": "fb2a69fde721ab3de5da016351854c40f8b1a1a03feaddf1c9616eedae3f0f45",
+   "rev": "826782d337ed498affc4fa41184dd174bc5676a6"
+  },
+  {
    "path": "hands-ff80fe8.jpg",
    "bytes": 129884,
    "sha256": "fa69fe886ed8654354f01eef5319cf263ea946e47a77c8eed0bafcc6a1b080c1",

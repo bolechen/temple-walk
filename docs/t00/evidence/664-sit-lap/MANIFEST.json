@@ -33,6 +33,24 @@
    "rev": "7432b1c684c90a919a569aa1005a75850c37c524"
   },
   {
+   "path": "hem-8a1bfa2.jpg",
+   "bytes": 102952,
+   "sha256": "fbbea7db45c3dd020cdd9f32a2ef3bc2d7902bcc74a39c41b96993995035c525",
+   "rev": "ba890343327aa264f15c8036648552f02b29df59"
+  },
+  {
+   "path": "hem-9fa4b32.jpg",
+   "bytes": 103099,
+   "sha256": "06523cb9aef7f07e95711ebf033865482f7674087ef80214e71664480e267b2e",
+   "rev": "ba890343327aa264f15c8036648552f02b29df59"
+  },
+  {
+   "path": "page-sitting-down-9fa4b32.jpg",
+   "bytes": 480507,
+   "sha256": "a0b754793dbf5e6719572d403adb8f9b3ebcf06bd336756175022688f399138d",
+   "rev": "ba890343327aa264f15c8036648552f02b29df59"
+  },
+  {
    "path": "review-shot-sit-8a1bfa2.png",
    "bytes": 2861749,
    "sha256": "84d899b55cf3b219470a663d83a727a604e905c916c5991ed357dfd6e96aad96",
@@ -97,6 +115,24 @@
    "bytes": 110663,
    "sha256": "00a2d5a28c1e7b850b6f11664baeb199bd1e0147484582d723d50b39d8d81bfb",
    "rev": "3c57323d9586cd3bfa23931b6269ab602aa19978"
+  },
+  {
+   "path": "sitting-down-9fa4b32.jpg",
+   "bytes": 146209,
+   "sha256": "2453738134c7109bc0068fba6a7b4f57eb34799c14e126fc8cadf77fad771774",
+   "rev": "ba890343327aa264f15c8036648552f02b29df59"
+  },
+  {
+   "path": "sleeve-8a1bfa2.jpg",
+   "bytes": 75371,
+   "sha256": "d38555053c0553a01dea4dcefd0113342c3a6b943875220ed38c7ce160eb17f4",
+   "rev": "ba890343327aa264f15c8036648552f02b29df59"
+  },
+  {
+   "path": "sleeve-9fa4b32.jpg",
+   "bytes": 75704,
+   "sha256": "a5d22a2a3816e4861fef76973fdfe3fd80a5bd68acacb9872996e376879c0df2",
+   "rev": "ba890343327aa264f15c8036648552f02b29df59"
   },
   {
    "path": "t4-shot-sit-autumn-dusk.png",
