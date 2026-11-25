@@ -41,13 +41,13 @@ export const HALL = Object.freeze({
 });
 /**
  * The fill under the roof while he is inside (white box), in two kinds, each the level it reaches once he is well in:
- * `door`, the light the doors and windows let in, two wide spots just inside the front wall turned to the altar and the back
- * wall, so that the front wall's inner face, which the light comes through, is the darkest in the hall (with lamps hung
- * overhead before it, the band over the doors' heads read 2.4 times the back wall, #493); `up`, the timber's light, as the
+ * `door`, the light the doors and windows let in, two spots standing for it: before the hall and a little above the seven's
+ * faces, turned down onto their upper bodies, so that the light on a face comes from in front and above, as daylight does
+ * (#754: from the doors' own height it struck faces 11 m up from below). They cast no shadow, so the front wall does not
+ * stop them, and its inner face, looking away, takes none of their light (#493); `up`, the timber's light, as the
  * light the doors lay on the floor goes up into the frame: three narrow spots half a metre under the floor over the
- * worship band, turned up into the roof (`upAim`, the z each is turned to at `upY` over the floor: the side two lean only a
- * metre north, so that the edge of their light reaches the front wall's inner face over the doors, the middle one three
- * metres, to the figures). A lamp hung in the air under this roof is close to something wherever it hangs, the beams' undersides 9–10 m
+ * worship band, turned straight up into the roof, narrow enough that the seven stand outside them (#754: wider and leaning
+ * north, they lit the figures from below). A lamp hung in the air under this roof is close to something wherever it hangs, the beams' undersides 9–10 m
  * up and the boards 15–19: at 13 m it laid a spot on the boards over station E, at 9 m on the beams and the figures (#549,
  * the art director's review of #554). Under the floor the nearest lit face is the beams', more than 9 m off. Then over how many metres before
  * the threshold it starts and how far in it is whole, and how fast the eye takes it (seconds to cover about two thirds of
@@ -56,7 +56,8 @@ export const HALL = Object.freeze({
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
 export const TIMBER = Object.freeze({ ring: 2.2, lift: 10.5, beam: 9.5, board: 1.0, from: 3.0, to: 4.5 });
 export const FILL = Object.freeze({
-  door: 45, up: 105, upDist: 21, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-9, -11, -9], upAngle: 0.85, out: 9, depth: 3, ease: 0.5,
+  door: 160, doorX: [-8, 8], doorY: 14, doorZ: 8, doorAimX: [-6, 6], doorAimY: 10.5, doorAimZ: -16.9, doorDist: 42, doorAngle: 0.5,
+  up: 105, upDist: 21, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-8, -8, -8], upAngle: 0.5, out: 9, depth: 3, ease: 0.5,
 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
@@ -337,7 +338,7 @@ export function buildHall(M) {
     // colour, aim]: a spot where an aim is given, a lamp otherwise; the intensity is what it reaches once he is well
     // inside; from the court it is out, so that the doorway reads dark (`within` below, and the site's tick, raise it).
     fill: [
-      ...[-10, 10].map((x) => [x, y0 + 6, ZS[0] + H.front - H.wall - 0.55, FILL.door, 34, 0xfff4e8, [x * 0.9, y0 + 4, zB + 1]]),
+      ...FILL.doorX.map((x, i) => [x, y0 + FILL.doorY, FILL.doorZ, FILL.door, FILL.doorDist, 0xfff4e8, [FILL.doorAimX[i], y0 + FILL.doorAimY, FILL.doorAimZ], FILL.doorAngle]),
       // (the timber's light, from under the floor: three narrow spots turned up into the frame over the worship band, as the light the doors lay on the floor goes up into it)
       ...FILL.upX.map((x, i) => [x, y0 - 0.5, FILL.upZ, FILL.up, FILL.upDist, 0xfff4e8, [x, y0 + FILL.upY, FILL.upAim[i]], FILL.upAngle]),
     ],

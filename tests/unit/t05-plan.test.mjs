@@ -218,17 +218,19 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
   assert.ok(FILL.door > 0 && FILL.up > 0 && FILL.depth > 0 && frames > 0);
 });
 
-test("the fill comes from the doors and from under the floor: none of it hung before the front wall, none in the air under the roof (#493, #549)", async () => {
-  const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
+test("the fill comes from the doors and from under the floor: the openings' light from before the hall and above, none in the air under the roof (#493, #549, #754)", async () => {
+  const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR, FIGURES, SEAT } = await import("../../app/levels/t05/altar.js");
   const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
   assert.ok(h.fill.length <= 5, "no more lights than the five of #549 (each is in every shader, outdoors too)");
   assert.ok(h.fill.every((f) => f[6]), "every one a spot, turned somewhere: no lamp lights the whole room");
   const doors = h.fill.filter((f) => f[1] > y0), up = h.fill.filter((f) => f[1] < y0);
   assert.equal(doors.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
+  // The openings' light (#754): it stands for the daylight the doors and windows let in, so it comes from before the hall and a little above
+  // the faces (y0 + 10.5 to 11.5 m), turned down onto the figures; from inside the hall the front wall's inner face looks away from it.
   for (const [x, y, z, , , , aim] of doors) {
-    assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X, `a door's light stands just inside the front wall (${x}, ${z.toFixed(2)})`);
-    assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar and the back wall, so the front wall takes none of it");
-    assert.ok(y > y0 + 3 && y < y0 + 8, "at about the height of the doors' middle");
+    assert.ok(z > zf && z < zf + 12 && Math.abs(x) < X, `a door's light stands before the hall (${x}, ${z.toFixed(2)})`);
+    assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar");
+    assert.ok(y > aim[1] && y > y0 + 11, "above the faces and turned down at them, so the light comes from in front and above, not from below");
   }
   // The timber's light comes from under the floor over the worship band, narrow and turned up: a light hung in the air under this roof is close to
   // the beams (9–10 m) or the boards (15–19 m) wherever it hangs, and laid a bright spot on one of them (#549: 30 L* at 13 m, the beams at 9 m).
@@ -237,6 +239,12 @@ test("the fill comes from the doors and from under the floor: none of it hung be
     assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3 && z < zf - 3 && Math.abs(x) < X - 3, `under the floor, over the worship band (${x}, ${z})`);
     assert.ok(aim[1] > y0 + 10 && Math.hypot(aim[0] - x, aim[2] - z) < 0.3 * (aim[1] - y), "turned up into the roof, leaning no more than a few degrees");
     assert.ok(angle <= 1, "a narrow spot, so that the walls stand outside it");
+    // and the seven stand outside it (#754): lit from under the floor their faces read upside down, chin and nose bright, and the lotus glared
+    const axis = [aim[0] - x, aim[1] - y, aim[2] - z], n = Math.hypot(...axis);
+    for (const f of FIGURES) for (const fy of [y0 + ALTAR.h + 2.5, y0 + 10.5]) {
+      const v = [f.x - x, fy - y, SEAT.z - z], c = (v[0] * axis[0] + v[1] * axis[1] + v[2] * axis[2]) / (n * Math.hypot(...v));
+      assert.ok(Math.acos(c) > angle, `the figure at x ${f.x} stands outside the timber's light from (${x}, ${z})`);
+    }
   }
   for (const [, , , i, d] of h.fill) assert.ok(i > 0 && d > 0);
   assert.ok(FILL.door > 0 && FILL.up > 0);
