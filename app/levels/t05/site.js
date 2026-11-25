@@ -14,6 +14,7 @@ import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 import { buildTower } from "./tower.js";
 import { buildSurround } from "./surround.js";
+import { dryMaterials } from "./dry.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
  * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
@@ -171,7 +172,7 @@ export function buildSite(M) {
   const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
   if (!offTower) root.add(buildTower());
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
-  const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
+  const land = mesh(merge(earth), dryMaterials(M).earth, { cast: false }); land.userData.walk = false; root.add(land);
 
   const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }, { name: "大雄殿", ...hall.box, y: top }, ...ax.buildings];
   // Named views (shots.js draws each): the arrival, the two stations, and the court seen from the terrace.
