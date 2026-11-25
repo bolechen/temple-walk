@@ -8,7 +8,7 @@
 //                                       robe hides; and the ruler's readings in metres; and a verdict on the two things #664 turned on
 // usage: node tools/review-sheet.cjs <what> [--out=<dir>] [--tag=<text>] [--size=WxH] [--season=<s>] [--time=<t>] [--q=low|medium|high]
 //   <what> is a view name of the plan (`shot-sit`, as `?show=` takes), `sit:<hall>` (the first cushion or stool in that room, sat
-//   on), or `rite:<id>` (an observance's pose, `__poseRite`, the clock held still). TEMPLE_SITE=<dir> names a site already built
+//   on; `sit:@<n>` the n-th of all the seats, __seats[n], for one out of doors), or `rite:<id>` (an observance's pose, `__poseRite`, the clock held still). TEMPLE_SITE=<dir> names a site already built
 //   (otherwise tools/site.cjs builds dist/ first). The workbench hook `__review` (app/src/review.js) is asked for with `?review=1`
 //   on a preview's host name, so it is never in a visitor's page.
 const { chromium } = require("playwright");
@@ -19,7 +19,7 @@ const what = process.argv.slice(2).find((a) => !a.startsWith("--"));
 if (!what) { console.error("usage: node tools/review-sheet.cjs <view | sit:<hall> | rite:<id>> [--out=dir] [--tag=x]"); process.exit(2); }
 const out = path.resolve(arg("out", path.join(__dirname, "out", "review-sheet"))), tag = arg("tag", ""), [W, H] = arg("size", "960x540").split("x").map(Number);
 const season = arg("season", "summer"), time = arg("time", "day"), q = arg("q", "medium");
-const name = what.replace(/[:@]/g, "_") + tag;
+const name = what.replace(/[:@]/g, "_") + tag;   // (sit:@4 → sit__4)
 // ids and the scene's lines are read without the finish that would tint the flat colours
 const OFF = "gtao,halation,lut,dof,layers,bloom,leafshadow";
 
@@ -39,7 +39,8 @@ const OFF = "gtao,halation,lut,dof,layers,bloom,leafshadow";
   const frames = (n) => p.evaluate((n) => new Promise((r) => { let i = 0; const f = () => (++i >= n ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
   const meta = { what, commit: await p.evaluate(() => window.__version?.().commit), body: await p.evaluate(() => window.__yard().body) };
   if (kind === "sit") {
-    const i = await p.evaluate((room) => window.__seats.findIndex((s) => s.room === room), rest);
+    // `sit:<hall>` the first seat in that room; `sit:@<n>` the n-th of all the seats (__seats), e.g. one out of doors
+    const i = rest.startsWith("@") ? +rest.slice(1) : await p.evaluate((room) => window.__seats.findIndex((s) => s.room === room), rest);
     if (i < 0) throw new Error(`no seat in ${rest}`);
     await p.evaluate((i) => window.__sit(i), i);
     // seated: the walk to it and the sitting down are done when he has stopped and the pose has settled
