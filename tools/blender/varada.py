@@ -10,6 +10,7 @@
 # scaled to Sakyamuni's hand length times target.scale and turned target.turn_deg about its own axis (so the two figures
 # do not show the same hand). Writes <out>/hand.glb (stage frame) and <out>/hand.json (where everything came from).
 import bpy, bmesh, sys, os, json, math, hashlib
+from collections import defaultdict
 import numpy as np
 from mathutils import Vector, Matrix
 args = [a for a in sys.argv[1:] if not a.startswith("--")]; opt = dict((a[2:].split("=", 1) + [True])[:2] for a in sys.argv[1:] if a.startswith("--"))
@@ -359,6 +360,14 @@ if Kn.get("mode") == "surface":
   lay = binary_closing(lay, iterations=2) if Kn.get("blur") else binary_opening(lay, iterations=2); lab_, nl_ = _lab(lay)
   if nl_ > 1: sizes = np.bincount(lab_.ravel()); sizes[0] = 0; lay = lab_ == sizes.argmax()
   core = lay & inbox_ & (distance_transform_edt(lay) * gs > sk)
+  WELD = Kn.get("weld")
+  if WELD:
+    # (#578, the closed knee: the sheet is laid only in the hole the robe is cut open to, and its edge is welded to the robe's
+    # cut edge by a band of triangles between the two, so that nothing is sunk under the robe and the figure stays one closed
+    # surface. The hole is the core, cleaned to one piece without thin branches or islands)
+    from scipy.ndimage import binary_opening as _bo, binary_fill_holes as _bf
+    core = _bf(_bo(core, iterations=WELD.get("open", 1))); lab2, n2 = _lab(core)
+    if n2 > 1: sz2 = np.bincount(lab2.ravel()); sz2[0] = 0; core = lab2 == sz2.argmax()
   dcore = distance_transform_edt(~core) * gs; tt_ = np.clip(dcore / sk, 0, 1); GZ = GZ - tk * tt_ * tt_ * (3 - 2 * tt_)
   if Kn.get("innerTuck"):
     # (on the inner side the sheet's border goes `innerTuck` metres under the robe beside it, which then lies over it, so
@@ -377,11 +386,14 @@ if Kn.get("mode") == "surface":
       hit = tree_s.ray_cast(Vector(o_), Vector(d_), 2.5)
       if hit[0] is not None and GZ[j_, i_] > 2.5 - hit[3] - Kn["skirtUnder"]: GZ[j_, i_] = 2.5 - hit[3] - Kn["skirtUnder"]; nsk += 1
     log["knee_skirt_pushed_under"] = nsk
+  if WELD: lay = core.copy()
   ci = np.clip(np.round((fc0[cand, 0] - xs[0]) / gs).astype(int), 0, len(xs) - 1); cj = np.clip(np.round((fc0[cand, 1] - ys[0]) / gs).astype(int), 0, len(ys) - 1)
   incore = core[cj, ci]; inlay = lay[cj, ci]
   # inside the core everything in front of the knee goes; in the band where the sheet's edge is sunk under the figure's
   # own surface, only what stands in front of the sheet (it would show as a patch over it)
-  gone_f = cand[(incore & (fc0[cand, 2] > GZ[cj, ci] - Kn.get("behind", 0.08))) | (inlay & ~incore & (fc0[cand, 2] > GZ[cj, ci] + Kn.get("front", 0.003)))]
+  if WELD: gone_f = cand[incore & (fc0[cand, 2] > GZ[cj, ci] - Kn.get("behind", 0.08))]
+  else: gone_f = cand[(incore & (fc0[cand, 2] > GZ[cj, ci] - Kn.get("behind", 0.08))) | (inlay & ~incore & (fc0[cand, 2] > GZ[cj, ci] + Kn.get("front", 0.003)))]
+  delv = {v for i in gone_f for v in bm.faces[i].verts}
   bmesh.ops.delete(bm, geom=[bm.faces[i] for i in gone_f], context="FACES")
   bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
   # scraps left round the box (pieces of fewer than `island` faces within `skirt` of it) go too
@@ -400,6 +412,9 @@ if Kn.get("mode") == "surface":
   bmesh.ops.delete(bm, geom=list(set(small)), context="FACES"); bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
   # the knee's front laid in as a regular sheet over the box and `skirt` metres past it, its border sunk `tuck` metres
   # behind the surface so the figure's own faces round the box lie over it and no edge shows
+  if WELD:
+    from scipy.ndimage import binary_erosion as _be
+    lay = _be(core, iterations=WELD.get("band_cells", 1))
   nx = len(xs); gv = {}
   def node(j, i):
     if (j, i) not in gv: gv[(j, i)] = bm.verts.new(Vector(to_blender(inv(np.array([[xs[i], ys[j], GZ[j, i]]])))[0]))
@@ -409,6 +424,82 @@ if Kn.get("mode") == "surface":
     for i in range(nx - 1):
       if lay[j, i] and lay[j, i + 1] and lay[j + 1, i + 1]: bm.faces.new([node(j, i), node(j, i + 1), node(j + 1, i + 1)]); nf += 1
       if lay[j, i] and lay[j + 1, i + 1] and lay[j + 1, i]: bm.faces.new([node(j, i), node(j + 1, i + 1), node(j + 1, i)]); nf += 1
+  def _weld_knee(bm, gv, delv, gone_f):
+    bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); bm.faces.ensure_lookup_table(); bm.normal_update()
+    def _cycles(es):
+      adj = defaultdict(list)
+      for e in es: adj[e.verts[0]].append(e.verts[1]); adj[e.verts[1]].append(e.verts[0])
+      seen_ = set(); loops_ = []; odd_ = []
+      for v0 in adj:
+        if v0 in seen_: continue
+        comp, stk = [], [v0]; seen_.add(v0)
+        while stk:
+          u = stk.pop(); comp.append(u)
+          for w in adj[u]:
+            if w not in seen_: seen_.add(w); stk.append(w)
+        if all(len(adj[u]) == 2 for u in comp):
+          order = [comp[0]]; prev = None; cur = comp[0]
+          while True:
+            nxt = [w for w in adj[cur] if w is not prev][0]
+            if nxt is order[0] or len(order) > len(comp): break
+            order.append(nxt); prev, cur = cur, nxt
+          loops_.append(order)
+        else: odd_.append(len(comp))
+      return loops_, odd_
+    # the rim: the robe's open edges round the hole, in the region of the hole (its points and three rings of neighbours).
+    # A face with two open edges is a spur and goes; where two open edges meet at a point that is not a spur's, the smaller face
+    # there goes; until every open edge of the region is on a simple loop
+    region = {v for v in delv if v.is_valid}
+    for _ in range(3):
+      region |= {w for v in list(region) if v.is_valid for e in v.link_edges for w in e.verts}
+    pinched = 0
+    for _ in range(60):
+      kill = set()
+      rim_e = [e for e in bm.edges if e.is_boundary and all(v in region and v.is_valid for v in e.verts)]
+      cnt = defaultdict(int)
+      for e in rim_e:
+        for v in e.verts: cnt[v] += 1
+      for f in {f for e in rim_e for f in e.link_faces}:
+        if sum(1 for e in f.edges if e.is_boundary) >= 2: kill.add(f)
+      if not kill:
+        for v in [v for v, c in cnt.items() if c > 2]:
+          fs = [f for f in v.link_faces if any(ee.is_boundary for ee in f.edges)]
+          if fs: kill.add(min(fs, key=lambda f: f.calc_area()))
+      if not kill: break
+      bmesh.ops.delete(bm, geom=list(kill), context="FACES"); pinched += len(kill)
+      bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
+      bm.verts.ensure_lookup_table(); bm.edges.ensure_lookup_table(); bm.faces.ensure_lookup_table()
+      region = {v for v in region if v.is_valid}
+    rim_e = [e for e in bm.edges if e.is_boundary and all(v in region and v.is_valid for v in e.verts)]
+    rim_loops, rim_odd = _cycles(rim_e)
+    in_e = [e for e in bm.edges if e.is_boundary and all(v in {w for w in gv.values()} for v in e.verts)]
+    in_loops, in_odd = _cycles(in_e)
+    bm.normal_update(); bands = 0
+    if rim_loops and in_loops:
+      A = max(rim_loops, key=len); B = max(in_loops, key=len); pa = np.array([v.co[:] for v in A]); pb = np.array([v.co[:] for v in B])
+      def turn(q): q = q[:, [0, 2]] - q[:, [0, 2]].mean(0); return np.sum(q[:-1, 0] * q[1:, 1] - q[1:, 0] * q[:-1, 1])
+      if turn(pa) * turn(pb) < 0: B = B[::-1]; pb = pb[::-1]
+      # the start of the second loop that makes the two lengths' squared gaps least over the whole walk
+      def walk_cost(j0):
+        Bj = np.roll(pb, -j0, axis=0); t = np.linspace(0, 1, len(pa), endpoint=False); u = np.linspace(0, 1, len(Bj), endpoint=False)
+        idx = (np.searchsorted(u, t) % len(Bj)); return float(np.sum((pa - Bj[idx]) ** 2))
+      js = list(range(0, len(pb), max(1, len(pb) // 60))); j0 = min(js, key=walk_cost)
+      B = B[j0:] + B[:j0]
+      n, m = len(A), len(B); i = j = 0; tris = []
+      while i < n or j < m:
+        a0, a1, b0, b1 = A[i % n], A[(i + 1) % n], B[j % m], B[(j + 1) % m]
+        adv_a = j >= m or (i < n and (i / n) <= (j / m))   # advance whichever is behind in arc fraction
+        if adv_a: tris.append((a0, a1, b0)); i += 1
+        else: tris.append((b0, b1, a0)); j += 1
+      for t in tris:
+        q = np.array([v.co[:] for v in t]); nn = np.cross(q[1] - q[0], q[2] - q[0]); ref = np.zeros(3)
+        for u_, w_ in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
+          e = bm.edges.get((u_, w_))
+          if e is not None and e.link_faces: ref = ref + np.array(e.link_faces[0].normal[:])
+        try: bm.faces.new(list(t) if nn @ ref >= 0 else [t[0], t[2], t[1]]); bands += 1
+        except ValueError: pass
+    return {"rim_loops": [len(l) for l in rim_loops], "rim_not_simple": rim_odd, "inner_loops": [len(l) for l in in_loops], "inner_not_simple": in_odd, "pinch_faces_removed": pinched, "band_faces": bands, "hole_faces": int(len(gone_f))}
+  if WELD: log["knee_weld"] = _weld_knee(bm, gv, delv, gone_f)
   bm.normal_update(); bm.to_mesh(me); bm.free(); me.update()
   co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); st = np.c_[co[:, 0], co[:, 2], -co[:, 1]]
   log["knee"] = {"mode": "surface", "box": Kn["box"], "ring_cells": int(len(ring)), "faces_taken_out": int(len(gone_f)), "scrap_faces_taken_out": len(set(small)),

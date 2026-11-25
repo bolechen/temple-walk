@@ -1,5 +1,5 @@
 {
- "about": "varada.json with the arm's lining, the two-sided fans (cap_under) and the fill blobs left out, and a `close` section for tools/blender/varada-close.py (#578). Work in progress: it does not yet pass tools/t05-statue/closed/gate.py.",
+ "about": "varada.json for the closed hand (#578): the arm's lining, the two-sided fans (cap_under) and the fill blobs left out, and knee.weld on: the knee's sheet is laid only in the hole cut in the robe and welded to its edge by a band (tools/blender/varada.py, round 1 of the weld).",
  "donor": {
   "file": "tools/out/t05/tripo-six/sikhin-r3.glb",
   "sha256": "a1224ee73752a4c36eb75f1fc6b4cd932443a2a0293ee903293471281494f057",
@@ -211,7 +211,11 @@
    "thr": 0.06,
    "soft": 0.05
   },
-  "skirtUnder": 0.004
+  "skirtUnder": 0.004,
+  "weld": {
+   "open": 1,
+   "band_cells": 1
+  }
  },
  "knee_r1": {
   "box": [
@@ -383,32 +387,5 @@
    "tuck": 0.005,
    "hang": "top"
   }
- },
- "close": {
-  "old_mm": 0.5,
-  "knee_box": [
-   -19.0,
-   -17.6,
-   6.5,
-   8.4,
-   -17.0,
-   -15.0
-  ],
-  "gap_sides": 12,
-  "box": [
-   -19.5,
-   -17,
-   6.5,
-   10.2,
-   -19.5,
-   -15.4
-  ],
-  "cell_mm": 3,
-  "sheet_faces": 11133,
-  "cover_cm": 1.5,
-  "band_cm": [
-   1.2,
-   2.0
-  ]
  }
 }
