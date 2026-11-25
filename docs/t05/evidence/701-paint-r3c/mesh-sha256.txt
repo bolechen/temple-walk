@@ -1,0 +1,7 @@
+b940f18dd523b936885c2bf945d0a9fa032edd21cf33566b22e1fbc35537d445  kasyapa-r3c.60000.glb (the 60k file of keep/t05-six-buddhas/r3c/)
+9db1d3a7cca3870897f37a59dfa4c184e83f8b761855372163c32505c71b1850  krakucchanda-r3c.60000.glb (the 60k file of keep/t05-six-buddhas/r3c/)
+75631883f074874d74c642af97fc6021199ae99b6adc984fdd835f023081cc28  sikhin-r3c.60000.glb (the 60k file of keep/t05-six-buddhas/r3c/)
+973851c989711ce61dc723fc10a27ca56c270aa970ccc8c5d1d961c1d630a448  vipasyin-r3c.60000.glb (the 60k file of keep/t05-six-buddhas/r3c/)
+06c1c44e90c64518fd2da97ad38f4fb5116c656a95d9251293690471748eb151  visvabhu-r3c.60000.glb (the 60k file of keep/t05-six-buddhas/r3c/)
+e7b53379d6b0353660a2450a53b6db988e2426af0437f251f7ee5ba1548d4e8c  kanakamuni-r3c.60000.glb (the 60k file of keep/t05-six-buddhas/r3c/)
+d927b066ef1c723895e12ce36a628b2b5acdefe64a0f1186dd38efd560dd1e9d  sakyamuni-r1.60000.glb (unchanged)

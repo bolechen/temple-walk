@@ -165,8 +165,12 @@ function caisson(M, add, hole, H, frame, gilt, rib) {
   const y1 = H + 0.5 * s, y2 = y1 + 0.55 * s, y3 = y2 + 0.85 * s, top = a * 0.34, painted = [];
   const at = (g) => g.translate(cx, 0, cz);
   // The square well: four boards standing on the rim of the opening, with a moulding at their foot.
-  // (The boards stand on the moulding's top, not inside it on the panels' plane, #688.)
-  for (const [w, d, x, z] of [[S, 0.06, 0, a], [S, 0.06, 0, -a], [0.06, S, a, 0], [0.06, S, -a, 0]]) frame.push(at(box(w + 0.06, y1 - H - 0.02, d, x, (H + 0.02 + y1) / 2, z)), at(box(w + 0.18, 0.1, d + 0.12, x, H - 0.03, z)));
+  // (The boards stand inside the opening, on its edge and not across it: across it their feet lay in the plane of the ceiling's own
+  // panels and fought them, #655. They are 3 and 6 cm nearer the middle than they were.)
+  for (const [w, d, x, z] of [[S, 0.06, 0, a], [S, 0.06, 0, -a], [0.06, S, a, 0], [0.06, S, -a, 0]]) {
+    const sx = Math.sign(x), sz = Math.sign(z);
+    frame.push(at(box(w === S ? S : 0.12, y1 - H, w === S ? 0.06 : S, x - sx * 0.06, (H + y1) / 2, z - sz * 0.03)), at(box(w + 0.18, 0.1, d + 0.12, x - sx * 0.06, H - 0.03, z - sz * 0.03)));
+  }
   // The corners cut across: four triangles looking down, leaving an octagon whose flats lie on the square's sides.
   const k = a * Math.tan(Math.PI / 8), tri = [];
   // Wound so that each looks down: the three points go clockwise seen from below whichever corner it is.

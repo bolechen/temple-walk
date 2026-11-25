@@ -308,7 +308,7 @@ export function buildSite(M) {
   // The stele pavilion beside the approach, at the end of the old path up the mountain.
   const sp = putStack([
     { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], platH: 0.45, platOut: 0.8, colTop: 3.3, overhang: 1.5, front: "open", back: "open", sides: "open", dark: false, steps: 2.6, walkAll: true },   // (three treads up from the path, #478: it had none, and 0.45 m is more than he steps; open floor like the path's other pavilions, #274)
-    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", plaque: { text: "御碑亭", style: "wood" } },
+    { cai: 0.186, xs: [-2.0, 2.0], zs: [2.0, -2.0], colTop: 1.5, overhang: 1.5, crest: 2.5, G: 9, lift: 0.5, liftLen: 2.4, front: "wall", platOut: -0.02, plaque: { text: "御碑亭", style: "wood" } },   // (platOut -0.02: its floor slab ends 2 cm inside the column line, and so inside the lower storey's white band, whose outer face it had shared and fought, #655)
   ], [-12.5, 50.5], 1);
   // The stele itself: a Song imperial stele with a notched head on a stepped base (stele.js, #520).
   const stele = buildStele(M);
