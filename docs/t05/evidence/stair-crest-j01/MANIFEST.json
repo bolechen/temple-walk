@@ -1,0 +1,126 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam02-c0.25.png",
+   "bytes": 1240343,
+   "sha256": "8d2ed9bc6c0aea400b9b8a890d6c02b193b1109ad58c6d5183e57f2dccfc184d",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "cam02-c0.5.png",
+   "bytes": 1240176,
+   "sha256": "7f9b6c97c3bb79e546a23903cc1ec180f8ff67a980902f7f1b053755ae7e7f29",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "cam02-c0.png",
+   "bytes": 1240644,
+   "sha256": "a67e991d190309bb10d22d499603fba8cc81c1a77e1bd02a39dff5a4d247755e",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "cam02-c1.png",
+   "bytes": 1240295,
+   "sha256": "3fc6a93647c7ea66038829e5c00e11e4fbb5edfca14ab0273c0a720b0f4ab722",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "cam02-summer-c0.25.png",
+   "bytes": 1102652,
+   "sha256": "ce7d84c2a9b557db6fffa73f98c6f2c3125a025f0a63d661f55bb188c90b6daf",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "cam02-summer-c0.png",
+   "bytes": 1102502,
+   "sha256": "47518a9a096ed47c8ddefb382f5c1d64fd209901312db0406e2cd2b26560fdc1",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "cam02-summer-c1.png",
+   "bytes": 1102218,
+   "sha256": "f6c0e4a4967bff89ae74e6ab982def719fa6c36f27ad47c4a1f21141c9d313ad",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 454654,
+   "sha256": "08bcea3181cc59583e7f0435010e5ffb69569aa01edd33d92969f42e393df8da",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "head-down-c0.25.png",
+   "bytes": 1408250,
+   "sha256": "fbd2a3b9b1d2d5d1b266f3ce9139f517ba5dff96a904398dbf26e67ad01a81bc",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "head-down-c0.5.png",
+   "bytes": 1409540,
+   "sha256": "490fb2d1ba2f85c024a595d6de9ae8bf8f500be9aee0c76cbd57c18716ca941b",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "head-down-c0.png",
+   "bytes": 1406646,
+   "sha256": "d93faa5e216ab0031dbfb2426f491578ad0b2c2bde7878118e1256ccb63cb776",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "head-down-c1.png",
+   "bytes": 1409784,
+   "sha256": "234747cf0cbe19c482a0c71e4d513b764a17f9cc5ebbba4e54decc71c5d22329",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "lower-up-c0.25.png",
+   "bytes": 1268313,
+   "sha256": "d47103c8abd36533ccde74306ffb889c1eaabc405f2961b6605aaafb31bf6a65",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "lower-up-c0.5.png",
+   "bytes": 1268098,
+   "sha256": "b19a628f3bdc29a5523f22a6d5647bd2e095ee3075d307af4f6a74f0008067df",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "lower-up-c0.png",
+   "bytes": 1269255,
+   "sha256": "70fc544276bf886d3843bd9830b741f396741074fd86f925386393687b0d8c8d",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "lower-up-c1.png",
+   "bytes": 1268363,
+   "sha256": "28cddc2a9821dd2038bf394220ce59604ad0292b1ea2cdce638b5b3ef51e5e28",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "mid-down-c0.25.png",
+   "bytes": 1411269,
+   "sha256": "6d662543817fc7719c31a354118ef3d82e265ba206ef9e588d49941429a4f69d",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "mid-down-c0.5.png",
+   "bytes": 1413771,
+   "sha256": "78d62c64c31b29a8ca4760695fcb360b280d8c19d8310ddf1f15754591e669ef",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "mid-down-c0.png",
+   "bytes": 1411164,
+   "sha256": "e95410a5fc4d8d0adce9d91a4be352819f23c0f9c1f691561a7db47a2bf24406",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  },
+  {
+   "path": "mid-down-c1.png",
+   "bytes": 1415522,
+   "sha256": "48abfd69dd4062d64f726ae58f6bea6270f5b1c38f8e25300f475f9bbe7da7c3",
+   "rev": "6a43642f7381a6e04558ebdc0d1c3c07340aca30"
+  }
+ ]
+}
