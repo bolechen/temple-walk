@@ -21,7 +21,7 @@ import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
 import { recordTap, strike, flutter, cueState, shutterSound, stampSound, photoSounds, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
-import { zoneOf } from "./src/score.js";
+import { zoneOf, layerOf } from "./src/score.js";
 import { createSettings, browserSettingsStore, DEFAULTS as SETTING_DEFAULTS } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
 import { createTrees, geometryHash } from "./src/trees.js";
@@ -34,7 +34,6 @@ import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "
 import { createEyeSpace, eyeRadius } from "./src/eyespace.js";
 import { planRecenter, recenterYaw, createFollowTurn, yawBehind } from "./src/camturn.js";
 import { keyAxes, createKeyTurn } from "./src/keyturn.js";
-import { hatSide } from "./src/hatside.js";
 import { gatherEye, eyeBoxes } from "./src/eyegather.js";
 import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
@@ -47,6 +46,8 @@ import { composeCard } from "./src/card.js";
 import { createClip, markCanvas, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
+import { setTemple, paintTemple, templeOf, sealOf, stemOf, saidNow, T00_NAME } from "./src/temple.js";
+import { levelSay } from "./src/levelsay.js";
 import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
 import { logSwing, riteNow, pauseRites } from "./src/rites.js";
@@ -98,6 +99,7 @@ if (!relang) document.documentElement.classList.remove("relang");
 // Only the bytes are fetched here; they are opened once the plan is built, and let go.
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
+setTemple(L); paintTemple(document, L); document.body.classList.toggle("nobook", !L.book);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
 // A level that does not keep its written plan up to what is drawn (T05) refuses `?walker=old`, and says so once.
 const WALKER = walkerMode(Q.get("walker"), L), WALKER_ASKED = Q.get("walker") === "old" && WALKER !== "old" ? "old" : undefined;
@@ -454,7 +456,7 @@ const ZB = L.zones;
 // heard are the ones the leaves and the smoke are seen to follow. (Under ?shot or reduced motion the picture holds its
 // clock at 0; the sound goes on along the timeline.)
 let joyaOn = false;   // the year-end bell's night is open (joya-ui.js says so): the bell's court plays only the drone (score.js)
-const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), joya: joyaOn, season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
+const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), layer: layerOf(pos.x, pos.z, inside, ZB), joya: joyaOn, season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
 const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
@@ -814,7 +816,7 @@ function frame(now) {
   // The novice: where he stands, which way he faces, how fast he is going.
   const moved = Math.hypot(pos.x - x0, pos.z - z0);
   if (!walked && moved > 0.02 && !stage && !photo.on && !aloft && document.body.classList.contains("entered")) { walked = true; track("demo.walk", { view, tier: quality.name }); }
-  if (!arrived && document.body.classList.contains("entered") && !opening.active()) { arrived = true; hints.say.entered(); }   // how to walk is said once the walk is his
+  if (!arrived && document.body.classList.contains("entered") && !opening.active()) { arrived = true; hints.say.entered(); if (L.intro) hints.say.intro(levelSay(L, L.intro)); }   // how to walk is said once the walk is his
   if (arrived) hints.step(dt, moved, !!keys.shift, !stage && !photo.on && !aloft);
   speedNow += ((dt > 0 ? Math.min(moved / dt, 2.4) : 0) - speedNow) * Math.min(1, dt * 10);
   const want = flight ? Math.atan2(flight.plan.to[0] - flight.plan.from[0], flight.plan.to[2] - flight.plan.from[2]) : stage ? stage.face : view === "first" && !photo.on ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : moved > 1e-4 ? Math.atan2(pos.x - x0, pos.z - z0) : keyTurn.rate ? Math.atan2(Math.sin(yaw), -Math.cos(yaw)) : heading;   // (turned by the keys standing still, he turns where he stands)
@@ -859,7 +861,6 @@ function frame(now) {
     monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) || climb ? 0 : speedNow,
       (aloft && !stepping) || (climb && !climb.down && climb.t < climb.plan.duration * 0.5) ? "hop" : down ? "rise" : stage ? stage.pose : photo.on && photo.pray,
       t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null,
-        hat: stage && stage.pose === "sit" ? (stage.hat ||= hatSide(walker, stage.seat ? stage.seat[0] : pos.x, stage.seat ? stage.seat[1] : pos.z, stage.face ?? heading, inside && hallIn ? hallIn.room.cx : 0)) : 0,   // on a cushion, the side his hat is laid on (#664)
         rise: down ? Math.min(1, down.t / down.plan.duration) : null,
         crouch: down && down.t > down.plan.duration ? 0.045 * Math.sin(Math.PI * Math.min(1, (down.t - down.plan.duration) / 0.34)) : 0 });
   }
@@ -1093,7 +1094,7 @@ async function capture(at = null) {
   drift.update(t, camera.position, H); ground.render(renderer, camera); post.render(t);
   const shot = document.createElement("canvas"); shot.width = W; shot.height = H; shot.getContext("2d").drawImage(canvas, 0, 0);
   camera.fov = keepFov; resize();
-  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: tr("云径禅寺"), seal: glyphs("云径"), url: MAIN.host, qr: settings.get().qr ? photoUrl(lang) : null });
+  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: templeOf(L, lang), seal: sealOf(L), url: MAIN.host, qr: settings.get().qr ? photoUrl(lang) : null });
 }
 let lastBlob = null;
 // The shutter. The view is drawn once more and copied onto a still that covers it, and the walk stops (the frame loop,
@@ -1121,7 +1122,7 @@ on("shutter", async () => {
     const card = await capture(at);
     lastBlob = await new Promise((r) => card.toBlob(r, "image/jpeg", 0.93));
     const url = URL.createObjectURL(lastBlob); $("printImg").src = url; $("saveLink").href = url;
-    $("saveLink").download = lang === "zh" ? `云径禅寺-${NAMES[state.season]}${NAMES[state.time]}.jpg` : tr("云径禅寺-{mood}.jpg", { mood: `${tr(NAMES[state.season])}-${tr(NAMES[state.time])}` });
+    $("saveLink").download = lang === "zh" ? `${L.name || T00_NAME}-${NAMES[state.season]}${NAMES[state.time]}.jpg` : saidNow("云径禅寺-{mood}.jpg", { mood: `${tr(NAMES[state.season])}-${tr(NAMES[state.time])}` }, lang);
     ui.open("print", { onClose: () => { if (frozen) freeze(false); } }); stampSound();   // put away by its button or by Esc: the walk goes on
   } catch (e) { freeze(false); throw e; }
   finally { b.disabled = false; }
@@ -1130,7 +1131,7 @@ on("printBack", () => ui.close("print"));
 // Shared from wherever the page is open (src/share.js, #344): the system's sheet where it can take the picture, else a
 // sheet to press and hold it on; the address it carries names the observance he stands at, if he is at one.
 const sceneHere = () => { let best = 12, id = "photo"; for (const [k, p] of Object.entries(site.places)) { if (!FROM.includes(k) || p.room) continue; const d = Math.hypot(p.at[0] - pos.x, p.at[1] - pos.z); if (d < best && !inside) { best = d; id = k; } } return id; };
-on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: "yunjing.jpg", title: tr("云径禅寺"), from: sceneHere(), content: "print" }));
+on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: `${stemOf(L)}.jpg`, title: templeOf(L, lang), from: sceneHere(), content: "print" }));
 $("saveLink")?.addEventListener("click", () => countDownload("print", sceneHere()));
 
 // ---- A short film (#342, clip.js) ----------------------------------------------------
@@ -1150,7 +1151,7 @@ const clipEnded = () => {
 // frame (a drawImage from the WebGL canvas onto a 2D one cost 25 ms a frame on a T4). The canvas is shown at the frame's place, so what is seen is what is kept.
 async function startClip(secs, short = 0, layoutOnly = false) {
   if (!clipPick || clipRec || clipView || frozen || !photo.on) return false;
-  const info = settings.get().clipMark ? { temple: tr("云径禅寺"), label: moodWords(mood), seal: glyphs("云径"), url: MAIN.host + "/?" + CLIP.utm } : null;
+  const info = settings.get().clipMark ? { temple: templeOf(L, lang), label: moodWords(mood), seal: sealOf(L), url: MAIN.host + "/?" + CLIP.utm } : null;
   if (info) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, info.seal), document.fonts.load(`30px ${FACE.serif}`, info.temple + info.label)]); } catch {} }
   if (clipRec || clipView || !photo.on) return false;
   const cw = canvas.clientWidth, ch = canvas.clientHeight, f = frameRect(), [aw, ah] = photo.aspect === "screen" ? [cw, ch] : ASPECT[photo.aspect];
@@ -1197,7 +1198,7 @@ on("clipStop", stopClip);
 on("clipBack", () => ui.close("clip"));
 on("clipShare", async () => {
   if (!clipLast) return;
-  try { await navigator.share({ files: [clipLast.file], title: tr("云径禅寺"), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
+  try { await navigator.share({ files: [clipLast.file], title: templeOf(L, lang), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
 });
 settings.onChange((s) => $("clipMarkToggle")?.setAttribute("aria-pressed", String(s.clipMark)));
 $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark));

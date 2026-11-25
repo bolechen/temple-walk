@@ -21,6 +21,7 @@ import * as THREE from "three";
 import { box, merge, mesh } from "../../src/geo.js";
 import { SECOND, LANE, AXIS } from "./axis.js";
 import { HALL } from "./hall.js";
+import { dryMaterials } from "./dry.js";
 
 /** The ceilings the art director set (#548: her comments 7068262688 and 7069444907) and the great hall's eave line. */
 export const LIMITS = Object.freeze({
@@ -320,22 +321,50 @@ function tiles(M) {
  * The surround as a group for the site's root. Every mesh carries `userData.surround` ("near": what stands against the walls, real geometry that casts shadows into the sun's map, the first row of
  * houses and the trees within 14 m of a wall; "far": the rest) and `userData.walk = false`.
  * @param {*} M the level's materials @param {{ x: number, zN: number, zS: number, t: number }} C the compound's walls
+ * @param {{ bench?: boolean }} [opts] `bench`: the page has the debug panel open (#684, src/objects-debug.js): each house is then a part of its own, kept out of the static merge, and `group.userData.houses` can rebuild one. The drawn picture is the same; only the draws differ.
  */
-export function buildSurround(M, C) {
+export function buildSurround(M, C, opts = {}) {
   const PLAN = planSurround(C), group = new THREE.Group(), tone = () => TILE_TONES.map(() => []), tone2 = () => WALL_TONES.map(() => []);
   const near = { trunk: [], crown: [], walls: tone2(), roofs: tone() }, far = { trunk: [], crown: [], walls: tone2(), roofs: tone() };
   for (const t of PLAN.trees) { const into = t.cast ? near : far; (t.kind === "pine" ? pine : t.kind === "cypress" ? cypress : bare)(t, into.trunk, into.crown); }
-  for (const h of PLAN.houses) { const into = h.cast ? near : far; house(h, into.walls[h.wall], into.roofs[h.tone]); }
-  const wall = bricks(M), tile = tiles(M);
+  const wall = bricks(M), tile = tiles(M), apart = [];
+  PLAN.houses.forEach((h, i) => {
+    if (opts.bench) { apart.push({ id: String(i), h, parts: [] }); return; }
+    const into = h.cast ? near : far; house(h, into.walls[h.wall], into.roofs[h.tone]);
+  });
   const put = (list, material, name, cast, mname) => {
     if (!list.length) return;
     const m = mesh(merge(list), material, { cast }); m.userData.surround = name; m.userData.walk = false; m.name = mname; group.add(m);
   };
   const add = (set, name, cast) => {
-    for (const [key, material] of [["trunk", M.bark], ["crown", M.cedar]]) put(set[key], material, name, cast, `surround-${name}-${key}`);
+    for (const [key, material] of [["trunk", M.bark], ["crown", dryMaterials(M).cedar]]) put(set[key], material, name, cast, `surround-${name}-${key}`);
     set.walls.forEach((list, i) => put(list, wall[i], name, cast, i ? `surround-${name}-${WALL_TONES[i].name}-walls` : `surround-${name}-walls`));   // (the walls, a draw to each tier)
     set.roofs.forEach((list, i) => put(list, tile[i], name, cast, `surround-${name}-${TILE_TONES[i].name}-roofs`));   // (the roofs, a draw to each tone of tile)
   };
   add(near, "near", true); add(far, "far", false);
+  if (opts.bench) group.userData.houses = houseParts(group, apart, wall, tile);
   return group;
+}
+
+/**
+ * The houses as parts of their own for the debug panel (#684): one wall mesh and one roof mesh to each, made as `house()` makes them
+ * for the merged draws (the same geometry, the tier's own material, shadows cast as the near row casts them), kept out of the static
+ * merge (`userData.keep`). `rebuild(id, params)` replaces only that house's two meshes with the house drawn from `{ ...its data, ...params }`.
+ * @param {*} group @param {{ id: string, h: any, parts: any[] }[]} list @param {*[]} wall @param {*[]} tile
+ */
+function houseParts(group, list, wall, tile) {
+  const make = (e) => {
+    for (const m of e.parts) { group.remove(m); m.geometry.dispose(); }
+    const walls = [], roofs = [], h = e.h; house(h, walls, roofs);
+    e.parts = [[walls, wall[h.wall], "walls"], [roofs, tile[h.tone], "roofs"]].map(([geos, material, kind]) => {
+      const m = mesh(merge(geos), material, { cast: h.cast }); m.userData.surround = h.cast ? "near" : "far"; m.userData.walk = false; m.userData.keep = true;
+      m.userData.house = e.id; m.name = `surround-house-${e.id}-${kind}`; group.add(m); return m;
+    });
+  };
+  list.forEach(make);
+  return {
+    list,
+    /** @param {string} id @param {Record<string, any>} params the house's own fields (x, z, w, d, alongX, eave, ridge, roof, tone, wall) */
+    rebuild(id, params) { const e = list.find((x) => x.id === id); if (!e) throw new Error(`no house ${id}`); e.h = Object.freeze({ ...e.h, ...params }); make(e); },
+  };
 }

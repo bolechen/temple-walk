@@ -9,11 +9,13 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
-import { buildHall, OUTER, FILL } from "./hall.js";
-import { buildAltar } from "./altar.js";
+import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
+import { buildAltar, benchFigures } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 import { buildTower } from "./tower.js";
 import { buildSurround } from "./surround.js";
+import { dryMaterials } from "./dry.js";
+import { debugGate } from "../../src/debuggate.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
  * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
@@ -52,6 +54,13 @@ export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false, crest: 0.
  * from there: 65° from his eyes is the walk's own angle, and the same reason makes 50° the walk's from behind (the T05 lead, after the art director's ruling, 2026-11-21).
  */
 export const LENS = Object.freeze({ cam06: Object.freeze({ first: 65, third: 50 }) });
+
+/**
+ * The named views that stand inside the great hall, which a visitor cannot reach while its doors are shut (HALL_DOORS in ./hall.js; the first release,
+ * docs/t05/DECISIONS.md, 先行版关殿门). They stay in `views` (the pictures are still drawn from them, and come back with the hall), but
+ * `site.closedViews` tells the floor's bake not to ask that they be walked to (tools/walk/scene.mjs) and tools/cameras.mjs to mark them closed.
+ */
+export const INSIDE_VIEWS = Object.freeze(["d", "e", "f", "sakya", "cam04", "cam05", "cam06"]);
 
 export function buildSite(M) {
   Object.assign((M.steps.userData.stairStyle ||= {}), STAIR_STYLE);   // (one page walks one level, so the material is this level's for good)
@@ -126,13 +135,17 @@ export function buildSite(M) {
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   // The wall ring's timber (hall.js, `ring`) in meshes of their own beside the roof's timber: the brackets keep the walls' share of the sky, the purlins and beams rise above it.
   const splitRing = (/** @type {any[]} */ list, /** @type {any} */ mat, /** @type {any} */ own, /** @type {any} */ ringAo) => [[list.filter((g) => !hp.ring.has(g)), own], [list.filter((g) => hp.ring.has(g)), ringAo]].filter(([l]) => l.length).map(([l, o]) => mesh(merge(l), mat, o));
-  const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
+  // While the doors are shut nothing inside is to be read from outside, the bars of a window included (the art director's call on the first pictures): what is inside takes a seventh of the share it would, a deep dark behind the bars (HALL_DOORS; open, as it was).
+  const inside = HALL_DOORS.shut ? (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, nx = 0, ny = 1, nz = 0) => { const v = hall.shut(x, y, z, nx, ny, nz); return v < 0.999 ? v * 0.15 : v; } : hall.shut;
+  const sh = { ao: inside };   // inside the walls the sky's light is mostly shut out (hall.js)
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
   root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
     mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shBoard), mesh(merge(hp.ridge), M.ridge));
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
+  // The shut doors' leaves face the court: they take the open air's light, not the inside's (hall.js, HALL_DOORS).
+  if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodV, { ao: () => 1 }), mesh(merge(hp.ledges), M.woodX, { ao: () => 1 }), mesh(merge(hp.iron), M.iron, { ao: () => 1, cast: false }));   // (the planks' vertical grain, the ledges across, the iron of the ring and the studs: as the prologue's shut doors, building.js)
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
   // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
@@ -144,7 +157,12 @@ export function buildSite(M) {
   // `?off=altar` leaves the altar, the figures, their halos and the kings undrawn (they are merged with the hall's own stone,
   // plaster and wood, so the page's `?off=` cannot reach them): what they cost a frame, measured apart (#493). Still walked round.
   const offAltar = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("altar");
-  if (!offAltar) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
+  // The debug panel's 「物件」 (#684, src/objects-debug.js): where it is open, the seven are parts of their own and the houses outside the walls too, so that the panel
+  // can draw one again (the hooks are `window.__t05Objects`); nowhere else, and the picture is the same either way. Read as `?off=altar` is.
+  const bench = typeof location !== "undefined" && debugGate({ dev: !!import.meta.env?.DEV, hostname: location.hostname, search: location.search });
+  const hooks = bench ? (/** @type {any} */ (globalThis).__t05Objects = /** @type {Record<string, any>} */ ({})) : null;
+  if (!offAltar && !bench) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
+  if (!offAltar && bench) { const fg = benchFigures(M, altar, sh); root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), M.plaster(), sh), fg.group); hooks.figures = fg; }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
     const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
@@ -166,12 +184,12 @@ export function buildSite(M) {
   };
 
   root.add(ax.group);
-  root.add(buildSurround(M, C));   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
+  const surround = buildSurround(M, C, { bench }); root.add(surround); if (hooks) hooks.houses = surround.userData.houses;   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
   // The old town's pagoda far to the west-south-west (./tower.js, #548 step two): a part of its own, left out by ?off=tower, nothing else reads it.
   const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
   if (!offTower) root.add(buildTower());
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
-  const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
+  const land = mesh(merge(earth), dryMaterials(M).earth, { cast: false }); land.userData.walk = false; root.add(land);
 
   const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }, { name: "大雄殿", ...hall.box, y: top }, ...ax.buildings];
   // Named views (shots.js draws each): the arrival, the two stations, and the court seen from the terrace.
@@ -197,7 +215,7 @@ export function buildSite(M) {
   // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.
   Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
-    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
+    root, walk, shade, closed: [...ax.closed, ...hall.closed], closedViews: HALL_DOORS.shut ? [...INSIDE_VIEWS] : [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
     places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }

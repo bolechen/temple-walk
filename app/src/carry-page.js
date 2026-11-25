@@ -4,6 +4,7 @@
 // address at once (history.replaceState), so a reload never asks again. Nothing is sent anywhere but the two counts
 // (save.export, save.import), which carry no part of the save (docs/t00/ANALYTICS.md).
 import { t, lang } from "./i18n.js";
+import { templeNow } from "./temple.js";
 import { track } from "./analytics.js";
 import { decode, check, apply, summary, saveIn, linkFor, encode, gather, SITES, SAVE_KEYS } from "./carry.js";
 import { DEPLOY } from "./deploy.js";
@@ -81,7 +82,7 @@ export function createCarryOut(ui) {
     try { getSelection()?.removeAllRanges(); } catch {} el.blur();
     $("carryCopy").textContent = t("已复制"); counted(to.id);
   };
-  $("carryShare").onclick = async () => { try { await navigator.share({ title: t("云径禅寺"), url: $("carryLink").value }); counted(to.id); } catch {} };
+  $("carryShare").onclick = async () => { try { await navigator.share({ title: templeNow(), url: $("carryLink").value }); counted(to.id); } catch {} };
   $("carryClose").onclick = () => ui.close("carryOut");
   window.__carry = () => ({ open: ui.isOpen("carryOut"), to: to.id, places: places.map((p) => p.id), link: $("carryLink").value });
   return { async open() { $("carryCopy").textContent = t("复制链接"); await draw(); ui.open("carryOut"); } };

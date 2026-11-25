@@ -33,7 +33,7 @@ export function zoneBounds(SITE, LEVELS, APPROACH, SCREEN) {
 /** What a zone plays on the year-end bell's night (#341): the bell's court and the terraces above it take the drone. @param {string} zone */
 export const joyaZone = (zone) => (zone === "court" || zone === "upper" ? "joya" : zone);
 export function zoneOf(x, z, inside, B) {
-  if (!B) return "none";                // a level with no music of its own yet (#409): the prologue's is not played there
+  if (!B || B.layers) return "none";    // a level with no music of its own yet (#409): the prologue's is not played there; T05, which gives `layers`, has a sound field but no melody
   if (inside) return "hall";
   if (z > B.grove) return "grove";      // the bamboo and the first flight, below the half-way pavilion
   if (z > B.stair) return "stair";      // the turning stair and the forecourt before the screen wall
@@ -41,6 +41,18 @@ export function zoneOf(x, z, inside, B) {
   if (z > B.court) return "court";      // the first court
   if (z > B.summit) return "upper";     // the terraces and the tea slope
   return "summit";
+}
+
+/**
+ * The layer of sound he stands in, for a level that gives `zones.layers` (T05, docs/t05/SOUND.md §1): "hall" under the
+ * great hall's roof (Z3), "yard" everywhere else (Z1; Z2, the doorway, is left to the doorstep's own mixing for now). A level
+ * with no layers, the prologue, has none: null, and audio.js keeps going by `zoneOf`. A room under the courts is the hall.
+ * @param {number} x @param {number} z @param {boolean} inside @param {any} B
+ */
+export function layerOf(x, z, inside, B) {
+  if (!B || !B.layers) return null;
+  const h = B.layers.hall;
+  return inside || (h && x >= h.x0 && x <= h.x1 && z >= h.z0 && z <= h.z1) ? "hall" : "yard";
 }
 
 // A place counts as where he is only once he has stayed in it `hold` seconds, so that walking along a boundary,
