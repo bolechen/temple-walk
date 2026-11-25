@@ -269,7 +269,8 @@ export function createMonk(opts = {}) {
   const along = ({ J, d }, x, y, z) => V3(x, y, z).sub(J).dot(d);
 
   // ---- Skin: head, neck, forearms, hands, one mesh ----
-  const skinParts = [];
+  const skinParts = [], skinMudraParts = [];
+  const pushSkin = (base, mudra = base) => { skinParts.push(base); skinMudraParts.push(mudra); };
   {
     const g = new THREE.SphereGeometry(R, 48, 32), p = g.attributes.position, clr = new Float32Array(p.count * 3), c = new THREE.Color();
     for (let i = 0; i < p.count; i++) {
@@ -281,7 +282,7 @@ export function createMonk(opts = {}) {
       const q = deform(n.multiplyScalar(R)).add(SKULL); p.setXYZ(i, q.x, q.y, q.z);
     }
     g.setAttribute("color", new THREE.BufferAttribute(clr, 3)); weld(g);
-    skinParts.push(finish(g, null, IDX.head));
+    pushSkin(finish(g, null, IDX.head));
     // Face strokes (refs/monk-poses-v6-2026-11-23-gassho-head.webp):
     // short flat rounded-cap brows, gentle downward U-arc closed eyes (no eyelashes), small button nose, tiny shallow smile.
     const stroke = (pts, width, color, depthRatio = 0.5, cap = true) => {
@@ -296,14 +297,14 @@ export function createMonk(opts = {}) {
     const arc = (n, f) => Array.from({ length: n + 1 }, (_, i) => f((2 * i) / n - 1));
     for (const s of [1, -1]) {
       // Closed eyes: gentle downward-curving smile arc, no eyelashes
-      skinParts.push(stroke(arc(12, (t) => [s * (0.46 + 0.12 * t), -0.15 - 0.046 * (1 - t * t)]), (u) => 0.0026 + 0.0014 * Math.sin(Math.PI * u), PAL.lash, 0.52));
+      pushSkin(stroke(arc(12, (t) => [s * (0.46 + 0.12 * t), -0.15 - 0.046 * (1 - t * t)]), (u) => 0.0026 + 0.0014 * Math.sin(Math.PI * u), PAL.lash, 0.52));
       // Short flat rounded brows (uniform pill bar with barely a gentle lift)
-      skinParts.push(stroke(arc(10, (t) => [s * (0.465 + 0.118 * t), 0.195 + 0.015 * (1 - t * t)]), () => 0.0058, PAL.brow, 0.48));
+      pushSkin(stroke(arc(10, (t) => [s * (0.465 + 0.118 * t), 0.195 + 0.015 * (1 - t * t)]), () => 0.0058, PAL.brow, 0.48));
     }
     // Small sweet shallow smile mouth
-    skinParts.push(stroke(arc(10, (t) => [0.115 * t, -0.505 + 0.036 * t * t]), (u) => 0.0013 + 0.0007 * Math.sin(Math.PI * u), PAL.lip, 0.48));
+    pushSkin(stroke(arc(10, (t) => [0.115 * t, -0.505 + 0.036 * t * t]), (u) => 0.0013 + 0.0007 * Math.sin(Math.PI * u), PAL.lip, 0.48));
     // Cute small rounded button nose
-    skinParts.push(finish(new THREE.SphereGeometry(0.0106, 14, 10).scale(1.04, 0.84, 0.96).translate(...onFace(0, -0.34, -0.0012).toArray()), PAL.skin.clone().lerp(PAL.blush, 0.18), IDX.head));
+    pushSkin(finish(new THREE.SphereGeometry(0.0106, 14, 10).scale(1.04, 0.84, 0.96).translate(...onFace(0, -0.34, -0.0012).toArray()), PAL.skin.clone().lerp(PAL.blush, 0.18), IDX.head));
     // Low-set plump C-cup ears (ear top roughly level with closed eyes, y = 0.95..1.01, smooth clay lobe)
     for (const s of [1, -1]) {
       const ear = mergeGeometries([
@@ -313,7 +314,7 @@ export function createMonk(opts = {}) {
       ]);
       if (s < 0) { ear.scale(-1, 1, 1); flip(ear); }
       ear.rotateY(-s * 0.26).translate(...onFace(s * 1.58, -0.45, -0.002).toArray());
-      skinParts.push(finish(ear, null, IDX.head));
+      pushSkin(finish(ear, null, IDX.head));
     }
     // Sturdy child's neck + throat extending cleanly behind the crossed cream V-collar (zero seam!)
     {
@@ -326,7 +327,7 @@ export function createMonk(opts = {}) {
         return [rx * Math.sin(a), y, rz * Math.cos(a) - 0.001 + frontChest, 0, 0, PAL.skin.clone().multiplyScalar(0.95 + 0.05 * smooth(0.85, 0.35, u))];
       });
       weld(nk);
-      skinParts.push(finish(nk, null, (x, y) => {
+      pushSkin(finish(nk, null, (x, y) => {
         const h = smooth(0.896, 0.922, y), c2 = smooth(0.875, 0.848, y);
         return [[IDX.head, h], [IDX.chest, c2], [IDX.neck, Math.max(0, 1 - h - c2)]];
       }));
@@ -342,19 +343,27 @@ export function createMonk(opts = {}) {
         return [q.x, q.y, q.z, 0, 0];
       });
       weld(fa);
-      skinParts.push(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.175, 0.215, t), h = 0.5 * smooth(UPPER + FORE - 0.02, UPPER + FORE, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
-      // The hand in its own frame: spherical wrist ball near (0,0,0), palm & fingers gently angled down (-0.46 rad around wrist)
-      /** @type {THREE.BufferGeometry[]} */
-      const palmParts = [new THREE.SphereGeometry(1, 14, 10).scale(0.0245, 0.0285, 0.015).translate(0, -0.026, 0.002)];
-      [[0.0135, 0.026], [0.0045, 0.032], [-0.0048, 0.03], [-0.0138, 0.024]].forEach(([fx, len], k) =>
-        palmParts.push(new THREE.CapsuleGeometry(0.0064 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(-0.18 - k * 0.03).rotateZ(fx * 1.6).translate(fx, -0.048, 0.003)));
-      palmParts.push(new THREE.CapsuleGeometry(0.0074, 0.019, 4, 8).translate(0, -0.0095, 0).rotateZ(0.24).rotateX(-0.55).translate(0.012, -0.018, 0.009));
-      const palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(-0.46).translate(-0.0045, -0.002, 0);
-      const wrist = new THREE.SphereGeometry(0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");
-      const hand = mergeGeometries([wrist, palm]);
-      if (s < 0) { hand.scale(-1, 1, 1); flip(hand); }
-      hand.applyMatrix4(B[n + "Hand"].matrixWorld);
-      skinParts.push(finish(hand, PAL.skin, IDX[n + "Hand"]));
+      pushSkin(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.175, 0.215, t), h = 0.5 * smooth(UPPER + FORE - 0.02, UPPER + FORE, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
+      // The hand in its own frame: spherical wrist ball near (0,0,0), palm & fingers gently angled down (-0.46 rad around wrist).
+      // Also build a matching Dhyana / Hokkai-join (法界定印) morph pose: neat gently cupped fingers and arched thumbs whose tips touch.
+      const buildHand = (mudra) => {
+        /** @type {THREE.BufferGeometry[]} */
+        const palmParts = [new THREE.SphereGeometry(1, 14, 10).scale(0.0245, 0.0285, 0.015).translate(0, -0.026, mudra ? 0.001 : 0.002)];
+        [[0.0135, 0.026], [0.0045, 0.032], [-0.0048, 0.03], [-0.0138, 0.024]].forEach(([fx, len], k) =>
+          palmParts.push(new THREE.CapsuleGeometry(0.0064 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(mudra ? -0.26 - k * 0.025 : -0.18 - k * 0.03).rotateZ(fx * (mudra ? 0.35 : 1.6)).translate(mudra ? fx * 0.92 : fx, -0.048, mudra ? 0.004 : 0.003)));
+        // Thumb: in 法界定印, arches gently upward (~28°) and inward toward midline so left & right thumb tips touch lightly to form the oval ring.
+        const thumb = mudra
+          ? new THREE.CapsuleGeometry(0.007, 0.028, 4, 8).translate(0, -0.014, 0).rotateZ(0.06).rotateX(-0.52).translate(0.014, -0.014, 0.018)
+          : new THREE.CapsuleGeometry(0.0074, 0.019, 4, 8).translate(0, -0.0095, 0).rotateZ(0.24).rotateX(-0.55).translate(0.012, -0.018, 0.009);
+        palmParts.push(thumb);
+        const palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(mudra ? -0.04 : -0.46).translate(-0.0045, -0.002, 0);
+        const wrist = new THREE.SphereGeometry(0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");
+        const hand = mergeGeometries([wrist, palm]);
+        if (s < 0) { hand.scale(-1, 1, 1); flip(hand); }
+        hand.applyMatrix4(B[n + "Hand"].matrixWorld);
+        return finish(hand, PAL.skin, IDX[n + "Hand"]);
+      };
+      pushSkin(buildHand(false), buildHand(true));
     }
   }
 
@@ -582,6 +591,12 @@ export function createMonk(opts = {}) {
   const skinned = (parts, mat) => { const m = new THREE.SkinnedMesh(mergeGeometries(parts), mat); m.frustumCulled = false; m.receiveShadow = true; group.add(m); return m; };
   const skin = skinned(skinParts, skinM), robe = skinned(robeParts, clothM), legs = skinned(legParts, clothM), shoes = skinned(shoeParts, shoeM);
   {
+    const skinMudra = mergeGeometries(skinMudraParts);
+    skin.geometry.morphAttributes.position = [skinMudra.attributes.position];
+    skin.geometry.morphAttributes.normal = [skinMudra.attributes.normal];
+    skin.updateMorphTargets();
+  }
+  {
     const basePos = robe.geometry.attributes.position.array, baseNorm = robe.geometry.attributes.normal.array;
     const sitPos = new Float32Array(basePos), sitNorm = new Float32Array(baseNorm);
     sitPos.set(torsoSit.attributes.position.array, 0);
@@ -674,7 +689,7 @@ export function createMonk(opts = {}) {
   }
   // The hands' own frame for a pose, in the frame of the bone they are placed against.
   function handFrame(mode, s, out) {
-    if (mode === "lap") { _z.set(0, 1, 0); _y.set(s, 0, -0.3).normalize(); }   // palms up in the lap, fingers in toward each other
+    if (mode === "lap") { _z.set(0, 0.96, -0.28).normalize(); _y.set(s, 0.04, 0.08).normalize(); }   // 法界定印: palms cupped upward in the lap, fingers gently overlapping at midline
     else if (mode === "thigh") { _y.set(0, 0.15, -1).normalize(); _z.set(0, -1, -0.15).normalize(); }   // palms down on the thighs, fingers forward
     else { _y.set(0, -Math.cos(0.22), -Math.sin(0.22)); _z.set(-s, 0, 0); }   // fingers up and a little forward, palm to palm
     _x.crossVectors(_y, _z).normalize(); _z.crossVectors(_x, _y);
@@ -1072,7 +1087,7 @@ export function createMonk(opts = {}) {
         const mode = palms >= Math.max(seat, perch) ? "pray" : perch > seat ? "thigh" : "lap", anchor = mode === "pray" ? B.chest : B.hips;
         group.updateMatrixWorld(true);
         if (mode === "pray") anchor.localToWorld(tv.set(s * 0.0125, 0.02, 0.165));
-        else if (mode === "lap") anchor.localToWorld(tv.set(s * 0.012, 0.06 + (s > 0 ? 0.013 : 0), 0.15));
+        else if (mode === "lap") anchor.localToWorld(tv.set(s * 0.0235, 0.056 + (s > 0 ? 0.01 : 0), 0.154));
         else anchor.localToWorld(tv.set(s * 0.085, 0.062, 0.14));
         reach(ua, la, UPPER, FORE, tv, tv2.set(s, mode === "pray" ? -1.3 : mode === "lap" ? -0.2 : -0.8, mode === "pray" ? -0.35 : mode === "lap" ? -0.6 : -0.5).applyQuaternion(gq), -1);
         ua.updateMatrixWorld(true);
@@ -1117,6 +1132,7 @@ export function createMonk(opts = {}) {
       B.robeRight.position.z += 0.65 * pushR; B.robeRight.position.x -= 0.14 * pushR;
       const sitDrape = !dressed && robe.morphTargetInfluences?.length ? smooth(0, 1, seat) : 0;
       if (robe.morphTargetInfluences?.length) robe.morphTargetInfluences[0] = sitDrape;
+      if (skin.morphTargetInfluences?.length) skin.morphTargetInfluences[0] = !dressed ? smooth(0, 1, seat) * (1 - palms) : 0;
       const boneSeat = dressed ? seat : 0;
       B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * boneSeat - 0.78 * perch, 0, sd);
       B.robeBack.rotation.set(back + 0.32 * boneSeat + 0.22 * perch, 0, sd);
