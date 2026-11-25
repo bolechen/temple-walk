@@ -1,0 +1,213 @@
+{
+ "errors": [],
+ "shots": [
+  {
+   "file": "copy-1-取纸.png",
+   "secs": 0.5,
+   "name": "取纸",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.657,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.055,
+     4.125,
+     11.04
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.104,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "copy-2-举板.png",
+   "secs": 1,
+   "name": "举板",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.5,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "copy-3-抬头读.png",
+   "secs": 1.9,
+   "name": "抬头读",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.999,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "copy-4-落笔.png",
+   "secs": 3,
+   "name": "落笔",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.585,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "copy",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "copy-5-写.png",
+   "secs": 8,
+   "name": "写",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 5,
+    "nearest": 0.585,
+    "copied": "觀其寶殿崔",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "copy",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "copy-6-再抬头.png",
+   "secs": 10,
+   "name": "再抬头",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 7,
+    "nearest": 0.585,
+    "copied": "觀其寶殿崔嵬儼",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "copy",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "copy-7-停笔.png",
+   "secs": 12.6,
+   "name": "停笔",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 9,
+    "nearest": 0.585,
+    "copied": "觀其寶殿崔嵬儼居七",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "copy",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "copy-8-收起.png",
+   "secs": 13.7,
+   "name": "收起",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 10,
+    "nearest": 0.585,
+    "copied": "觀其寶殿崔嵬儼居七佛",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "copy",
+    "w": 1,
+    "cuts": 0
+   }
+  }
+ ]
+}

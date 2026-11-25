@@ -14,14 +14,29 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
   // One line at the foot of the view. `id` is said only once in a visit; a later line replaces an earlier one.
   // A line is a few phrases between middle dots; each is kept whole, so that on a narrow screen the line breaks between
   // them and not in the middle of one (a dot with no space round it, as in a Korean pair of words, belongs to its phrase).
-  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? part : `<span class="phrase">${part}</span>`)).join("");
+  // The dot between two phrases, with the spaces on both sides of it, is its own span, and a line break waits beside it (`brk`, hidden): where the line breaks there the dot is put
+  // away and the break made real (`unhang`), so that the two phrases do not run together on one line if the line later has room: left at
+  // the end of the first line the dot reads as one dot too many, and with it gone and no break a line has two phrases and nothing between them.
+  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? `<span class="dot">${part}</span><br class="brk" hidden>` : `<span class="phrase">${part}</span>`)).join("");
+  const unhang = () => {
+    if (!line || line.getClientRects().length === 0) return;   // not on the page just now (before 入山, the photograph): measured when it shows, nothing is measured at zero
+    const ps = [...line.querySelectorAll(".phrase")], dots = /** @type {HTMLElement[]} */ ([...line.querySelectorAll(".dot")]), brs = /** @type {HTMLElement[]} */ ([...line.querySelectorAll(".brk")]);
+    for (const d of dots) d.hidden = false;   // (every dot is put back and every break let go first, then the line is measured as it falls)
+    for (const r of brs) r.hidden = true;
+    for (let i = 1; i < ps.length; i++) if (ps[i].offsetTop >= ps[i - 1].offsetTop + ps[i - 1].offsetHeight - 1 && dots[i - 1]) { dots[i - 1].hidden = true; brs[i - 1].hidden = false; }
+  };
+  addEventListener("resize", unhang);
+  document.fonts?.addEventListener?.("loadingdone", unhang);   // (a face that arrives after the line is set changes where it breaks)
+  if (line && typeof ResizeObserver !== "undefined") new ResizeObserver(() => unhang()).observe(line);   // (the line's width changes with the screen, and it is none at all while hidden: it is set right when it shows again)
   function tip(id, html, secs = 7) {
     if (off || !line || said.has(id) || now === "hold") return false;   // (the far view's line is held until it is released: a tip refused is not counted as said)
-    said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on");
+    said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on"); unhang();
     clearTimeout(lineT); lineT = setTimeout(() => drop(id), secs * 1000); return true;
   }
   // A line that stays until it is released (the far view's way to the book): not said once, not faded.
-  function hold(html) { if (off || !line) return false; now = "hold"; line.innerHTML = phrases(html); line.classList.add("on"); clearTimeout(lineT); return true; }
+  function hold(html) { if (off || !line) return false; now = "hold"; line.innerHTML = phrases(html); line.classList.add("on"); unhang(); clearTimeout(lineT); return true; }
+  // The line set to some words, as it is when said (for a tool that looks at how a line breaks: the page's own words are said only once).
+  function set(html) { if (!line) return; line.innerHTML = phrases(html); line.classList.add("on"); unhang(); }
   function release() { drop("hold"); }
   function drop(id) { if (!line || (id && now !== id)) return; line.classList.remove("on"); now = null; }
   // A label that shows for a while and fades: the season's name, the next place.
@@ -71,7 +86,8 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     stamped() { said.add("stamp"); },
     seal() { said.add("stamp"); tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
     // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
-    seasons() { return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
+    // (#726: when the hour has just turned to the visitor's own, the same line says so: one sentence, not two)
+    seasons(clock) { if (clock) return tip("seasons", coarse ? t("山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换") : t("山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　{t}时节", { t: K("T") }), 9); return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
     // A newer build has been put up since the page was opened (src/version.js): said once; nothing reloads by itself.
     update() { return tip("update", t("新的版本已就绪，刷新即可"), 9); },
     photo() { drop(); },
@@ -94,5 +110,5 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     if (!coarse && !ran && walked > 40) tip("run", t("{shift}快步　·　{space}跳", { shift: K("Shift"), space: K("Space") }), 6);
     if (moved > 1e-4 || !free) stillFor = 0; else if ((stillFor += dt) > 14) { stillFor = -30; flash("goal", 7); }
   }
-  return { tip, hold, release, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: shown(), calm: document.body.classList.contains("calm") }) };
+  return { tip, hold, set, release, drop, flash, card, step, say, coarse, state: () => ({ tip: now, said: [...said], goal: !!$("goal")?.classList.contains("on"), moodTag: !!$("moodTag")?.classList.contains("on"), keys: shown(), calm: document.body.classList.contains("calm") }) };
 }

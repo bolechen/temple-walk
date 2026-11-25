@@ -1,0 +1,102 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 306870,
+   "sha256": "5fa335a333a850685008137592215d238be65932dc54f3ed756d6bce7002b7e1",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "shots/cam01.png",
+   "bytes": 1085626,
+   "sha256": "ee3fd4e3e302270279bff57038071f3135c46a71933ed320f35004fc3c11bffe",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "shots/cam02.png",
+   "bytes": 1107450,
+   "sha256": "d3ee3cd1cec35b0d7d96b6899415b6847cfe63c6257896e421fe177b0d656e27",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "shots/cam07.png",
+   "bytes": 1087831,
+   "sha256": "c8b64daeab9be7acf4900404129dc1cfdcf5301033ba20d7f23d1eb8de6e14a4",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "shots/corner.png",
+   "bytes": 1098306,
+   "sha256": "8653e46e2ec7e9c85b2c3089427a79189500493df92264e12843c2c702ab3af7",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "shots/eave.png",
+   "bytes": 1109768,
+   "sha256": "e6924a1da6cd59f531e20bda817fa52d9033d363a92ec70339aa35c2e826b2b6",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/cam01.png",
+   "bytes": 2442854,
+   "sha256": "07301258d172f45ab721ceb8dd5dc634c75de2f5911648156fc35f5a03dd9a01",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/cam02.png",
+   "bytes": 2478042,
+   "sha256": "16c43089d28392485a59e9149146267376bafc7e5a9776030963fa5534cfbf35",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/cam02_winter-day-742.png",
+   "bytes": 2815132,
+   "sha256": "2734e924432b51cf940b1eaada9a5363e1688ffc20f7b7169da4e9d907751d47",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/cam02_winter-day.png",
+   "bytes": 2821610,
+   "sha256": "57263339cef38f6fa2a4d60ea1409dd252cb238a48f6d3c851a317670a2b45cf",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/cam07_winter-day-742.png",
+   "bytes": 2578472,
+   "sha256": "43cc034cb48e7c74bb3ced7bce84a52886c0a0b8021d4ab34b4f13d41e0f6618",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/cam07_winter-day.png",
+   "bytes": 2578743,
+   "sha256": "164dd63859075129ba85bac04192b83f6ac69d98fd88fac0577fd61ccebdaed6",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/corner_winter-day-742.png",
+   "bytes": 2751820,
+   "sha256": "3551cfd595940fc204374c59c91c061a9bba58db86155d2324078d9f3b6f6764",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/corner_winter-day.png",
+   "bytes": 2753481,
+   "sha256": "553e4cd6dc89d125bd771f3d091ec15dd801a34789bab53a68e2da695c6a118a",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/eave.png",
+   "bytes": 2430290,
+   "sha256": "6aa3758369ea433d14a252e2b799da8f714cc08db708c0e9207cad852ba12f19",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  },
+  {
+   "path": "t4/eave_winter-day.png",
+   "bytes": 2709899,
+   "sha256": "5590e38776618872963ccc55c3d250398a640b1242c55dcb71e4144e578395b8",
+   "rev": "efa82d6996c99fe6fa013665dfe6ed1a0fb7a505"
+  }
+ ]
+}

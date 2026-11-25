@@ -92,11 +92,12 @@ test("from where he arrives, the outer gate's, the inner gate's, the archway's, 
   assert.ok(site.views.mouth[1] < FOOT.hall.z0 - stairProfile(SECOND.y).run, "the court's mouth is beyond the foot of the hall's back steps");
 });
 
-test("the middle way across the terrace before the great hall is 20 m wide and open, and the monument pavilion's place is held at its west edge", () => {
+test("the middle way across the terrace before the great hall is 20 m wide and open, and the monument pavilion stands at its west edge: its stele, plinth and columns in the way, the place before the stele open (stele.js)", () => {
   for (const [name, w] of both) {
     for (let x = -10; x <= 10; x += 0.5) for (let z = 1; z <= 14; z += 0.5) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) of the middle way is open`);
-    const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2;
-    for (const [x, z] of [[mx, mz], [M0.x0 + 0.3, M0.z0 + 0.3], [M0.x1 - 0.3, M0.z1 - 0.3]]) assert.ok(w.blocked(x, z), `${name}: the pavilion's block, (${x}, ${z})`);
+    const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, c = AX.MONUMENT_FORM.span / 2;
+    for (const [x, z] of [[mx, mz], [mx - 0.7, mz + 0.4], [mx + 0.7, mz - 0.4], ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => [mx + a * c, mz + b * c])]) assert.ok(w.blocked(x, z), `${name}: the stele, its plinth or a column, (${x}, ${z})`);
+    assert.ok(!w.blocked(site.places.copy.at[0], site.places.copy.at[1]), `${name}: the place before the stele is open`);
   }
   // 4–5 m square (ARCHITECTURE.md §3.2), clear of the 20 m middle way, against the west parapet (SITE.md §6.1: pavilions stand to either side of the way).
   assert.ok(MONUMENT.x1 - MONUMENT.x0 >= 4 && MONUMENT.x1 - MONUMENT.x0 <= 5 && MONUMENT.z1 - MONUMENT.z0 >= 4 && MONUMENT.z1 - MONUMENT.z0 <= 5);
@@ -235,4 +236,22 @@ test("the winter sun reaches the archway's front: over 55% of its middle bay lit
   for (let x = -2; x <= 2.001; x += 0.25) for (let y = 1.5; y <= 8.5; y += 0.25) { const P = [x, y, AXIS.paifangZ + 0.6], Q = P.map((v, i) => v + s[i] * 80); n++; if (!trees.some((t) => AX.treeBlocks(P, Q, t))) lit++; }
   assert.ok(lit / n >= 0.55, `${((100 * lit) / n).toFixed(1)}% of the middle bay lit`);
   assert.ok(EAST_WALL_TREES.every((t) => t.x - PATH.hw >= 7), "the east's dark ground stands 7 m and more off the path");
+});
+
+test("the monument's stele has a head: the Yingzao Fashi's proportions (chapter 3, 造赑屃鳌坐碑之制) for the shaft and the head, a head wider and thicker than the shaft, a cloud plate under it, and no tortoise", () => {
+  const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, S = AX.STELE, floor = M0.y + AX.MONUMENT_FORM.base + 0.45;
+  // The shaft: 0.4 wide and 0.15 thick to every unit of its length (原文), the head 0.44 square-wide and 0.18 thick (原文), its cloud plate 0.15 of the shaft's width high (原文).
+  assert.ok(near(S.w / S.L, 0.4, 1e-6) && near(S.t / S.L, 0.15, 1e-6), "the shaft is 4/10 wide and 1.5/10 thick of its length");
+  assert.ok(near(S.headW / S.L, 0.44, 1e-6) && near(S.headT / S.L, 0.18, 1e-6) && near(S.cloud, 0.15 * S.w, 1e-6), "the head 0.44 and 0.18 of the shaft's length; the cloud plate 0.15 of its width");
+  assert.ok(S.headW > S.w && S.headT > S.t, "the head is wider and thicker than the shaft");
+  // Drawn so: a line at the head's height across its middle meets the head's full width; at the shaft's height, only the shaft's.
+  site.root.updateMatrixWorld(true);
+  const ray = new THREE.Raycaster(), widthAt = (y) => {
+    const along = (dx) => { ray.set(new THREE.Vector3(mx + dx * 3, y, mz), new THREE.Vector3(-dx, 0, 0)); const h = ray.intersectObject(site.root, true).find((q) => Math.abs(q.point.z - mz) < 1e-6 && Math.abs(q.point.x - mx) < 1.2); return h ? Math.abs(h.point.x - mx) : 0; };
+    return along(1) + along(-1);
+  };
+  assert.ok(near(widthAt(floor + S.L / 2), S.w, 0.01), `the shaft's width ${widthAt(floor + S.L / 2)}`);
+  assert.ok(near(widthAt(floor + S.L + S.cloud + 0.1), S.headW, 0.02), `the head's width ${widthAt(floor + S.L + S.cloud + 0.1)}`);
+  // It stands clear under the ceiling plate, and nothing of it is a tortoise: the plinth stays the one plain block (the owner's lead: no turtle).
+  assert.ok(floor + S.L + S.headH < M0.y + AX.MONUMENT_FORM.base + AX.MONUMENT_FORM.column + 0.3 + AX.MONUMENT_FORM.beam - 0.1, "the head clears the ceiling plate");
 });
