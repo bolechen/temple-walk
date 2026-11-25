@@ -63,9 +63,10 @@ export const FOOT_TREES = Object.freeze([
 /**
  * Old arborvitae standing just outside the terrace's east wall, their crowns over its top (the art director, 2026-11-25, with A of #722's three: where the
  * east rows were thinned to let the sun onto the archway, the east side seen from the path is still a dark ground, but of crowns 13 m and more off the path
- * whose shadows fall short of the archway; no tall tree near the path). They stand on the town's ground, the crown from 4.6 m, over the wall's top at 4.2 m.
+ * whose shadows fall short of the archway; no tall tree near the path). They stand on the town's ground, the crown from 4.6 m, over the wall's top at 4.2 m;
+ * the three north of the archway are the ones seen from cam07, over the wall to the right of the archway (the four south of it stand beyond the gate's opening).
  */
-export const EAST_WALL_TREES = Object.freeze([[16.4, 120.8, 13.6], [16.9, 124.4, 14.8], [16.3, 128.6, 13.2], [16.7, 132.3, 14.4]].map(([x, z, h], i) => Object.freeze({ kind: "cypress", old: true, x, z, y: 0, h, r: 0.34 + 0.04 * (i % 2), env: Object.freeze({ base: 4.6, rx: 2.6 - 0.15 * (i % 2), ry: +((h - 4.6) / 2).toFixed(2) }) })));
+export const EAST_WALL_TREES = Object.freeze([[16.4, 120.8, 13.6], [16.9, 124.4, 14.8], [16.3, 128.6, 13.2], [16.7, 132.3, 14.4], [16.3, 102.2, 14.6], [16.6, 106.2, 15.4], [16.2, 113.6, 14.2]].map(([x, z, h], i) => Object.freeze({ kind: "cypress", old: true, back: true, x, z, y: 0, h, r: 0.34 + 0.04 * (i % 2), env: Object.freeze({ base: 4.6, rx: 2.6 - 0.15 * (i % 2), ry: +((h - 4.6) / 2).toFixed(2) }) })));
 /** A court tree's pit: edge stones `rim` wide standing `up` over the paving round a square of earth `side` across (two of the Yingzao Fashi's three-chi blocks, as the prologue's pits, three for a pine; by analogy, not a source). */
 export const COURT_PIT = Object.freeze({ side: 1.86, pine: 2.79, rim: 0.2, up: 0.065 });   // (a pine's pit three blocks across: its flared trunk is the thickest in the court)   // (edge stones 0.2 m wide: at 0.15 their top was exactly the baked floor's foothold and one side counted as a low thing his shoes were kept off)
 // Where each station stands. A (cam01) is 44 m out, where the nine bays fill about four fifths of a wide picture with the
