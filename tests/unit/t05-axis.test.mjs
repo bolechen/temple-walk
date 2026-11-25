@@ -92,11 +92,12 @@ test("from where he arrives, the outer gate's, the inner gate's, the archway's, 
   assert.ok(site.views.mouth[1] < FOOT.hall.z0 - stairProfile(SECOND.y).run, "the court's mouth is beyond the foot of the hall's back steps");
 });
 
-test("the middle way across the terrace before the great hall is 20 m wide and open, and the monument pavilion's place is held at its west edge", () => {
+test("the middle way across the terrace before the great hall is 20 m wide and open, and the monument pavilion stands at its west edge: its stele, plinth and columns in the way, the place before the stele open (stele.js)", () => {
   for (const [name, w] of both) {
     for (let x = -10; x <= 10; x += 0.5) for (let z = 1; z <= 14; z += 0.5) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) of the middle way is open`);
-    const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2;
-    for (const [x, z] of [[mx, mz], [M0.x0 + 0.3, M0.z0 + 0.3], [M0.x1 - 0.3, M0.z1 - 0.3]]) assert.ok(w.blocked(x, z), `${name}: the pavilion's block, (${x}, ${z})`);
+    const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, c = AX.MONUMENT_FORM.span / 2;
+    for (const [x, z] of [[mx, mz], [mx - 0.7, mz + 0.4], [mx + 0.7, mz - 0.4], ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => [mx + a * c, mz + b * c])]) assert.ok(w.blocked(x, z), `${name}: the stele, its plinth or a column, (${x}, ${z})`);
+    assert.ok(!w.blocked(site.places.copy.at[0], site.places.copy.at[1]), `${name}: the place before the stele is open`);
   }
   // 4–5 m square (ARCHITECTURE.md §3.2), clear of the 20 m middle way, against the west parapet (SITE.md §6.1: pavilions stand to either side of the way).
   assert.ok(MONUMENT.x1 - MONUMENT.x0 >= 4 && MONUMENT.x1 - MONUMENT.x0 <= 5 && MONUMENT.z1 - MONUMENT.z0 >= 4 && MONUMENT.z1 - MONUMENT.z0 <= 5);
