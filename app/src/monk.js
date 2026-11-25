@@ -77,7 +77,7 @@ const rodsOf = () => {
 let seatRods = rodsOf();
 // Cloth over a rod of radius r, at a distance d to the side of its middle line: round over the top, then falling away
 // at the slope it has where the round is left (LAP.cap of the radius out), as cloth hangs from a knee.
-export const LAP = { cap: 0.9, sharp: 95, belly: 10, back: 9, pool: 0.034, tail: 0.016, lie: 0.022, thick: 0.004, taut: 0.6, hollow: 0.9, droop: 0.006, trail: 0.018 };
+export const LAP = { cap: 0.9, sharp: 95, belly: 10, back: 9, pool: 0.034, tail: 0.016, lie: 0.022, thick: 0.004, taut: 0.6, hollow: 0.9, droop: 0.006, trail: 0.018, hem: 0.012, roll: 0.006 };
 const overRod = (d, r) => { const c = LAP.cap, e = c * r; return d < e ? Math.sqrt(r * r - d * d) : r * Math.sqrt(1 - c * c) - (c / Math.sqrt(1 - c * c)) * (d - e); };
 /** How high the folded legs hold the cloth at a point of the seat's frame (above the cushion's crown); far from them it falls below any floor. */
 export function legsTop(x, z) {
@@ -372,6 +372,14 @@ export function createMonk(opts = {}) {
     const hull = [], taut = LAP.taut * (1 - LAP.hollow * Math.exp(-sq(a / 0.62)));
     for (const q of pts) { while (hull.length > 1) { const a = hull[hull.length - 2], b = hull[hull.length - 1]; if ((b.y - a.y) * (q.rho - a.rho) <= (q.y - a.y) * (b.rho - a.rho)) hull.pop(); else break; } hull.push(q); }
     for (let i = 0, k = 0; i < pts.length; i++) { while (k < hull.length - 2 && hull[k + 1].rho < pts[i].rho) k++; const a = hull[k], b = hull[k + 1], line = a.y + (b.y - a.y) * (pts[i].rho - a.rho) / (b.rho - a.rho); if (line > pts[i].y) pts[i].y += taut * (line - pts[i].y); }
+    // Where it comes down onto the cushion the cloth is pressed into a crease, and its hem rolls up a little at the end
+    // (the sheet has both, and the art review asked for them back): over `LAP.hem` at its end the cloth lies pressed on
+    // the cushion and then lifts `LAP.roll` at its edge.
+    if (pooled >= 0) {
+      const end = pts[pts.length - 1].rho, from = end - LAP.hem;
+      // the crease: just before the hem the cloth is pressed down onto the cushion; then the hem rolls up off it
+      for (const q of pts) { if (q.rho < from - 0.012) continue; const g = cushionAt(q.x, q.z) + LAP.thick; const press = smooth(from - 0.012, from, q.rho); q.y = g + (1 - press) * Math.max(0, q.y - g) + LAP.roll * smooth(from, end, q.rho) * (1 - 0.5 * smooth(end - 0.002, end, q.rho)); }
+    }
     let len = 0; for (let i = 1; i < pts.length; i++) { len += Math.hypot(pts[i].rho - pts[i - 1].rho, pts[i].y - pts[i - 1].y); pts[i].len = len; }
     return { pts, len };
   };
@@ -1041,8 +1049,8 @@ export function createMonk(opts = {}) {
   let dressed = false;
   return {
     group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat, straps }, steps,
-    /** Seated on a cushion, in the seat's frame (x to his left, y up from the cushion's crown, z the way he faces): each hand's wrist, palm, the way its fingers run and its thumb, where the thumbs meet, and `clothTop(x, z)`, how high the lap's cloth lies. */
-    lap: { hands: lapHands, clothTop, legs: seatRods, handMid: HAND_MID },
+    /** Seated on a cushion, in the seat's frame (x to his left, y up from the cushion's crown, z the way he faces): each hand's wrist, palm, the way its fingers run and its thumb, where the thumbs meet, `clothTop(x, z)`, how high the lap's cloth lies, and the line each column of the skirt is laid along (`lines`, from behind him round by his right). */
+    lap: { hands: lapHands, clothTop, legs: seatRods, handMid: HAND_MID, lines: lapLines },
     get dressed() { return dressed; },
     /** How many of the robe's points, from its first, are its body (trunk and skirt); the sleeves, collar and sash come after them. */
     get robeBody() { return dressed ? robe.geometry.attributes.position.count : torsoCount; },

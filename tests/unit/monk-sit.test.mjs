@@ -187,3 +187,18 @@ test("asked to, he lays the hat at his left; and beside every cushion of the lev
   walker.setRoom(null);
   assert.ok(cushions >= 30 && lefts >= 3, `${cushions} cushions, the hat at his left beside ${lefts} of them`);
 });
+
+test("where the robe comes down onto the cushion it is pressed into a crease and its hem rolls up (the art review's relief, #666)", () => {
+  // Along every column of the skirt before him and at his sides, the last few centimetres dip and then rise again at
+  // the hem by a few millimetres: not one smooth slope down to a sharp edge.
+  // (Behind him the cloth comes straight down from his back onto the cushion, and there is no lap to lie out from.)
+  const m = createMonk(), n = m.lap.lines.length - 1; let checked = 0;
+  for (const [j, { pts }] of m.lap.lines.entries()) {
+    if (Math.abs(-Math.PI + (2 * Math.PI * j) / n) > 2.2) continue;
+    const tail = pts.filter((q) => q.rho > pts[pts.length - 1].rho - 0.03); if (tail.length < 6) continue;
+    const ys = tail.map((q) => q.y), low = Math.min(...ys), at = ys.indexOf(low), rise = Math.max(...ys.slice(at)) - low;
+    assert.ok(at < ys.length - 2 && rise >= 0.003, `a column's hem rises ${(rise * 1000).toFixed(1)} mm past its crease (its last 3 cm: ${ys.map((y) => (y * 1000).toFixed(0)).join(" ")} mm)`);
+    checked++;
+  }
+  assert.ok(checked >= 40, `${checked} columns checked`);
+});
