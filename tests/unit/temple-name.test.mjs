@@ -49,3 +49,10 @@ test("nothing a visitor takes away is written with the prologue's name outside t
     assert.deepEqual(lines, [], f);
   }
 });
+
+test("only the prologue keeps the book of seals; a level that says nothing hides it", async () => {
+  assert.equal((await loadLevel("t00")).book, true);
+  assert.equal((await loadLevel("t05")).book, undefined);
+  const css = fs.readFileSync(new URL("../../app/src/ui.css", import.meta.url), "utf8");
+  for (const sel of ["#bookBtn", "#goal", "#way", ".need-book"]) assert.ok(new RegExp(`body\\.nobook :is\\([^)]*${sel.replace(".", "\\.")}`).test(css), sel);
+});

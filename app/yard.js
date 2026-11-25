@@ -47,7 +47,7 @@ import { composeCard } from "./src/card.js";
 import { createClip, markCanvas, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
-import { setTemple, templeOf, sealOf, stemOf, saidNow, T00_NAME } from "./src/temple.js";
+import { setTemple, paintTemple, templeOf, sealOf, stemOf, saidNow, T00_NAME } from "./src/temple.js";
 import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
 import { logSwing, riteNow, pauseRites } from "./src/rites.js";
@@ -99,7 +99,7 @@ if (!relang) document.documentElement.classList.remove("relang");
 // Only the bytes are fetched here; they are opened once the plan is built, and let go.
 // Which temple (src/level.js, #369): ?level= names one; a name not known walks the prologue, and says so once.
 const LV = levelOf(location.search), L = await loadLevel(LV.id);
-setTemple(L);
+setTemple(L); paintTemple(document, L); document.body.classList.toggle("nobook", !L.book);
 if (!LV.known) console.warn(`?level=${LV.asked}: no such level; walking ${LV.id}`);
 // A level that does not keep its written plan up to what is drawn (T05) refuses `?walker=old`, and says so once.
 const WALKER = walkerMode(Q.get("walker"), L), WALKER_ASKED = Q.get("walker") === "old" && WALKER !== "old" ? "old" : undefined;

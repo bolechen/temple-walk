@@ -47,3 +47,17 @@ export const sealNow = () => sealOf(current);
 export const stemNow = () => stemOf(current);
 /** The temple's name in Chinese, for what is drawn as calligraphy (the book's page): `glyphs` then writes it in the forms the language uses. */
 export const nameNow = () => current?.name || T00_NAME;
+
+/**
+ * What index.html says of the prologue in its markup (the tab's title, the link previews' titles, the small seals on the menu
+ * and the slip, the title page's second line), put right for another level's temple. The prologue is left exactly as written.
+ * @param {Document} doc @param {Named | null | undefined} level
+ */
+export function paintTemple(doc, level) {
+  if (!level?.name || level.name === T00_NAME) return;
+  const name = templeOf(level), title = `${t("山门之外")} · ${name}`;
+  doc.title = title;
+  for (const sel of ['meta[property="og:title"]', 'meta[name="twitter:title"]']) doc.querySelector(sel)?.setAttribute("content", title);
+  for (const el of doc.querySelectorAll(".seal-mark[aria-hidden]")) el.textContent = sealOf(level);
+  const sub = doc.querySelector("#title .sub"); if (sub) sub.textContent = name;   // no 序章: the prologue's chapter mark is not this temple's
+}

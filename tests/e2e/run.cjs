@@ -790,6 +790,12 @@ const scenarios = {
       const dl = await t.page.getAttribute("#saveLink", "download");
       expect(dl && dl.startsWith(want[level][lang]), `${level}/${lang}: saved as ${dl}`);
       if (level === "t05") expect(!/云径|yunjing/i.test(dl), `${level}/${lang}: the saved name carries the prologue's: ${dl}`);
+      // The markup says the temple it walks (#703): the tab, the small seals, the title's second line, and the book of seals only where the level keeps one.
+      const m = await t.page.evaluate(() => ({ title: document.title, og: document.querySelector('meta[property="og:title"]').content, seals: [...document.querySelectorAll(".seal-mark[aria-hidden]")].map((e) => e.textContent), sub: document.querySelector("#title .sub").textContent, nobook: document.body.classList.contains("nobook"), book: getComputedStyle(document.getElementById("bookBtn")).display, way: getComputedStyle(document.getElementById("way")).display, keyB: getComputedStyle(document.querySelector(".need-book")).display }));
+      if (level === "t05") {
+        expect(!/云径|Yunjing/.test(JSON.stringify(m)), `t05/${lang}: the page still says the prologue's name: ${JSON.stringify(m)}`);
+        expect(m.nobook && m.book === "none" && m.way === "none" && m.keyB === "none" && m.seals.every((x) => x === "奉明") && !m.sub.includes("序章"), `t05/${lang}: ${JSON.stringify(m)}`);
+      } else expect(!m.nobook && m.keyB !== "none" && m.seals.every((x) => x === "云径") && (lang === "en" || m.title.includes("云径禅寺")), `t00/${lang}: the prologue's page changed: ${JSON.stringify(m)}`);
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },

@@ -15,6 +15,7 @@ export default {
   id: "t00",
   name: "云径禅寺",
   seal: "云径",
+  book: true,
   build: buildSite,
   createWalker,
   land: terrain,
