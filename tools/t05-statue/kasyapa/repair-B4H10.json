@@ -1,0 +1,115 @@
+{
+ "turn": -90,
+ "source": "kasyapa.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.937,
+   "band": 0.03
+  },
+  {
+   "op": "headscale",
+   "note": "a face of its own among the seven (3D review risk 1): head width, depth and height scaled about its centre",
+   "c": [
+    0,
+    0.0449,
+    0.8926
+   ],
+   "s": [
+    1.06,
+    1.0,
+    0.97
+   ],
+   "z0": 0.7876,
+   "fade": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.47,
+   "k": 0.899,
+   "band": 0.05
+  },
+  {
+   "op": "tilt",
+   "note": "the figure above the lotus leaned 4.0° about the seat's rear edge (#701)",
+   "c": [
+    0,
+    0.1915,
+    0.359
+   ],
+   "deg": 4.0,
+   "z0": 0.4787,
+   "fade": 0.1436
+  },
+  {
+   "op": "tilt",
+   "note": "head bowed 10.0° about the neck (the shipping pose, #701)",
+   "c": [
+    0,
+    0.02,
+    0.7125
+   ],
+   "deg": 10.0,
+   "z0": 0.7211,
+   "fade": 0.0365,
+   "rx": 0.1217,
+   "fx": 0.0209
+  },
+  {
+   "op": "snapshot",
+   "name": "bow",
+   "note": "the points as the bow leaves them"
+  },
+  {
+   "op": "chinshape",
+   "from": "bow",
+   "z0": 0.7642,
+   "s": 8.3554,
+   "k_groove": 0.85,
+   "k_chin": 1.0,
+   "arc_keep": 0.5,
+   "bow": 14.0,
+   "chin_behind": 0.008,
+   "chin_shift": 0.015,
+   "lip0": 0.0014361951219512199,
+   "lip1": 0.0077793902439024405,
+   "gr0": 0.0014361951219512199,
+   "gr1": 0.010771463414634148,
+   "chin0": 0.0014361951219512199,
+   "chin1": 0.01914926829268293,
+   "jaw": 0.008377804878048782,
+   "bin": 0.0004787317073170733,
+   "span": 0.043085853658536594,
+   "xm": 0.0035904878048780495,
+   "x0": 0.0,
+   "x1": 0.047873170731707326,
+   "front": 0.02,
+   "ffront": 0.012,
+   "smooth": {
+    "iter": 24,
+    "lam": 0.5
+   },
+   "dsmooth": 9,
+   "ramp": 0.25,
+   "note": "the lower profile from the lower lip to the jaw rebuilt on r3c's own: the groove at 0.85 of its depth, the chin behind the lip's tip, a wide bell across the face (#701, 自拟)"
+  }
+ ]
+}
