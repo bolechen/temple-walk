@@ -10,10 +10,12 @@ import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER, FILL } from "./hall.js";
-import { buildAltar } from "./altar.js";
+import { buildAltar, benchFigures } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 import { buildTower } from "./tower.js";
 import { buildSurround } from "./surround.js";
+import { dryMaterials } from "./dry.js";
+import { debugGate } from "../../src/debuggate.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
  * now 1.0 m thick and wrapping its 0.81 m columns, and its south edge 0.1 m out so that the front corner columns, 0.405 m
@@ -144,7 +146,12 @@ export function buildSite(M) {
   // `?off=altar` leaves the altar, the figures, their halos and the kings undrawn (they are merged with the hall's own stone,
   // plaster and wood, so the page's `?off=` cannot reach them): what they cost a frame, measured apart (#493). Still walked round.
   const offAltar = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("altar");
-  if (!offAltar) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
+  // The debug panel's 「物件」 (#684, src/objects-debug.js): where it is open, the seven are parts of their own and the houses outside the walls too, so that the panel
+  // can draw one again (the hooks are `window.__t05Objects`); nowhere else, and the picture is the same either way. Read as `?off=altar` is.
+  const bench = typeof location !== "undefined" && debugGate({ dev: !!import.meta.env?.DEV, hostname: location.hostname, search: location.search });
+  const hooks = bench ? (/** @type {any} */ (globalThis).__t05Objects = /** @type {Record<string, any>} */ ({})) : null;
+  if (!offAltar && !bench) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
+  if (!offAltar && bench) { const fg = benchFigures(M, altar, sh); root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), M.plaster(), sh), fg.group); hooks.figures = fg; }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
     const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
@@ -166,12 +173,12 @@ export function buildSite(M) {
   };
 
   root.add(ax.group);
-  root.add(buildSurround(M, C));   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
+  const surround = buildSurround(M, C, { bench }); root.add(surround); if (hooks) hooks.houses = surround.userData.houses;   // the trees and low roofs of the town outside the walls (./surround.js, #548): nothing walked, nothing held
   // The old town's pagoda far to the west-south-west (./tower.js, #548 step two): a part of its own, left out by ?off=tower, nothing else reads it.
   const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
   if (!offTower) root.add(buildTower());
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
-  const land = mesh(merge(earth), M.earth, { cast: false }); land.userData.walk = false; root.add(land);
+  const land = mesh(merge(earth), dryMaterials(M).earth, { cast: false }); land.userData.walk = false; root.add(land);
 
   const buildings = [{ name: "台基", x0: -pX, x1: pX, z0: pN, z1: P.zS, y: 0 }, { name: "月台", x0: -tX, x1: tX, z0: T.zN, z1: T.zS, y: 0 }, { name: "大雄殿", ...hall.box, y: top }, ...ax.buildings];
   // Named views (shots.js draws each): the arrival, the two stations, and the court seen from the terrace.
