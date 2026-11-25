@@ -1,6 +1,7 @@
 {
  "_about": "Seconds each tests/unit/*.test.mjs took alone on a dev machine (#442); tools/ci/unit-shard.cjs shares the files among the CI machines by these. A file missing here counts as the median.",
  "files": {
+  "t05-dry.test.mjs": 0.6,
   "eye-rooms.test.mjs": 107.6,
   "follow.test.mjs": 46.5,
   "spring-arm.test.mjs": 43.1,
