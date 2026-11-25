@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.0](https://github.com/bolechen/temple-walk/compare/v0.8.0...v0.9.0) (2026-11-25)
+
+
+### Features
+
+* **level:** a level may say how it looks the first time; T05 opens in early winter by day ([#573](https://github.com/bolechen/temple-walk/issues/573)) ([#674](https://github.com/bolechen/temple-walk/issues/674)) ([e21965a](https://github.com/bolechen/temple-walk/commit/e21965a0cf3d363d54d1a7386f55b0e7b89cb5d1))
+* **t05:** J01 early-winter clear light as the level's own mood table ([#573](https://github.com/bolechen/temple-walk/issues/573) step 7) ([#665](https://github.com/bolechen/temple-walk/issues/665)) ([2f98879](https://github.com/bolechen/temple-walk/commit/2f988791c8d212c58a667fd72bcc871093bacc8d))
+* **t05:** wear the stair edge thinner in J01's low light, crest 0.25 ([#573](https://github.com/bolechen/temple-walk/issues/573)) ([#679](https://github.com/bolechen/temple-walk/issues/679)) ([29fd055](https://github.com/bolechen/temple-walk/commit/29fd055863ca8633680e6ba8e6ed9560408cec90))
+* **tools:** review-sheet, three views and numbers for the cheap first art review ([#675](https://github.com/bolechen/temple-walk/issues/675)) ([d7e8771](https://github.com/bolechen/temple-walk/commit/d7e8771bf038d2c64c1b6058921874d118e6748d))
+* **tools:** 调试面板「物件」组的框架，第一半 ([#684](https://github.com/bolechen/temple-walk/issues/684)) ([#687](https://github.com/bolechen/temple-walk/issues/687)) ([f4e9b73](https://github.com/bolechen/temple-walk/commit/f4e9b732c983bdde4677c257833b3d7ca5350227))
+
+
+### Bug Fixes
+
+* **monk:** 推镜淡出时半透明只画朝向镜头的一面，渐变区放宽到 1.5 m ([#632](https://github.com/bolechen/temple-walk/issues/632)) ([#676](https://github.com/bolechen/temple-walk/issues/676)) ([c8eb25f](https://github.com/bolechen/temple-walk/commit/c8eb25fb6bc86dfd8370bfc425f10e0fcaf83579))
+* **novice:** 盘坐先盘腿再铺袍，两手叠放腿面贴小腹，坐下取笠 ([#664](https://github.com/bolechen/temple-walk/issues/664)) ([#680](https://github.com/bolechen/temple-walk/issues/680)) ([2ac19ad](https://github.com/bolechen/temple-walk/commit/2ac19ad08359185e02fb08ebc99e4f3ad36a90d6))
+* **t00:** 三殿上香不再踩过坐垫，殿中正中不放蒲团 ([#638](https://github.com/bolechen/temple-walk/issues/638)) ([#668](https://github.com/bolechen/temple-walk/issues/668)) ([c45b92d](https://github.com/bolechen/temple-walk/commit/c45b92d9381d049e2dead9344a3a6fa49058aa74))
+* **t05:** draw a gable house's ends as brick under a thin roof plate ([#573](https://github.com/bolechen/temple-walk/issues/573)) ([#671](https://github.com/bolechen/temple-walk/issues/671)) ([9f21e03](https://github.com/bolechen/temple-walk/commit/9f21e03d2ee0f53c76b65cc6037f6b6b04ee998d))
+* **ui:** 为他人点灯弹窗里的长链接收起来，复制和分享仍是完整链接 ([#639](https://github.com/bolechen/temple-walk/issues/639)) ([#669](https://github.com/bolechen/temple-walk/issues/669)) ([cdc3bb4](https://github.com/bolechen/temple-walk/commit/cdc3bb4908c832fc2448cc594e5ce65fc0c99363))
+
 ## [0.8.0](https://github.com/bolechen/temple-walk/compare/v0.7.0...v0.8.0) (2026-11-24)
 
 
