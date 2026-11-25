@@ -15,6 +15,30 @@
    "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
   },
   {
+   "path": "crop-copy-hand-after.png",
+   "bytes": 397338,
+   "sha256": "1d3a18ab328a1dd4a32609da0dbf2d30a688e3a2e5c3a4459cf5194bed87fa71",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
+   "path": "crop-copy-hand-before.png",
+   "bytes": 761086,
+   "sha256": "cd7d4caf7efb2d78ce5051274abbd6c7a80bb74537796d2e9f8352d1447507bc",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
+   "path": "crop-p1b-hand.png",
+   "bytes": 608545,
+   "sha256": "18fc1157e78b2178997345c39c828ab0de648a2d48c85867930d6db5847d3f11",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
+   "path": "crop-slip-stroke-390x844.png",
+   "bytes": 560243,
+   "sha256": "910f4022ab34d5dbc4682ea0b818b56614595a25c38ec905b9b29e00a543ef29",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
    "path": "j01-shot-copy-t4.png",
    "bytes": 3137513,
    "sha256": "b46ed4268eb2d898e4292d037a71f884953d2600de4f48bec852252e4170c3d5",
