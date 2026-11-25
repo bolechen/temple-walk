@@ -5,7 +5,7 @@
 ## 两次 Job
 
 - **run 20261125-153838**（`t4-report-cost.json`）：帧耗，本分支与当前 main（9cdfb5d，`BASE_SITE`）同一 Job 交替各两轮；图三张，冬昼（与先前证据同一气氛，便于对照）。
-- **run 20261125-154240**（`t4-report-j01.json`）：只出图，J01（夏昼，基线气氛）四张：抄碑终点机位、P1 3/4 低机位、cam01、碑面。
+- **run 20261125-154240**（`t4-report-j01.json`）：只出图，夏昼四张。**作废**：T05 的 J01 是冬昼，夏昼是引擎默认的灰天，不是玩家看到的 J01；J01 四张见 `728-t4c/`（run 20261125-154648）。
 
 ## 帧耗（`__cost`，毫秒，两轮均值）
 
@@ -19,8 +19,8 @@
 
 ## 图（推在证据库，钉在 4147789：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/4147789111a3b40fdc57c8c4d46131d20194de4c/t05/728-t4b ，见 `MANIFEST.json`）
 
-- `j01-shot-copy.png`、`j01-shot-p1b.png`、`j01-cam01.png`、`j01-stele.png`：J01。碑文在整石上读得出；纸面干净，抄的那列字在纸上。
+- `j01-shot-copy.png`、`j01-shot-p1b.png`、`j01-cam01.png`、`j01-stele.png`：夏昼（**作废**，文件名里的 j01 是误写，以 `728-t4c/` 为准）。
 - `winter-shot-copy.png`、`winter-shot-p1b.png`、`winter-cam01.png`：冬昼。
 - `collage.jpg`（只在证据库）：上排 J01 四张，下排冬昼三张与 J01 纸面放大。
 
-**留意**：这几张 J01 的天是阴灰色，不是 #740 标题里说的蓝天。`shots.js` 用的是 `?season=summer&time=day`，也许与 #740 改的那一处不是同一条路径；请 T05 主创/终审判断，不在本 PR 的范围。
+**更正**：夏昼那四张天是阴灰色，原因是 T05 的 J01 是冬昼（`level.js` 的 `moodFor` 只对 winter + day 给 J01），夏昼走的是引擎默认气氛（T05 主创确认）。冬昼三张（run 20261125-153838）就是 J01。
