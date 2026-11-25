@@ -1,0 +1,692 @@
+{
+ "tuning": [
+  {
+   "voice": "qin",
+   "m": 55,
+   "want": 196,
+   "got": 196,
+   "cents": 0.1,
+   "peak": 0.167
+  },
+  {
+   "voice": "qin",
+   "m": 62,
+   "want": 293.66,
+   "got": 293.66,
+   "cents": 0,
+   "peak": 0.182
+  },
+  {
+   "voice": "qin",
+   "m": 67,
+   "want": 392,
+   "got": 392,
+   "cents": 0,
+   "peak": 0.227
+  },
+  {
+   "voice": "qin",
+   "m": 72,
+   "want": 523.25,
+   "got": 523.27,
+   "cents": 0.1,
+   "peak": 0.169
+  },
+  {
+   "voice": "low",
+   "m": 38,
+   "want": 73.42,
+   "got": 73.42,
+   "cents": 0,
+   "peak": 0.265
+  },
+  {
+   "voice": "low",
+   "m": 43,
+   "want": 98,
+   "got": 98,
+   "cents": 0,
+   "peak": 0.262
+  },
+  {
+   "voice": "harm",
+   "m": 67,
+   "want": 392,
+   "got": 392,
+   "cents": 0,
+   "peak": 0.163
+  },
+  {
+   "voice": "harm",
+   "m": 74,
+   "want": 587.33,
+   "got": 587.46,
+   "cents": 0.4,
+   "peak": 0.151
+  },
+  {
+   "voice": "harm",
+   "m": 79,
+   "want": 783.99,
+   "got": 784.08,
+   "cents": 0.2,
+   "peak": 0.152
+  },
+  {
+   "voice": "xiao",
+   "m": 55,
+   "want": 196,
+   "got": 196.05,
+   "cents": 0.4,
+   "peak": 0.114
+  },
+  {
+   "voice": "xiao",
+   "m": 62,
+   "want": 293.66,
+   "got": 293.68,
+   "cents": 0.1,
+   "peak": 0.113
+  },
+  {
+   "voice": "xiao",
+   "m": 67,
+   "want": 392,
+   "got": 391.96,
+   "cents": -0.2,
+   "peak": 0.116
+  },
+  {
+   "voice": "xiao",
+   "m": 72,
+   "want": 523.25,
+   "got": 523.3,
+   "cents": 0.2,
+   "peak": 0.117
+  }
+ ],
+ "summer-day": {
+  "sr": 44100,
+  "seconds": 697,
+  "bytes": 122950800,
+  "peak_dbfs": -15.39,
+  "clipped": 0,
+  "rms_db_5s": [
+   -34.7,
+   -39.3,
+   -56.3,
+   -115.7,
+   -39,
+   -34.1,
+   -54.7,
+   -118,
+   -37.5,
+   -33.3,
+   -39.4,
+   -57.5,
+   -118.2,
+   -37.3,
+   -36.2,
+   -39.9,
+   -42,
+   -104,
+   -120,
+   -41.7,
+   -40.1,
+   -38.4,
+   -56.3,
+   -110.9,
+   -40.2,
+   -41.7,
+   -39,
+   -31.9,
+   -32.3,
+   -41.6,
+   -36.6,
+   -54.1,
+   -120,
+   -120,
+   -49.2,
+   -38.4,
+   -59.1,
+   -120,
+   -120,
+   -47,
+   -53.6,
+   -119.9,
+   -120,
+   -46.6,
+   -91,
+   -120,
+   -49.1,
+   -94.4,
+   -120,
+   -120,
+   -62.7,
+   -38.3,
+   -38.5,
+   -38.6,
+   -38.5,
+   -38.3,
+   -37.6,
+   -38.4,
+   -38,
+   -38.1,
+   -38,
+   -38.1,
+   -39.1,
+   -42,
+   -35.8,
+   -36.3,
+   -36.5,
+   -35,
+   -35,
+   -34.6,
+   -61.8,
+   -120,
+   -46.7,
+   -40.9,
+   -46.6,
+   -119.6,
+   -120,
+   -40.6,
+   -46.3,
+   -119.9,
+   -42.1,
+   -42,
+   -75.4,
+   -120,
+   -39.9,
+   -37.1,
+   -36.8,
+   -95.6,
+   -120,
+   -40.8,
+   -44,
+   -39.1,
+   -28.9,
+   -32.7,
+   -34.8,
+   -35.3,
+   -39.2,
+   -74,
+   -31.8,
+   -36.8,
+   -29.7,
+   -29.4,
+   -30.2,
+   -30.9,
+   -28.2,
+   -27.8,
+   -28.4,
+   -31.5,
+   -34,
+   -48.7,
+   -27.8,
+   -28.7,
+   -34,
+   -35.2,
+   -35.2,
+   -43.8,
+   -108.6,
+   -120,
+   -41.2,
+   -43.4,
+   -44.3,
+   -41.1,
+   -71.1,
+   -120,
+   -120,
+   -49.3,
+   -40.5,
+   -42.6,
+   -32,
+   -32,
+   -32.9,
+   -33.3,
+   -44.3,
+   -38,
+   -42.3,
+   -66.8,
+   -120,
+   -120,
+   -120
+  ],
+  "silences_over_3s": [
+   [
+    13,
+    11.4
+   ],
+   [
+    32.7,
+    9.9
+   ],
+   [
+    57.8,
+    10.1
+   ],
+   [
+    84,
+    14.4
+   ],
+   [
+    112.6,
+    9.3
+   ],
+   [
+    128.3,
+    4.6
+   ],
+   [
+    156.9,
+    16.5
+   ],
+   [
+    182.3,
+    13.8
+   ],
+   [
+    202,
+    14.6
+   ],
+   [
+    219.2,
+    12.9
+   ],
+   [
+    234.3,
+    19.9
+   ],
+   [
+    351,
+    13.9
+   ],
+   [
+    372.4,
+    13
+   ],
+   [
+    392.2,
+    11.9
+   ],
+   [
+    410.4,
+    11
+   ],
+   [
+    434.4,
+    11.5
+   ],
+   [
+    453.5,
+    5.6
+   ],
+   [
+    485.3,
+    5.6
+   ],
+   [
+    547.9,
+    3
+   ],
+   [
+    578.7,
+    12.4
+   ],
+   [
+    598.8,
+    5.8
+   ],
+   [
+    610.6,
+    19.3
+   ],
+   [
+    635.8,
+    3.4
+   ],
+   [
+    663.4,
+    4
+   ]
+  ],
+  "phrases": [
+   {
+    "at": 0.15,
+    "place": "grove",
+    "section": "grove",
+    "length": 9.9,
+    "rest": 14.1,
+    "sig": "grove:h79,h82,h74"
+   },
+   {
+    "at": 24.4,
+    "place": "grove",
+    "section": "grove",
+    "length": 7,
+    "rest": 11.1,
+    "sig": "grove:h72,h74"
+   },
+   {
+    "at": 42.65,
+    "place": "grove",
+    "section": "grove",
+    "length": 12.2,
+    "rest": 12.9,
+    "sig": "grove:h79,h82,h84,h74"
+   },
+   {
+    "at": 67.9,
+    "place": "grove",
+    "section": "grove",
+    "length": 9.8,
+    "rest": 12,
+    "sig": "grove:h82,h84,h67"
+   },
+   {
+    "at": 72,
+    "place": "stair",
+    "cut": true
+   },
+   {
+    "at": 77.15,
+    "place": "stair",
+    "section": "stair",
+    "length": 9.3,
+    "rest": 11.7,
+    "sig": "stair:l43,q65,q67,q70"
+   },
+   {
+    "at": 98.4,
+    "place": "stair",
+    "section": "stair",
+    "length": 11.7,
+    "rest": 11.6,
+    "sig": "stair:l43,q65,q67,q65,q62,h67"
+   },
+   {
+    "at": 121.9,
+    "place": "stair",
+    "section": "stair",
+    "length": 9.2,
+    "rest": 11.6,
+    "sig": "stair:l43,q60,q62,q65"
+   },
+   {
+    "at": 132.9,
+    "place": "gate",
+    "section": "gate",
+    "length": 15.8,
+    "rest": 11.2,
+    "sig": "gate:p43,l43,q62,q65,q67,q65,q62,l43"
+   },
+   {
+    "at": 144,
+    "place": "court",
+    "cut": true
+   },
+   {
+    "at": 149.15,
+    "place": "court",
+    "section": "court",
+    "length": 9.3,
+    "rest": 14.8,
+    "sig": "court:q62,q62"
+   },
+   {
+    "at": 173.4,
+    "place": "court",
+    "section": "court",
+    "length": 8.2,
+    "rest": 14.4,
+    "sig": "court:q67,h74"
+   },
+   {
+    "at": 196.15,
+    "place": "court",
+    "section": "court",
+    "length": 8.2,
+    "rest": 11.9,
+    "sig": "court:q67,q62"
+   },
+   {
+    "at": 216.65,
+    "place": "court",
+    "section": "court",
+    "length": 5.1,
+    "rest": 10.1,
+    "sig": "court:q55"
+   },
+   {
+    "at": 232.15,
+    "place": "court",
+    "section": "court",
+    "length": 4.5,
+    "rest": 17.9,
+    "sig": "court:q62"
+   },
+   {
+    "at": 254.15,
+    "place": "hall",
+    "section": "hall",
+    "length": 20.8,
+    "rest": 7.3,
+    "sig": "hall:p43,l43"
+   },
+   {
+    "at": 282.4,
+    "place": "hall",
+    "section": "hall",
+    "length": 20.8,
+    "rest": 7.4,
+    "sig": "hall:p43,l43,l50"
+   },
+   {
+    "at": 310.9,
+    "place": "hall",
+    "section": "hall",
+    "length": 20.8,
+    "rest": 6.4,
+    "sig": "hall:p43,l38"
+   },
+   {
+    "at": 314,
+    "place": "court",
+    "cut": true
+   },
+   {
+    "at": 319.15,
+    "place": "court",
+    "section": "court",
+    "length": 8.9,
+    "rest": 13.8,
+    "sig": "court:q67,q65"
+   },
+   {
+    "at": 339.15,
+    "place": "upper",
+    "section": "upper",
+    "length": 11.5,
+    "rest": 13.9,
+    "sig": "upper:l43,q62,q65,q67,x70"
+   },
+   {
+    "at": 364.9,
+    "place": "upper",
+    "section": "upper",
+    "length": 9.2,
+    "rest": 11,
+    "sig": "upper:l43,q67,q65,q62"
+   },
+   {
+    "at": 385.4,
+    "place": "upper",
+    "section": "upper",
+    "length": 8.7,
+    "rest": 9.8,
+    "sig": "upper:l43,q62,q67,q70"
+   },
+   {
+    "at": 404.15,
+    "place": "upper",
+    "section": "upper",
+    "length": 7.5,
+    "rest": 9.5,
+    "sig": "upper:l43,q60,q65,q70"
+   },
+   {
+    "at": 421.4,
+    "place": "upper",
+    "section": "upper",
+    "length": 12.7,
+    "rest": 11.4,
+    "sig": "upper:l43,q67,q72,q74,x70"
+   },
+   {
+    "at": 445.9,
+    "place": "upper",
+    "section": "upper",
+    "length": 9.2,
+    "rest": 10.6,
+    "sig": "upper:l43,q65,q62,q60"
+   },
+   {
+    "at": 459.15,
+    "place": "summit",
+    "section": "summit",
+    "length": 18.5,
+    "rest": 13,
+    "sig": "summit:p43,x79,x82,x79,q65,q62,q58"
+   },
+   {
+    "at": 490.9,
+    "place": "summit",
+    "section": "summit",
+    "length": 19.9,
+    "rest": 11.3,
+    "sig": "summit:p43,x74,x77,x79,q60,q58,q53"
+   },
+   {
+    "at": 493.25,
+    "place": "summit",
+    "cut": true
+   },
+   {
+    "at": 498.4,
+    "place": "summit",
+    "section": "complete",
+    "length": 39.9,
+    "rest": 12.4,
+    "sig": "complete:p43,l43,q62,q65,q67,q65,q62,q60,q55,x74,x77,x79,x77,x74,x72,x67,l43"
+   },
+   {
+    "at": 550.9,
+    "place": "summit",
+    "section": "summit",
+    "length": 19.7,
+    "rest": 11.4,
+    "sig": "summit:p43,x74,x77,x74,q65,q60,q55"
+   },
+   {
+    "at": 572.4,
+    "place": "upper",
+    "section": "upper",
+    "length": 7.5,
+    "rest": 10.9,
+    "sig": "upper:l43,q65,q67,q70"
+   },
+   {
+    "at": 591.15,
+    "place": "upper",
+    "section": "upper",
+    "length": 15,
+    "rest": 11.3,
+    "sig": "upper:l43,q65,q62,q60,x67"
+   },
+   {
+    "at": 599,
+    "place": "court",
+    "cut": true
+   },
+   {
+    "at": 604.15,
+    "place": "court",
+    "section": "court",
+    "length": 8.7,
+    "rest": 16.9,
+    "sig": "court:h79,q60"
+   },
+   {
+    "at": 629.9,
+    "place": "court",
+    "section": "court",
+    "length": 4.9,
+    "rest": 17.4,
+    "sig": "court:h79"
+   },
+   {
+    "at": 639.15,
+    "place": "gate",
+    "section": "gate",
+    "length": 15.8,
+    "rest": 12.2,
+    "sig": "gate:p43,l43,q62,q65,q67,q65,q62,l43"
+   },
+   {
+    "at": 667.4,
+    "place": "gate",
+    "section": "gate",
+    "length": 8.9,
+    "rest": 9.8,
+    "sig": "gate:l50,q62,q65,q62,q60"
+   }
+  ],
+  "render_seconds": 98.952,
+  "walk": [
+   [
+    "grove",
+    70
+   ],
+   [
+    "stair",
+    60
+   ],
+   [
+    "gate",
+    12
+   ],
+   [
+    "court",
+    110
+   ],
+   [
+    "hall",
+    60
+   ],
+   [
+    "court",
+    25
+   ],
+   [
+    "upper",
+    120
+   ],
+   [
+    "summit",
+    110
+   ],
+   [
+    "upper",
+    30
+   ],
+   [
+    "court",
+    40
+   ],
+   [
+    "gate",
+    40
+   ]
+  ]
+ }
+}

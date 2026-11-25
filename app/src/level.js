@@ -14,6 +14,12 @@ import t00 from "../levels/t00/level.js";
  * What a level hands the engine.
  * @typedef {object} Level
  * @property {string} id the folder's name under app/levels/, and the name of its baked floor (shared/walk/<id>.bin)
+ * @property {string} [name] the temple's name, in Chinese, as a photograph, a saved file and a share sheet say it (temple.js; the locale tables translate it); the prologue's when left out
+ * @property {Record<string, string>} [names] the name in the other languages (ja, en, ko), kept with the level so that a build that does not list the level carries none of it; the prologue's are lines of the locale tables
+ * @property {boolean} [cardLink] false: a photograph's card, a film's mark and the picture handed to the share sheet carry no address or code of the public page (T05: that page has no T05 yet, so a scan would walk the reader into the prologue). Left out, they carry it, as the prologue's always did
+ * @property {boolean} [ownVerse] true: a photograph prints only the verse this level itself gives its season and hour (`moodFor`'s `line`), and none where it gives none; left out, the hours' own verse (T05: no bamboo, no summer rain)
+ * @property {boolean} [book] the level keeps the book of seals (the small seal at the top left, the way to the next place, the key B): the prologue. Left out, those are hidden (`body.nobook`), not drawn for this level (T05's first release has no seals)
+ * @property {string} [seal] the two characters its seal is cut with, as PLACES has them
  * @property {(M: any) => any} build builds the place (buildSite)
  * @property {(site: any) => any} createWalker the walker of the written plan, which the baked floor's walker wraps
  * @property {(x: number, z: number) => number} land the height of the land outside the walls (the plan's terrain)
@@ -30,8 +36,11 @@ import t00 from "../levels/t00/level.js";
  * @property {boolean} [keepsPlace] keeps where he was under yunjing.place.v1 (the prologue only, until each level keeps its own; #385)
  * @property {boolean} [opening] plays the opening after 入山 (opening.js, which knows only the prologue's way)
  * @property {boolean} [title] raises the prologue's title at its gate
+ * @property {string} [intro] one line, in Chinese, said once in the foot line as the walk begins (a level whose first edition has no seals or book says so; src/levelsay.js)
+ * @property {Record<string, Record<string, string>>} [tr] the level's own words in `ja`, `en`, `ko`, each a table from the Chinese line to that language, kept with the level and not in app/locales/ (a build that holds no such level holds none of its words)
  * @property {{ place: string, line: string }} [how] the line at the foot of the title page: "region · road" (a region's name, never a real city's) and one sentence of this temple's own (#445); none, none shown
  * @property {(season: string, time: string, mood: Record<string, any>) => (Record<string, any> | null | undefined)} [moodFor] fields of mood.js's table this level replaces for a season and hour (given the table so far), or nothing: the hours' own numbers stand for a level that gives none (#488)
+ * @property {boolean} [keepsOwnPlace] keeps where he was under its own record in yunjing.levels.v1 (src/levelsave.js, S4), never the prologue's yunjing.place.v1, and stands him there on opening; no book, no seal, no title with it
  * @property {{ season: string, time: string }} [firstMood] the season and hour a page opens in the first time, when the address names none (T05: early winter by day, J01; docs/t05/DECISIONS.md, 2026-11-25). Nothing, and the prologue goes on as it was: the visitor's own season, by day until the book is filled once; a level that keeps no book of its own (`keepsPlace` false) is always on its first look
  * @property {[number, number]} [skyAt] where the sky's dome stands (x, z), so that its far side stays within the eye's 800 m from everywhere walked (#409; the origin by default)
  *

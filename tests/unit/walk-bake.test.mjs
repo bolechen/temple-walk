@@ -28,7 +28,7 @@ test("every named place, seat, door and view can be walked to from where he come
   const { header } = readHeader(readFileSync(FILE)), kinds = new Set(header.targets.map((t) => t.kind));
   for (const k of ["place", "seat", "door", "view"]) assert.ok(kinds.has(k), `the check asks after every ${k}`);
   assert.equal(header.targets.filter((t) => t.kind === "place").length, Object.keys({ ...prep.drawn.site.places, ...prep.drawn.rooms.places }).length);
-  assert.equal(header.targets.filter((t) => t.kind === "view").length, Object.values(prep.drawn.site.views).filter(Array.isArray).length);
+  assert.equal(header.targets.filter((t) => t.kind === "view").length, Object.entries(prep.drawn.site.views).filter(([id, v]) => Array.isArray(v) && !(prep.drawn.site.closedViews || []).includes(id)).length);
   const lost = header.targets.filter((t) => !t.new || !t.old);
   assert.deepEqual(lost.map((t) => `${t.kind} ${t.id}: drawn ${t.new}, plan ${t.old}`), []);
 });

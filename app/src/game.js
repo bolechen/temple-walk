@@ -18,9 +18,11 @@ import { traceStubCount } from "./censer.js";
 import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
+import { readLevelPlace, writeLevelPlace, clearLevelPlace } from "./levelsave.js";
 import { track } from "./analytics.js";
 import { titleHow } from "./titlehow.js";
 import { t, lang, glyphs, FONT } from "./i18n.js";
+import { saidNow, stemNow } from "./temple.js";
 import { moodOf } from "./mood.js";
 import { WEB } from "./channel.js";
 import { WISHES, decodeLamp, lampLink } from "./wishes.js";
@@ -170,7 +172,7 @@ export function createGame(y) {
     if (!completed) { completed = true; track("demo.complete", { count: journey.count(), seconds: Math.round(visit.seconds) }); }
     const el = $("toast"); if (completing || !el) { openBook(); return; }
     completing = true;
-    $("toastSeal").src = sealStamp(glyphs("七印圆满"), 220, { seed: 29 }).toDataURL(); $("toastName").textContent = t("云径禅寺 · 七印圆满");
+    $("toastSeal").src = sealStamp(glyphs("七印圆满"), 220, { seed: 29 }).toDataURL(); $("toastName").textContent = saidNow("云径禅寺 · 七印圆满");
     $("toastLine").textContent = t("钟、香、茶、句、井、灯、坐，帐上七处都盖了印。");
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
     setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; completing = false; openBook(); }, 900); }, 6400 * Math.max(fast, 0.3));
@@ -502,7 +504,7 @@ export function createGame(y) {
     const blob = /** @type {Blob} */ (await new Promise((r) => card.toBlob(r, "image/jpeg", 0.92))); if (!ui.isOpen("bless")) return;
     if (blessed) URL.revokeObjectURL(blessed.pic);
     const pic = URL.createObjectURL(blob), file = new File([blob], "yunjing-lamp.jpg", { type: "image/jpeg" }); blessed = { url, pic, file };
-    $("blessImg").src = pic; $("blessImg").alt = t(WISHES[i]); showLink(url); $("blessSave").href = pic; $("blessSave").download = t("云径禅寺-点灯.jpg");
+    $("blessImg").src = pic; $("blessImg").alt = t(WISHES[i]); showLink(url); $("blessSave").href = pic; $("blessSave").download = saidNow("云径禅寺-点灯.jpg");
     for (const id of ["blessCard", "blessLink", "blessActs", "blessSave"]) $(id).hidden = false;
     $("blessShare").hidden = !navigator.share; $("blessCopy").textContent = t("复制链接");
     $("blessCard").scrollIntoView?.({ block: "nearest", behavior: "smooth" });   // the card and its buttons are below the list: bring them into the paper
@@ -510,7 +512,7 @@ export function createGame(y) {
   });
   $("blessCopy")?.addEventListener("click", async () => { if (!blessed) return; try { await navigator.clipboard.writeText(blessed.url); $("blessCopy").textContent = t("已复制"); } catch { showLink(blessed.url, true); const r = document.createRange(); r.selectNodeContents($("blessLink")); const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r); } });
   $("blessShare")?.addEventListener("click", async () => {
-    if (!blessed) return; const data = /** @type {ShareData} */ ({ title: t("云径禅寺 · 点灯"), text: t("有人在此为你点了一盏灯。"), url: blessed.url });
+    if (!blessed) return; const data = /** @type {ShareData} */ ({ title: saidNow("云径禅寺 · 点灯"), text: t("有人在此为你点了一盏灯。"), url: blessed.url });
     if (navigator.canShare && navigator.canShare({ files: [blessed.file] })) data.files = [blessed.file];
     try { await navigator.share(data); } catch {}
   });
@@ -563,9 +565,9 @@ export function createGame(y) {
     page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label.split(" · ").map(glyphs).join(" · ") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
-    $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");
+    $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = saidNow("云径禅寺-朱印.jpg");
     // Shared from wherever the page is open (src/share.js, #344): the system's sheet, or a sheet to press and hold the page on.
-    $("bookShare").onclick = () => shareOrSave({ blob, url, name: "yunjing-seals.jpg", title: t("云径禅寺 · 朱印"), from: "goshuin", content: "book" });
+    $("bookShare").onclick = () => shareOrSave({ blob, url, name: `${stemNow()}-seals.jpg`, title: saidNow("云径禅寺 · 朱印"), from: "goshuin", content: "book" });
     $("bookSave").onclick = () => countDownload("book", "goshuin");
     // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
     const leaf = $("bookPage"), boxes = sealBoxes(SEALS.length);
@@ -641,7 +643,10 @@ export function createGame(y) {
   const free = placeKept(Q, BENCH, y.level);
   const titleOn = free && (!y.level || !!y.level.title);   // the prologue's title rises in the prologue only
   awaitTitle(titleOn && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
-  let left = free ? readPlace(localStorage) : null, kept = 0;
+  // The prologue's place is yunjing.place.v1; a level with a place of its own keeps it in yunjing.levels.v1 and the prologue's key is never read or written from there.
+  // (First edition: only a place out of doors, which is all T05 has: no room, no balcony; an older or tampered record is read by the same checks and settled below.)
+  const ownPlace = !!y.level && !y.level.keepsPlace && !!y.level.keepsOwnPlace;
+  let left = free ? (ownPlace ? (readLevelPlace(localStorage, levelId) && { ...readLevelPlace(localStorage, levelId), label: "", up: null, hall: null }) : readPlace(localStorage)) : null, kept = 0;
   if (left && left.up && !y.lofts[left.up]) left = null;
   if (left && left.hall && !y.hallIds?.includes(left.hall)) left = null;   // a hall this level does not have
   // A place is kept to the centimetre, which against a railing or a wall can fall just past the edge of the floor: it
@@ -662,7 +667,7 @@ export function createGame(y) {
     return o;
   };
   if (left && !y.relang && !y.crossing && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up, left.hall);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
-  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
+  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; if (ownPlace) { writeLevelPlace(localStorage, levelId, w); return; } writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   // Where the visit ends (#326): the first time the page is hidden after he has stepped in, named from the same source
   // as the place "接着走" offers, so the two always agree. A second hide of the same page says nothing.
   let leftNamed = false;
@@ -686,7 +691,7 @@ export function createGame(y) {
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
     track("demo.restart", { from: "title", seals: journey.count() });
     // Another level's start empties nothing of the prologue's.
-    journey.reset(); visit.metres = visit.seconds = 0; keep(); if (ours) { clearPlace(localStorage); forgetTitle(); } left = null; b.dataset.asked = "";
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); if (ours) { clearPlace(localStorage); forgetTitle(); } else if (ownPlace) clearLevelPlace(localStorage, levelId); left = null; b.dataset.asked = "";
     const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter(true);
   });
   // Stepping in. A first visit (and a visit begun again from the foot of the path) is shown where it is going first
