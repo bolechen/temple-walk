@@ -14,8 +14,8 @@
 const fs = require("fs"), path = require("path");
 const DIR = path.join(__dirname, "../../tests/unit");
 const SHARDS = 4;
-/** Longest a machine's share may be counted at, seconds: the PR's checks are held to three minutes from first check to `verify`. Four machines plan about 124 s each (#697), leaving a new test 15 s or more before this is reached. */
-const BUDGET = 150;   // (166 on three machines, raised twice from 160 for single tests; #697 added the fourth machine and gave it back)
+/** Longest a machine's share may be counted at, in the seconds of tests/unit/durations.json, which are each file run alone on a CI machine. A shard really takes about 2.5 times less than its plan, because `node --test` runs its files side by side on the runner's cores, so this is a bound on balance, not on the clock: what the clock follows is the longest single file, which is why no test file may be much over a minute (#697). Four machines plan about 303 s each, leaving a new test 15 s or more before this is reached. */
+const BUDGET = 320;   // (was 166 on three machines when durations.json held dev-machine times and left out the slowest files; #697 measured them all on CI)
 
 const files = () => fs.readdirSync(DIR).filter((f) => f.endsWith(".test.mjs")).sort();
 const durations = () => JSON.parse(fs.readFileSync(path.join(DIR, "durations.json"), "utf8")).files;
