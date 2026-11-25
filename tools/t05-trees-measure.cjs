@@ -67,6 +67,17 @@ const stats = (cs) => (cs.length ? { n: cs.length, L: med(cs.map((c) => c[0])), 
       r.hall = stats(of((q) => bay(q) && q.d > 60 && q.m !== SKY && q.mat !== "none")); r.archway = stats(of((q) => q.d > 12 && q.d < 40 && /^(woodV|woodX|beam|fascia|lattice)$/.test(q.mat) && Math.abs(q.x - w / 2) < 260));
       r.hallVsArchway = r.hall.n && r.archway.n ? +Math.abs(r.hall.L - r.archway.L).toFixed(1) : null;
       r.grass = stats(of((q) => q.mat === "dryGrass" || q.mat === "dryEarth"));
+      // the archway's middle bay (the art director's lines for A, 2026-11-25): its timber split into sun and shade at the lightness that best parts them
+      // (Otsu), the share in the sun, each part's median L*, and how much of each of the two middle columns is in the sun
+      const ARCH = /^(woodV|woodX|beam|fascia|lattice|plaque|bracket|paint)/, bayX = [w * 0.43, w * 0.57];
+      const mb = res.filter((q) => ARCH.test(q.mat) && q.d > 15 && q.d < 40 && q.x > bayX[0] && q.x < bayX[1] && q.y > h * 0.3 && q.y < h * 0.72);
+      if (mb.length > 10) {
+        const Ls = mb.map((q) => q.c[0]); let best = 0, cut = 0;
+        for (let tq = 5; tq < 80; tq += 0.5) { const a0 = Ls.filter((L) => L < tq), a1 = Ls.filter((L) => L >= tq); if (!a0.length || !a1.length) continue; const m0 = a0.reduce((p, v) => p + v, 0) / a0.length, m1 = a1.reduce((p, v) => p + v, 0) / a1.length, v = a0.length * a1.length * (m1 - m0) ** 2; if (v > best) { best = v; cut = tq; } }
+        const lit = mb.filter((q) => q.c[0] >= cut), shade = mb.filter((q) => q.c[0] < cut);
+        const cols = [...new Set(mb.filter((q) => q.mat === "woodV").map((q) => q.x))].sort((p, q) => p - q), side = (f) => { const xs = cols.filter(f); const px = mb.filter((q) => q.mat === "woodV" && xs.includes(q.x)); return px.length ? +(px.filter((q) => q.c[0] >= cut).length / px.length).toFixed(2) : null; };
+        r.bay = { n: mb.length, cut, litShare: +(lit.length / mb.length).toFixed(3), litL: med(lit.map((q) => q.c[0])), shadeL: med(shade.map((q) => q.c[0])), colLeftLit: side((x) => x < w / 2), colRightLit: side((x) => x >= w / 2) };
+      }
     }
     if (name === "cam01") {
       const stone = res.filter((q) => q.mat === "stone" && q.d < 70).map((q) => q.c), Ls = stone.map((c) => c[0]).sort((a, b) => a - b), cut = Ls[Math.floor(Ls.length * 0.6)] ?? 0;
