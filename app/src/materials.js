@@ -429,6 +429,12 @@ export function createMaterials() {
       vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
       col=vec3(.3,.3,.28)*A; col=mix(col,vec3(.16,.2,.1),smoothstep(.5,.75,fbm3(vWP*1.3+4.))*.45);
       rough_=Nr.w; nd_=Nr.xyz*1.2;`, { tex: ["stone"] }),
+    // T05's monument stele (shaft and head cut from one block), the monolith's grain at about half its value so that it is no brighter than the coursed stone
+    // of the pavilion's plinth and the terrace round it (the art review of #716: the plain monolith read as a pale slab against them).
+    steleMono: procMat("steleMono", { roughness: 0.8, envMapIntensity: 0.4 }, `
+      vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
+      col=vec3(.3,.3,.28)*A*.52; col=mix(col,vec3(.12,.15,.08),smoothstep(.5,.75,fbm3(vWP*1.3+4.))*.45);
+      rough_=Nr.w; nd_=Nr.xyz*1.2;`, { tex: ["stone"] }),
     // The imperial stele in the stele pavilion (#520): blue-grey stone, cooler and darker than the pavilion's platform, damp at the foot, worn bright where a hand
     // passes the front arrises, mossy on the shaded side low down, its writing weathered into traces and its title still cut. Everything is read from the
     // `stair` numbers stele.js writes (the point's place across the stone and up from the platform, which way the face looks, whether it is the base and whether

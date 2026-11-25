@@ -1,6 +1,6 @@
 // A level other than the prologue keeps its own place under yunjing.levels.v1 and leaves the prologue's ten keys alone (S4).
 import test from "node:test"; import assert from "node:assert/strict";
-import { LEVELS_KEY, readLevels, readLevelPlace, writeLevelPlace, clearLevelPlace, sanitizeLevelPlace } from "../../app/src/levelsave.js";
+import { LEVELS_KEY, readLevels, readLevelPlace, writeLevelPlace, clearLevelPlace, sanitizeLevelPlace, readLevelPage, markLevelPage, clearLevelPage } from "../../app/src/levelsave.js";
 import { readPlace, writePlace, PLACE_KEY, placeKept } from "../../app/src/resume.js";
 import { SAVE_KEYS } from "../../app/src/carry.js";
 
@@ -48,4 +48,32 @@ test("only a level that keeps a place of its own is read and written, and only a
   assert.equal(placeKept(new URLSearchParams("level=t05&cam=0,0,0,0"), false, { keepsOwnPlace: true }), false, "an address that names a place keeps none");
   assert.equal(placeKept(new URLSearchParams(""), false, null), true, "the prologue as before");
   assert.equal(PLACE_KEY, "yunjing.place.v1");
+});
+
+// T05's own page (docs/t05/CHECKPOINTS.md §2.2, PRD.md §1.3 (a)): the stroke for the whole and the line copied from the stele.
+test("T05's page keeps its marks under the same key, and the prologue's keys do not move by a byte", () => {
+  const s = store(OLD), before = snapshot(s);
+  assert.deepEqual(readLevelPage(s, "t05"), {});
+  assert.ok(markLevelPage(s, "t05", "p1", { at: 1795300000000 }));
+  assert.ok(!markLevelPage(s, "t05", "p1", { at: 1795300009999 }), "a stroke already made is not made again");
+  assert.ok(markLevelPage(s, "t05", "stele", { at: 1795300100000, line: "guan" }));
+  assert.ok(markLevelPage(s, "t05", "stele", { at: 1795300200000, line: "liaojin" }, true), "a second line copied replaces the first");
+  assert.deepEqual(readLevelPage(s, "t05"), { p1: { at: 1795300000000 }, stele: { at: 1795300200000, line: "liaojin" } });
+  assert.equal(snapshot(s), before, "every key but yunjing.levels.v1 is exactly as it was");
+  writeLevelPlace(s, "t05", { x: 1, z: 2, at: 3 });
+  assert.deepEqual(readLevelPage(s, "t05").p1, { at: 1795300000000 }, "keeping where he stood keeps the page");
+  clearLevelPlace(s, "t05"); assert.ok(readLevelPage(s, "t05").stele, "and forgetting it forgets nothing of the page");
+  clearLevelPage(s, "t05"); assert.deepEqual(readLevelPage(s, "t05"), {});
+  assert.equal(snapshot(s), before);
+});
+test("a save made before pages reads and writes back as it was; bad marks are dropped, not the record", () => {
+  const old = JSON.stringify({ v: 1, last: "t05", place: { t05: { x: 1, z: 2, yaw: 0, at: 9 } } }), s = store({ [LEVELS_KEY]: old });
+  writeLevelPlace(s, "t05", { x: 1, z: 2, yaw: 0, at: 9 }); assert.equal(s.getItem(LEVELS_KEY), old, "no page key appears for a level with none");
+  const bad = { v: 1, place: {}, page: { t05: { p1: { at: 5 }, x: 1, "Bad": { at: 5 }, stele: { at: "now" }, s2: { at: 7, line: "<script>" } }, t00: { p1: { at: 5 } }, "../x": { p1: { at: 5 } } } };
+  s.setItem(LEVELS_KEY, JSON.stringify(bad));
+  assert.deepEqual(readLevels(s).page, { t05: { p1: { at: 5 }, s2: { at: 7 } } }, "only well-formed marks of a level's own page survive; a line's name that is not a plain id is dropped");
+  assert.ok(!markLevelPage(store(), "t00", "p1", { at: 5 }), "the prologue's book is never written here");
+  assert.ok(!markLevelPage(store(), "t05", "P 1", { at: 5 }) && !markLevelPage(store(), "t05", "p1", { at: -1 }));
+  const many = store(); for (let i = 0; i < 20; i++) markLevelPage(many, "t05", "m" + i, { at: 1 + i });
+  assert.equal(Object.keys(readLevelPage(many, "t05")).length, 12, "a page holds a dozen marks at most");
 });

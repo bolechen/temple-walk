@@ -3,6 +3,7 @@
 // county is flat (docs/t05/SITE.md §4.1): no far hills, no bamboo, no censer. It keeps no place, plays no opening and
 // raises no title of its own yet, and the prologue's music is not played here (score.js zoneOf with no zones).
 import { buildSite, createWalker, COMPOUND, WAY } from "./site.js";
+import { PAGE } from "./page.js";
 import ja from "./locales/ja.js";
 import en from "./locales/en.js";
 import ko from "./locales/ko.js";
@@ -42,10 +43,11 @@ export default {
   createWalker,
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
+  keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4)
+  page: PAGE,                          // its own page, kept beside its place (yunjing.levels.v1): the observation's stroke and the line copied from the stele (./page.js, src/levelpage.js)
   // One line said once as the walk begins, in the foot line: the first edition has no seals and no book yet (the lead's and the owner's step one, 2026-11-25). No temple's name in it.
   intro: "这座寺还在修建，眼下没有朱印，也没有朱印帐。慢慢走一走就好。",
   tr: { ja, en, ko },   // its own words in the other languages, kept with the level
-  keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4); no book yet
   writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level
   backdrop: null,

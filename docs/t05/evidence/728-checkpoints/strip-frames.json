@@ -1,0 +1,213 @@
+{
+ "errors": [],
+ "shots": [
+  {
+   "file": "strip-1-0.4s.png",
+   "secs": 0.4,
+   "name": "0.4s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.721,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.062,
+     4.088,
+     11.059
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.058,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-2-0.6s.png",
+   "secs": 0.6,
+   "name": "0.6s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.611,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.048,
+     4.162,
+     11.021
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.163,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-3-0.8s.png",
+   "secs": 0.8,
+   "name": "0.8s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.035,
+     4.224,
+     10.989
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.317,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-4-1.0s.png",
+   "secs": 1,
+   "name": "1.0s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.5,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-5-1.2s.png",
+   "secs": 1.2,
+   "name": "1.2s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.683,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-6-1.4s.png",
+   "secs": 1.4,
+   "name": "1.4s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.837,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-7-1.6s.png",
+   "secs": 1.6,
+   "name": "1.6s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.942,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-8-1.8s.png",
+   "secs": 1.8,
+   "name": "1.8s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 0.588,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -16.03,
+     4.25,
+     10.975
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "copy",
+    "w": 0.991,
+    "cuts": 0
+   }
+  }
+ ]
+}
