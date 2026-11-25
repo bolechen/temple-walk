@@ -27,10 +27,12 @@ const STROKE = [[0.5, "取纸"], [1.9, "抬头看檐"], [3.0, "落笔"], [3.9, "
   await frames(4);
   if (P1) await page.evaluate(() => window.__page({ meet: true }));
   const id = P1 ? "p1b" : "copy";
-  await page.evaluate((i) => { window.__rite(i); }, id);   // (not awaited: the copy runs while the clock is held)
+  // The clock is held in the same moment the observance is begun (not awaited: it runs while the clock is held), so that every moment below
+  // counts from his first move; on a slow software page a hold taken after the leaf shows came seconds late.
+  await page.evaluate((i) => { window.__riteClock(0); window.__rite(i); }, id);
   // Once his hands are on the leaf the clock is held and stepped: each moment is a frame of the page as it is drawn then.
-  await page.waitForFunction(() => window.__rites().writing.leaf, null, { timeout: 120000 }).catch(async (e) => { console.error(JSON.stringify(await page.evaluate(() => ({ page: window.__page(), yard: (({ x, z, staged, target, route, frames }) => ({ x, z, staged, target, route, frames }))(window.__yard()), ui: window.__ui() })))); throw e; });
-  await page.evaluate(() => window.__riteClock(0));
+  for (let i = 0; i < 40 && !(await page.evaluate(() => window.__rites().writing.leaf)); i++) await frames(1);   // (he takes the leaf on the first steps of the held clock)
+  await page.waitForFunction(() => window.__rites().writing.held !== undefined, null, { timeout: 120000 }).catch(async (e) => { console.error(JSON.stringify(await page.evaluate(() => ({ page: window.__page(), yard: (({ x, z, staged, target, route, frames }) => ({ x, z, staged, target, route, frames }))(window.__yard()), ui: window.__ui() })))); throw e; });
   const list = P1 ? STROKE : COPY, shots = [];
   let held = 0;
   for (const [secs, name] of list) {
