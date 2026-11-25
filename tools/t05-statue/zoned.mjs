@@ -35,12 +35,13 @@ const run = (list, target) => { if (target === "keep" || target * 3 >= list.leng
 const results = cfg.tiers.map((tr, i) => ({ name: tr.name, before: parts[i].length / 3, ...run(parts[i], tr.keep ? "keep" : tr.target) }));
 const rr = run(restList, cfg.rest);
 const f = { out: (() => { const all = [...results.map((r) => r.out), rr.out]; const n = all.reduce((q, a) => q + a.length, 0); const o = new Uint32Array(n); let q = 0; for (const a of all) { o.set(a, q); q += a.length; } return o; })(), err: 0 }, r = { out: new Uint32Array(0), err: rr.err }; const fa = [], ra = restList;
-// Simplifying can leave a two-face sliver hanging on the body (a doubled triangle on a non-manifold edge); drop every piece of ten faces or fewer. Pieces are found with points welded by position (a texture seam splits indices, not the surface).
+// Simplifying can leave a two-face sliver hanging on the body by a non-manifold edge (a doubled triangle); drop every piece of ten faces or fewer, where a piece is faces joined across edges that exactly two faces share (as trimesh's split counts them), points welded by position (a texture seam splits indices, not the surface).
 const joined = (() => { const o = f.out, key = new Map(), id = (v) => { const k = `${pos[v * 3]}|${pos[v * 3 + 1]}|${pos[v * 3 + 2]}`; if (!key.has(k)) key.set(k, key.size); return key.get(k); };
-  const w = Array.from(o, id), par = Array.from({ length: key.size }, (_, i) => i); const find = (a) => { while (par[a] !== a) { par[a] = par[par[a]]; a = par[a]; } return a; };
-  for (let t = 0; t < w.length; t += 3) for (const v of [w[t + 1], w[t + 2]]) { const x = find(w[t]), y = find(v); if (x !== y) par[y] = x; }
-  const cnt = new Map(); for (let t = 0; t < w.length; t += 3) { const r = find(w[t]); cnt.set(r, (cnt.get(r) || 0) + 1); }
-  const keep = []; for (let t = 0; t < w.length; t += 3) if (cnt.get(find(w[t])) > 10) keep.push(o[t], o[t + 1], o[t + 2]);
+  const w = Array.from(o, id), nf = w.length / 3, par = Array.from({ length: nf }, (_, i) => i); const find = (a) => { while (par[a] !== a) { par[a] = par[par[a]]; a = par[a]; } return a; };
+  const edges = new Map(); for (let t = 0; t < nf; t++) for (let e = 0; e < 3; e++) { const a = w[t * 3 + e], b = w[t * 3 + (e + 1) % 3], k = a < b ? `${a}|${b}` : `${b}|${a}`; if (!edges.has(k)) edges.set(k, []); edges.get(k).push(t); }
+  for (const l of edges.values()) if (l.length === 2) { const x = find(l[0]), y = find(l[1]); if (x !== y) par[y] = x; }
+  const cnt = new Map(); for (let t = 0; t < nf; t++) { const r = find(t); cnt.set(r, (cnt.get(r) || 0) + 1); }
+  const keep = []; for (let t = 0; t < nf; t++) if (cnt.get(find(t)) > 10) keep.push(o[t * 3], o[t * 3 + 1], o[t * 3 + 2]);
   return new Uint32Array(keep); })();
 const map = new Int32Array(pos.length / 3).fill(-1); let n = 0; const np = [];
 const nidx = new Uint32Array(joined.length);
