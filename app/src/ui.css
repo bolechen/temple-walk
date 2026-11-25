@@ -627,6 +627,7 @@ body.photo #goal, body.photo #act, body.bare #goal, body.bare #act, body.bare #s
 #blessList button[aria-pressed="true"] { border-color: #a52a1d; box-shadow: inset 0 0 0 1px #a52a1d; }
 #blessCard { margin: 4px auto 10px; width: min(100%, 300px); } #blessCard img { display: block; width: 100%; height: auto; box-shadow: 0 8px 28px rgba(0,0,0,.35); }
 #blessLink { margin: 0 0 10px; font: 400 12px/1.5 var(--serif); color: var(--ink-3); word-break: break-all; -webkit-user-select: text; user-select: text; }
+#blessLink:not(.full) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* #639: only where the link goes; the whole of it is what copy and share hand on */
 #blessActs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 12px; }
 #blessActs[hidden], #blessCard[hidden], #blessLink[hidden] { display: none; }
 #bless .ink-btn { min-height: 44px; }
