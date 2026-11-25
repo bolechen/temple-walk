@@ -330,7 +330,7 @@ export function buildRoof(o) {
   // each leaning up the back, as scales or a fin's rays do
   const back = curve([[-0.42, 0], [-0.45, 0.2], [-0.42, 0.42], [-0.35, 0.62], [-0.24, 0.8], [-0.08, 0.94], [0.08, 0.99]], 60);
   // Down the back, six fins, large and not alike, smaller each one up the back, each swept up toward the beak (the art director's
-  // final review of #742: a row of small even teeth read against the sky as a circular saw; 「5–7 道大而不等的鳍，从下往上渐小」).
+  // final review of #742: a row of small even teeth read against the sky as a circular saw: five to seven large unequal fins, smaller going up).
   // Each is [where it starts and ends on the back, as samples of the curve; how far it stands out; how far its tip leans up the back],
   // in the ornament's height.
   const FINS = [[13, 19, 0.098, 0.058], [23, 27, 0.07, 0.04], [30, 35, 0.075, 0.05], [39, 42, 0.05, 0.03], [45, 48, 0.046, 0.034], [51, 53, 0.03, 0.018]];   // (smooth back between them, so that they read as fins on a back, not a saw's edge)
