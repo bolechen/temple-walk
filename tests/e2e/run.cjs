@@ -2750,19 +2750,22 @@ const scenarios = {
   // drawn (no BARE), since the eye's hierarchy holds only what is built. The route is asked of the page, the hierarchy of the page.
   "ending-eye": { tier: 2, async run(b, base) {
     const SHAPES = { upright: { width: 390, height: 844 }, wide: { width: 960, height: 540 } };
+    const bad = [];
     for (const season of ["spring", "summer", "autumn", "winter"]) for (const [shape, viewport] of Object.entries(SHAPES)) {
-      const t = await open(b, base, `q=low&fast=1&seed=4&view=third&season=${season}&time=day&off=reflect,bloom,drift`, { viewport });
+      const t = await open(b, base, `q=low&view=third&season=${season}&time=day&off=reflect,bloom,drift`, { viewport });
       await t.until(async () => (await t.page.evaluate(() => window.__eyeSpace().state)) === "ready", 180000, "the eye's hierarchy was not built");
-      await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
-      await t.frames(3);
-      await t.page.evaluate(() => { window.__riteClock(null); void window.__ending(); });
+      // as the workbench's ?play=ending does it: he sits on the summit mat, the following eye behind him, and the close begins
+      await t.page.evaluate(() => { window.__riteClock(null); const p = window.__places.sit, i = window.__seats.findIndex((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3); window.__sit(i); });
+      await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) > 0, 120000, "he did not sit on the summit mat"); await t.frames(30);
+      await t.page.evaluate(() => { void window.__ending(); });
       await t.until(async () => (await t.page.evaluate(() => window.__rites().closing)) === true, 60000, "the close never began");
       await t.page.evaluate(() => window.__riteClock(0)); await t.frames(3);
       const hits = await t.page.evaluate(() => { const r = window.__closeRoute(0.1); return r && r.map((p, i) => [i * 0.1, p, window.__eyeShutAt(p[0], p[1], p[2])]).filter((h) => h[2]).map((h) => [+h[0].toFixed(1), h[1].map((v) => +v.toFixed(2))]); });
       expect(hits !== null, `${season} ${shape}: no route`);
-      expect(hits.length === 0, `${season} ${shape}: the eye is inside something at ${hits.length} of the route's 301 points, first at ` + JSON.stringify(hits.slice(0, 6)));
+      if (hits.length) bad.push(`${season} ${shape}: the eye is inside something at ${hits.length} of the route's 301 points, from ${hits[0][0]} s to ${hits[hits.length - 1][0]} s, first at ` + JSON.stringify(hits.slice(0, 3)));
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
+    expect(bad.length === 0, bad.join("\n     "));
   } },
   "ending-skip": { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
