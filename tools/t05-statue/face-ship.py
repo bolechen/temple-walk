@@ -2,7 +2,7 @@
 # tall face from 1.2 m; real great figures bow their heads a little): r3c's own ops, the head bowed `--tilt` degrees, the lips as r3c has them (nothing of the f2 face ops), the lips' ends
 # lifted (mouthlift), the nasolabial folds and the lines down the chin's sides softened outside the lips (flatblocks), and the chin rebuilt (chinshape, L4's numbers).
 #
-#   python3 tools/t05-statue/face-ship.py <name> <tag> --tilt=10 [--chin-shift=0.015] [--lift=0.024] [--lift-up=0] [--lift-sz=0.035] [--out=<repair.json>]
+#   python3 tools/t05-statue/face-ship.py <name> <tag> --tilt=10 [--chin-shift=0.015] [--lift=0.024] [--lift-up=0] [--lift-sz=0.035] [--no-furrows] [--no-lift] [--cleft] [--out=<repair.json>]
 #
 # Writes tools/t05-statue/<name>/repair-<tag>.json; run repair.py on it as for any figure. Positions are the bowed figure's, worked out from face.json the way face-build.py works them out.
 import sys, json, os, math
@@ -27,7 +27,10 @@ fb = lambda k, bl, note: {"op": "flatblocks", "s": round(s, 4), "front": front, 
 nl = [{"kind": "capsule", "p0": [sg * 0.115, slit + 0.13], "p1": [sg * 0.135, slit + 0.06], "r": 0.012, "soft": 0.02} for sg in (1, -1)]
 mar = [{"kind": "capsule", "p0": [sg * 0.15, slit - 0.06], "p1": [sg * 0.165, slit - 0.14], "r": 0.012, "soft": 0.02} for sg in (1, -1)]
 lift = {"op": "mouthlift", "s": round(s, 4), "z0": round((slit + float(opt.get("lift-up", 0.0))) / s, 4), "a": float(opt.get("lift", 0.024)), "x0": 0.03, "x1": 0.13, "x2": 0.17, "x3": 0.27, "sz": float(opt.get("lift-sz", 0.035)), "front": front, "note": "the lips' ends lifted (#701, 自拟)"}
-ops = base + [tilt_op, {"op": "snapshot", "name": "bow", "note": "the points as the bow leaves them"}, chin,
-              fb(0.4, nl, "the nasolabial folds from the nose's wing to above the lip's corner: detail kept to 0.4, outside the lips (#701, 自拟)"),
-              fb(0.4, mar, "the lines from under the lip's corner down the chin's sides: detail kept to 0.4, outside the lips (#701, 自拟)"), lift]
+cleft = fb(0.3, [{"kind": "capsule", "p0": [0.0, slit - 0.10], "p1": [0.0, slit - 0.26], "r": 0.012, "soft": 0.035}], "the chin's middle groove (r3c's, where the chin has one) softened: detail kept to 0.3 (#701, 自拟)")
+ops = base + [tilt_op, {"op": "snapshot", "name": "bow", "note": "the points as the bow leaves them"}, chin]
+if "no-furrows" not in opt: ops += [fb(0.4, nl, "the nasolabial folds from the nose's wing to above the lip's corner: detail kept to 0.4, outside the lips (#701, 自拟)"),
+                                    fb(0.4, mar, "the lines from under the lip's corner down the chin's sides: detail kept to 0.4, outside the lips (#701, 自拟)")]
+if "cleft" in opt: ops += [cleft]
+if "no-lift" not in opt: ops += [lift]
 out = os.path.join(here, name, f"repair-{tag}.json"); json.dump({**{k: v for k, v in spec.items() if k != "ops"}, "ops": ops}, open(out, "w"), ensure_ascii=False, indent=1); print(out, "slit (bowed)", round(slit, 3))
