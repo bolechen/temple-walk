@@ -95,7 +95,7 @@ export const ARCHWAY_CLEAR = Object.freeze({ z: 17, x: 8 });
 export const nearArchway = (t) => Math.abs(t.z - AXIS.paifangZ) < ARCHWAY_CLEAR.z && Math.abs(t.x) - t.rx < ARCHWAY_CLEAR.x;
 // (a trial for the T05 lead and the art director, #722's first art review: the archway's front in the sun. A: four of the east eight left; B: the east eight
 // leaning 3 m out with their crowns 3 m higher; C: B less the two that shade most. `?rows=` in the page, T05_ROWS in Node; none: as before.)
-const ROWS_TRIAL = (() => { const v = (typeof location !== "undefined" ? new URLSearchParams(location.search).get("rows") : typeof process !== "undefined" ? process.env.T05_ROWS : "") || "";
+const ROWS_TRIAL = (() => { const v = (typeof location !== "undefined" ? new URLSearchParams(location.search).get("rows") : typeof globalThis.process !== "undefined" ? /** @type {any} */ (globalThis).process.env.T05_ROWS : "") || "";
   return { A: { drop: ["inner1", "inner2", "inner3", "outer2"], lean: 0, up: 0 }, B: { drop: [], lean: 3, up: 3 }, C: { drop: ["inner2", "inner3"], lean: 3, up: 3 } }[v] || { drop: [], lean: 0, up: 0 }; })();
 const grow = () => {
   const rnd = seeded(482), out = [], rr = () => +(0.25 + rnd() * 0.25).toFixed(2), crown = () => ({ rx: +(2.7 + rnd() * 0.9).toFixed(2), ry: +(2.1 + rnd() * 0.7).toFixed(2) });
