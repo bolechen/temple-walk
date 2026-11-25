@@ -123,7 +123,7 @@ for _k, op in enumerate(spec["ops"]):
       f_ = np.where(ring < 7, 1 - 0.5 * (1 - ring / 7.0), 1.0)
       co[:] = before + f_[:, None] * (co - before); undone += 1
     mv = np.linalg.norm(co - before, axis=1)
-    log.append({"op": "lowerback", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "fold_passes": undone, "folds_left": int((((_nrm(co) * n_before).sum(1)) < 0).sum())}); print(json.dumps(log[-1])); continue
+    log.append({"op": "lowerback", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "fold_passes": undone, "above_z0_max_move": float(mv[before[:, 2] > op["z0"]].max()) if (before[:, 2] > op["z0"]).any() else 0.0, "folds_left": int((((_nrm(co) * n_before).sum(1)) < 0).sum())}); print(json.dumps(log[-1])); continue
   if op["op"] == "facex":
     before = co.copy(); z = co[:, 2]; f = op["fade"]
     # the half-width test and the front plane were hard steps: across the plane (a 4 mm layer from cheek to cheek) the points on one side

@@ -29,6 +29,12 @@ else:
 if len(A.faces) == len(B.faces):   # folded: a triangle whose normal turned over (more than 90 degrees from before) is a fold in the surface (#701)
   def nrm(M): a, b, c = (M.vertices[M.faces[:, i]].astype(np.float64) for i in range(3)); n = np.cross(b - a, c - a); return n / np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-30)
   flips = int(((nrm(A) * nrm(B)).sum(1) < 0).sum()); row("folded: triangles whose normal turned over (> 90 degrees) from before", flips, "0", flips == 0)
+lg = after + ".log.json"   # repair.py's log beside the file: lowerback must not touch anything above the slit (the eyes, brows and nose stay as the bow left them)
+if os.path.exists(lg):
+  for e_ in json.load(open(lg))["log"]:
+    if e_["op"] == "lowerback" and "above_z0_max_move" in e_:
+      s_ = face["height"] / face["fileHeight"]; mm_ = e_["above_z0_max_move"] * s_ * 1000
+      row("lowerback: largest move above the slit line (mm)", round(mm_, 4), "<= 0.01", mm_ <= 0.01)
 row("faces: after / before", f"{len(B.faces)} / {len(A.faces)}", "equal", len(B.faces) == len(A.faces))
 tj = os.path.join(tmp, "topo.json"); run(os.path.join(here, "topology.py"), before, after, f"--json={tj}"); T = json.load(open(tj)); a, b = T[before], T[after]
 row("closed: open edges (before)", f"{b['boundary_edges']} ({a['boundary_edges']})", "<= before", b["boundary_edges"] <= a["boundary_edges"])
