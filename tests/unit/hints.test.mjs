@@ -3,7 +3,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 
 // Just enough of a page: the one line at the foot of the view, a coarse pointer, and timers that never fire on their own.
-const el = () => ({ innerHTML: "", classList: { set: new Set(), add(c) { this.set.add(c); }, remove(c) { this.set.delete(c); }, contains(c) { return this.set.has(c); } } });
+const el = () => ({ innerHTML: "", querySelectorAll: () => [], getClientRects: () => [], classList: { set: new Set(), add(c) { this.set.add(c); }, remove(c) { this.set.delete(c); }, contains(c) { return this.set.has(c); } } });
 const page = { hint: el(), moodTag: el(), goal: el(), keys: el() };
 globalThis.document = { getElementById: (id) => page[id] || null, body: el() };
 globalThis.matchMedia = (q) => ({ matches: q.includes("coarse") });

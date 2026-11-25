@@ -1504,6 +1504,7 @@ window.__music = (begin) => { if (begin) hear(); return musicState(); };
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
+window.__hintSet = (html) => hints.set(html);   // (the line set to some words, to see how it breaks)
 window.__eventLog = () => (globalThis.__events || []).slice();   // what the page has named since it opened (src/analytics.js), the last 100
 window.__ui = () => ({ stack: ui.state(), modal: ui.modal(), focus: document.activeElement?.id || document.activeElement?.tagName || null });
 // ---- The pause menu: what the visitor may set, a way back to the start, the keys ----

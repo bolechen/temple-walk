@@ -196,6 +196,57 @@ async function probeLevel(b, base) {
   expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
 }
 
+  // The line at the foot of the view breaks between its phrases (hints.js `phrases`, `unhang`): in each language, the two sentences it says most
+  // (how to walk, and, when the book is shut, the hour), each in its two shapes (a thumb, and keys), on the screen widths given:
+  // wherever two phrases are on one line the dot is between them, wherever they are on two lines the dot is put away and the break is real
+  // (never two phrases run together on a line, and never a dot left at the end of a line); and a line set while it was hidden (the photograph) is right when it is back.
+function hintBreak(langs, widths) {
+  return async function run(b, base) {
+      const K = (...k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
+      const LINES = {
+        zh: ["推左下的圆盘行走　·　拖动画面环顾", `${K("W", "S")}行走，${K("A", "D")}转身　·　按住拖动画面环顾，点地面走去　·　${K("V")}换视角　·　${K("H")}键位`, "山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换", `山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　${K("T")}时节`],
+        ja: ["左下の円を押して歩く　·　画面をドラッグして見回す", `${K("W", "S")}で歩く、${K("A", "D")}で向きを変える　·　ドラッグで見回し、地面を押すとそこへ歩く　·　${K("V")}視点を変える　·　${K("H")}キー`, "山の刻は今のあなたの刻に合わせた　·　季節と刻は撮影と休憩のメニューで変えられる", `山の刻は今のあなたの刻に合わせた　·　季節と刻は撮影と休憩のメニューで変えられる　·　${K("T")}で季節`],
+        en: ["Push the circle at lower left to walk · drag to look around", `${K("W", "S")} walk, ${K("A", "D")} turn · drag to look around, click the ground to go there · ${K("V")} change view · ${K("H")} keys`, "The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest", `The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest · ${K("T")} seasons`],
+        ko: ["왼쪽 아래 원을 밀어 걷기 · 화면을 끌어 둘러보기", `${K("W", "S")} 걷기, ${K("A", "D")} 몸 돌리기 · 끌어서 둘러보기, 땅을 누르면 그리로 걷기 · ${K("V")} 시점 바꾸기 · ${K("H")} 키`, "산의 시각이 지금 당신의 시각을 따른다 · 계절과 시각은 사진과 쉼에서 바꿀 수 있다", `산의 시각이 지금 당신의 시각을 따른다 · 계절과 시각은 사진과 쉼에서 바꿀 수 있다 · ${K("T")} 계절`],
+      };
+      // for every pair of neighbouring phrases: on one line (the dot shown, between them) or on two (the dot away, the break shown)
+      const READ = () => { const line = document.getElementById("hint"), ps = [...line.querySelectorAll(".phrase")], dots = [...line.querySelectorAll(".dot")], brs = [...line.querySelectorAll(".brk")], bad = [];
+        const shown = (e) => e.getClientRects().length > 0;
+        for (let i = 0; i + 1 < ps.length; i++) { const a = ps[i].getBoundingClientRect(), c = ps[i + 1].getBoundingClientRect(), same = c.top < a.bottom - 1;
+          if (same && !(shown(dots[i]) && !shown(brs[i]))) bad.push({ i, why: "two phrases on a line with no dot between them", dot: shown(dots[i]), br: shown(brs[i]), a: [a.left, a.top, a.width], c: [c.left, c.top, c.width] });
+          if (!same && !(!shown(dots[i]) && shown(brs[i]))) bad.push({ i, why: "a break with the dot not put away, or no break", dot: shown(dots[i]), br: shown(brs[i]), a: [a.left, a.top, a.width], c: [c.left, c.top, c.width] }); }
+        // every line sits on the middle of the hint (a break must not leave a space at the head or the tail of a line, which pushes it aside), and no line is empty
+        const box = line.getBoundingClientRect(), mid = (box.left + box.right) / 2, rects = [...ps, ...dots.filter(shown)].map((e) => e.getBoundingClientRect()).sort((x, y) => x.top - y.top), rows = [];
+        for (const r of rects) { const mid_y = r.top + r.height / 2, row = rows.find((q) => Math.abs(q.mid - mid_y) < 6); if (row) { row.left = Math.min(row.left, r.left); row.right = Math.max(row.right, r.right); row.h = Math.max(row.h, r.height); } else rows.push({ top: r.top, mid: mid_y, left: r.left, right: r.right, h: r.height }); }   // (a row is by the middle of its boxes: a dot's box is a little shorter than a phrase's)
+        rows.forEach((q, k) => { const off = (q.left + q.right) / 2 - mid; if (Math.abs(off) > 1) bad.push({ why: "a line is off the middle of the hint", row: k, off: +off.toFixed(1) }); if (k > 0 && q.top - rows[k - 1].top > 1.5 * Math.max(q.h, rows[k - 1].h)) bad.push({ why: "an empty line between two", row: k, gap: +(q.top - rows[k - 1].top).toFixed(1) }); });
+        return { bad, sig: dots.map((d) => (shown(d) ? 1 : 0)).join(""), text: line.textContent }; };
+      for (const lang of langs) {
+        const t = await open(b, base, `q=low&lang=${lang}&view=third`, { viewport: { width: 390, height: 640 }, hasTouch: true, isMobile: true });
+        await t.until(async () => (await t.page.evaluate(() => window.__hud().tip)) === "walk", 60000, `${lang}: the line about walking was never said`);
+        const settle = () => t.page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+        const failures = [];
+        for (const w of widths) {
+          await t.page.setViewportSize({ width: w, height: 640 });
+          for (const [n, html] of LINES[lang].entries()) {
+            const r = await t.page.evaluate(([h, read]) => { window.__hintSet(h); return eval(`(${read})`)(); }, [html, READ.toString()]); if (r.bad.length) failures.push({ w, line: n, bad: r.bad.slice(0, 2), text: r.text });
+          }
+        }
+        expect(failures.length === 0, `${lang}: ${failures.length} widths where a line has two phrases and no dot, or a dot at a break: ` + JSON.stringify(failures.slice(0, 3)));
+        // a line set while it was hidden (the photograph) and shown again is as it was set: not a dot gone, and not a dot where there is a break
+        await t.page.setViewportSize({ width: 320, height: 640 });
+        for (const html of [LINES[lang][0], LINES[lang][3]]) {   // (the shortest and the longest)
+          await t.page.evaluate((h) => window.__hintSet(h), html); await settle(); const before = await t.page.evaluate(READ);
+          await t.page.evaluate(() => { document.body.classList.add("photo"); window.dispatchEvent(new Event("resize")); }); await settle();
+          await t.page.evaluate(() => document.body.classList.remove("photo")); await settle();
+          const after = await t.page.evaluate(READ);
+          expect(after.bad.length === 0 && after.sig === before.sig, `${lang}: the line was not the same after the photograph: ` + JSON.stringify({ before, after }));
+        }
+        // the line, hidden, is not measured at zero: a resize meanwhile puts no dot away
+        expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      }
+  };
+}
+
 const scenarios = {
   // The page comes up, draws, and offers its controls.
   // A browser that cannot draw the temple at all (#190): no WebGL, or its graphics card switched off for the browser. The
@@ -2762,6 +2813,9 @@ const scenarios = {
     const ev = JSON.stringify(await events()); expect(!/demo\.complete/.test(ev.split("demo.ending.replay").slice(1).join("")), "watching again sent demo.complete");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // (the line, in a language with full-width spaces (ja) and one with a close fit (ko), at four widths: a part of smoke; the whole sweep is a scenario of its own, in the full run and the night's)
+  "hint-break": { tier: 2, run: hintBreak(["ja", "ko"], [300, 320, 340, 360]) },
+  "hint-break-sweep": { tier: 3, run: hintBreak(["zh", "ja", "en", "ko"], Array.from({ length: 26 }, (_, i) => 260 + i * 4)) },
   // #726: the first time the book is shut after the close, the hour turns to the visitor's own and one line says so with the
   // seasons being open; shutting it again, and watching the close again from the summit mat, do neither.
   "hour-after-book": { tier: 2, async run(b, base) {
@@ -2810,7 +2864,8 @@ const scenarios = {
     const R = () => t.page.evaluate(() => window.__rites().closing);
     await t.page.keyboard.press("Escape"); await t.until(async () => (await R()) === false, 60000, "the eye did not come home from the far view");
     // with the eye home the slips are on the picture: the veil's class hides them and nothing else does, and they come back when it goes (#726)
-    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
+    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); for (let i = 0; i < 60 && op() === "0"; i++) await new Promise((r) => setTimeout(r, 250));   /* (the slips fade back in once the eye is home) */
+      const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
       expect(o.on === "0" && o.after !== "0" && o.before !== "0", "the veil's class should hide the slips and give them back: " + JSON.stringify(o)); }
     await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookMoreBtn"); await t.until(() => shown("#bookMore"), 10000, "更多"); await t.page.click("#bookReplay");
     await t.until(async () => (await R()) === true, 120000, "the close did not play again");
