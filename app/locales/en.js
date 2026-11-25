@@ -336,6 +336,8 @@ export default {
   "{b}翻开朱印帐": "{b} open the seal book",
   "时节已开：留影与歇脚里可选": "The seasons are open: choose them in Photo and Rest",
   "时节已开：留影与歇脚里可选　·　{t}时节": "The seasons are open: choose them in Photo and Rest · {t} seasons",
+  "山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换": "The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest",
+  "山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　{t}时节": "The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest · {t} seasons",
   "{shift}快步　·　{space}跳": "{shift} hurry · {space} jump",
 
   // ---- The close of the chapter (game.js) ----
