@@ -18,10 +18,11 @@
    "halo": {
     "rings": 0,
     "tips": 0,
-    "gain": 1.3
+    "gain": 1.5
    },
    "paint": "clay",
-   "colour": "kasyapa-t05"
+   "colour": "kasyapa-t05",
+   "lotusGain": 1.25
   },
   {
    "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
@@ -115,10 +116,11 @@
    "halo": {
     "rings": 0,
     "tips": 0,
-    "gain": 1.3
+    "gain": 1.5
    },
    "paint": "clay",
-   "colour": "sakyamuni-370"
+   "colour": "sakyamuni-370",
+   "lotusGain": 1.25
   }
  ],
  "shots": [
@@ -145,7 +147,8 @@
     "paint": true,
     "mood": "winter",
     "view": "cam06"
-   }
+   },
+   "zones": true
   },
   {
    "name": "face10-kasyapa",
@@ -167,6 +170,45 @@
      "fov": 11,
      "exp": 4.5
     }
+   },
+   "zones": true,
+   "probe": {
+    "i": 0,
+    "pts": {
+     "cheekL": [
+      0.365125,
+      6.72425,
+      0.426
+     ],
+     "cheekR": [
+      -0.365125,
+      6.72425,
+      0.426
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-kasyapa",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
    },
    "zones": true,
    "probe": {
@@ -224,6 +266,45 @@
    }
   },
   {
+   "name": "face10d-krakucchanda",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 1,
+    "pts": {
+     "cheekL": [
+      0.33177499999999993,
+      6.752,
+      0.286
+     ],
+     "cheekR": [
+      -0.33177499999999993,
+      6.752,
+      0.286
+     ]
+    }
+   }
+  },
+  {
    "name": "face10-sikhin",
    "shoot": {
     "paint": true,
@@ -243,6 +324,45 @@
      "fov": 11,
      "exp": 4.5
     }
+   },
+   "zones": true,
+   "probe": {
+    "i": 2,
+    "pts": {
+     "cheekL": [
+      0.363975,
+      6.856,
+      0.466
+     ],
+     "cheekR": [
+      -0.363975,
+      6.856,
+      0.466
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-sikhin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.28,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
    },
    "zones": true,
    "probe": {
@@ -300,6 +420,45 @@
    }
   },
   {
+   "name": "face10d-vipasyin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      0,
+      11.48,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 3,
+    "pts": {
+     "cheekL": [
+      0.35995,
+      7.0655,
+      0.366
+     ],
+     "cheekR": [
+      -0.35995,
+      7.0655,
+      0.366
+     ]
+    }
+   }
+  },
+  {
    "name": "face10-visvabhu",
    "shoot": {
     "paint": true,
@@ -319,6 +478,45 @@
      "fov": 11,
      "exp": 4.5
     }
+   },
+   "zones": true,
+   "probe": {
+    "i": 4,
+    "pts": {
+     "cheekL": [
+      0.34615,
+      6.936,
+      0.39
+     ],
+     "cheekR": [
+      -0.34615,
+      6.936,
+      0.39
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-visvabhu",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.38,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
    },
    "zones": true,
    "probe": {
@@ -376,6 +574,45 @@
    }
   },
   {
+   "name": "face10d-kanakamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.17,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 5,
+    "pts": {
+     "cheekL": [
+      0.36224999999999996,
+      6.72,
+      0.23
+     ],
+     "cheekR": [
+      -0.36224999999999996,
+      6.72,
+      0.23
+     ]
+    }
+   }
+  },
+  {
    "name": "face10-sakyamuni",
    "shoot": {
     "paint": true,
@@ -395,6 +632,45 @@
      "fov": 11,
      "exp": 4.5
     }
+   },
+   "zones": true,
+   "probe": {
+    "i": 6,
+    "pts": {
+     "cheekL": [
+      0.33809999999999996,
+      6.946,
+      0.046
+     ],
+     "cheekR": [
+      -0.33809999999999996,
+      6.946,
+      0.046
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-sakyamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.22,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
    },
    "zones": true,
    "probe": {

@@ -189,7 +189,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) }, uLotus: { value: anchors.lotusGain ?? 1 },
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) }, uLotus: { value: opts.lotusGain ?? 1 },
     uIdMode: { value: 0 }, uFig: { value: opts.fig ?? 0 } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
@@ -241,7 +241,7 @@ ${zoneCode}
       // the zone's number (the lips 14) over 16, green the figure's
       .replace("#include <dithering_fragment>", "#include <dithering_fragment>\n  if (uIdMode > .5) gl_FragColor = vec4(mix(zone, 14., step(.5, lip_ * onFace)) / 16., (uFig + 1.) / 16., 0., 1.);");
   };
-  m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N + ":" + fh + ":" + fe;
+  m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N + ":" + fh + ":" + fe + (recipe.debugKey ?? "");
   const upd = () => { pivot.updateMatrixWorld(true); U.uToFig.value.copy(pivot.matrixWorld).invert(); };
   upd(); m.userData.update = upd;
   // a normal map baked from the repaired full-detail surface (tools/t05-statue/bake.py, #463) is worn by the paint too

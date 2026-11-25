@@ -418,6 +418,12 @@ function pick(i, a, b, from = "front", top = 99) {
   ray.set(wo, wd); ray.far = 100; const h = ray.intersectObject(f.obj, true)[0];
   return h ? P.worldToLocal(h.point.clone()).toArray().map((v) => +v.toFixed(3)) : null;
 }
+// Where a pixel of the last picture falls on figure i's surface, in the figure's own frame (the frame the anchors are written
+// in): a ray from the camera through the pixel (x, y from the top left, in the canvas's pixels), the nearest hit on that figure.
+function pixelPoint(i, x, y) {
+  const f = figures[i]; f.pivot.updateMatrixWorld(true); ray.setFromCamera(new THREE.Vector2(x / W * 2 - 1, 1 - y / H * 2), camera); ray.far = 1e3;
+  const hit = ray.intersectObjects(f.meshes, false)[0]; return hit ? f.pivot.worldToLocal(hit.point.clone()).toArray().map((v) => +v.toFixed(3)) : null;
+}
 function occlusion(i, pts, near = 0.3) {
   const eye = camera.position.clone(), out = {};
   const targets = []; scene.traverse((o) => { if (o.isMesh && o.visible && o !== sky) targets.push(o); });
@@ -513,8 +519,10 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
     // masks cost a frame (#370 round 6)
-    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "");
-    const rec = o.folds === false ? { ...recipe, folds: { ...recipe.folds, hollow: 0, edge: 0 } } : recipe;
+    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "");
+    let rec = o.folds === false ? { ...recipe, folds: { ...recipe.folds, hollow: 0, edge: 0 } } : recipe;
+    // { skin: "#00ff00" }: the zone of face and hands in a flat colour, to see where its edge lies on a hand (a tool's view, not a look)
+    if (o.skin) rec = { ...rec, debugKey: "skin" + o.skin, zones: rec.zones.map((z) => z.name === rec.face.zone ? { ...z, color: o.skin, metal: 0, rough: 1, wear: 0 } : z) };
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
     const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
@@ -522,6 +530,7 @@ function paint(on = true) {
     for (const mesh of f.meshes) {
       const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
       f.painted[k2] ??= paintMaterial(rec, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+      f.painted[k2].userData.paint.U.uLotus.value = f.s.lotusGain ?? 1;   // the white box's light is weaker at the two ends: the spec's compensation, not part of a figure's anchors
       f.painted[k2].userData.update(); if (o.envIntensity) f.painted[k2].envMapIntensity = o.envIntensity;
       mesh.material = f.painted[k2];
     }
@@ -587,11 +596,19 @@ function zoneIds() {
   for (const [o, m] of kept) o.material = m; for (const f of figures) for (const m of f.meshes) if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 0;
   if (dif) { for (const [l, v] of kept0) l.visible = v; hemi.visible = false; }
   black.dispose(); mats.forEach((m) => m.dispose());
+  // the head alone (the zone of face and hands also holds the hands, the neck and the chest): the skin pixels inside the screen
+  // rectangle from the hairline to the chin and from ear to ear, from each figure's own anchors (the reviewer's denominator, #683)
+  const faceZi = recipe.zones.findIndex((z) => z.name === recipe.face.zone) + 1, heads = figures.map((f) => {
+    const A = f.s.colour && ANCHORS[f.s.colour]?.anchors; if (!A) return null;
+    const eyeY = (A.eyeL[1] + A.eyeR[1]) / 2, ps = [A.hairFront, [A.mouth[0], A.mouth[1] - 0.6 * (eyeY - A.mouth[1]), A.mouth[2]], A.earL, A.earR].map((p) => figurePoint(figures.indexOf(f), p).project(camera));
+    const x = ps.map((q) => (q.x + 1) / 2 * Wd), y = ps.map((q) => (1 - q.y) / 2 * Hd); return [Math.min(...x), Math.min(...y), Math.max(...x), Math.max(...y)]; });
+  const headAcc = figures.map(() => [0, 0, 0, 0, new Uint32Array(256)]);
   const code = (k) => (id[k + 1] ? Math.round(id[k] * 16 / 255) * 100 + Math.round(id[k + 1] * 16 / 255) : 0);
   const acc = {};
   for (let y = 1; y < Hd - 1; y++) for (let x = 1; x < Wd - 1; x++) {
     const k = (y * Wd + x) * 4, c = code(k); if (!c) continue;
     if (code(k + 4) !== c || code(k - 4) !== c || code(k + Wd * 4) !== c || code(k - Wd * 4) !== c) continue;
+    if (Math.floor(c / 100) === faceZi && heads[(c % 100) - 1]) { const h = heads[(c % 100) - 1], yy = Hd - 1 - y; if (x >= h[0] && x <= h[2] && yy >= h[1] && yy <= h[3]) { const q = headAcc[(c % 100) - 1]; q[0]++; q[1] += shown[k]; q[2] += shown[k + 1]; q[3] += shown[k + 2]; q[4][Math.round(0.2126 * shown[k] + 0.7152 * shown[k + 1] + 0.0722 * shown[k + 2])]++; } }
     const a = (acc[c] ??= [0, 0, 0, 0, new Uint32Array(256)]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2]; a[4][Math.round(0.2126 * shown[k] + 0.7152 * shown[k + 1] + 0.0722 * shown[k + 2])]++;
   }
   const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光"; names[15] = "头光与光环";
@@ -599,12 +616,13 @@ function zoneIds() {
   // the 10th, 50th and 90th percentile of each zone's luma (0–255), for how much light and shade the zone holds on screen
   const pct = (h, n, q) => { let t = 0; for (let i = 0; i < 256; i++) { t += h[i]; if (t >= n * q) return i; } return 255; };
   for (const [c, [n, r, g, b, h]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)), q: [0.1, 0.5, 0.9].map((q) => pct(h, n, q)) }; }
+  figures.forEach((f, i) => { const q = headAcc[i]; if (q[0]) out[i]["头"] = { px: q[0], rgb: [q[1] / q[0], q[2] / q[0], q[3] / q[0]].map((v) => +v.toFixed(1)), q: [0.1, 0.5, 0.9].map((qq) => pct(q[4], q[0], qq)) }; });
   return out;
 }
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, pixelPoint, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site
