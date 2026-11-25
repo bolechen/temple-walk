@@ -68,7 +68,7 @@ if (process.env.SETS === "ship701") {
   const N = ["kasyapa-t05", "krakucchanda-L2", "sikhin-t05", "vipasyin-t05", "visvabhu-L2", "kanakamuni-L2", "sakyamuni-370"], X = [16.45, 11.33, 5.8, 0, -5.8, -11.33, -16.45];
   const HT = [8.6, 8.75, 8.9, 9.0, 8.9, 8.75, 8.6], HEAD = [11.15, 11.2, 11.28, 11.48, 11.38, 11.17, 11.2];
   const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0, ...(i === 0 || i === 6 ? { gain: 1.5 } : {}) }, paint: "clay", colour: c, ...(i === 0 || i === 6 ? { lotusGain: 1.25 } : {}), ...(i === 0 ? { innerTint: [0.97, 1, 1.03] } : {}), ...(i === 6 ? { innerTint: [0.96, 1, 1.05] } : {}) }));
-  // winter by day, the altar lamp as the review specs set it (45, a little to the figure's right and before it), on every shot
+  // winter by day, the altar lamp as the review specs set it (45, a little to the right of the figure and before it), on every shot
   const lamp = (i) => ({ lamp: 45, lampAt: [+(X[i] + 0.8).toFixed(2), 7.07, -14.0], lampColor: 16764826 });
   const shots = [{ name: "cam03-winter", shoot: { paint: true, mood: "winter", view: "cam03", ...lamp(3) } }];
   for (const i of [1, 4, 5]) {
