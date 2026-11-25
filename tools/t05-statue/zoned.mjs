@@ -60,5 +60,7 @@ const buf = P.getBuffer();
 prim.getAttribute("POSITION").setArray(nP); prim.setIndices(doc.createAccessor().setType("SCALAR").setArray(nidx).setBuffer(buf));
 for (const sem of prim.listSemantics()) if (sem !== "POSITION") { const a = prim.getAttribute(sem); prim.setAttribute(sem, null); }
 prim.setAttribute("NORMAL", doc.createAccessor().setType("VEC3").setArray(nrm).setBuffer(buf));
+// The first tier's points, written beside the file (<out>.face.json, file units, glTF frame) so that bake.py can leave the face without a normal map.
+{ const fv = new Set(results[0].out), flat = []; for (const v of fv) if (map[v] !== undefined && map[v] >= 0) flat.push(pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2]); fs.writeFileSync(dst + ".face.json", JSON.stringify({ tier: results[0].name, points: flat })); }
 await io.write(dst, doc); const bytes = fs.readFileSync(dst);
 console.log(JSON.stringify({ tiers: results.map((q) => ({ name: q.name, before: q.before, after: q.out.length / 3, error: q.err })), rest: { before: restList.length / 3, after: rr.out.length / 3, error: rr.err }, total_after: nidx.length / 3, points: n, sha256: crypto.createHash("sha256").update(bytes).digest("hex") }));
