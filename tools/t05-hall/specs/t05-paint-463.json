@@ -22,7 +22,12 @@
    },
    "paint": "clay",
    "colour": "kasyapa-t05",
-   "lotusGain": 1.25
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.97,
+    1.0,
+    1.03
+   ]
   },
   {
    "url": "tools/out/t05/tripo-six/krakucchanda-r3.60000.glb",
@@ -120,7 +125,12 @@
    },
    "paint": "clay",
    "colour": "sakyamuni-370",
-   "lotusGain": 1.25
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.96,
+    1.0,
+    1.05
+   ]
   }
  ],
  "shots": [

@@ -530,6 +530,7 @@ function paint(on = true) {
     for (const mesh of f.meshes) {
       const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
       f.painted[k2] ??= paintMaterial(rec, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+      f.painted[k2].userData.paint.U.uInner.value.set(...(f.s.innerTint ?? [1, 1, 1]));   // likewise the inner garment's hue where the light is cooler at the ends
       f.painted[k2].userData.paint.U.uLotus.value = f.s.lotusGain ?? 1;   // the white box's light is weaker at the two ends: the spec's compensation, not part of a figure's anchors
       f.painted[k2].userData.update(); if (o.envIntensity) f.painted[k2].envMapIntensity = o.envIntensity;
       mesh.material = f.painted[k2];

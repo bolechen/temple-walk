@@ -33,3 +33,10 @@ test("the run's spec carries the compensation, the same for the two end figures"
   const gains = spec.statues.filter((s) => s.lotusGain !== undefined);
   assert.equal(gains.length, 2); assert.equal(gains[0].lotusGain, gains[1].lotusGain); assert.equal(gains[0].halo.gain, gains[1].halo.gain);
 });
+
+test("the inner garment's tint for the two end figures is in the spec, and the zones that take it say so", () => {
+  const spec = JSON.parse(readFileSync(new URL("specs/t05-paint-463.json", dir), "utf8"));
+  assert.equal(spec.statues.filter((s) => s.innerTint !== undefined).length, 2);
+  for (const n of ["胸衣", "内衣"]) assert.equal(recipe.zones.find((z) => z.name === n).gain, "inner");
+  for (const [f, a] of anchors) assert.equal(a.innerTint, undefined, f);
+});
