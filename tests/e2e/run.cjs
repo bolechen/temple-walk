@@ -688,6 +688,82 @@ const scenarios = {
     for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} byte for byte: ${kept[k]}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // T05's own page (PRD.md §1.3 (a), CHECKPOINTS.md §2.2; src/levelpage.js, src/writing.js): the stele copied once through, at a visitor's
+  // pace, and the observation's two looks held and its stroke written. Walked by __walk up the axis and the flight and onto the monument
+  // pavilion's base by its new steps; E pressed at the stele: the eye swings to the place's shot (no cut), his hands take the leaf and the brush,
+  // write the line a character at a time and stop, every hand and the brush 0.3 m and more off the stone's face; the line is kept under
+  // yunjing.levels.v1 and shown on a slip; then at C01 the view is held on the whole front 3 s and at C02 raised till the front eave is in
+  // the upper part of the picture for 2 s,
+  // 记下 is offered, pressed, and the stroke is on the page. The prologue's keys lie in the browser all the while, byte for byte.
+  "t05-page": { tier: 2, async run(b, base) {
+    const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, label: "大殿前", at: 5 }), "yunjing.settings.v1": JSON.stringify({ fov: 5 }) };
+    const mine = () => t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
+    const t = await open(b, base, "level=t05&q=low&fast=1" + BARE, { init: `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) if (localStorage.getItem(k) === null) localStorage.setItem(k, p[k]); })()` });
+    const P = () => t.page.evaluate(() => window.__page()), D = () => t.page.evaluate(() => window.__director());
+    let pg = await P(); expect(pg && Object.keys(pg.page).length === 0, "T05's page should start empty: " + JSON.stringify(pg));
+    // Up the axis and the flight, and onto the pavilion's base by its steps, to the stele.
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 24], [0, 14], [-16, 14], [-16, 11.4]]));
+    await t.until(async () => (await P()).near === "copy", 900000, "he never came to the stele, or 抄碑 was not offered there");
+    expect((await t.page.textContent("#act span")) === "抄碑", "the button before the stele should say 抄碑");
+    const cuts0 = (await D()).cuts || 0;
+    // The eye's weight on the stele's shot, kept every frame in the page: on a quick page it may arrive, rest its beat and go home between two looks from here.
+    await t.page.evaluate(() => { window.__copyEye = 0; const look = () => { const d = window.__director(); if (d.id === "copy") window.__copyEye = Math.max(window.__copyEye, d.w); requestAnimationFrame(look); }; requestAnimationFrame(look); });
+    await t.page.keyboard.press("e");
+    await t.until(async () => (await P()).writing.writing, 120000, "pressing E at the stele did not set him writing");
+    pg = await P(); expect(pg.writing.leaf && pg.writing.brush, "he should hold the leaf and the brush: " + JSON.stringify(pg.writing));
+    await t.until(async () => (await t.page.evaluate(() => window.__copyEye)) > 0.95, 60000, "the eye never went to the stele's shot");
+    await t.until(async () => (await P()).page.stele, 300000, "the copied line was never put on the page");
+    pg = await P();
+    expect(pg.page.stele.line === "qifo" && pg.view.copy === "觀其寶殿崔嵬，儼居七佛", "the first line copied is the seven Buddhas' line, as cut: " + JSON.stringify(pg.view));
+    expect(pg.writing.marks >= 10 && pg.writing.copied === "觀其寶殿崔嵬儼居七佛", "every character written, one mark each: " + JSON.stringify(pg.writing));
+    expect(pg.writing.nearest !== null && pg.writing.nearest >= 0.3, "his hands, the leaf and the brush kept 0.3 m and more off the stele's face: " + pg.writing.nearest);
+    await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown on a slip after the copy");
+    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬儼居七佛", "the slip should carry the line copied");
+    expect(!(await t.page.isVisible("#slip .seal-mark")), "T05's page carries no vermilion seal (CHECKPOINTS.md §4.2)");
+    expect(!(await t.page.isVisible("#slip .page-stroke")), "before the observation the page has no stroke of ink");
+    // The line copied from the stone is written as cut, in the regular hand that holds its traditional forms, not the running hand of a note (which has none).
+    const cutFace = await t.page.evaluate(() => getComputedStyle(document.getElementById("slipText")).fontFamily);
+    expect(/^"?Yunjing Kai"?(,|$)/.test(cutFace), "the copied line on the slip is set in Yunjing Kai alone: " + cutFace);
+    const d = await D(); expect((d.cuts || 0) === cuts0, "the eye went to the stele and back without a cut: " + JSON.stringify(d));
+    const heard = await t.page.evaluate(() => window.__shots?.() || null);
+    expect(!heard || heard.brush > 0, "the brush on the paper should have been heard: " + JSON.stringify(heard));
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#slip")), 10000, "the slip did not go away");
+    // The observation: C01, the whole front, three seconds; C02, the eaves, raised 25° and more, two seconds; then 记下.
+    await t.page.evaluate(() => window.__walk([[-16, 14], [0, 14], [0, 24], [0, 44]]));
+    await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 44) < 0.8; }, 600000, "he never came to C01");
+    pg = await P(); expect(pg.met.length === 0, "nothing is met by walking past: " + JSON.stringify(pg.met));
+    await t.page.evaluate(() => { const s = window.__yard(); window.__pose(s.x, s.z, 0, 0.08); });
+    await t.until(async () => (await P()).met.includes("c01"), 120000, "holding the view on the whole front at C01 did not count");
+    expect((await P()).near !== "p1a", "with one look met nothing is offered");
+    await t.page.evaluate(() => window.__walk([[0, 27]]));
+    await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 27) < 0.8; }, 300000, "he never came to C02");
+    // From behind him the view raised as far as it goes (0.45): the front eave comes into the upper part of the picture.
+    await t.page.evaluate(() => { const s = window.__yard(); window.__pose(s.x, s.z, 0, 0.45); });
+    await t.until(async () => (await P()).met.includes("c02"), 120000, "raising the view to the eaves at C02 did not count: " + JSON.stringify(await P()));
+    await t.until(async () => (await P()).near === "p1b", 30000, "记下 was not offered once both looks were met");
+    expect((await t.page.textContent("#act span")) === "记下", "the button should say 记下");
+    await t.page.keyboard.press("e");
+    await t.until(async () => (await P()).page.p1, 300000, "the stroke was never put on the page");
+    pg = await P(); expect(pg.view.stroke === 1 && pg.view.note === "九间，单檐庑殿，青灰瓦。台基比人高。" && pg.view.copy, "the page holds the stroke, its line and the copy: " + JSON.stringify(pg.view));
+    await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown after the stroke");
+    // The note is laid in its phrases, one to a column (九间， / 单檐庑殿， / 青灰瓦。 / 台基比人高。), never a word split across two.
+    expect(await t.page.isVisible("#slip .page-stroke"), "the observation's page carries its stroke of ink across the top, as the leaf did");
+    const noteCols = await t.page.evaluate(() => document.getElementById("slipText").innerText.split("\n").filter(Boolean));
+    expect(JSON.stringify(noteCols) === JSON.stringify(["九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "the note's phrases each have a column: " + JSON.stringify(noteCols));
+    const stored = await t.page.evaluate(() => JSON.parse(localStorage.getItem("yunjing.levels.v1")).page.t05);
+    expect(stored.p1 && stored.stele && stored.stele.line === "qifo", "both marks are kept under yunjing.levels.v1: " + JSON.stringify(stored));
+    expect(JSON.stringify(await mine()) === JSON.stringify(PROLOGUE), "the prologue's keys changed: " + JSON.stringify(await mine()));
+    expect((await D()).cuts === cuts0, "no cut through the whole of it");
+    // The pause menu's 这一页 shows the page again; the prologue (no page of its own) never shows the row.
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#slip")), 10000, "the slip did not go away");
+    await t.page.click("#menuBtn"); await t.until(() => t.page.isVisible("#menu"), 10000, "the menu did not open");
+    expect(await t.page.isVisible("#menuPage"), "这一页 should be in the menu once the page has something on it");
+    await t.page.click("#menuPage"); await t.until(() => t.page.isVisible("#slip"), 10000, "这一页 did not show the page");
+    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬儼居七佛", "the page shown again leads with the copied line");
+    const fromCols = await t.page.evaluate(() => document.getElementById("slipFrom").innerText.split("\n").filter(Boolean));
+    expect(JSON.stringify(fromCols) === JSON.stringify(["元大德七年碑", "九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "beside the copy, where it is from and the note a phrase to a column: " + JSON.stringify(fromCols));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // A named view's own lens (`site.lens`, app/yard.js `baseFov`; T05's cam06 is 65° from his eyes, 50° from behind him): `?show=<name>` takes it, a view with no
   // entry and the prologue's views keep the fixed views' 52° and 44°, `?cam=` is a pose, not a view, so it never takes one, and a picture held upright is the fixed
   // views' few degrees wider (+16° from his eyes, +14° from behind him, as 52 and 44 become 68 and 58). Built, not drawn.
