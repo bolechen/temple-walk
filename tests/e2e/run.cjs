@@ -544,6 +544,9 @@ const scenarios = {
     expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
     const w = await t.page.evaluate(() => window.__walker());
     expect(w.mode !== "old" && w.bytes > 0, "T05's own baked floor should be fetched: " + JSON.stringify(w));
+    // The one line a first edition says as the walk begins: no seals, no book yet (once: it is not said again).
+    await t.until(async () => (await t.page.evaluate(() => window.__hud().tip)) === "intro", 120000, "T05's line about having no seals yet was never said: " + JSON.stringify(await t.page.evaluate(() => window.__hud())));
+    expect((await t.page.textContent("#hint")).includes("修建") && !(await t.page.textContent("#hint")).includes("云径"), "the foot line should be T05's own line: " + await t.page.textContent("#hint"));
     let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
     await t.page.evaluate(() => window.__walk([[0, 120], [0, 44], [0, 27], [0, 14.4]]));
     let lo = 9, hi = -9;
@@ -555,6 +558,59 @@ const scenarios = {
     let veil = false;
     await t.until(async () => { s = await t.state(); veil ||= !!s.inside || s.room !== null; return Math.hypot(s.x, s.z + 12) < 0.6; }, 300000, "he never reached station E inside the hall");
     expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // T05's sound field, first version (docs/t05/SOUND.md §1; score.js `layerOf`): the court's reverb out of doors, the great hall's
+  // long one under its roof, which is a shell on the platform and no room under the court, so it is where he stands that says
+  // which. In from the terrace, to station E, and out again, with no page error; the prologue's own reverbs stay the prologue's.
+  "t05-sound": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "level=t05&q=low&fast=1&cam=0,20,0,0&view=first" + BARE);
+    await t.page.evaluate(() => window.__music(true)); await t.page.waitForTimeout(1500);
+    const room = () => t.page.evaluate(() => { const m = window.__music(); return { verb: m.verb, long: m.long, zone: m.zone, state: m.state }; });
+    let r = await room(); expect(r.state === "running" && r.verb === "court" && !r.long, "out of doors T05 should be in the court's reverb: " + JSON.stringify(r));
+    await t.until(async () => (await t.page.evaluate(() => window.__bird())).bed > 0, 30000, "T05's Z1 floor of sound (BED) never came up in the court");
+    await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
+    await t.until(async () => (await room()).verb === "hall", 300000, "under the great hall's roof the long reverb never took over");
+    r = await room(); expect(r.long === true, "the hall's reverb should be the long one: " + JSON.stringify(r));
+    const peak = await t.page.evaluate(() => { const x = window.__listen(); return x.peak ?? x.rms ?? 0; }); expect(Number.isFinite(peak), "the mix could not be read");
+    await t.page.evaluate(() => window.__walk([[0, 2], [0, 14.4], [0, 20]]));
+    await t.until(async () => (await room()).verb === "court", 300000, "coming out of the hall the court's reverb never came back");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
+  // T05 keeps its own place and the prologue's save is not touched (S4, docs/t05/LEVEL-SPLIT.md; the first edition of T05 on production):
+  // the prologue's ten kinds of key are seeded, T05 is walked a way up the axis and left, and what is kept lies under yunjing.levels.v1
+  // alone; the prologue opened with no address finds its own place and book exactly as they were, and T05 opened again offers 接着走
+  // on its title and stands him where he stood.
+  "t05-save": { tier: 2, async run(b, base) {
+    const T00 = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, label: "大殿前", at: 5 }), "yunjing.incense.v1": "1795233520952", "yunjing.visit.v1": JSON.stringify({ metres: 812, seconds: 640 }), "yunjing.prologue.v1": "1", "yunjing.ending.v1": "1795233000000" };
+    const mine = (page) => page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(T00));
+    const t = await open(b, base, "level=t05&q=low&fast=1" + BARE, { init: `(() => { const p = ${JSON.stringify(T00)}; for (const k in p) if (localStorage.getItem(k) === null) localStorage.setItem(k, p[k]); })()` });
+    expect((await t.page.evaluate(() => window.__level())).id === "t05", "T05 should be what is walked");
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 100]]));
+    await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 100) < 0.6; }, 300000, "he never walked up the axis");
+    await t.until(async () => !!(await t.page.evaluate(() => { try { return JSON.parse(localStorage.getItem("yunjing.levels.v1")).place.t05.z < 105; } catch { return false; } })), 120000, "T05's place was never kept under yunjing.levels.v1");
+    expect(JSON.stringify(await mine(t.page)) === JSON.stringify(T00), "the prologue's keys changed while T05 was walked: " + JSON.stringify(await mine(t.page)));
+    // T05 again: where he stood, no title.
+    await t.page.goto(base + "?level=t05&q=low&fast=1" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    const s = await t.state(); expect(Math.hypot(s.x, s.z - 100) < 3, "T05 opened again should have him where he stood: " + JSON.stringify(s));
+    expect((await t.page.textContent("#enterBtn")) === "接着走", "T05's title should offer to go on from where he stood");
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
+    await t.page.waitForFunction(() => document.body.classList.contains("entered") && !window.__opening().active, null, { timeout: 60000 });
+    // 回到起点 in the pause menu puts him back at the foot of T05's way, and what is kept follows him (the first edition keeps outdoor places only: T05 has no room, no balcony).
+    await t.page.click("#menuBtn"); await t.until(() => t.page.isVisible("#menu"), 10000, "the menu chip did not open the menu"); await t.page.click("#menuHome"); await t.frames(3);
+    const home = await t.state(); expect(Math.hypot(home.x, home.z - 215) < 2 && !(await t.page.isVisible("#menu")), "回到起点 should put him back at T05's outer gate: " + JSON.stringify([home.x, home.z]));
+    // A damaged, out-of-range or tampered record is ignored: T05 still comes up, at the start, and the prologue's keys are as they were.
+    for (const bad of ["{", "null", '{"v":1,"place":{"t05":{"x":"0","z":50}}}', '{"v":1,"place":{"t05":{"x":0,"z":3000}}}', '{"v":1,"place":{"t05":{"x":4000,"z":4000,"yaw":1}}}', '{"v":9,"place":{"t05":{"x":0,"z":100}}}']) {
+      await t.page.evaluate((v) => localStorage.setItem("yunjing.levels.v1", v), bad);
+      await t.page.goto(base + "?level=t05&q=low&fast=1" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      const at = await t.state(); expect(Math.hypot(at.x, at.z - 215) < 2, "a bad T05 record should leave him at the start: " + bad + " " + JSON.stringify([at.x, at.z]));
+    }
+    expect(JSON.stringify(await mine(t.page)) === JSON.stringify(T00), "the prologue's keys changed while T05 read damaged records: " + JSON.stringify(await mine(t.page)));
+    // The prologue with no address: its own place and book, as seeded.
+    await t.page.goto(base + "?q=low" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(JSON.stringify(await mine(t.page)) === JSON.stringify(T00), "the prologue's keys changed: " + JSON.stringify(await mine(t.page)));
+    const left = await t.page.evaluate(() => ({ level: window.__level().id, place: window.__left().place }));
+    expect(left.level === "t00" && left.place && left.place.z === -20 && left.place.label === "大殿前", "the prologue should find its own place: " + JSON.stringify(left));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // T05 walked as a visitor walks it (PLAN.md item 12, PRD.md §9 item 3): ?level=t05 straight in on the workbench, at the

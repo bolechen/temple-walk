@@ -46,6 +46,12 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
       stir(); flash("moodTag", 7); flash("goal", 9);
       tip("walk", coarse ? t("推左下的圆盘行走　·　拖动画面环顾") : (strafeAD() ? t("{wasd}行走　·　按住拖动画面环顾，点地面走去　·　{v}换视角　·　{h}键位", { wasd: K("W", "A", "S", "D"), v: K("V"), h: K("H") }) : t("{ws}行走，{ad}转身　·　按住拖动画面环顾，点地面走去　·　{v}换视角　·　{h}键位", { ws: K("W", "S"), ad: K("A", "D"), v: K("V"), h: K("H") })), 12);
     },
+    // A level's own line, said once after the one about how to walk has gone (a level whose first edition has no seals or book says so): it waits
+    // for the foot line to be free rather than cover another line, and for nothing else open over the picture.
+    intro(text, secs = 9) {
+      let tries = 0; const wait = () => { if (off) return; if (now === null && !document.querySelector("dialog[open]")) { tip("intro", text, secs); return; } if (++tries < 30) setTimeout(wait, 1500); };
+      setTimeout(wait, 1500);
+    },
     // On a touch screen the rest is said as the hand comes to it: two fingers once the view has first been dragged, and
     // the way into his own eyes once the eye has first been drawn all the way in to him. A drag made before the line about
     // walking has been said and has gone (a drag that passes over the opening, or one while that line shows) is kept, and
