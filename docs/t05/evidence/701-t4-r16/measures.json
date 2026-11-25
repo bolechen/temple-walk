@@ -1,0 +1,47 @@
+{
+ "kasyapa": {
+  "mid10": 67.7,
+  "mid10_d1": 67.7,
+  "mid10_clay": 97.5
+ },
+ "krakucchanda": {
+  "mid10": 78.5,
+  "mid10_d1": 78.5,
+  "mid10_clay": 110.2
+ },
+ "sikhin": {
+  "mid10": 77.9,
+  "mid10_d1": 77.9,
+  "mid10_clay": 110.6
+ },
+ "vipasyin": {
+  "mid10": 89.6,
+  "mid10_d1": 89.6,
+  "mid10_clay": 125.0
+ },
+ "visvabhu": {
+  "mid10": 79.9,
+  "mid10_d1": 79.9,
+  "mid10_clay": 112.7
+ },
+ "kanakamuni": {
+  "mid10": 81.6,
+  "mid10_d1": 81.6,
+  "mid10_clay": 112.9
+ },
+ "sakyamuni": {
+  "mid10": 69.8,
+  "mid10_d1": 69.8,
+  "mid10_clay": 97.2
+ },
+ "_ratio_max_over_min": 1.32,
+ "_d1_share_pct": {
+  "kasyapa": 0.0,
+  "krakucchanda": 0.0,
+  "sikhin": 0.0,
+  "vipasyin": 0.0,
+  "visvabhu": 0.0,
+  "kanakamuni": 0.0,
+  "sakyamuni": 0.0
+ }
+}
