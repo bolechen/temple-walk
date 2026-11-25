@@ -56,7 +56,8 @@
    ],
    "tol": 0.03,
    "close": 0.1,
-   "blur": 0.012
+   "blur": 0.012,
+   "rowfill": true
   },
   {
    "zone": "衣缘描金",

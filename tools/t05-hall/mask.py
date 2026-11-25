@@ -71,7 +71,15 @@ for ci, z in enumerate(spec["channels"]):
   k = max(1, int(round(z.get("close", 0.03) / mpp)))
   st = ndi.generate_binary_structure(2, 1)
   reg = ndi.binary_closing(reg, structure=st, iterations=k) & allow
-  reg = ndi.binary_fill_holes(reg); regs.append(reg)
+  reg = ndi.binary_fill_holes(reg)
+  if z.get("rowfill"):
+    # a block with straight sides (an inner garment's panel) is filled across each row between its leftmost and rightmost
+    # pixel, inside the box: the small folds that the growth stopped at, along its top edge and sides, take the colour too
+    rows = np.nonzero(reg.any(axis=1))[0]
+    for r in rows:
+      cs = np.nonzero(reg[r])[0]; reg[r, cs.min():cs.max() + 1] = True
+    reg &= allow
+  regs.append(reg)
   # surfaces seen edge-on lie on the picture's silhouette; let the region run on into the empty backdrop a little, so the
   # blur does not fade them (a bare arm's side, seen from neither front nor back)
   spill = reg | (ndi.binary_dilation(reg, structure=st, iterations=max(1, int(round(3 * z.get("blur", 0.012) / mpp)))) & bg)
