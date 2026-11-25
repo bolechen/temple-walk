@@ -27,6 +27,6 @@ function dryCopy(base, key, pow, grey) {
 /** The dry-day earth and crown materials of this set of materials, made once (the site, the surround and the axis all ask). */
 const made = new WeakMap();
 export function dryMaterials(M) {
-  if (!made.has(M)) made.set(M, { earth: dryCopy(M.earth, "dryEarth", 1, 0), cedar: dryCopy(M.cedar, "dryCedar", 0.75, 0.7) });
+  if (!made.has(M)) made.set(M, { earth: dryCopy(M.earth, "dryEarth", 1, 0.2), cedar: dryCopy(M.cedar, "dryCedar", 0.58, 0.6) });
   return made.get(M);
 }
