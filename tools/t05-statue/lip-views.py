@@ -2,7 +2,7 @@
 # (10 m, long lens), from the side, and from a visitor's eye 10 m in front and 1.6 m up, with the figure on its 0.4 m plinth.
 # Blender's workbench, a studio light, no colour: shape only (software drawing says nothing of the real light, which is T4's).
 #
-#   python3 tools/t05-statue/lip-views.py <statue.glb> <out prefix> <face.json> [--turn=deg] [--mouth=y_stage_m] [--unbow=deg] [--sidelens=mm] [--sidedy=m] [--sidey=file units, the face's depth the side view is aimed at]
+#   python3 tools/t05-statue/lip-views.py <statue.glb> <out prefix> <face.json> [--turn=deg] [--mouth=y_stage_m] [--unbow=deg] [--frontlens=mm] [--sidelens=mm] [--sidedy=m] [--sidey=file units, the face's depth the side view is aimed at]
 #
 # face.json is the figure's own (tools/t05-statue/<name>/face.json: "height", "fileHeight", "features.mouth"). Writes
 # <prefix>-front.png, -side.png, -below.png, 600 px square each. `--mouth` overrides the mouth's height (a bowed head's lies lower).
@@ -35,7 +35,7 @@ def shot(name, pos, look, mm):
   cam.data.lens = mm; cam.data.sensor_width = 36; cam.location = Vector(pos)
   cam.rotation_euler = (Vector(look) - Vector(pos)).to_track_quat("-Z", "Y").to_euler(); sc.render.filepath = f"{pre}-{name}.png"; bpy.ops.render.render(write_still=True)
 D = 10 / s; plinth = 0.4 / s
-shot("front", (0, -D, my), (0, 0, my), 400)
+shot("front", (0, -D, my), (0, 0, my), float(opt.get("frontlens", 400)))
 sy = float(opt.get("sidey", 0)); sz = my - float(opt.get("sidedy", 0)) / s
 shot("side", (D, sy, sz), (0, sy, sz), float(opt.get("sidelens", 400)))
 shot("below", (0, -D, 1.6 / s), (0, 0, my), 300) if False else shot("below", (0, -D, (1.6 - 0.4) / s), (0, 0, my), 300)

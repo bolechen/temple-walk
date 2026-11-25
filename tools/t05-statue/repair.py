@@ -114,6 +114,15 @@ for _k, op in enumerate(spec["ops"]):
     kk = 1 - w * (1 - op["k"]); co[:] = cs + kk[:, None] * (co - cs)
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "flatblocks", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "moved_max_stage_mm": round(float(mv.max()) * sc_ * 1000, 2), "weighted_points": int(len(idx_))}); print(json.dumps(log[-1])); continue
+  if op["op"] == "mouthlift":
+    # {"s", "z0", "a", "x0", "x1", "x2", "x3", "sz", "front"} (issue #701, the art director: the corners read as pulled down): lift the lips' ends. Each point of the face's front moves up by
+    # a x bump(x) x g(z): bump rises from nothing at |x| = x0 to whole at x1 and falls to nothing again by x3 (x2: where it starts to fall), g is a Gaussian of height sz (metres) about the slit's z0,
+    # so that the line of the slit curves up at its two ends (the middle stays) and the cheeks beyond the corners are left alone. Lengths in the stage's metres, a in the stage's metres too.
+    sm_ = lambda u: u * u * (3 - 2 * u); sc_ = op["s"]; ax_ = np.abs(co[:, 0]) * sc_
+    bump = sm_(np.clip((ax_ - op["x0"]) / (op["x1"] - op["x0"]), 0, 1)) * (1 - sm_(np.clip((ax_ - op["x2"]) / (op["x3"] - op["x2"]), 0, 1)))
+    g = np.exp(-(((co[:, 2] - op["z0"]) * sc_) / op["sz"]) ** 2); wf = sm_(np.clip((op["front"] - co[:, 1]) / 0.012, 0, 1))
+    before = co.copy(); co[:, 2] += op["a"] / sc_ * bump * g * wf; mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "mouthlift", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max_stage_mm": round(float(mv.max()) * sc_ * 1000, 2)}); print(json.dumps(log[-1])); continue
   if op["op"] == "snapshot":   # {"name"}: the points as they are now, for a later `hold`
     globals().setdefault("_snaps", {})[op["name"]] = co.copy(); log.append({"op": "snapshot", "note": op.get("note", ""), "name": op["name"]}); continue
   if op["op"] == "hold":
