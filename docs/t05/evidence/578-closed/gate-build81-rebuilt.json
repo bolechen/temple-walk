@@ -1,0 +1,80 @@
+[
+ {
+  "check": "elsewhere: largest move outside the change areas (mm)",
+  "value": 0.0,
+  "limit": "<= 1",
+  "ok": true
+ },
+ {
+  "check": "faces: result / original",
+  "value": 1.022,
+  "limit": "<= 1.10",
+  "ok": true
+ },
+ {
+  "check": "closed: open edges (original)",
+  "value": "4021 (204)",
+  "limit": "<= original",
+  "ok": false
+ },
+ {
+  "check": "closed: non-manifold edges (original)",
+  "value": "568 (204)",
+  "limit": "<= original",
+  "ok": false
+ },
+ {
+  "check": "closed: winding agrees",
+  "value": false,
+  "limit": "true",
+  "ok": false
+ },
+ {
+  "check": "closed: pieces of 10 faces or fewer (original)",
+  "value": "219 (102)",
+  "limit": "<= original",
+  "ok": false
+ },
+ {
+  "check": "closed: open edges in the arm box (original)",
+  "value": "3865 (47)",
+  "limit": "<= original",
+  "ok": false
+ },
+ {
+  "check": "backfaces: aisle-nearest (original)",
+  "value": "58 (0)",
+  "limit": "0",
+  "ok": false
+ },
+ {
+  "check": "backfaces: aisle42 (original)",
+  "value": "20 (0)",
+  "limit": "0",
+  "ok": false
+ },
+ {
+  "check": "backfaces: sakya (original)",
+  "value": "2 (0)",
+  "limit": "0",
+  "ok": false
+ },
+ {
+  "check": "backfaces: hand10 (original)",
+  "value": "19 (0)",
+  "limit": "<= original",
+  "ok": false
+ },
+ {
+  "check": "backfaces: hand34 (original)",
+  "value": "1 (0)",
+  "limit": "<= original",
+  "ok": false
+ },
+ {
+  "check": "backfaces: hand-level (original)",
+  "value": "1 (0)",
+  "limit": "<= original",
+  "ok": false
+ }
+]

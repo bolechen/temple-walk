@@ -1,0 +1,71 @@
+{
+ "file": "/tmp/claude-0/work/in/sakyamuni-mv-1.base_model.glb",
+ "faces": 1437680,
+ "window_m": 0.8,
+ "views": {
+  "aisle-nearest (-19.33, 4.6, -15.43), 3.2 m": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 1530,
+   "hit_within_0.15m_of_the_aimed_point": 215,
+   "dist_m": 3.13,
+   "first_back_hits": []
+  },
+  "aisle-nearest-old (-19.12, 4.6, -15.79)": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 1195,
+   "hit_within_0.15m_of_the_aimed_point": 105,
+   "dist_m": 3.0,
+   "first_back_hits": []
+  },
+  "aisle42 (-20.85, 4.6, -15.0), 4.2 m": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 1681,
+   "hit_within_0.15m_of_the_aimed_point": 415,
+   "dist_m": 4.08,
+   "first_back_hits": []
+  },
+  "sakya (-14.5, 4.6, -7.0), 10.1 m": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 886,
+   "hit_within_0.15m_of_the_aimed_point": 220,
+   "dist_m": 10.07,
+   "first_back_hits": []
+  },
+  "sakya-old (-13.31, 4.6, -8.01)": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 720,
+   "hit_within_0.15m_of_the_aimed_point": 151,
+   "dist_m": 9.7,
+   "first_back_hits": []
+  },
+  "cam-hand10 (-17.6, 3.2, -7.0)": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 1427,
+   "hit_within_0.15m_of_the_aimed_point": 219,
+   "dist_m": 9.94,
+   "first_back_hits": []
+  },
+  "cam-hand34 (-11.5, 4.0, -9.5)": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 630,
+   "hit_within_0.15m_of_the_aimed_point": 40,
+   "dist_m": 9.83,
+   "first_back_hits": []
+  },
+  "cam-hand-level (-17.9, 7.8, -6.0)": {
+   "back": 0,
+   "rays": 1681,
+   "hit": 1680,
+   "hit_within_0.15m_of_the_aimed_point": 554,
+   "dist_m": 10.01,
+   "first_back_hits": []
+  }
+ }
+}
