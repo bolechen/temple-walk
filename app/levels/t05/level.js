@@ -33,6 +33,8 @@ export default {
   name: "奉明寺",   // docs/t05/DECISIONS.md §2, I18N.md: Fengming Temple
   names: { ja: "奉明寺", en: "Fengming Temple", ko: "奉明寺" },   // docs/t05/I18N.md §1 gives the Hangul reading; it is not in the Korean faces yet, so the hanja stand until tools/fonts.py --lang ko is run with the original TTFs (T05 lead);  here and not in app/locales, which production bundles whole
   seal: "奉明",
+  cardLink: false,   // no address or code on its pictures until the public page lists it (the lead, 2026-11-25); add it back when it does
+  ownVerse: true,    // the card prints J01's own line in early winter by day, and no verse at any other hour (the art review, 2026-11-25)
   build: buildSite,
   createWalker,
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor

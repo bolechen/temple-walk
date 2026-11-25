@@ -110,7 +110,7 @@ export function buildSite(M) {
   const wall = (x0, z0, x1, z1, h, t) => {
     const along = z0 === z1 ? "x" : "z", len = along === "x" ? x1 - x0 : z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     plaster.push(along === "x" ? box(len, h, t, cx, h / 2, cz) : box(t, h, len, cx, h / 2, cz));
-    stone.push(along === "x" ? box(len + 0.2, 0.35, t + 0.2, cx, 0.175, cz) : box(t + 0.2, 0.35, len + 0.2, cx, 0.175, cz));
+    stone.push(along === "x" ? box(len + 0.2, 0.355, t + 0.2, cx, 0.1725, cz) : box(t + 0.2, 0.355, len + 0.2, cx, 0.1725, cz));   // (the plinth goes 5 mm into the ground, so that its foot and the wall's are not two faces on one plane, #688)
     const r = along === "x" ? { x0, x1, z0: cz - t / 2, z1: cz + t / 2 } : { x0: cx - t / 2, x1: cx + t / 2, z0, z1 };
     walk.solids.push({ x0: r.x0 - BODY, x1: r.x1 + BODY, z0: r.z0 - BODY, z1: r.z1 + BODY, eyeTop: h + 0.3 });
     shade[along === "z" || z0 < 62 ? 0 : 1].push(r);
@@ -147,6 +147,10 @@ export function buildSite(M) {
   // walls are painted (ART.md, phase two).
   // The shut doors' leaves face the court: they take the open air's light, not the inside's (hall.js, HALL_DOORS).
   if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodV, { ao: () => 1 }), mesh(merge(hp.ledges), M.woodX, { ao: () => 1 }), mesh(merge(hp.iron), M.iron, { ao: () => 1, cast: false }));   // (the planks' vertical grain, the ledges across, the iron of the ring and the studs: as the prologue's shut doors, building.js)
+  if (hp.windowShade.length) {   // (the windows of a shut hall: a sheet that casts the sun's shadow and draws nothing; hall.js)
+    const veil = mesh(merge(hp.windowShade), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }), { receive: false });
+    veil.userData.keep = true; veil.userData.bake = false; root.add(veil);
+  }
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
   // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
