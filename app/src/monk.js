@@ -111,7 +111,7 @@ export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, 
 // plump (the sheet's are a small child's mitts), `x` being where the middle of each hand's length lies: the two lie
 // deep over each other, the left's fingers on the right's fingers and palm, so that from before him there is little
 // more than one hand's width to see. `elbow` is the way the elbows are drawn.
-export const LAP_HAND = { x: 0.004, z: 0.163, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.012, fwd: 0.03, gap: 0.006, turn: 0.5, arch: 1.0, thick: 1.25 } };
+export const LAP_HAND = { x: 0.004, z: 0.163, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.018, fwd: 0.03, gap: 0.006, turn: 0.5, arch: 1.0, thick: 1.25 } };
 // A hand lying palm up, as rods along its fingers' way from the wrist's middle: how far along, how thick it is there
 // (the wrist's ball, the palm, the knuckles, the fingertips) and how far to either side it reaches.
 const HAND_ROD = [[0, 0.027, 0], [0.03, 0.013, 0.022], [0.052, 0.0115, 0.018], [0.082, 0.0115, 0.014]].map(([d, r, w], i) => (i ? [d * LAP_HAND.big, r * LAP_HAND.big, w * LAP_HAND.big] : [d, r, w]));
@@ -315,7 +315,7 @@ const spring = (k = 70, c = 9) => ({ x: 0, v: 0, step(target, dt) { for (let lef
 // together: `groove` is how deep the lines between them are, `tips` how much further the middle ones reach.
 export const HAND_SHAPE = {
   stand: { w: 0.0245, wf: 0.0215, h: 0.0145, hf: 0.0085, L: 0.076, y0: -0.003, at: 0.5, curl: 0.012, cup: 0.0015, full: 0.35, groove: 0.0012, tips: 0.04 },
-  lap: { w: 0.0215, wf: 0.0205, h: 0.0145, hf: 0.0098, L: 0.078, y0: -0.003, at: 0.5, curl: 0.008, cup: 0.004, full: 0.3, groove: 0.0014, tips: 0.035 },
+  lap: { w: 0.0215, wf: 0.0205, h: 0.0145, hf: 0.0098, L: 0.078, y0: -0.003, at: 0.5, curl: 0.004, cup: 0.004, full: 0.3, groove: 0.003, tips: 0.035 },
 };
 function mitt(M) {
   const g = new THREE.SphereGeometry(1, 28, 18), p = g.attributes.position;
@@ -518,8 +518,8 @@ export function createMonk(opts = {}) {
       const reach = -tip.y, up = tip.z;
       // (the thumb is long and leaves the palm at its heel, as the owner's photograph of the seal has it)
       const by = -0.008;
-      // (and rises steeply before it turns in, so that the two together are an arch with a level top, not a peak)
-      h.thumb = { base: [0.016, by, 0.005], joint: [Math.max(tip.x, 0.018) + 0.004, by - T.turn * (reach + by), up * T.arch], tip: tip.toArray() };
+      // (it rises from the heel of the palm and comes into the meeting level, the pull `turn` of the way along at the tip's height, so that the two together are one arch with a level top, not a peak)
+      h.thumb = { base: [0.016, by, 0.005], joint: [0.9 * tip.x + 0.1 * 0.016, by + T.turn * (tip.y - by), tip.z * T.arch], tip: tip.toArray() };   // (the pull level with the tip: each thumb comes into the meeting level, so the two read as one arch)
       h.meet = meet;
     }
     return out;

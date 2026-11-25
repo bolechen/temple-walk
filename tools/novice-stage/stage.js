@@ -87,7 +87,7 @@ const POSES = {
   chair: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "chair", i / 30, () => -0.44, {}); },
   sit: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },
   // half way down onto the cushion (#664: the hat on its way off his back, the skirt between the two shapes)
-  sitting: (m) => { for (let i = 0; i < 9; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },
+  sitting: (m, f = 9) => { for (let i = 0; i < f; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },   // `--walk=<frame>` picks the frame
   // Two of the observances' hand places, as rites.js sets them (issue #246: do the hands still meet the body?): the bowl
   // of tea held in both hands at his lips, and the incense raised between his palms to the brow. Each frame the hands
   // are sent where rites.js would send them from the bones of the frame before.
