@@ -225,3 +225,24 @@ test("two tiers of wall, the earth-grey about a quarter; a pale-tiled house has 
   const highEdge = edge(edge(bb.max.z)[1] > edge(bb.min.z)[1] ? bb.max.z : bb.min.z);
   assert.ok(highEdge[1] - highEdge[0] <= 0.13, `the plate is ${(highEdge[1] - highEdge[0]).toFixed(2)} m thick at its high edge, not a solid wedge`);
 });
+
+// The art director's #637 note, followed up in step 7 (#573): a gable roof's end was a vertical triangle of tile, where snow cannot lie, so in winter it stood dark in a white town.
+// Now the roof is a thin plate over the two slopes and the gable end is brick, in the house's own wall tier.
+test("a gable house has no vertical triangle of tile; its two gable ends are brick under the plate", () => {
+  const fattest = (g) => { const p = g.attributes.position; let worst = 0; for (let i = 0; i < p.count; i += 3) {   // of the faces that stand upright (no snow can lie on them), the one with the greatest breadth: a sliver is the plate's edge, a broad one is a gable
+    const a = new THREE.Vector3().fromBufferAttribute(p, i), b = new THREE.Vector3().fromBufferAttribute(p, i + 1), c = new THREE.Vector3().fromBufferAttribute(p, i + 2);
+    const n = b.clone().sub(a).cross(c.clone().sub(a)); const len = n.length(); if (Math.abs(n.y / len) >= 0.1) continue;
+    worst = Math.max(worst, len / Math.max(a.distanceTo(b), b.distanceTo(c), c.distanceTo(a))); } return worst; };   // (the shortest altitude is twice the area over the longest edge; the cross product's length is twice the area)
+  const gables = plan.houses.filter((h) => h.roof === "gable"); assert.ok(gables.length >= 40, `${gables.length} gable houses in the plan`);
+  for (const h of gables) {
+    const roofs = [], walls = []; house(h, walls, roofs);
+    assert.equal(roofs.length, 1); assert.equal(walls.length, 2, "the wall box and the gable brick");
+    assert.ok(fattest(roofs[0]) <= 0.12 + 1e-6, `the tile's upright faces are the plate's edge, a sliver at most ${fattest(roofs[0]).toFixed(2)} m broad, not a triangle (house at ${h.x}, ${h.z})`);
+    const r = new THREE.Box3().setFromBufferAttribute(roofs[0].attributes.position), b = new THREE.Box3().setFromBufferAttribute(walls[1].attributes.position);
+    assert.ok(Math.abs(b.max.y - (r.max.y - 0.12)) <= 0.02, "the brick rises to the plate's underside at the ridge");
+    assert.ok(b.min.y >= r.min.y + 0.12 - 1e-6 && b.min.y <= r.min.y + 0.2, "and stands on the eave line");
+    const [lo, hi] = h.alongX ? ["z", "z"] : ["x", "x"], [len0, len1] = h.alongX ? ["x", "x"] : ["z", "z"];
+    assert.ok(r.min[lo] <= b.min[lo] && r.max[hi] >= b.max[hi], "the plate covers the gable across the roof");
+    assert.ok(r.min[len0] < b.min[len0] - 0.3 && r.max[len1] > b.max[len1] + 0.3, "and its verge sticks out past the gable end");
+  }
+});

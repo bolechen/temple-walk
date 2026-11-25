@@ -283,11 +283,14 @@ export function house(hs, walls, roofs) {
     const r = new THREE.ExtrudeGeometry(roof, { depth: len, bevelEnabled: false }), g = new THREE.ExtrudeGeometry(gable, { depth: lenW, bevelEnabled: false });
     place(r, len); place(g, lenW); roofs.push(r); walls.push(g); return;
   }
-  const run = (alongX ? d : w) / 2 + over, len = (alongX ? w : d) + 2 * over;
-  const shape = new THREE.Shape(); shape.moveTo(-run, 0); shape.lineTo(run, 0); shape.lineTo(0, rise); shape.closePath();
-  const g = new THREE.ExtrudeGeometry(shape, { depth: len, bevelEnabled: false }); g.translate(0, 0, -len / 2);
-  if (alongX) g.rotateY(Math.PI / 2);   // the extrusion's length now along x, the gable's section across z
-  g.translate(x, y0 + eave, z); roofs.push(g);
+  // A gable roof: a thin plate over the two slopes, and the brick of the gable end standing under it, so that no vertical triangle of tile faces the street (snow cannot lie on one, and it read as a dark patch
+  // in a white town; the art director, #637). The plate's top surface is the slope it always had.
+  const run = (alongX ? d : w) / 2 + over, len = (alongX ? w : d) + 2 * over, T = 0.12, a = ((alongX ? d : w) - 0.4) / 2, lenW = (alongX ? w : d) - 0.4, top = (u) => rise * (1 - Math.abs(u) / run);
+  const plate = new THREE.Shape(); plate.moveTo(-run, 0); plate.lineTo(0, rise); plate.lineTo(run, 0); plate.lineTo(run, -T); plate.lineTo(0, rise - T); plate.lineTo(-run, -T); plate.closePath();
+  const gable = new THREE.Shape(); gable.moveTo(-a, 0); gable.lineTo(a, 0); gable.lineTo(a, top(a) - T + 0.01); gable.lineTo(0, rise - T + 0.01); gable.lineTo(-a, top(a) - T + 0.01); gable.closePath();
+  const r = new THREE.ExtrudeGeometry(plate, { depth: len, bevelEnabled: false }), g = new THREE.ExtrudeGeometry(gable, { depth: lenW, bevelEnabled: false });
+  for (const [e, l] of [[r, len], [g, lenW]]) { e.translate(0, 0, -l / 2); if (alongX) e.rotateY(Math.PI / 2); e.translate(x, y0 + eave, z); }   // (the extrusion's length now along x when the ridge runs that way)
+  roofs.push(r); walls.push(g);
 }
 /** The court wall's plaster with its colour pressed down to a brick, in each of WALL_TONES (the art director: the houses' walls were the brightest thing at the arrival; both tiers at least 8 L* under the court's wall). */
 export const BRICK_TONE = 0.4;
