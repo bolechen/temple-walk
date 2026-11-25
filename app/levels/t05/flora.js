@@ -1,11 +1,12 @@
-// The trees of 奉明寺 (T05), grown and not drawn as placeholders: the Chinese pine (油松), the oriental arborvitae (ce bai), the pagoda tree
-// (guo huai) and the Chinese white poplar (mao bai yang) of an old county town on the plain of north-east China, on an early-winter morning (J01): the
-// pines and arborvitae keep their needles, a dusty olive grey, and the pagoda trees and poplars stand bare, every bough and twig against
+// The trees of 奉明寺 (T05), grown and not drawn as placeholders: the Chinese pine (油松), the oriental arborvitae (ce bai), the bare broadleaf
+// and the Chinese white poplar (mao bai yang) of an old county town on the plain of north-east China, on an early-winter morning (J01): the
+// pines and arborvitae keep their needles, a dusty olive grey, and the bare broadleaves and poplars stand bare, every bough and twig against
 // the sky (docs/t05/ART.md §4.2: "院树落叶，枝干清楚"; the prologue's bamboo and cryptomerias are not grown here).
 //
 // What is known and what is ours (docs/t00/SOURCES.md, T05 rows): "old pines and cypresses tower in the court" (docs/t05/SOURCES.md §15) is a news
 // report quoted second-hand; "the way between the gates, cypresses either side" is the scope's own invention (docs/t05/SCOPE-OPTIONS.md
-// §二 B); the pagoda tree and the poplar as the town's trees, and every shape and number below, are the project's own, by common knowledge of
+// §二 B); old arborvitae with some Chinese pines inside the walls is quoted second-hand (Ming arborvitae and Qing pines along the way before the hall, the general
+// director's winter research of 2026-11-25); the bare broadleaf (its species unrecorded) and the poplar (by common sense) as the town's trees, and every shape and number below, are the project's own, by common knowledge of
 // the north China plain and not from any record of Yixian.
 //
 // The wood is grown by three's TreeGenerator (../../src/three-tree.js, as the prologue's cedars and ginkgoes are): the same seed gives the
@@ -24,8 +25,8 @@ import { U } from "../../src/glsl.js";
 import { mesh } from "../../src/geo.js";
 import { dryMaterials } from "./dry.js";
 
-/** The kinds grown here, by their botanical names (油松, ce bai, guo huai, mao bai yang). */
-export const KINDS = Object.freeze({ pine: "Pinus tabuliformis", cypress: "Platycladus orientalis", huai: "Styphnolobium japonicum", poplar: "Populus tomentosa" });
+/** The kinds grown here, by their botanical names (油松, ce bai, mao bai yang). */
+export const KINDS = Object.freeze({ pine: "Pinus tabuliformis", cypress: "Platycladus orientalis", broad: "a deciduous broadleaf, no species recorded", poplar: "Populus tomentosa" });
 
 /** A number in [0, 1) from where a tree stands (a hash: the layouts' own seeded streams are not touched, so that nothing the art director passed moves). */
 export const hashAt = (x, z, salt = 0) => { const v = Math.sin(x * 12.9898 + z * 78.233 + salt * 37.719) * 43758.5453; return v - Math.floor(v); };
@@ -35,21 +36,21 @@ const mulberry = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ 
 /**
  * What each kind is grown with, near (`n`) and far (`f`). The pine: a trunk bare for its lower part, boughs that leave it nearly level and
  * spread, the crown widest in its middle layers and flat on top, as an old 油松 is. The arborvitae: a short trunk and many boughs turned up,
- * the needles a dense flame. The pagoda tree: a short, thick trunk dividing into boughs that spread into a round head of fine twigs. The poplar:
+ * the needles a dense flame. The bare broadleaf: a short, thick trunk dividing into boughs that spread into a round head of fine twigs. The poplar:
  * one straight leader to the top and short boughs climbing steeply along it, a narrow oval. Ours, by common knowledge of the four (no record).
  */
 const GROW = {
   pine: (h, r, far) => ({ levels: far ? 2 : 3, trunkLength: h * 0.9, trunkRadius: r * 1.15, trunkClear: 0.56, children: far ? [6] : [8, 3], childRadius: far ? [0.32] : [0.32, 0.45], branchAngle: [82, 40], angleVariance: 10, lengthRatio: [0.62, 0.4], branchLengthFalloff: 0.5, taper: [0.82, 0.6], taperCurve: 0.8, rootFlare: 0.45, flareFrac: 0.06, droop: 0.05, upPull: 0.06, gnarl: [0.05, 0.14, 0.2], radialSegments: far ? [6, 3] : [8, 4, 3], sectionLength: 1.0, childStart: 0.3, minRadius: 0.012, minLength: 0.4, collar: 0.18, radiusExponent: 2.4 }),
   cypress: (h, r, far) => ({ levels: 2, trunkLength: h * 0.82, trunkRadius: r * 1.1, trunkClear: 0.06, children: [far ? 7 : 12], childRadius: [0.34], branchAngle: [34], angleVariance: 10, lengthRatio: [0.3], branchLengthFalloff: 0.55, taper: [0.85, 0.6], taperCurve: 0.85, rootFlare: 0.4, flareFrac: 0.06, droop: 0.01, upPull: 0.45, gnarl: [0.05, 0.12], radialSegments: far ? [6, 3] : [9, 4], sectionLength: 1.0, minRadius: 0.012, minLength: 0.4, collar: 0.15, radiusExponent: 2.4 }),
-  // (the pagoda tree's trunk is short and divides at 3 to 4 m into four or five thick limbs that spread and crook; its crown wider than it is tall)
-  huai: (h, r, far) => ({ levels: far ? 3 : 4, trunkLength: 4.2, trunkRadius: Math.min(r * 1.2, TRUNK_MAX), trunkClear: 0.78, children: far ? [4, 5] : [5, 5, 4], childRadius: far ? [0.62, 0.42] : [0.62, 0.42, 0.42], branchAngle: [46, 40, 44], angleVariance: 14, lengthRatio: [1.25, 0.5, 0.5], branchLengthFalloff: 0, taper: [0.45, 0.65, 0.75], taperCurve: 0.75, rootFlare: 0.45, flareFrac: 0.12, droop: 0.015, upPull: 0.24, gnarl: [0.04, 0.26, 0.3, 0.32], radialSegments: far ? [7, 4, 3] : [10, 5, 4, 3], sectionLength: 0.9, childStart: 0.25, minRadius: 0.008, minLength: 0.3, collar: 0.15, radiusExponent: 2.4 }),
+  // (the bare broadleaf's trunk is short and divides at 3 to 4 m into four or five thick limbs that spread and crook; its crown wider than it is tall)
+  broad: (h, r, far) => ({ levels: far ? 3 : 4, trunkLength: 4.2, trunkRadius: Math.min(r * 1.2, TRUNK_MAX), trunkClear: 0.78, children: far ? [4, 5] : [5, 5, 4], childRadius: far ? [0.62, 0.42] : [0.62, 0.42, 0.42], branchAngle: [46, 40, 44], angleVariance: 14, lengthRatio: [1.25, 0.5, 0.5], branchLengthFalloff: 0, taper: [0.45, 0.65, 0.75], taperCurve: 0.75, rootFlare: 0.45, flareFrac: 0.12, droop: 0.015, upPull: 0.24, gnarl: [0.04, 0.26, 0.3, 0.32], radialSegments: far ? [7, 4, 3] : [10, 5, 4, 3], sectionLength: 0.9, childStart: 0.25, minRadius: 0.008, minLength: 0.3, collar: 0.15, radiusExponent: 2.4 }),
   poplar: (h, r, far) => ({ levels: 3, trunkLength: h, trunkRadius: Math.min(r * 1.05, TRUNK_MAX), trunkClear: 0.3, children: far ? [12, 4] : [22, 6], childRadius: [0.3, 0.45], branchAngle: [36, 28], angleVariance: 8, lengthRatio: [0.4, 0.5], branchLengthFalloff: 0.62, taper: [0.9, 0.7], taperCurve: 0.85, rootFlare: 0.35, flareFrac: 0.05, droop: 0.01, upPull: 0.42, gnarl: [0.02, 0.1, 0.18], radialSegments: far ? [7, 3] : [10, 4, 3], sectionLength: 1.0, childStart: 0.25, minRadius: 0.008, minLength: 0.35, collar: 0.12, radiusExponent: 2.4 }),
 };
 
-/** The thickest a pagoda tree's or a poplar's trunk may be (radius, m): on the three judged pictures no trunk of a bare tree is wider than a house's door (the art director, 2026-11-25). */
+/** The thickest a bare broadleaf's or a poplar's trunk may be (radius, m): on the three judged pictures no trunk of a bare tree is wider than a house's door (the art director, 2026-11-25). */
 export const TRUNK_MAX = 0.32;
-/** How grey each kind's bark is (0: the shared red-brown, the pine's scaly bark; 1: the pagoda tree's grey-brown), carried to the bark in the wood's second texture coordinate. */
-const GREY = { pine: 0, cypress: 0.55, huai: 1, poplar: 0 };
+/** How grey each kind's bark is (0: the shared red-brown, the pine's scaly bark; 1: the bare broadleaf's grey-brown), carried to the bark in the wood's second texture coordinate. */
+const GREY = { pine: 0, cypress: 0.55, broad: 1, poplar: 0 };
 
 /** A tube's point at `u` (0 at its foot, 1 at its tip). */
 const along = (tube, u) => { const R = tube.rings, f = Math.min(0.999, Math.max(0, u)) * (R.length - 1), i = Math.floor(f); return R[i].pos.clone().lerp(R[i + 1].pos, f - i); };
@@ -96,7 +97,7 @@ export function growTree(t, far = false) {
   const r = t.r ?? h * 0.037, gen = /** @type {any} */ (new TreeGenerator(null)), P = GROW[kind](h, r, far);
   if (env) { const top = env.base + 2 * env.ry; Object.assign(P, { trunkRadius: r, rootFlare: t.old ? 0.45 : 0.3, gnarl: [t.old ? 0.02 : 0, ...P.gnarl.slice(1)], trunkLength: env.base + env.ry * (kind === "pine" ? 0.9 : 1.2), trunkClear: (env.base + 0.3) / (env.base + env.ry * (kind === "pine" ? 0.9 : 1.2)), lengthRatio: [Math.min(0.5, (env.rx * 1.05) / (env.base + env.ry)), 0.42], branchLengthFalloff: 0.3 }); P.top = top; }
   if (t.crownFrom) P.trunkClear = Math.min(0.6, (t.crownFrom + 0.2) / P.trunkLength);   // (no bough below where its needles start: he walks the earth beside it)
-  const lean = env ? (t.old ? 0.025 : 0) : kind === "pine" ? 0.07 + 0.06 * hashAt(x, z, 4) : kind === "huai" ? 0.05 : 0.015;   // (a tree on the axis stands straight: its trunk is cleared against the views as an upright post)
+  const lean = env ? (t.old ? 0.025 : 0) : kind === "pine" ? 0.07 + 0.06 * hashAt(x, z, 4) : kind === "broad" ? 0.05 : 0.015;   // (a tree on the axis stands straight: its trunk is cleared against the views as an upright post)
   for (const [k, v] of Object.entries({ seed: seedAt(x, z, 1), direction: [Math.sin(yaw) * lean, 1, Math.cos(yaw) * lean], ...P })) if (k !== "top") gen["set" + k[0].toUpperCase() + k.slice(1)](v);
   const m = gen.build(), tubes = m.userData.tubes, geo = m.geometry;
   // each tube's fineness (0 the trunk, 1 the finest twig) and the kind's greyness, for the bark (`treeBark`: twigs paler and warmer than limbs)
@@ -109,8 +110,8 @@ export function growTree(t, far = false) {
   const ready = (g) => { g.scale(s, s, s); g.translate(x, y - 0.2 * s, z); return g; };
   for (const tb of tubes) for (const ring of tb.rings) ring.pos.multiplyScalar(s).add(new THREE.Vector3(x, y - 0.2 * s, z));
   let [trunk, wood] = splitTrunk(geo, tubes[0]); trunk = ready(trunk); wood = ready(wood);
-  // A pagoda tree's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
-  if (kind === "huai") { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
+  // A bare broadleaf's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
+  if (kind === "broad") { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
   // a column (the way's arborvitae) keeps its boughs inside its needles' radius
   if (t.crownR) { const A = wood.attributes.position, R0 = t.crownR * 0.9; for (let i = 0; i < A.count; i++) { const dx = A.getX(i) - x, dz = A.getZ(i) - z, d = Math.hypot(dx, dz); if (d > R0) { A.setX(i, x + (dx * R0) / d); A.setZ(i, z + (dz * R0) / d); } } }
   const centre = new THREE.Vector3(x, y + (env ? env.base + env.ry : kind === "pine" ? h * 0.72 : kind === "cypress" ? h * 0.52 : h * 0.6), z);
@@ -142,7 +143,7 @@ export function growTree(t, far = false) {
     // in three or four clumps, as an old temple cypress's crown breaks up.
     const R = Math.min(t.crownR ?? Infinity, h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3))), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
     const radiusAt = (f) => { for (let i = 1; i < prof.length; i++) if (f <= prof[i][1]) { const [a, fa] = prof[i - 1], [b, fb] = prof[i]; return R * (a + ((b - a) * (f - fa)) / (fb - fa)); } return 0; };
-    const count = far ? 16 : env ? Math.round(26 + 3.2 * env.ry) : 34;   // (an old tree's tall crown takes more)
+    const count = far ? 16 : env ? Math.round((t.old ? 34 : 26) + (t.old ? 4.4 : 3.2) * env.ry) : 34;   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
     if (env) {
       // An old cypress with its lower boughs long gone: the head broken into four or five masses held out on the boughs, the widest low and
       // spread to the ellipsoid's rim, one over the leader, with sky between them (not a ball on a pole).
@@ -155,7 +156,7 @@ export function growTree(t, far = false) {
         cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? 0.5 : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
       }
       for (let i = 0; i < count; i++) {
-        const c0 = cs[i % clumps], w = c0.r * (0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * 0.6, (rnd() - 0.5) * c0.r * 1.4));
+        const c0 = cs[i % clumps], w = c0.r * (t.old ? 0.42 + 0.22 * rnd() : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * 0.6, (rnd() - 0.5) * c0.r * 1.4));
         const e = inEllipsoid(p, centre, env.rx - w * 0.7, env.ry - w * 0.45); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
         lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
       }
@@ -194,7 +195,7 @@ function paleBark(M) {
   m.customProgramCacheKey = () => "paleBark"; m.name = "paleBark"; return m;
 }
 /**
- * The bark of every tree but the poplar: the shared bark's grain; greyed by the kind (`uv.y`: the pine keeps the shared red-brown, the pagoda tree is
+ * The bark of every tree but the poplar: the shared bark's grain; greyed by the kind (`uv.y`: the pine keeps the shared red-brown, the bare broadleaf is
  * grey-brown), and toward the twigs (`uv.x`, 0 at the trunk, 1 at the finest twig) paler and a warmer grey, so that a bare crown seen against the sky
  * reads as a haze of fine twigs over darker limbs, not a black tangle (the art director: limbs a dark grey-brown, the tips lighter and warmer). Ours.
  */
@@ -244,7 +245,7 @@ export function buildFlora(M, trees, { name = "flora", far = false, cast = true,
   const mats = floraMaterials(M), group = new THREE.Group(), chunks = new Map(), census = [];
   for (const t of trees) {
     const key = chunk(t); if (!chunks.has(key)) chunks.set(key, { bark: [], pale: [], trunkBark: [], trunkPale: [], needles: [] });
-    const bins = chunks.get(key), g = growTree(t, typeof far === "function" ? far(t) : far), bark = t.kind === "poplar" ? "pale" : "bark";   // (the pagoda tree takes the shared bark: one material, and a draw in every chunk, fewer)
+    const bins = chunks.get(key), g = growTree(t, typeof far === "function" ? far(t) : far), bark = t.kind === "poplar" ? "pale" : "bark";   // (the bare broadleaf takes the shared bark: one material, and a draw in every chunk, fewer)
     bins[bark].push(g.wood); (walk ? bins["trunk" + bark[0].toUpperCase() + bark.slice(1)] : bins[bark]).push(g.trunk); bins.needles.push(...g.needles);   // (where nothing walks, the trunk goes in with the rest of the wood: one draw fewer)
     census.push({ kind: t.kind, at: [t.x, t.z], h: t.h, top: +g.top.toFixed(3), tris: g.tris, hash: floraHash([g.trunk, g.wood, ...g.needles]) });
   }
@@ -269,7 +270,7 @@ export function buildFlora(M, trees, { name = "flora", far = false, cast = true,
 
 /**
  * The ground under the trees inside the walls: a soft dark ring where each trunk goes into the earth (the shade and the damp a trunk's foot
- * keeps), and a patch of what has fallen reaching out under its crown, a pagoda tree's dry leaves wide and warm, a pine's or an arborvitae's
+ * keeps), and a patch of what has fallen reaching out under its crown, a bare broadleaf's dry leaves wide and warm, a pine's or an arborvitae's
  * needles narrower and darker; broken into leaves by the material, not a felt. One transparent mesh laid a finger over the earth or the paving,
  * one draw; under snow it is gone (`uSnow`). Ours.
  * @param {any[]} trees as for `growTree` @param {number} [lift] how far over the ground (m)
@@ -284,7 +285,7 @@ export function buildTreeGround(trees, lift = 0.03) {
   };
   trees.forEach((t, i) => {
     const y = (t.y ?? 0) + lift, r = t.r ?? 0.3, seed = hashAt(t.x, t.z, 21) * 6.283;
-    const reach = t.kind === "huai" ? 3.4 : t.kind === "pine" ? 2.6 : t.crownR ? t.crownR + 0.5 : 1.6, warm = t.kind === "huai";
+    const reach = t.kind === "broad" ? 3.4 : t.kind === "pine" ? 2.6 : t.crownR ? t.crownR + 0.5 : 1.6, warm = t.kind === "broad";
     // the litter first, the dark ring over it (later in the mesh: drawn over it)
     disc(t.x, y, t.z, reach, warm ? [0.5, 0.4, 0.26] : [0.36, 0.31, 0.22], [0.85, 0.85, 0.7, 0.3, 0], [0, 0.35, 0.65, 0.88, 1], seed + i);
     disc(t.x, y + 0.002, t.z, r + 1.0, [0.03, 0.025, 0.02], [0.75, 0.75, 0.4, 0], [0, (r + 0.2) / (r + 1.0), 0.7, 1], seed + 3);

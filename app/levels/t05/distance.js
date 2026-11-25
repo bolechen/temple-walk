@@ -84,7 +84,7 @@ export function middlePlan() {
   for (let k = 0, n = 0; n < D.trees + D.poplars && k < (D.trees + D.poplars) * 10; k++) {
     const [x, z] = pick(k, 60); if (!inRing(x, z, 6) || onTowerLine(x, z, 10)) continue;
     if (houses.some((h) => Math.abs(h.x - x) < h.w / 2 + 2 && Math.abs(h.z - z) < h.d / 2 + 2) || trees.some((t) => Math.hypot(t.x - x, t.z - z) < 7)) continue;
-    const poplar = n >= D.trees; trees.push({ kind: poplar ? "poplar" : "huai", x, z, h: +(poplar ? 15 + 4 * hashAt(x, z, 61) : 7 + 3 * hashAt(x, z, 62)).toFixed(2), r: poplar ? 0.26 : 0.3 }); n++;
+    const poplar = n >= D.trees; trees.push({ kind: poplar ? "poplar" : "broad", x, z, h: +(poplar ? 15 + 4 * hashAt(x, z, 61) : 7 + 3 * hashAt(x, z, 62)).toFixed(2), r: poplar ? 0.26 : 0.3 }); n++;
   }
   return { houses, trees };
 }

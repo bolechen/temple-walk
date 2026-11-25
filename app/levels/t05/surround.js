@@ -75,19 +75,19 @@ export const onTowerLine = (x, z, pad = 0) => {
  */
 const hash01 = (x, z, salt) => { const v = Math.sin(x * 12.9898 + z * 78.233 + salt * 37.719) * 43758.5453; return v - Math.floor(v); };
 /**
- * What a tree of the plan is grown as (./flora.js): a pine (油松) and a cypress (ce bai) as planned; a bare broadleaf is a pagoda tree (guo huai) or, about
+ * What a tree of the plan is grown as (./flora.js): a pine (油松) and a cypress (ce bai) as planned; a bare broadleaf is a bare broadleaf or, about
  * one in three and more in the rows behind, a white poplar (mao bai yang), by a hash of where it stands (not the seeded stream: nothing the art director passed moves). Ours.
  */
 export const POPLAR_SHARE = Object.freeze({ front: 0.25, behind: 0.45 });
 /**
  * Trees the arrival looks south over, whose kind is set by hand (the art director, 2026-11-25: beyond the way's end at least six in ten bare, evergreens a quarter or
- * fewer; the bare tree beside the earth-grey house kept as it was, a pagoda tree, not a poplar): [x, z, kind].
+ * fewer; the bare tree beside the earth-grey house kept as it was, a bare broadleaf, not a poplar): [x, z, kind].
  */
 /** @type {ReadonlyArray<[number, number, string, number?]>} */
-export const KIND_AT = Object.freeze([[-13.02, 228.09, "huai", 7.2], [-37.67, 229.7, "huai"], [-3.37, 238.87, "huai"]]);   // (the first kept low: its boughs reached over the arrival's picture, the art director)
+export const KIND_AT = Object.freeze([[-13.02, 228.09, "broad", 7.2], [-37.67, 229.7, "broad"], [-3.37, 238.87, "broad"]]);   // (the first kept low: its boughs reached over the arrival's picture, the art director)
 export const growKind = (t) => {
   const set = KIND_AT.find(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (set) return set[2];
-  return t.kind !== "bare" ? t.kind : hashAt(t.x, t.z, 11) < (t.row === 0 || t.cast ? POPLAR_SHARE.front : POPLAR_SHARE.behind) ? "poplar" : "huai";
+  return t.kind !== "bare" ? t.kind : hashAt(t.x, t.z, 11) < (t.row === 0 || t.cast ? POPLAR_SHARE.front : POPLAR_SHARE.behind) ? "poplar" : "broad";
 };
 /**
  * How tall a tree is grown. A poplar is the one thing in the town that stands well over the roofs (the art director: 15 to 20 m), but only where no picture's ceiling

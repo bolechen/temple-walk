@@ -1,4 +1,4 @@
-// T05's grown trees (app/levels/t05/flora.js): the pines, cypresses, pagoda trees and poplars inside and outside the walls. The same seed grows
+// T05's grown trees (app/levels/t05/flora.js): the pines, cypresses, bare broadleaves and poplars inside and outside the walls. The same seed grows
 // the same tree point for point (the page grows them again and the `t05-treeseed` scenario compares its fingerprint with Node's); no tree stands
 // over the ceiling its place was given; the axis's crowns stay inside the ellipsoids the views along it are cleared against; and the whole is held
 // to a budget of triangles and draws.
@@ -31,11 +31,13 @@ test("every tree of the plan is grown, each of its kind: the court's four, the a
   assert.equal(census.length, COURT_TREES.length + AXIS_TREES.length + plan.trees.length + ARRIVAL_POPLARS.length);
   const kinds = new Set(census.map((c) => c.kind)); for (const k of Object.keys(KINDS)) assert.ok(kinds.has(k), `${KINDS[k]} grows`);
   assert.ok(AXIS_TREES.filter((t) => t.y === 0).every((t) => t.kind === "cypress"), "the way between the gates is lined with cypresses");
-  assert.ok(AXIS_TREES.filter((t) => t.y > 0).every((t) => t.kind === "cypress" && t.old), "the terrace is two rows of old arborvitae (the art director, 2026-11-25)");
+  const terrace = AXIS_TREES.filter((t) => t.y > 0);
+  assert.ok(terrace.every((t) => t.old && ["cypress", "pine"].includes(t.kind)) && [-1, 1].every((sx) => { const row = terrace.filter((t) => Math.sign(t.x) === sx); return row.filter((t) => t.kind === "pine").length >= 1 && row.filter((t) => t.kind === "cypress").length >= 4; }), "the terrace is two rows of old arborvitae with a pine or two among them (the art director and the general director's research, 2026-11-25)");
+  assert.ok(![...AXIS_TREES, ...COURT_TREES].some((t) => t.kind === "broad"), "no bare broadleaf inside the walls (none is on record there)");
   const byHand = (t) => KIND_AT.some(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05);
   assert.equal(plan.trees.filter(byHand).length, KIND_AT.length, "every tree set by hand is one of the plan's");
   for (const t of plan.trees) if (!byHand(t)) assert.equal(growKind(t), t.kind === "bare" ? growKind(t) : t.kind, "a pine stays a pine, a cypress a cypress");
-  assert.ok(plan.trees.filter((t) => t.kind === "bare").every((t) => ["huai", "poplar"].includes(growKind(t))), "a bare broadleaf is a pagoda tree or a poplar");
+  assert.ok(plan.trees.filter((t) => t.kind === "bare").every((t) => ["broad", "poplar"].includes(growKind(t))), "a bare broadleaf outside the walls is grown as a broadleaf or a poplar");
 });
 
 test("no tree stands over its height: the plan's (the eave line in cam01 and cam07, 13 m, 10 m beside the hall), the court's under the eave line too", () => {
@@ -84,12 +86,12 @@ test("the art director's lines of 2026-11-25 that a number can hold", () => {
   // the poplar is the one tall thing, 15 to 19 m, only where no picture's ceiling holds it down; every other tree keeps its plan's height
   for (const t of plan.trees) { const h = growHeight(t), set = KIND_AT.find(([x, z, , hh]) => hh && Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (h !== t.h) assert.ok(set ? h === set[3] && h < t.h : growKind(t) === "poplar" && h >= POPLAR_H[0] && h <= POPLAR_H[1] && eaveCap(t.x, t.z) >= 40, `${t.x}, ${t.z}`); }
   assert.ok(plan.trees.some((t) => growHeight(t) > LIMITS.treeMax), "some poplars stand over the roofs");
-  // a bare tree's trunk is never wider than a house's door; a pagoda tree's limbs keep over his head
+  // a bare tree's trunk is never wider than a house's door; a bare broadleaf's limbs keep over his head
   for (const c of [...COURT_TREES, ...ARRIVAL_POPLARS.map((t) => ({ ...t }))]) {
-    if (c.kind !== "huai" && c.kind !== "poplar") continue;
+    if (c.kind !== "broad" && c.kind !== "poplar") continue;
     const g = growTree(c), rings = g.tubes[0].rings;
     for (const ring of rings) if (ring.pos.y - (c.y ?? 0) > 1.2) assert.ok(ring.radius * g.scale <= TRUNK_MAX * 1.12 + 1e-6, `the ${c.kind} at (${c.x}, ${c.z}) is ${(ring.radius * g.scale).toFixed(2)} m round its middle at ${ring.pos.y.toFixed(1)} m`);
-    if (c.kind === "huai") { const W = g.wood.attributes.position; for (let i = 0; i < W.count; i++) if (Math.hypot(W.getX(i) - c.x, W.getZ(i) - c.z) > 1.6) assert.ok(W.getY(i) >= 2.45, `a limb of the pagoda tree at (${c.x}, ${c.z}) hangs at ${W.getY(i).toFixed(2)} m`); }
+    if (c.kind === "broad") { const W = g.wood.attributes.position; for (let i = 0; i < W.count; i++) if (Math.hypot(W.getX(i) - c.x, W.getZ(i) - c.z) > 1.6) assert.ok(W.getY(i) >= 2.45, `a limb of the bare broadleaf at (${c.x}, ${c.z}) hangs at ${W.getY(i).toFixed(2)} m`); }
   }
 });
 

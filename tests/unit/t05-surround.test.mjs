@@ -80,7 +80,7 @@ test("the great hall's eave line is kept where the roof stands (all of cam01's p
     for (const [x, y, z, what] of tops) {
       const p = new THREE.Vector3(x, y, z), n = p.clone().project(cam); if (Math.abs(n.x) > 1.05 || n.y < -1 || n.y > 1.05) continue;
       const az = Math.atan2(x - e.x, e.z - z); if (Math.abs(az) > rad(e.within)) continue;   // (beyond `within` of the axis the eave line is not asked of it: the art director, 2nd round)
-      const d = p.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L - 0.3; if (ray.intersectObjects(meshes, false).find((h) => !outside(h.object))) continue;   // hidden behind the temple's own
+      const d = p.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L - 0.3; if (ray.intersectObjects(meshes, false).find((h) => !outside(h.object) && !/^trees-/.test(h.object.name))) continue;   // hidden behind the temple's own (not its trees: the eave line is asked of what stands behind a court tree too)
       const el = Math.atan2(y - e.y, Math.hypot(x - e.x, z - e.z)), eaveEl = Math.atan2(HALL.eave - e.y, (e.z - HALL.overhang) / Math.cos(az));
       seen.push(el - eaveEl); if (el > eaveEl) assert.fail(`${e.id}: a ${what} at (${x}, ${z}), ${y.toFixed(1)} m, stands ${(((el - eaveEl) * 180) / Math.PI).toFixed(2)}° over the eave line`);
     }

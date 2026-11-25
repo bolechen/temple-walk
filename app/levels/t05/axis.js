@@ -104,9 +104,9 @@ const grow = () => {
   // nearly meeting overhead, two walls of trees; trunk 0.6 to 0.9 m through, 14 to 18 m tall, the crown from 3.5 to 4.5 m up and 5 to 6 m across, the trunk 2.2 to 3.8 m
   // off the path's edge; spaced a little unevenly. #482/#492's lines are set aside for this stretch; the two kept (KEPT_SIGHTS) push a tree out if it stops one.
   const ROWS = { [-1]: [127.2, 111.8, 103.4, 97.6, 89.8, 83.5], [1]: [126.5, 112.4, 105.6, 97.5, 91.9, 84.2] };
-  for (const sx of [-1, 1]) for (const z of ROWS[sx]) {
+  for (const sx of [-1, 1]) for (const [k, z] of ROWS[sx].entries()) {   // (the fourth of each row a pine: arborvitae first, with a pine or two among them, quoted second-hand: Ming arborvitae and Qing pines, the general director's research of 2026-11-25)
     const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2), x = PATH.hw + 2.2 + rnd() * 1.6;
-    for (let k = 0; k <= 8; k++) { const t = { x: +(sx * (x + 0.3 * k)).toFixed(2), z, y: SECOND.y, r, rx, ry, base, h, old: true }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
+    for (let j = 0; j <= 8; j++) { const t = { x: +(sx * (x + 0.3 * j)).toFixed(2), z, y: SECOND.y, r, rx, ry, base, h, old: true, kind: k === 3 ? "pine" : "cypress" }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
   }
   return Object.freeze(out);
 };
@@ -118,7 +118,7 @@ export const WAY_CYPRESS = Object.freeze({ crownFrom: 2.6, radius: 1.2, height: 
 const way01 = (t) => { const v = Math.sin(t.x * 12.9898 + t.z * 78.233 + 14 * 37.719) * 43758.5453; return v - Math.floor(v); };
 export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze(t.y === 0
   ? { kind: "cypress", x: t.x, z: t.z, y: t.y, h: +(WAY_CYPRESS.height[0] + (WAY_CYPRESS.height[1] - WAY_CYPRESS.height[0]) * way01(t)).toFixed(2), r: Math.min(t.r, 0.3), crownFrom: WAY_CYPRESS.crownFrom, crownR: Math.min(WAY_CYPRESS.radius, Math.abs(t.x) - PATH.hw - 1 - 0.2) }   // (its crown's edge at least a metre from the paved path's: the lumps reach a little past the radius)
-  : { kind: "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
+  : { kind: t.kind || "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 
