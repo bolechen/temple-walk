@@ -61,7 +61,7 @@ export function moodOf(season, time, tune) {
   if (time === "dusk") m.lamp = t.lamp * (0.1 + 1.1 * cloud);
   // Summer by day is the picture the place is judged by (J01 in docs/ART-SPEC.md): overcast, just after rain. No sun
   // to speak of, a grey sky darker than the white walls, thin cool mist that leaves what is near perfectly clear.
-  if (season === "summer" && time === "day") Object.assign(m, { cloud: 1, sunI: 0.5, sunCol: [0.62, 0.65, 0.66], hills: [0.05, 0.085, 0.07], hemiI: 1.15, hemiS: [0.64, 0.7, 0.69], hemiG: [0.7, 0.72, 0.56],
+  if (season === "summer" && time === "day") Object.assign(m, { cloud: 1, sunI: 0.5, sunCol: [0.62, 0.65, 0.66], hills: [0.05, 0.085, 0.07], hemiI: 1.25, hemiS: [0.66, 0.72, 0.71], hemiG: [0.7, 0.72, 0.56],
     fog: [0.47, 0.51, 0.5], fogD: 0.0056, zen: [0.3, 0.335, 0.35], hor: [0.42, 0.455, 0.45], exp: 1.16, sat: 1.4, lift: 0.01, con: 1, bloom: 0.14, mist: 0.8, glow: 0.3,
     hal: 0, fogLayer: [0, 0, 20, 2], haze: 1, lut: IDENTITY });   // the film's finish leaves J01 as it was: no table, no halation, plain air
   // A summer dawn after rain: pale jade mist in the bamboo, the light cool and green rather than gold (prototype 01).
