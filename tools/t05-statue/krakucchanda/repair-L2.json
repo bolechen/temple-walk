@@ -62,6 +62,11 @@
    "fx": 0.0207
   },
   {
+   "op": "snapshot",
+   "name": "bow",
+   "note": "the points as the bow leaves them: what the upper face is held to (#701)"
+  },
+  {
    "op": "attenuate",
    "note": "the knit between the brows kept to 30% of its depth (#463, the 3D review)",
    "seed": [
@@ -666,6 +671,13 @@
     "iter": 12,
     "lam": 0.5
    }
+  },
+  {
+   "op": "hold",
+   "from": "bow",
+   "z0": 0.8043,
+   "z1": 0.7919,
+   "note": "the upper face held to the bow's shape: whole from the nose's tip (z 0.8043) up, easing to none at its base (z 0.7919) (#701)"
   }
  ]
 }

@@ -31,6 +31,7 @@ def bowed(p):   # a stage-frame point turned with the head, as repair.py's tilt 
   x, y, z = p; cy, cz = neck["c"]; a = math.radians(tilt) * min(max((y - (neck["z0"] - neck["fade"])) / neck["fade"], 0), 1) * min(max((neck["rx"] - abs(x)) / neck["fx"], 0), 1)
   dy, dz = y - cy, z - cz; return [x, cy + dy * math.cos(a) - dz * math.sin(a), cz + dz * math.cos(a) + dy * math.sin(a)]
 F = face["features"]   # unbowed: knit [x, y, z], philtrum, mouth corners
+snap_op = {"op": "snapshot", "name": "bow", "note": "the points as the bow leaves them: what the upper face is held to (#701)"}
 small = [
   {"op": "attenuate", "note": "the knit between the brows kept to 30% of its depth (#463, the 3D review)", "seed": B(*bowed(F["knit"])), "r": round(0.3 / s, 4), "sr": round(0.6 / s, 4), "k": 0.3, "iter": 500},
   {"op": "attenuate", "note": "the philtrum shallower, k 0.5 (#463)", "seed": B(*bowed(F["philtrum"])), "r": round(0.12 / s, 4), "sr": round(0.3 / s, 4), "k": 0.5, "iter": 300},
@@ -57,7 +58,13 @@ if not only:
     fops = fops + [{"op": "lowerback", "note": f"the lower face (lip, chin, jaw) pressed back {L['d']} m, whole within {L['x0']} m of the middle, easing out by {L['x1']} m, from z {z0} down to {z1} and out by {round(z1 - L['fz'], 4)} (file units, z up, {L['below']} under the bowed slit), in front of y {round(-neck['c'][1] / s, 4)} (the neck's axis); relaxed {L['iter']} passes (#701, 自拟)",
                     "d": round(L["d"] / s, 5), "z0": z0, "fz0": L["fz0"], "z1": z1, "fz": L["fz"], "x0": round(L["x0"] / s, 5), "x1": round(L["x1"] / s, 5),
                     "front": round(-neck["c"][1] / s, 4), "ffront": L["ffront"], "smooth": {"iter": L["iter"], "lam": L["lam"]}}]
-  j = repair(base_ops + [tilt_op] + small + fops, final)
+  if _R.get("hold") and face.get("nose"):   # #701: the upper face is the bow's own: whole from the tip of the nose up, eased to none at its base (face.json "nose": metres above the slit)
+    _slit = pts["mouth"][1] / s - _R["lowerback"]["below"] + _R["lowerback"]["below"]   # the bowed slit (file units)
+    _tip = _slit + face["nose"]["tipAboveSlit"] / s; _base = _slit + face["nose"]["baseAboveSlit"] / s
+    fops = fops + [{"op": "hold", "from": "bow", "z0": round(_tip, 4), "z1": round(_base, 4), "note": f"the upper face held to the bow's shape: whole from the nose's tip (z {round(_tip, 4)}) up, easing to none at its base (z {round(_base, 4)}) (#701)"}]
+    j = repair(base_ops + [tilt_op, snap_op] + small + fops, final)
+  else:
+    j = repair(base_ops + [tilt_op] + small + fops, final)
   if "quick" in opt: print(json.dumps({"repair": j, "glb": final})); sys.exit(0)   # --quick: the full-detail mesh only, for tuning a recipe by eye (no levels, no bake, no anchors)
   for t, e in (("60000", "0.02"), ("20000", "0.05"), ("6000", "0.1")):
     subprocess.run(["node", os.path.join(root, "tools/t05-statue.mjs"), final, os.path.join(D, f"{name}-{tag}.{t}.glb"), f"--tris={t}", f"--error={e}"], check=True, capture_output=True)

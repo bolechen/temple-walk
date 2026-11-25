@@ -1,6 +1,6 @@
 # The gate for a changed face (issue #701): the same idea as gate.py, for a figure whose head alone was edited (bow, brow, mouth, chin).
 #
-#   python3 tools/t05-statue/closed/face-gate.py <before.glb> <after.glb> <face.json> [--json=<out.json>] [--move-mm=1]
+#   python3 tools/t05-statue/closed/face-gate.py <before.glb> <after.glb> <face.json> [--json=<out.json>] [--move-mm=1] [--tilt-baseline=<bow-only.glb> --points=<points.json>]
 #
 # gate.py judges the grafted hand of Sakyamuni against its original through varada.json and varada-check3; it cannot be pointed at
 # a face. This one compares two full-detail files of one figure that share their points (repair.py keeps the order), and
@@ -29,6 +29,20 @@ else:
 if len(A.faces) == len(B.faces):   # folded: a triangle whose normal turned over (more than 90 degrees from before) is a fold in the surface (#701)
   def nrm(M): a, b, c = (M.vertices[M.faces[:, i]].astype(np.float64) for i in range(3)); n = np.cross(b - a, c - a); return n / np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-30)
   flips = int(((nrm(A) * nrm(B)).sum(1) < 0).sum()); row("folded: triangles whose normal turned over (> 90 degrees) from before", flips, "0", flips == 0)
+if "tilt-baseline" in opt and "points" in opt and len(A.vertices) == len(B.vertices):
+  # the upper face is the bow's own (#701, the art director: eyes, brows and nose as r3c's): against the same figure bowed and nothing else
+  Tb = trimesh.load(opt["tilt-baseline"], force="mesh", process=False); sp = json.load(open(opt["points"])); slit = sp["mouth"][1]; sM = face["height"] / (Tb.bounds[1][1] - Tb.bounds[0][1])
+  yy = (Tb.vertices[:, 1] - Tb.bounds[0][1]) * sM; dd = np.linalg.norm(Tb.vertices - B.vertices, axis=1) * 1000   # model millimetres: the file's unit (the figure is 1 tall) x 1000, as the 3D review reads them
+  nose = face.get("nose", {}).get("tipAboveSlit", 0.234); fr = lambda Mx: Mx.faces
+  def zone(lo):
+    vm = yy >= slit + lo; fm = vm[B.faces].all(1); return vm, fm
+  def turn(fm):
+    a_, b_ = (lambda M: tuple(M.vertices[M.faces[fm][:, i]].astype(np.float64) for i in range(3)))(Tb), (lambda M: tuple(M.vertices[M.faces[fm][:, i]].astype(np.float64) for i in range(3)))(B)
+    na = np.cross(a_[1] - a_[0], a_[2] - a_[0]); nb = np.cross(b_[1] - b_[0], b_[2] - b_[0]); c = (na * nb).sum(1) / np.maximum(np.linalg.norm(na, axis=1) * np.linalg.norm(nb, axis=1), 1e-30)
+    return float(np.degrees(np.arccos(np.clip(c, -1, 1))).max()) if len(c) else 0.0
+  for name, lo, lim in (("eyes and brows (slit +0.30 m up)", 0.30, 0.05), ("the nose's tip and up", nose, 0.1)):
+    vm, fm = zone(lo); mx = float(dd[vm].max()) if vm.any() else 0.0; row(f"upper face: largest move from the bow, {name} (model mm)", round(mx, 4), f"<= {lim}", mx <= lim)
+  vm, fm = zone(0.30); tt = turn(fm); row("upper face: largest turn of a triangle's normal from the bow, eyes and brows (deg)", round(tt, 3), "<= 1", tt <= 1)
 lg = after + ".log.json"   # repair.py's log beside the file: lowerback must not touch anything above the slit (the eyes, brows and nose stay as the bow left them)
 if os.path.exists(lg):
   for e_ in json.load(open(lg))["log"]:

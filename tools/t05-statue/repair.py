@@ -89,6 +89,15 @@ for _k, op in enumerate(spec["ops"]):
         dd = np.linalg.norm(co - e, axis=1); gd = np.exp(-3 * (dd / op["dimples"]["r"]) ** 2); co[:, 1] += op["dimples"]["d"] * gd
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "groove", "note": op.get("note", ""), "points": int((mv > 1e-6).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
+  if op["op"] == "snapshot":   # {"name"}: the points as they are now, for a later `hold`
+    globals().setdefault("_snaps", {})[op["name"]] = co.copy(); log.append({"op": "snapshot", "note": op.get("note", ""), "name": op["name"]}); continue
+  if op["op"] == "hold":
+    # {"from", "z0", "z1"}: give back the snapshot's points from z0 up (whole) and ease to none at z1 below it (smoothstep), so that what lies above
+    # z0 is exactly as the snapshot had it: the eyes, brows and nose stay as the bow left them and only the lower face is worked (#701, the art director:
+    # 「以 r3c 的脸为底只动下巴」)
+    snap = globals()["_snaps"][op["from"]]; u = np.clip((co[:, 2] - op["z1"]) / (op["z0"] - op["z1"]), 0, 1); w = u * u * (3 - 2 * u)
+    before = co.copy(); co[:] = snap + (1 - w)[:, None] * (co - snap); mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "hold", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "left_above_z0_max": float(np.linalg.norm(co - snap, axis=1)[co[:, 2] >= op["z0"]].max())}); print(json.dumps(log[-1])); continue
   if op["op"] == "lowerback":
     # {"d", "z0", "z1", "fz", "x0", "x1", "front", "ffront", "smooth": {"iter", "lam"}}: the lower face (lower lip, chin and jaw as one mass)
     # pressed back by up to d (+y: away from the viewer), whole between z1 and z0 (z0 the slit's side), easing to nothing over fz below z1
