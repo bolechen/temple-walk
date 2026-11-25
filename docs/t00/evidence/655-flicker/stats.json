@@ -1,0 +1,38 @@
+{
+ "level": "t00",
+ "meshes": 919,
+ "triangles": 928288,
+ "instancedSkipped": 0,
+ "hiddenSkipped": 22,
+ "buildSkipped": [],
+ "gap_mm": 2,
+ "minArea_m2": 0.0001,
+ "pairsTested": 1691087,
+ "coplanarFindings": 3383,
+ "tiers": {
+  "A": 574,
+  "B": 17,
+  "C": 0,
+  "H": 2792
+ },
+ "exact": 3275,
+ "transparentDepthWriters": 0,
+ "transparentOverlaps": 0,
+ "depthPrecision": [
+  {
+   "z_m": 10,
+   "24bit_mm": 0.06,
+   "16bit_mm": 15.3
+  },
+  {
+   "z_m": 50,
+   "24bit_mm": 1.49,
+   "16bit_mm": 381.4
+  },
+  {
+   "z_m": 200,
+   "24bit_mm": 23.839,
+   "16bit_mm": 6102.8
+  }
+ ]
+}
