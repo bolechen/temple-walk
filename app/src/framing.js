@@ -167,7 +167,7 @@ function caisson(M, add, hole, H, frame, gilt, rib) {
   // panels and fought them, #655. They are 3 and 6 cm nearer the middle than they were.)
   for (const [w, d, x, z] of [[S, 0.06, 0, a], [S, 0.06, 0, -a], [0.06, S, a, 0], [0.06, S, -a, 0]]) {
     const sx = Math.sign(x), sz = Math.sign(z);
-    frame.push(at(box(w === S ? S : 0.12, y1 - H, w === S ? 0.06 : S, x - sx * 0.06, (H + y1) / 2, z - sz * 0.03)), at(box(w + 0.18, 0.1, d + 0.12, x, H - 0.03, z)));
+    frame.push(at(box(w === S ? S : 0.12, y1 - H, w === S ? 0.06 : S, x - sx * 0.06, (H + y1) / 2, z - sz * 0.03)), at(box(w + 0.18, 0.1, d + 0.12, x - sx * 0.06, H - 0.03, z - sz * 0.03)));
   }
   // The corners cut across: four triangles looking down, leaving an octagon whose flats lie on the square's sides.
   const k = a * Math.tan(Math.PI / 8), tri = [];
