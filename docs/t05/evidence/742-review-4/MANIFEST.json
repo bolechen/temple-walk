@@ -1,0 +1,66 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 111597,
+   "sha256": "be2740151ed7a9997c542e77016e89f36e50363d9c12692a96429c14c7824a72",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/cam01.png",
+   "bytes": 2438465,
+   "sha256": "eb8518f8a63a275490ecbe5e56876ea1c5ed279a21bcd73a7f2de917bd70456a",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/cam02.png",
+   "bytes": 2466393,
+   "sha256": "00fc0cb69a1a7d2bfdc5d1e78c606cc5ccf82b2e7b64275fad0fdd7af6395cab",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/cam02_winter-day.png",
+   "bytes": 2815670,
+   "sha256": "ab61913d6012b95bc730e70a22232e34f5b12f2f41a3e253ea41af34e8511df4",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/cam07_winter-day.png",
+   "bytes": 2577618,
+   "sha256": "9aa07e69028aac9cadd911b55cc8477232fee349954b4bfff9dac15243a6ab1d",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/close-hip-winter.png",
+   "bytes": 2374122,
+   "sha256": "a037e09ac753b113d5e2d804e8959fbecb6aa849e12a33a7f18e790e764793f6",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/close-hip.png",
+   "bytes": 2137074,
+   "sha256": "64666792fc329a59df2ece6c9e0ad8c547d6157c9d8f78342b5039142ea27c7f",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/close-ornament-winter.png",
+   "bytes": 2141186,
+   "sha256": "cbaee5856a51691f0095f42b305721e6c884eb59e6e4cd8773432614c5aa05db",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/close-ornament.png",
+   "bytes": 1973295,
+   "sha256": "0cc3c847df0a1a1f6db53128be41821c5e0b3f29b64aa486bc207d22196a0af2",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  },
+  {
+   "path": "t4/corner_winter-day.png",
+   "bytes": 2751771,
+   "sha256": "d24eddc19697fef9c18e3d9e3308ed7f30c15916e8a59e4c106de281b9d5e6be",
+   "rev": "8389dd651e4b618f03babe108bb0176943938e9b"
+  }
+ ]
+}
