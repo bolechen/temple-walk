@@ -3,6 +3,8 @@
  "files": {
   "analytics.test.mjs": 0.1,
   "app.test.mjs": 2.1,
+  "temple-name.test.mjs": 0.3,
+  "level-say.test.mjs": 0.2,
   "save-levels.test.mjs": 0.2,
   "asset-register.test.mjs": 0.2,
   "atmosphere.test.mjs": 0.4,
