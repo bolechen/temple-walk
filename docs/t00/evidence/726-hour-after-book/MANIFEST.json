@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "after-book-shut-night.png",
+   "bytes": 1828945,
+   "sha256": "1390b21b94eef2e4cc816dd3d021c22ebc56632e6c5343173569aa4104404dc7",
+   "rev": "101513d60e853daa407b224eaf24f2573bad2c88"
+  },
+  {
+   "path": "before-book-open-day.png",
+   "bytes": 976088,
+   "sha256": "ae1c10b2d18ee9cc2562c733e945491581c593e74061f5e6f8c25fc5182eeb68",
+   "rev": "101513d60e853daa407b224eaf24f2573bad2c88"
+  }
+ ]
+}
