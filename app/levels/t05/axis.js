@@ -73,7 +73,7 @@ export const SIGHTS = (() => {
 export function treeBlocks(eye, to, t) {
   const d = [to[0] - eye[0], to[1] - eye[1], to[2] - eye[2]];
   { // crown
-    const c = [t.x + (t.lean || 0), t.y + (t.base ?? 7.6) + t.ry, t.z], o = [eye[0] - c[0], eye[1] - c[1], eye[2] - c[2]], k = [t.rx, t.ry, t.rx];   // (a crown's underside: its own `base`, or 7.6 m)
+    const c = [t.x, t.y + (t.base ?? 7.6) + t.ry, t.z], o = [eye[0] - c[0], eye[1] - c[1], eye[2] - c[2]], k = [t.rx, t.ry, t.rx];   // (a crown's underside: its own `base`, or 7.6 m)
     const a = d.reduce((s, v, i) => s + (v / k[i]) ** 2, 0), b = 2 * d.reduce((s, v, i) => s + (v * o[i]) / k[i] ** 2, 0), cc = o.reduce((s, v, i) => s + (v / k[i]) ** 2, 0) - 1, disc = b * b - 4 * a * cc;
     if (disc >= 0) { const s0 = (-b - Math.sqrt(disc)) / (2 * a), s1 = (-b + Math.sqrt(disc)) / (2 * a); if (s1 > 0 && s0 < 1) return true; }
   }
@@ -93,10 +93,13 @@ const keptClear = (t) => !KEPT_SIGHTS.some((l) => treeBlocks(SIGHTS.eye, l.to, t
 /** No tree within 17 m of the archway, north or south, whose trunk or crown comes within 8 m of the axis: such crowns stood behind its ridges seen from cam07 and from the hall, like a pair of ears (the T05 lead's review of #492; a trunk at 8 m with a crown 3 m wide still did). */
 export const ARCHWAY_CLEAR = Object.freeze({ z: 17, x: 8 });
 export const nearArchway = (t) => Math.abs(t.z - AXIS.paifangZ) < ARCHWAY_CLEAR.z && Math.abs(t.x) - t.rx < ARCHWAY_CLEAR.x;
-// (a trial for the T05 lead and the art director, #722's first art review: the archway's front in the sun. A: four of the east eight left; B: the east eight
-// leaning 3 m out with their crowns 3 m higher; C: B less the two that shade most. `?rows=` in the page, T05_ROWS in Node; none: as before.)
-const ROWS_TRIAL = (() => { const v = (typeof location !== "undefined" ? new URLSearchParams(location.search).get("rows") : typeof globalThis.process !== "undefined" ? /** @type {any} */ (globalThis).process.env.T05_ROWS : "") || "";
-  return { A: { drop: ["inner1", "inner2", "inner3", "outer2"], lean: 0, up: 0 }, B: { drop: [], lean: 3, up: 3 }, C: { drop: ["inner2", "inner3"], lean: 3, up: 3 } }[v] || { drop: [], lean: 0, up: 0 }; })();
+/**
+ * The east rows' trees left out so that the low winter sun reaches the archway's front (#722's first art review, the art director's choice of 2026-11-25,
+ * A of three tried): J01's sun stands at 152°, 17° up, almost straight up the axis from the gate, so any tall crown near the path on the east side of this
+ * stretch lays its shadow over the archway's middle bay. Of the east eight the inner row's second to fourth and the outer row's third go: the bay is then
+ * lit over 55% of it (`t05-axis`), its left half in the sun and its right in the trees' shade, light that comes from somewhere. The west rows stand whole.
+ */
+export const SUNWARD_GAP = Object.freeze(["inner1", "inner2", "inner3", "outer2"]);
 const grow = () => {
   const rnd = seeded(482), out = [], rr = () => +(0.25 + rnd() * 0.25).toFixed(2), crown = () => ({ rx: +(2.7 + rnd() * 0.9).toFixed(2), ry: +(2.1 + rnd() * 0.7).toFixed(2) });
   const add = (tree, push) => { for (let k = 0; k <= 7; k++) { const t = { ...tree, x: +(tree.x + Math.sign(tree.x) * push * k).toFixed(2) }; if (clear(t) && !nearArchway(t)) { out.push(Object.freeze(t)); return; } } };   // moved out until it stands clear (of the lines of sight and of the archway's neighbourhood), else left out
@@ -114,9 +117,8 @@ const grow = () => {
   for (const sx of [-1, 1]) for (const row of /** @type {const} */ (["inner", "outer"])) for (const [k, z0] of SOUTH[row].entries()) {
     const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2);
     const x = row === "inner" ? PATH.hw + 2.2 + rnd() * 0.6 : k === 3 ? 11.9 : PATH.hw + 5.3 + rnd() * 0.6, z = +(z0 + (sx < 0 ? 0.35 : -0.2) + 0.3 * (rnd() - 0.5)).toFixed(2);
-    const V = ROWS_TRIAL, lean = sx > 0 && V.lean ? V.lean : 0;
-    if (sx > 0 && V.drop.includes(`${row}${k}`)) continue;
-    for (let j = 0; j <= 16; j++) { const t = { x: +(sx * (x + 0.3 * j)).toFixed(2), z, y: SECOND.y, r, rx: lean ? Math.min(rx, 2.4) : rx, ry: lean ? +(ry - V.up / 2).toFixed(2) : ry, base: lean ? base + V.up : base, h, old: true, kind: "cypress", back: row === "outer", lean }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
+    if (sx > 0 && SUNWARD_GAP.includes(`${row}${k}`)) continue;   // (drawn after its numbers, so that every other tree keeps its own)
+    for (let j = 0; j <= 16; j++) { const t = { x: +(sx * (x + 0.3 * j)).toFixed(2), z, y: SECOND.y, r, rx, ry, base, h, old: true, kind: "cypress", back: row === "outer" }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
   }
   // North of the archway to the Wuliang hall (the same comment, from the owner's photograph 11): not rows of cypress but broad pines, scattered, their crowns
   // round, wide and layer on layer, of uneven heights, standing where no row would put them. Six, three a side, pushed out of the kept lines as the cypresses are.
@@ -135,7 +137,7 @@ export const WAY_CYPRESS = Object.freeze({ crownFrom: 2.6, radius: 1.2, height: 
 const way01 = (t) => { const v = Math.sin(t.x * 12.9898 + t.z * 78.233 + 14 * 37.719) * 43758.5453; return v - Math.floor(v); };
 export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze(t.y === 0
   ? { kind: "cypress", x: t.x, z: t.z, y: t.y, h: +(WAY_CYPRESS.height[0] + (WAY_CYPRESS.height[1] - WAY_CYPRESS.height[0]) * way01(t)).toFixed(2), r: Math.min(t.r, 0.3), crownFrom: WAY_CYPRESS.crownFrom, crownR: Math.min(WAY_CYPRESS.radius, Math.abs(t.x) - PATH.hw - 1 - 0.2) }   // (its crown's edge at least a metre from the paved path's: the lumps reach a little past the radius)
-  : { kind: t.kind || "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, back: !!t.back, lean: t.lean || 0, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
+  : { kind: t.kind || "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, back: !!t.back, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 

@@ -111,18 +111,13 @@ export function growTree(t, far = false) {
   const ready = (g) => { g.scale(s, s, s); g.translate(x, y - 0.2 * s, z); return g; };
   for (const tb of tubes) for (const ring of tb.rings) ring.pos.multiplyScalar(s).add(new THREE.Vector3(x, y - 0.2 * s, z));
   let [trunk, wood] = splitTrunk(geo, tubes[0]); trunk = ready(trunk); wood = ready(wood);
-  // An old tree leaning out of the row toward the open light (`lean`, m: where its crown's middle stands off its foot, across the axis): the whole tree is
-  // sheared over from its foot, the trunk tilting into the crown, so that nothing floats beside its trunk.
-  // (the trunk rises straight from its foot and bends over on a smooth curve, the crown's middle standing `lean` off; above that the crown keeps its offset)
-  const bend = (yy) => { const u = Math.min(1, Math.max(0, (yy - y) / (env.base + env.ry))); return t.lean * u * u * (3 - 2 * u); };
-  if (env && t.lean) { for (const g of [trunk, wood]) { const A = g.attributes.position; for (let i = 0; i < A.count; i++) A.setX(i, A.getX(i) + bend(A.getY(i))); } for (const tb of tubes) for (const ring of tb.rings) ring.pos.x += bend(ring.pos.y); }
   // A bare broadleaf's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
   if (kind === "broad" && h > 6) { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
   // a column (the way's arborvitae) keeps its boughs inside its needles' radius
   if (t.crownR) { const A = wood.attributes.position, R0 = t.crownR * 0.9; for (let i = 0; i < A.count; i++) { const dx = A.getX(i) - x, dz = A.getZ(i) - z, d = Math.hypot(dx, dz); if (d > R0) { A.setX(i, x + (dx * R0) / d); A.setZ(i, z + (dz * R0) / d); } } }
   const centre = new THREE.Vector3(x, y + (env ? env.base + env.ry : kind === "pine" ? h * 0.72 : kind === "cypress" ? h * 0.52 : h * 0.6), z);
   if (env) {   // what reaches out of the ellipsoid is drawn back into it, and nothing of the boughs comes below its underside
-    const c = new THREE.Vector3(x + (t.lean || 0), y + env.base + env.ry, z), p = new THREE.Vector3(), A = wood.attributes.position;
+    const c = new THREE.Vector3(x, y + env.base + env.ry, z), p = new THREE.Vector3(), A = wood.attributes.position;
     for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); const e = inEllipsoid(p, c, env.rx, env.ry); if (e > 0.97) { p.sub(c).multiplyScalar(0.97 / e).add(c); A.setXYZ(i, p.x, p.y, p.z); } }
     centre.copy(c);
   }

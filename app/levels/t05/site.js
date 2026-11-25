@@ -60,6 +60,12 @@ export const FOOT_TREES = Object.freeze([
   ...[6.6, 9.3, 12.1, 14.6, 17.2].flatMap((x, i) => [-1, 1].map((sx, j) => Object.freeze({ kind: "broad", foot: true, x: +(sx * (x + 0.3 * Math.sin(i * 1.9 + j))).toFixed(2), z: +(TERRACE.zS + 1.9 + 0.15 * Math.sin(i + j * 2.1)).toFixed(2), h: +(3.2 + 0.8 * Math.abs(Math.sin(i * 1.3 + j * 0.7))).toFixed(2), r: 0.09 }))),
   ...[20.6, 23.4, 26.1].flatMap((x, i) => [-1, 1].map((sx, j) => Object.freeze({ kind: "broad", foot: true, x: +(sx * (x + 0.25 * Math.sin(i * 2.3 + j))).toFixed(2), z: +(PLATFORM.zS + 0.95).toFixed(2), h: +(3.4 + 0.6 * Math.abs(Math.sin(i * 0.9 + j))).toFixed(2), r: 0.09 }))),
 ]);
+/**
+ * Old arborvitae standing just outside the terrace's east wall, their crowns over its top (the art director, 2026-11-25, with A of #722's three: where the
+ * east rows were thinned to let the sun onto the archway, the east side seen from the path is still a dark ground, but of crowns 13 m and more off the path
+ * whose shadows fall short of the archway; no tall tree near the path). They stand on the town's ground, the crown from 4.6 m, over the wall's top at 4.2 m.
+ */
+export const EAST_WALL_TREES = Object.freeze([[16.4, 120.8, 13.6], [16.9, 124.4, 14.8], [16.3, 128.6, 13.2], [16.7, 132.3, 14.4]].map(([x, z, h], i) => Object.freeze({ kind: "cypress", old: true, x, z, y: 0, h, r: 0.34 + 0.04 * (i % 2), env: Object.freeze({ base: 4.6, rx: 2.6 - 0.15 * (i % 2), ry: +((h - 4.6) / 2).toFixed(2) }) })));
 /** A court tree's pit: edge stones `rim` wide standing `up` over the paving round a square of earth `side` across (two of the Yingzao Fashi's three-chi blocks, as the prologue's pits, three for a pine; by analogy, not a source). */
 export const COURT_PIT = Object.freeze({ side: 1.86, pine: 2.79, rim: 0.2, up: 0.065 });   // (a pine's pit three blocks across: its flared trunk is the thickest in the court)   // (edge stones 0.2 m wide: at 0.15 their top was exactly the baked floor's foothold and one side counted as a low thing his shoes were kept off)
 // Where each station stands. A (cam01) is 44 m out, where the nine bays fill about four fifths of a wide picture with the
@@ -230,7 +236,7 @@ export function buildSite(M) {
     pitStones.push(box(long, h, rim, t.x, cy, t.z - half), box(long, h, rim, t.x, cy, t.z + half), box(rim, h, side, t.x - half, cy, t.z), box(rim, h, side, t.x + half, cy, t.z));
     pitEarth.push(new THREE.PlaneGeometry(side, side).rotateX(-Math.PI / 2).translate(t.x, 0.025, t.z));
   }
-  const inner = buildFlora(M, [...AXIS_TREES, ...COURT_TREES.map((t) => { const h = Math.min(t.h, eaveCap(t.x, t.z)); return t.old ? { ...t, h, env: { base: t.base, rx: t.rx, ry: (h - t.base) / 2 } } : { ...t, h }; }), ...FOOT_TREES], { name: "trees", cast: true, walk: true, chunk: (t) => (t.z < COMPOUND.zS + 8 ? "court" : "axis") });
+  const inner = buildFlora(M, [...AXIS_TREES, ...COURT_TREES.map((t) => { const h = Math.min(t.h, eaveCap(t.x, t.z)); return t.old ? { ...t, h, env: { base: t.base, rx: t.rx, ry: (h - t.base) / 2 } } : { ...t, h }; }), ...FOOT_TREES, ...EAST_WALL_TREES], { name: "trees", cast: true, walk: true, chunk: (t) => (t.z < COMPOUND.zS + 8 ? "court" : "axis") });
   { const st = mesh(merge(pitStones), M.stone); st.userData.walk = "floor"; st.name = "court-pits-stones"; root.add(inner.group, st); }   // (a pit's edge stones are stood on, as a low curb is: the baked floor rises to their top within his shoes' reach)
   { const e = mesh(merge(pitEarth), dryMaterials(M).earth, { cast: false }); e.name = "court-pits-earth"; root.add(e); }   // (the pit's earth is floor, as the prologue's pits are: the edge stones are then a step with a foothold behind them, not a low thing his shoes are kept off)
   root.add(buildTreeGround([...AXIS_TREES, ...COURT_TREES]));   // fallen leaves and needles and the dark at each trunk's foot (./flora.js)

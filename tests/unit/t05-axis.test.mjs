@@ -148,8 +148,9 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   // staggered lines, crown against crown; north of the archway broad pines, scattered, none of them a cypress; nothing at the Wuliang hall's steps)
   const rows = onTerrace.filter((t) => t.kind === "cypress"), pines = onTerrace.filter((t) => t.kind === "pine");
   assert.ok(rows.every((t) => t.z > AXIS.paifangZ + 4 && t.z < FOOT.inner.z0 - 0.8), `the rows keep between the archway and the gate: ${rows.map((t) => t.z)}`);
-  assert.ok([-1, 1].every((sx) => rows.filter((t) => Math.sign(t.x) === sx).length === 8), "eight a side (six the least, seven or eight better)");
-  for (const sx of [-1, 1]) { const zs = rows.filter((t) => Math.sign(t.x) === sx).map((t) => t.z).sort((a, b) => a - b); assert.ok(zs.every((z, i) => i === 0 || z - zs[i - 1] <= 3.2), `side ${sx}, crown against crown: ${zs}`); }
+  // eight on the west, crown against crown; four on the east, the rest left out for the archway's sun (AX.SUNWARD_GAP; the sun test below)
+  assert.equal(rows.filter((t) => t.x < 0).length, 8, "eight on the west (six the least, seven or eight better)"); assert.equal(rows.filter((t) => t.x > 0).length, 8 - AX.SUNWARD_GAP.length);
+  { const zs = rows.filter((t) => t.x < 0).map((t) => t.z).sort((a, b) => a - b); assert.ok(zs.every((z, i) => i === 0 || z - zs[i - 1] <= 3.2), `the west, crown against crown: ${zs}`); }
   assert.ok(pines.length >= 5 && pines.every((t) => t.z < AXIS.paifangZ - 5 && t.z > FOOT.hall.z1 + 4) && onTerrace.length === rows.length + pines.length, "north of the archway broad pines only");
   assert.ok(pines.every((t) => t.rx >= 3.3) && new Set(pines.map((t) => Math.round(t.h))).size >= 4, "broad crowns, of uneven heights");
   assert.ok(onLane.every((t) => t.z > FOOT.inner.z1 + 4 && t.z < FOOT.outer.z0 - 4));
@@ -188,7 +189,7 @@ test("no tree crown stands in cam07's view of the middle 60% of the Great Hall's
 test("the rows between the inner gate and the archway stand close beside the path, the inner line 2 to 3 m off its edge and the outer behind it; the archway's own neighbourhood rule (#492) is set aside for them (the art director, 2026-11-25)", () => {
   const rows = TRUNKS.list.filter((t) => t.y > 0 && t.kind === "cypress"), off = (t) => Math.abs(t.x) - PATH.hw;
   const inner = rows.filter((t) => !t.back), outer = rows.filter((t) => t.back);
-  assert.equal(inner.length, 8); assert.equal(outer.length, 8);
+  assert.equal(inner.length + outer.length, 16 - AX.SUNWARD_GAP.length); assert.equal(inner.filter((t) => t.x < 0).length, 4); assert.equal(outer.filter((t) => t.x < 0).length, 4);
   assert.ok(inner.every((t) => off(t) >= 2 && off(t) <= 3.2), inner.map((t) => off(t).toFixed(2)).join(" "));
   assert.ok(outer.every((t) => off(t) >= 5 && off(t) <= 9.2), outer.map((t) => off(t).toFixed(2)).join(" "));
   assert.ok(TRUNKS.list.filter((t) => t.y === 0).every((t) => !AX.nearArchway(t)), "the way's trees keep #492's rule (none near the archway)");
@@ -222,4 +223,15 @@ test("the monument pavilion's roof stands clear of the great hall's eave: a clea
   assert.ok(vertical >= 1.0, `${vertical.toFixed(2)} m of the pavilion's finial under the hall's fascia: at least 1 m`);
   assert.ok(M0.x0 >= -TERRACE.w / 2 && M0.x0 - -TERRACE.w / 2 < 0.5, "and it still stands against the west parapet, as before");
   assert.ok(mx < -10 && M0.z1 <= TERRACE.zS - 1.5, "clear of the middle way, and a stride in front of the terrace's south parapet");
+});
+
+test("the winter sun reaches the archway's front: over 55% of its middle bay lit through the trees (the art director's line of 2026-11-25 for #722, A)", async () => {
+  // J01's sun (app/levels/t05/level.js: 152°, 17° up); each crown as its ellipsoid and each trunk as its post, as the views are cleared
+  const { EAST_WALL_TREES } = await import("../../app/levels/t05/site.js");
+  const el = (17 * Math.PI) / 180, az = (152 * Math.PI) / 180, s = [Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)];
+  const trees = [...TRUNKS.list.filter((t) => t.y > 0), ...EAST_WALL_TREES.map((t) => ({ ...t, ...t.env }))];
+  let lit = 0, n = 0;
+  for (let x = -2; x <= 2.001; x += 0.25) for (let y = 1.5; y <= 8.5; y += 0.25) { const P = [x, y, AXIS.paifangZ + 0.6], Q = P.map((v, i) => v + s[i] * 80); n++; if (!trees.some((t) => AX.treeBlocks(P, Q, t))) lit++; }
+  assert.ok(lit / n >= 0.55, `${((100 * lit) / n).toFixed(1)}% of the middle bay lit`);
+  assert.ok(EAST_WALL_TREES.every((t) => t.x - PATH.hw >= 7), "the east's dark ground stands 7 m and more off the path");
 });

@@ -7,6 +7,7 @@ import "./dom-stub.mjs"; import * as THREE from "three";
 const { createMaterials } = await import("../../app/src/materials.js");
 const { growTree, buildFlora, floraHash, KINDS } = await import("../../app/levels/t05/flora.js");
 const { buildSite, COURT_TREES, COMPOUND, FOOT_TREES } = await import("../../app/levels/t05/site.js");
+const T05S = await import("../../app/levels/t05/site.js");
 const { AXIS_TREES, TRUNKS, treeBlocks, SIGHTS, PATH } = await import("../../app/levels/t05/axis.js");
 const { RIDGE } = await import("../../app/levels/t05/hall.js");
 const { planSurround, eaveCap, growKind, growHeight, LIMITS, KIND_AT, ARRIVAL_POPLARS, POPLAR_H } = await import("../../app/levels/t05/surround.js");
@@ -28,7 +29,7 @@ test("the same tree twice is the same tree, to a tenth of a millimetre; a tree e
 
 test("every tree of the plan is grown, each of its kind: the court's four, the axis's fourteen, the town's 151 and the arrival's group of poplars", () => {
   const plan = planSurround(COMPOUND), census = site.flora.census;
-  assert.equal(census.length, COURT_TREES.length + AXIS_TREES.length + FOOT_TREES.length + plan.trees.length + ARRIVAL_POPLARS.length);
+  assert.equal(census.length, COURT_TREES.length + AXIS_TREES.length + FOOT_TREES.length + T05S.EAST_WALL_TREES.length + plan.trees.length + ARRIVAL_POPLARS.length);
   const kinds = new Set(census.map((c) => c.kind)); for (const k of Object.keys(KINDS)) assert.ok(kinds.has(k), `${KINDS[k]} grows`);
   assert.ok(AXIS_TREES.filter((t) => t.y === 0).every((t) => t.kind === "cypress"), "the way between the gates is lined with cypresses");
   const terrace = AXIS_TREES.filter((t) => t.y > 0);
