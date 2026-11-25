@@ -1,0 +1,108 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 160001,
+   "sha256": "638fa34d217dae9d60949519e7cdd638806a58c7f05cb355d4feb7b340241558",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/face10-sikhin.png",
+   "bytes": 668505,
+   "sha256": "eacd98d9618191f170257bc5a4fdf5d5c3f05409842952e3230f5f506e7b662b",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/face10-vipasyin.png",
+   "bytes": 655072,
+   "sha256": "233672a4ef45a7972b2238297ca864e3eec6a21765f3d314f380a62715c2f5f0",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/front4-sikhin.png",
+   "bytes": 758103,
+   "sha256": "615e33337f6acb6ca5ac2fc264569b9066bd2032a6c64ca1b7d38b57d33dc900",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/front4-vipasyin.png",
+   "bytes": 710572,
+   "sha256": "8e2b85a25548406794c2c2134943aeb5dbbc6ac7b56bcbff5717f00dbdc43c63",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/macroA-sikhin.png",
+   "bytes": 841670,
+   "sha256": "06ec381c73b1a8dc5d03769efc660cd90fda1087cc36eb59015944f654d29329",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/macroA-vipasyin.png",
+   "bytes": 650112,
+   "sha256": "54241f2e88fff1131a0f63d3ff06e20bf8bbbd584b264ecc4f2ca2333fd9363b",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/macroB-sikhin.png",
+   "bytes": 567188,
+   "sha256": "b8412536ad4b7d9c7cba9f33be51c954c580f01aed02ba1a34109c4d130ad95a",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/macroB-vipasyin.png",
+   "bytes": 754609,
+   "sha256": "cccb20e14a72770cc4119e7b686dff4aa6e813cad5a1521ce33f0432600e46f6",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/mid10-clay-sikhin.png",
+   "bytes": 722606,
+   "sha256": "42a505cf7797f59a766a4906ba07cbd13e04ac52b85bad25ddc9ad13c2cff10c",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/mid10-clay-vipasyin.png",
+   "bytes": 706301,
+   "sha256": "172f8abef5d008c858d14c8716f3a61b523f138178eecdeb9755727eac335a72",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/mid10-sikhin.png",
+   "bytes": 663779,
+   "sha256": "323710c0ae53c8c7dc2985c90dc6a6d7ff48646aee4177af53429c535d401fb5",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/mid10-vipasyin.png",
+   "bytes": 653897,
+   "sha256": "0af2c11b91e3c8112bd5c89e338380daeb8078835533e6972c5837a03c532b82",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/mouth-sikhin.png",
+   "bytes": 704778,
+   "sha256": "0cc790642ac517b6bc856a260ddb7b0077e487a4e918f394fb0e122057665537",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/mouth-vipasyin.png",
+   "bytes": 616450,
+   "sha256": "e50384c5768e96fe50b8ff9bd71ae7bc50a4368c658aee0c960c442f637e7924",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/side7-sikhin.png",
+   "bytes": 666140,
+   "sha256": "5cff96c09dd324e99a0058db6a02ae942ff396d9d949cb6c9032919267c9ab93",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  },
+  {
+   "path": "png/side7-vipasyin.png",
+   "bytes": 658946,
+   "sha256": "82b4d709402193509b519f4d84ac1f33950abf63fdc8b7453a37d0642152cd97",
+   "rev": "fadd2ec079b9480c6e6470ebc8e5a291e2bbe3c8"
+  }
+ ]
+}
