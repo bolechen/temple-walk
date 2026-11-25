@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "b1-summer-day-main-vs-pr.jpg",
+   "bytes": 516004,
+   "sha256": "7a150dfb249ecccfb41e8d9e9b98e7ba28b029f171fc7847d3108e6a8313a88f",
+   "rev": "a5d21a5ae322d58989cff60cd00cd998d3c8a47d"
+  }
+ ]
+}
