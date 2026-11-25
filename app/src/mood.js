@@ -71,15 +71,30 @@ export function moodOf(season, time, tune) {
   if (s.snow && time !== "night") m.fog = t.fog.map((v, i) => v * 0.6 + [0.86, 0.88, 0.92][i] * 0.4);
   if (SKY_TRIAL.on) { const air = atmosphereMood(m); if (air) Object.assign(m, air); }   // #592 trial B: the sky, mist, sky-light and sun's colour from one scattering model, at the table's own lightness; off, this line is not reached
   const own = tune ? tune(season, time, m) : null; if (own) Object.assign(m, own);   // the level's say, after the hours and the seasons have had theirs
-  m.drift = s.drift === "none" && time === "night" ? "firefly" : s.drift;
+  const ownDrift = own && own.drift, ownLine = own && own.line;   // a level whose winter has no snow (T05's J01) says what falls in the air and which verse it is
+  m.drift = ownDrift || (s.drift === "none" && time === "night" ? "firefly" : s.drift);
   // The breeze (wind.js), m/s at its steadiest: a spring and autumn day the liveliest, still winter cold and the night
   // the calmest, so that the smoke stands straightest then. And how much of the censer's incense is burning: most after
   // the morning service, a few sticks by evening, two or three glowing ends at night (#217; by common sense, our own choice).
   m.wind = { spring: 0.9, summer: 0.6, autumn: 1.05, winter: 0.4 }[season] * { dawn: 0.6, day: 1, dusk: 0.75, night: 0.45 }[time];
   m.incense = { dawn: 1, day: 0.6, dusk: 0.3, night: 0.12 }[time];
-  m.line = LINES[season][dark ? 1 : 0];
+  m.line = ownLine || LINES[season][dark ? 1 : 0];
   m.label = `${NAMES[season]} · ${NAMES[time]}`;
   return m;
+}
+// The season and hour a page opens in (#573 step 7). `query` is the address (has/get); `now` is moodNow(); `prologueDay` says the book has not
+// been filled once, so the walk is by day (the owner, 2026-11-17, yard.js). `firstMood` is what a level says about its own first look
+// ({ season, time }, Level.firstMood); a level that keeps no book of its own (`keepsPlace` false) has no "later", so it is always the first look.
+// An address that names a season, an hour or a fixed view (?shot, ?show, ?cam) is obeyed before all of this. A level that declares nothing
+// gets exactly what the prologue always had: the visitor's own season, and by day until the book is filled.
+export function startMood({ query, now, prologueDay, firstMood, keepsPlace }) {
+  const fixed = query.has("shot") || query.has("show") || query.has("cam"), first = !!firstMood && (!keepsPlace || prologueDay);
+  const askedSeason = SEASONS.includes(query.get("season")), askedTime = TIMES.includes(query.get("time"));
+  return {
+    season: askedSeason ? query.get("season") : fixed ? "summer" : first ? firstMood.season : now.season,
+    time: askedTime ? query.get("time") : fixed ? "day" : first ? firstMood.time : prologueDay ? "day" : now.time,
+    follow: !askedTime && !fixed && !prologueDay && !first,   // (the hour follows the clock only after the prologue, and not on a level's own first look)
+  };
 }
 // The season and hour it is now, where the visitor is.
 export function moodNow(d = new Date()) {
