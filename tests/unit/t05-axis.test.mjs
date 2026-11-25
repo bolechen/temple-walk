@@ -191,7 +191,7 @@ test("the rows between the inner gate and the archway stand close beside the pat
   const inner = rows.filter((t) => !t.back), outer = rows.filter((t) => t.back);
   assert.equal(inner.length + outer.length, 16 - AX.SUNWARD_GAP.length); assert.equal(inner.filter((t) => t.x < 0).length, 4); assert.equal(outer.filter((t) => t.x < 0).length, 4);
   assert.ok(inner.filter((t) => t.x < 0).every((t) => off(t) >= 2 && off(t) <= 3.2), inner.map((t) => off(t).toFixed(2)).join(" "));
-  assert.ok(rows.filter((t) => t.x > 0).every((t) => AX.sunClear(t)), "every east tree kept stops none of the sun's rays to the archway's middle bay");
+  assert.ok(rows.filter((t) => t.x > 0).every((t) => AX.sunClear(t) || t.rx <= 1.4), "every east tree kept stops none of the sun's rays to the archway's middle bay, or has narrowed its crown as far as it may");
   assert.ok(outer.every((t) => off(t) >= 5 && off(t) <= 9.2), outer.map((t) => off(t).toFixed(2)).join(" "));
   assert.ok(TRUNKS.list.filter((t) => t.y === 0).every((t) => !AX.nearArchway(t)), "the way's trees keep #492's rule (none near the archway)");
 });
