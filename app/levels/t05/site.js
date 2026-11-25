@@ -134,7 +134,9 @@ export function buildSite(M) {
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   // The wall ring's timber (hall.js, `ring`) in meshes of their own beside the roof's timber: the brackets keep the walls' share of the sky, the purlins and beams rise above it.
   const splitRing = (/** @type {any[]} */ list, /** @type {any} */ mat, /** @type {any} */ own, /** @type {any} */ ringAo) => [[list.filter((g) => !hp.ring.has(g)), own], [list.filter((g) => hp.ring.has(g)), ringAo]].filter(([l]) => l.length).map(([l, o]) => mesh(merge(l), mat, o));
-  const sh = { ao: hall.shut };   // inside the walls the sky's light is mostly shut out (hall.js)
+  // While the doors are shut nothing inside is to be read from outside, the bars of a window included (the art director's call on the first pictures): what is inside takes a seventh of the share it would, a deep dark behind the bars (HALL_DOORS; open, as it was).
+  const inside = HALL_DOORS.shut ? (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, nx = 0, ny = 1, nz = 0) => { const v = hall.shut(x, y, z, nx, ny, nz); return v < 0.999 ? v * 0.15 : v; } : hall.shut;
+  const sh = { ao: inside };   // inside the walls the sky's light is mostly shut out (hall.js)
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
   root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
     mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shBoard), mesh(merge(hp.ridge), M.ridge));
@@ -142,7 +144,7 @@ export function buildSite(M) {
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
   // The shut doors' leaves face the court: they take the open air's light, not the inside's (hall.js, HALL_DOORS).
-  if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodX, { ao: () => 1 }));
+  if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodV, { ao: () => 1 }), mesh(merge(hp.ledges), M.woodX, { ao: () => 1 }), mesh(merge(hp.iron), M.iron, { ao: () => 1, cast: false }));   // (the planks' vertical grain, the ledges across, the iron of the ring and the studs: as the prologue's shut doors, building.js)
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
   // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner

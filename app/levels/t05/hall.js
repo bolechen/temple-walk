@@ -87,7 +87,7 @@ export const RIDGE = (() => { const EX = XS[XS.length - 1] + HALL.overhang, EF =
 export function buildHall(M) {
   const H = HALL, y0 = H.floor, top = y0 + H.column, X = XS[XS.length - 1], zB = ZS[ZS.length - 1];
   const wallIn = H.wall - H.out;   // how far the wall's inner face lies inside the column line
-  const ring = new Set(), plaster = [], wood = [], woodZ = [], dark = [], mural = [], leaves = [], walk = { solids: [], decks: [], posts: [] }, closed = [];
+  const ring = new Set(), plaster = [], wood = [], woodZ = [], dark = [], mural = [], leaves = [], ledges = [], iron = [], walk = { solids: [], decks: [], posts: [] }, closed = [];
   /** The wall ring's timber (door and window frames, tie-beams, cap boards, bracket sets, the eave purlins) takes the walls' share of the sky, not the roof timber's (TIMBER.ring). */
   const rw = (/** @type {THREE.BufferGeometry} */ g) => { wood.push(g); ring.add(g); };
   // The hall's own floor, a thin course laid over the platform's top within the walls: the platform's top is one face from
@@ -133,15 +133,15 @@ export function buildHall(M) {
         for (const s of [-1, 1]) {
           const cx = mid + s * (g / 2 + lw / 2), x0 = mid + s * g / 2, x1 = x0 + s * lw;
           leaves.push(box(lw + 0.1, lh, 0.12, cx + s * 0.05, ly, lz));   // (reaching 0.1 m into the reveal's plaster: a leaf flush with the jamb let a hairline of light round it)
-          for (const f of [0.18, 0.5, 0.82]) leaves.push(box(lw - 0.1, 0.16, 0.06, cx, y1 + lh * f, zFace + 0.03));   // three ledges across the planks
+          for (const f of [0.18, 0.5, 0.82]) ledges.push(box(lw - 0.1, 0.16, 0.06, cx, y1 + lh * f, zFace + 0.03));   // three ledges across the planks
           // The planks' joints: a shallow dark line every 0.36 m down each leaf (the art director's pass on the first picture: a leaf of plain brown board read as a wall), and the meeting stile, a dark seam that lets no light through.
           const n = Math.round(lw / 0.36);
           for (let k = 1; k < n; k++) dark.push(box(0.014, lh, 0.01, x0 + s * (lw * k) / n, ly, zFace + 0.003));
           dark.push(box(0.05, lh, 0.02, x0, ly, zFace + 0.005));
           // A ring on a boss at a grown man's breast, either side of the meeting stile, and rows of studs on the leaf (three rows of five between the ledges).
           const rx = x0 + s * 0.34, ry = y1 + 1.35;
-          dark.push(new THREE.CylinderGeometry(0.075, 0.075, 0.03, 12).rotateX(Math.PI / 2).translate(rx, ry, zFace + 0.07), new THREE.TorusGeometry(0.1, 0.014, 6, 16).translate(rx, ry - 0.07, zFace + 0.095));
-          for (const f of [0.34, 0.66, 0.9]) for (let k = 0; k < 5; k++) leaves.push(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 8).rotateX(Math.PI / 2).translate(x0 + s * (lw * (k + 0.5)) / 5 + s * 0.02, y1 + lh * f, zFace + 0.05));
+          iron.push(new THREE.CylinderGeometry(0.075, 0.075, 0.03, 12).rotateX(Math.PI / 2).translate(rx, ry, zFace + 0.07), new THREE.TorusGeometry(0.1, 0.014, 6, 16).translate(rx, ry - 0.07, zFace + 0.095));
+          for (const f of [0.34, 0.66, 0.9]) for (let k = 0; k < 5; k++) iron.push(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 8).rotateX(Math.PI / 2).translate(x0 + s * (lw * (k + 0.5)) / 5 + s * 0.02, y1 + lh * f, zFace + 0.05));
         }
         solid(l, r, fz0, fz1);
         // The sill under a shut door is no step (nothing lies beyond it to step to), but the bake finds a foothold on its top and lets his shoes
@@ -291,7 +291,7 @@ export function buildHall(M) {
   return {
     // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
     // not a box's own 0 to 1, which laid the damp line slanting across every wall (the diagonal band the art review saw).
-    parts: { leaves, plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
+    parts: { leaves, ledges, iron, plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
     walk,
     closed,
     columns,
