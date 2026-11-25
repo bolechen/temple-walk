@@ -45,24 +45,28 @@ export const FACE = Object.freeze({ margin: 0.07, foot: 0.12, head: 0.1 });
 function inscription(w, h, again = true) {
   if (typeof document === "undefined" || !document.createElement) return null;
   const c = document.createElement("canvas"); if (!c.getContext) return null;
-  const px = 512, ph = Math.round((px * h) / w); c.width = px; c.height = ph;
+  const px = 1024, ph = Math.round((px * h) / w); c.width = px; c.height = ph;
   const g = c.getContext("2d"); if (!g) return null;
   g.clearRect(0, 0, px, ph);
-  const cols = STELE_TEXT.columns, n = 12, step = px / (n + 1), fs = step * 0.78;
-  const cell = (ph * 0.92) / Math.max(...cols.map((s) => s.length), 15);
+  // Five columns across the face (the title and the four read), right to left, each character as large as a column is wide;
+  // they reach about half way down, and below them the stone is left as it weathered.
+  const cols = STELE_TEXT.columns, n = cols.length + 1, step = px / (n + 0.4), fs = step * 0.8, cell = fs * 1.08;
+  // An incised character in a stone under a roof reads by its two edges: the upper wall of the cut in shadow, and the floor of
+  // the cut and its lower lip catching the sky (with the pale dust that lies in old cuts). Drawn as three passes of the glyph.
   const draw = (ch, x, y, size) => {
     g.font = `${size}px "Yunjing Kai", serif`; g.textAlign = "center"; g.textBaseline = "middle";
-    g.fillStyle = "rgba(255,248,232,0.22)"; g.fillText(ch, x + size * 0.03, y + size * 0.04);   // the lit lower lip of the cut
-    g.fillStyle = "rgba(28,24,20,0.62)"; g.fillText(ch, x, y);                                   // the hollow
+    g.fillStyle = "rgba(8,7,6,0.85)"; g.fillText(ch, x - size * 0.025, y - size * 0.035);       // the upper wall of the cut, in shadow
+    g.fillStyle = "rgba(214,208,196,0.78)"; g.fillText(ch, x + size * 0.02, y + size * 0.03);   // the lower lip, catching the light
+    g.fillStyle = "rgba(150,144,134,0.9)"; g.fillText(ch, x, y);                                 // the floor of the cut, pale with dust
   };
   // The title down the first column, larger; then the columns read, right to left.
-  [...STELE_TEXT.title].forEach((ch, i) => draw(ch, px - step * 0.9, ph * 0.04 + cell * 0.55 + i * cell * 0.98, fs * 0.92));
-  cols.forEach((s, k) => [...s].forEach((ch, i) => draw(ch, px - step * (2.2 + k * 1.05), ph * 0.04 + cell * 0.55 + i * cell, fs * 0.82)));
+  [...STELE_TEXT.title].forEach((ch, i) => draw(ch, px - step * 0.7, ph * 0.03 + cell * (i + 0.5), fs * 0.92));
+  cols.forEach((s, k) => [...s].forEach((ch, i) => draw(ch, px - step * (1.7 + k), ph * 0.03 + cell * (i + 0.5), fs * 0.86)));
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
   let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < 900; i++) {
-    const x = rnd() * px, y = rnd() * ph, r = 1 + rnd() * 6 * (0.4 + y / ph), a = 0.05 + 0.1 * rnd() * (1 - x / px * 0.6);
-    g.fillStyle = `rgba(${rnd() < 0.5 ? "40,36,30" : "235,228,212"},${a.toFixed(3)})`; g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill();
+  for (let i = 0; i < 1800; i++) {
+    const x = rnd() * px, y = rnd() * ph, r = 2 + rnd() * 12 * (0.4 + y / ph), a = 0.05 + 0.1 * rnd() * (1 - x / px * 0.6);
+    g.fillStyle = `rgba(40,36,30,${(a * 0.8).toFixed(3)})`; g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill();
   }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   // Redrawn once the face has come (the first frames may draw before the font has loaded).
@@ -84,7 +88,7 @@ export function buildStele(M) {
   group.add(mesh(merge(steps), M.steps));
   // The inscribed face, a millimetre proud of the shaft.
   const fw = STELE.w - 2 * FACE.margin, fh = STELE.L - FACE.foot - FACE.head, map = inscription(fw, fh);
-  const plane = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, roughness: 0.95, color: map ? 0xffffff : 0x000000, opacity: map ? 1 : 0 }));
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(fw, fh), new THREE.MeshLambertMaterial({ map, transparent: true, depthWrite: false, color: map ? 0xffffff : 0x000000, opacity: map ? 1 : 0 }));
   plane.position.set(mx, plinth.top + FACE.foot + fh / 2, face + 0.001); plane.userData.keep = true; plane.userData.walk = false; plane.userData.part = "inscription"; plane.name = "stele-face";
   group.add(plane);
   // The written plan (the eye's, until its hierarchy is built; app/src/plan-walker.js): the base is a floor, the columns and the
@@ -94,22 +98,24 @@ export function buildStele(M) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) walk.posts.push({ x0: mx + sx * S.span - S.colR - BODY, x1: mx + sx * S.span + S.colR + BODY, z0: mz + sz * S.span - S.colR - BODY, z1: mz + sz * S.span + S.colR + BODY, h: S.ceil });
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) walk.solids.push({ x0: mx + sx * S.span - S.colR, x1: mx + sx * S.span + S.colR, z0: mz + sz * S.span - S.colR, z1: mz + sz * S.span + S.colR, eyeTop: S.ceil + 2.6 });
   walk.posts.push({ x0: plinth.x0 - BODY, x1: plinth.x1 + BODY, z0: plinth.z0 - BODY, z1: plinth.z1 + BODY, h: S.top });
-  walk.solids.push({ x0: plinth.x0, x1: plinth.x1, z0: plinth.z0, z1: plinth.z1, eyeTop: S.top + STELE.headH + 0.05 });
+  walk.solids.push({ x0: plinth.x0, x1: plinth.x1, z0: plinth.z0, z1: plinth.z1, eyeTop: plinth.top });   // the plinth, knee high
+  walk.solids.push({ x0: mx - STELE.headW / 2, x1: mx + STELE.headW / 2, z0: mz - STELE.headT / 2, z1: mz + STELE.headT / 2, eyeTop: S.top + STELE.headH + 0.05 });   // the stele, as wide and thick as its head
   const pad = BODY + 0.02;
   walk.ramps.push({ x0: mx - fl.w / 2 + pad, x1: mx + fl.w / 2 - pad, z0: M0.z1 - 0.4, z1: M0.z1 + fl.run + 0.3, base: M0.y, h: fl.rise, low: [mx, M0.z1 + fl.run], high: [mx, M0.z1], floor: "stone" });
   for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? mx + fl.w / 2 - BODY - 0.021 : mx - fl.w / 2 - CHEEK - BODY, x1: sx > 0 ? mx + fl.w / 2 + CHEEK + BODY : mx - fl.w / 2 + BODY + 0.021, z0: M0.z1 + 0.02, z1: M0.z1 + fl.run + BODY + 0.06, h: floor });
 
-  // Where he stands to copy: on the base, before the plinth, his robe clear of it, facing the stele (north). The shot: over his
-  // right shoulder from behind, between the two south columns and a head above him, down past him to the leaf in his hands and
-  // on to the stele's face, so that what he writes and what he reads it from are in one picture (found by trying a grid of
-  // poses against the safe area on four screens, with no column or stone between the eye and any of them: t05-director.test). In the place's own frame: x to his left, z the way he faces, y up from the floor.
+  // Where he stands to copy: on the base, before the plinth, his robe clear of it, facing the stele (north). The shot: low at his
+  // right and a little before him, between him and the south-east column, looking up past his hands to the stele's face, so that
+  // his face bent to the leaf, the brush and the column he reads from are in one picture. From behind, the hat on his back hides
+  // his hands. (Found by trying a grid of poses against the safe area on four screens, with no column or stone between the eye
+  // and any of them: t05-director.test.) In the place's own frame: x to his left, z the way he faces, y up from the floor.
   const stand = plinth.z1 + BODY + 0.22;
   const toFace = stand - face;                    // how far the face is before him
   const copy = {
     at: [mx, stand], r: 1.1, face: Math.PI, act: "抄碑", rite: "copy",
     stele: { x: mx, face, y0: plinth.top + FACE.foot, y1: plinth.top + FACE.foot + fh, w: fw },
-    shot: { at: [-0.3, 1.5, -1.2], look: [0.05, 1.3, 0.3], fov: 48, in: 2.0, out: 1.0, drift: { push: 0.012, for: 14 },
-      keep: [[0, 0.95, 0], [0, 1.15, 0], [0, 0.8, 0.26], [0, 1.3, toFace], [0, 1.9, toFace]] },   // his head and shoulders, the leaf in his hands, and the face he reads from
+    shot: { at: [-1.3, 0.9, 0.1], look: [-0.1, 1.2, 0.4], fov: 56, in: 2.0, out: 1.0, drift: { push: 0.012, for: 14 },
+      keep: [[0, 0.9, 0], [0, 1.12, 0], [0, 0.8, 0.26], [0, 1.3, toFace], [0, 1.9, toFace]] },   // his head and chest, the leaf in his hands, and the face he reads from
   };
   const views = { "shot-copy": [mx, stand + 2.4, 0, 0.12], stele: [mx, stand + 0.2, 0, 0.32] };
   return { group, walk, places: { copy }, views, frame: S };
