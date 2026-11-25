@@ -453,6 +453,20 @@ const scenarios = {
     expect(page.ginkgoHash === geometryHash(node.ginkgos.map((g) => g.geometry)), `the page's ginkgoes (${page.ginkgoHash}) are not Node's (${geometryHash(node.ginkgos.map((g) => g.geometry))})`);
     await t.close();
   } },
+  // T05's grown trees (app/levels/t05/flora.js): the page grows the same pines, cypresses, pagoda trees and poplars as Node does from the
+  // same plan, point for point: the fingerprint of every tree (inside the walls and the town's) is the same in both.
+  "t05-treeseed": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "level=t05&q=low" + BARE);
+    const page = await t.page.evaluate(() => window.__flora && window.__flora());
+    await import(require("url").pathToFileURL(require("path").join(__dirname, "../unit/dom-stub.mjs")).href);
+    const THREE = await import("three"), { buildSite } = await import(require("url").pathToFileURL(require("path").join(__dirname, "../../app/levels/t05/site.js")).href);
+    const M = new Proxy({}, { get: (o, k) => (k === "plaster" || k === "interior" ? () => (o["__" + k] ||= new THREE.MeshStandardMaterial()) : (o[k] ||= new THREE.MeshStandardMaterial())) });
+    const node = buildSite(M).flora;
+    expect(page && page.inner.count === node.inner.count && page.surround.count === node.surround.count, `the page grew ${page && page.inner.count}+${page && page.surround.count} trees, Node ${node.inner.count}+${node.surround.count}`);
+    expect(page.inner.hash === node.inner.hash, `the trees inside the walls: the page's ${page.inner.hash}, Node's ${node.inner.hash}`);
+    expect(page.surround.hash === node.surround.hash, `the town's trees: the page's ${page.surround.hash}, Node's ${node.surround.hash}`);
+    await t.close();
+  } },
   // Trailer mode (#610): the clock is the film's, the interface is gone, and a frame is a function of its number: the same frame
   // drawn in two fresh pages is the same picture, to the pixel, and while nothing steps the clock the page's time stands still.
   trailer: { tier: 3, async run(b, base) {
