@@ -156,3 +156,19 @@ test("swung to the stele from behind him and back, no column ever stands between
     }
   }
 });
+
+// The art director's final review (#728, 2026-11-25): the copy's shot rests a dozen seconds, so its top edge must not cut a
+// character in two, least of all in the column he is copying. The face seen from his left shoulder slants each row across the
+// picture, so one tilt cannot lay the edge in the gap between characters in every column at once: the whole inscription is in
+// the picture instead, every character wholly inside it on a wide screen.
+test("the copy's shot rests with every character of the inscription whole in a wide picture, none cut by its edge", async () => {
+  const { steleLayout } = await import("../../app/levels/t05/stele.js");
+  const p = site.places.copy, st = p.stele, fw = st.w, fh = st.y1 - st.y0, px = 1024, ph = Math.round((px * fh) / fw);
+  const o = shotPose(p, p.shot, at(p), 0, 16 / 9), cam = new THREE.PerspectiveCamera(o.fov, 16 / 9, 0.05, 500); cam.position.copy(o.p); cam.quaternion.copy(o.q); cam.updateMatrixWorld();
+  const onFace = (x, y) => new THREE.Vector3(st.x - fw / 2 + (x / px) * fw, st.y1 - (y / ph) * fh, st.face + 0.001).project(cam);
+  for (const c of steleLayout(px, ph)) for (const [dx, dy] of [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]) {
+    const v = onFace(c.x + dx * c.size, c.y + dy * c.size);
+    assert.ok(Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1, `「${c.ch}」 (column ${c.col}, row ${c.row}) has a corner outside the picture at (${v.x.toFixed(3)}, ${v.y.toFixed(3)})`);
+  }
+  assert.ok(!(p.shot.drift?.tilt || p.shot.drift?.push || p.shot.drift?.rise || p.shot.drift?.turn), "it rests: no drift that would carry the edge across a character");
+});

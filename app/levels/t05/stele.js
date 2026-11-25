@@ -42,15 +42,24 @@ export const FACE = Object.freeze({ margin: 0.07, foot: 0.12, head: 0.1 });
 // The inscription drawn on a canvas, characters in the kai (the project's own regular hand, Yunjing Kai, written in the forms
 // cut), as incised characters: a darker hollow with a lit lower edge, the stone's grain over all. Weathered where nothing was
 // read in a transcription (SOURCES.md §17): no characters there.
+/**
+ * Where each character stands on the face, as a canvas `px` wide and `ph` high lays them: its centre (x, y) and size, the title
+ * down the first column, larger, then the columns read, right to left; each as large as a column is wide, reaching about half
+ * way down. The face's own drawing and the tests that keep the copy's shot from cutting a character both read it.
+ * @param {number} px @param {number} ph @returns {{ ch: string, col: number, row: number, x: number, y: number, size: number }[]}
+ */
+export function steleLayout(px, ph) {
+  const cols = STELE_TEXT.columns, n = cols.length + 1, step = px / (n + 0.4), fs = step * 0.8, cell = fs * 1.08, out = [];
+  [...STELE_TEXT.title].forEach((ch, i) => out.push({ ch, col: 0, row: i, x: px - step * 0.7, y: ph * 0.03 + cell * (i + 0.5), size: fs * 0.92 }));
+  cols.forEach((s, k) => [...s].forEach((ch, i) => out.push({ ch, col: k + 1, row: i, x: px - step * (1.7 + k), y: ph * 0.03 + cell * (i + 0.5), size: fs * 0.86 })));
+  return out;
+}
 function inscription(w, h, again = true) {
   if (typeof document === "undefined" || !document.createElement) return null;
   const c = document.createElement("canvas"); if (!c.getContext) return null;
   const px = 1024, ph = Math.round((px * h) / w); c.width = px; c.height = ph;
   const g = c.getContext("2d"); if (!g) return null;
   g.clearRect(0, 0, px, ph);
-  // Five columns across the face (the title and the four read), right to left, each character as large as a column is wide;
-  // they reach about half way down, and below them the stone is left as it weathered.
-  const cols = STELE_TEXT.columns, n = cols.length + 1, step = px / (n + 0.4), fs = step * 0.8, cell = fs * 1.08;
   // An incised character in a stone under a roof reads by its two edges: the upper wall of the cut in shadow, and the floor of
   // the cut and its lower lip catching the sky (with the pale dust that lies in old cuts). Drawn as three passes of the glyph.
   const draw = (ch, x, y, size) => {
@@ -59,9 +68,8 @@ function inscription(w, h, again = true) {
     g.fillStyle = "rgba(214,208,196,0.78)"; g.fillText(ch, x + size * 0.02, y + size * 0.03);   // the lower lip, catching the light
     g.fillStyle = "rgba(150,144,134,0.9)"; g.fillText(ch, x, y);                                 // the floor of the cut, pale with dust
   };
-  // The title down the first column, larger; then the columns read, right to left.
-  [...STELE_TEXT.title].forEach((ch, i) => draw(ch, px - step * 0.7, ph * 0.03 + cell * (i + 0.5), fs * 0.92));
-  cols.forEach((s, k) => [...s].forEach((ch, i) => draw(ch, px - step * (1.7 + k), ph * 0.03 + cell * (i + 0.5), fs * 0.86)));
+  // The five columns (steleLayout); below them the stone is left as it weathered.
+  for (const c of steleLayout(px, ph)) draw(c.ch, c.x, c.y, c.size);
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
   let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   for (let i = 0; i < 1800; i++) {
@@ -114,7 +122,7 @@ export function buildStele(M) {
   const copy = {
     at: [mx, stand], r: 1.1, face: Math.PI, act: "抄碑", rite: "copy",
     stele: { x: mx, face, y0: plinth.top + FACE.foot, y1: plinth.top + FACE.foot + fh, w: fw },
-    shot: { at: [0.7, 1.25, -0.7], look: [0, 1.15, 0.4], fov: 48, in: 2.0, out: 1.0, drift: { tilt: 0.35, for: 12 },
+    shot: { at: [0.8, 1.4, -1.0], look: [0, 1.52, 0.4], fov: 60, in: 2.0, out: 1.0,
       keep: [[0, 1.12, 0], [0, 0.8, 0.26], [0, 1.7, toFace]] },   // his head, the leaf in his hands, and the foot of the columns he reads
   };
   const views = { "shot-copy": [mx, stand, Math.PI - copy.face, 0.05], stele: [mx, stand + 1.6, 0, 0.3] };   // (shot-<id> stands him at the place, as the prologue's do; `stele` looks at its face from the top of the steps)

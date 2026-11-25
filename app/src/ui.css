@@ -194,6 +194,8 @@ body:not(.page) .need-page { display: none !important; }
 #slip.own-page .seal-mark { display: none; }
 #slip.own-page #slipText, #slip.own-page #slipFrom { white-space: pre-line; }
 #slip.own-page.cut #slipText { font-family: "Yunjing Kai", serif; }
+#slip .page-stroke { display: none; }
+#slip.own-page.stroke .page-stroke { display: block; position: absolute; left: 14%; right: 14%; top: 20px; height: 18px; pointer-events: none; background: var(--brush-ink, linear-gradient(var(--ink-1), var(--ink-1)) 0 50% / 100% 3px no-repeat) center / 100% 100% no-repeat; opacity: .92; }
 /* A level without the book of seals (Level.book; T05's first release): its button, the goal line, the way to the next place and the key card's B. */
 body.nobook :is(#bookBtn, #goal, #way, .need-book) { display: none !important; }
 #goal span { display: grid; gap: 4px; font: 400 21px/1 var(--kai); letter-spacing: var(--track); }

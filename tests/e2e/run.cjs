@@ -718,8 +718,9 @@ const scenarios = {
     expect(pg.writing.marks >= 10 && pg.writing.copied === "觀其寶殿崔嵬儼居七佛", "every character written, one mark each: " + JSON.stringify(pg.writing));
     expect(pg.writing.nearest !== null && pg.writing.nearest >= 0.3, "his hands, the leaf and the brush kept 0.3 m and more off the stele's face: " + pg.writing.nearest);
     await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown on a slip after the copy");
-    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬，儼居七佛", "the slip should carry the line copied");
+    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬儼居七佛", "the slip should carry the line copied");
     expect(!(await t.page.isVisible("#slip .seal-mark")), "T05's page carries no vermilion seal (CHECKPOINTS.md §4.2)");
+    expect(!(await t.page.isVisible("#slip .page-stroke")), "before the observation the page has no stroke of ink");
     // The line copied from the stone is written as cut, in the regular hand that holds its traditional forms, not the running hand of a note (which has none).
     const cutFace = await t.page.evaluate(() => getComputedStyle(document.getElementById("slipText")).fontFamily);
     expect(/^"?Yunjing Kai"?(,|$)/.test(cutFace), "the copied line on the slip is set in Yunjing Kai alone: " + cutFace);
@@ -746,6 +747,7 @@ const scenarios = {
     pg = await P(); expect(pg.view.stroke === 1 && pg.view.note === "九间，单檐庑殿，青灰瓦。台基比人高。" && pg.view.copy, "the page holds the stroke, its line and the copy: " + JSON.stringify(pg.view));
     await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown after the stroke");
     // The note is laid in its phrases, one to a column (九间， / 单檐庑殿， / 青灰瓦。 / 台基比人高。), never a word split across two.
+    expect(await t.page.isVisible("#slip .page-stroke"), "the observation's page carries its stroke of ink across the top, as the leaf did");
     const noteCols = await t.page.evaluate(() => document.getElementById("slipText").innerText.split("\n").filter(Boolean));
     expect(JSON.stringify(noteCols) === JSON.stringify(["九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "the note's phrases each have a column: " + JSON.stringify(noteCols));
     const stored = await t.page.evaluate(() => JSON.parse(localStorage.getItem("yunjing.levels.v1")).page.t05);
@@ -757,7 +759,7 @@ const scenarios = {
     await t.page.click("#menuBtn"); await t.until(() => t.page.isVisible("#menu"), 10000, "the menu did not open");
     expect(await t.page.isVisible("#menuPage"), "这一页 should be in the menu once the page has something on it");
     await t.page.click("#menuPage"); await t.until(() => t.page.isVisible("#slip"), 10000, "这一页 did not show the page");
-    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬，儼居七佛", "the page shown again leads with the copied line");
+    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬儼居七佛", "the page shown again leads with the copied line");
     const fromCols = await t.page.evaluate(() => document.getElementById("slipFrom").innerText.split("\n").filter(Boolean));
     expect(JSON.stringify(fromCols) === JSON.stringify(["元大德七年碑", "九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "beside the copy, where it is from and the note a phrase to a column: " + JSON.stringify(fromCols));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();

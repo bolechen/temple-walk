@@ -228,9 +228,12 @@ export function createGame(y) {
     const phrases = (/** @type {string} */ s) => s.replace(/([，。、；！？])(?=\S)/g, "$1\n");
     const cut = last === "stele", text = cut ? v.copy : v.note, from = cut ? (v.note ? `${v.from}\n${phrases(v.note)}` : v.from) : "";
     if (!text) return;
-    const lines = cut ? text : phrases(text);
-    $("slip")?.classList.add("own-page"); $("slip")?.classList.toggle("cut", cut);
-    holdOut(lines, from, t("收下"), () => $("slip")?.classList.remove("own-page", "cut"));
+    const lines = cut ? text.replace(/[，、。；]/g, "") : phrases(text);   // the stone has no stops: the copy is as cut, as on the leaf
+    // The stroke of ink across the top of the page, as on the leaf he held: there once the observation has put it there.
+    const sheet = $("slip")?.querySelector(".paper");
+    if (sheet && !sheet.querySelector(".page-stroke")) { const i = document.createElement("i"); i.className = "page-stroke"; i.setAttribute("aria-hidden", "true"); sheet.prepend(i); }
+    $("slip")?.classList.add("own-page"); $("slip")?.classList.toggle("cut", cut); $("slip")?.classList.toggle("stroke", !!v.stroke);
+    holdOut(lines, from, t("收下"), () => $("slip")?.classList.remove("own-page", "cut", "stroke"));
     pageRow();
   }
   // The pause menu's 这一页 (only in a temple with a page of its own, once something is on it): the page shown again.
