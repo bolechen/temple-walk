@@ -8,10 +8,9 @@
 #   elsewhere   no point below the head line moves more than --move-mm (1 by default; the head line is the neck's z0 less its fade,
 #               where the bow's weight is gone, in the stage frame: metres up from the seat, the figure `height` tall)
 #   faces       the face count is unchanged (face edits move points, they do not add or remove any)
-#   closed      welded open edges, non-manifold edges and pieces of 10 faces or fewer are no more than before; the winding agrees (or did not before)
+#   closed      welded open edges, non-manifold edges and pieces of 10 faces or fewer are no more than before; the winding agrees
 #   backfaces   raycompare.py's lines from the six visitor places that end on the back of a face are no more than before at each
-# Prints a table and exits 1 if any row fails. Before the file already has open edges (r3 of the six has 210, which the original
-# does not: the repair's squeeze/zband steps, issue #701), the gate does not mend them; it only forbids more.
+# Prints a table and exits 1 if any row fails. Before the file already has open edges, the gate does not mend them; it only forbids more. (r3 of the six had 210 from repair.py's weld at 1e-6, issue #701, and Kanakamuni's r3 disagreed in winding; the weld is 1e-8 now and r3c is closed and agrees.)
 import sys, os, json, subprocess, tempfile
 import numpy as np, trimesh
 args = [a for a in sys.argv[1:] if not a.startswith("--")]; opt = dict((a[2:].split("=", 1) + [True])[:2] for a in sys.argv[1:] if a.startswith("--"))
@@ -31,7 +30,7 @@ tj = os.path.join(tmp, "topo.json"); run(os.path.join(here, "topology.py"), befo
 row("closed: open edges (before)", f"{b['boundary_edges']} ({a['boundary_edges']})", "<= before", b["boundary_edges"] <= a["boundary_edges"])
 row("closed: non-manifold edges (before)", f"{b['nonmanifold_edges']} ({a['nonmanifold_edges']})", "<= before", b["nonmanifold_edges"] <= a["nonmanifold_edges"])
 row("closed: pieces of 10 faces or fewer (before)", f"{b['pieces_of_10_faces_or_fewer']} ({a['pieces_of_10_faces_or_fewer']})", "<= before", b["pieces_of_10_faces_or_fewer"] <= a["pieces_of_10_faces_or_fewer"])
-row("closed: winding agrees (before)", f"{b['winding_consistent']} ({a['winding_consistent']})", "true, or no worse than before", b["winding_consistent"] or not a["winding_consistent"])   # Kanakamuni's r3 already disagrees (the original does not): the gate forbids making it so, it does not mend it
+row("closed: winding agrees", b["winding_consistent"], "true", b["winding_consistent"])
 rays = os.path.join(tmp, "rays.json"); run(os.path.join(here, "raycompare.py"), "--make-grid", rays); S = {}
 for k, p in (("a", before), ("b", after)):
   rj = os.path.join(tmp, f"rc-{k}.json"); run(os.path.join(here, "raycompare.py"), p, rays, rj); S[k] = json.load(open(rj))["summary"]

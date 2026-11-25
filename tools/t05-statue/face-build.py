@@ -1,6 +1,6 @@
 # One figure's face, from its generated original to a baked statue and its paint anchors, in one command (issue #463):
 #
-#   python3 tools/t05-statue/face-build.py <name> <tag> [--tilt=10] [--anchors-from=<anchors.json>] [--colour=<anchor file name>] [--anchors-only] [--quick] [--recipe=<face-recipe.json>]
+#   python3 tools/t05-statue/face-build.py <name> <tag> [--tilt=10] [--anchors-from=<anchors.json>] [--colour=<anchor file name>] [--anchors-only] [--quick] [--measure=<glb>] [--recipe=<face-recipe.json> (recipe-L2.json adds the lower face's push back)]
 #
 # Reads tools/t05-statue/<name>/repair.json for the figure's own fixes (whatever is not a face op: squeeze, zband,
 # xband, smoothing of a cuff), adds the face's ops in order — the bow (`tilt`, deg from --tilt), the brow's knit and the
@@ -51,6 +51,12 @@ pj = os.path.join(here, name, f"points-{tag}.json"); json.dump(pts, open(pj, "w"
 final = os.path.join(D, f"{name}-{tag}.glb"); j = os.path.join(here, name, f"repair-{tag}.json")
 if not only:
   fops = json.loads(run(os.path.join(here, "face-ops.py"), pre, pj, f"--recipe={opt.get('recipe', os.path.join(here, 'face/recipe.json'))}"))
+  _R = json.load(open(opt.get("recipe", os.path.join(here, "face/recipe.json"))))
+  if _R.get("lowerback"):   # #701: the lower face pressed back as one mass (repair.py `lowerback`), laid on this figure's own slit and neck
+    L = _R["lowerback"]; z0 = round(pts["mouth"][1] / s - L["below"], 4); z1 = round(z0 - L["span"], 4)
+    fops = fops + [{"op": "lowerback", "note": f"the lower face (lip, chin, jaw) pressed back {L['d']} m, whole within {L['x0']} m of the middle, easing out by {L['x1']} m, from z {z0} down to {z1} and out by {round(z1 - L['fz'], 4)} (file units, z up, {L['below']} under the bowed slit), in front of y {round(-neck['c'][1] / s, 4)} (the neck's axis); relaxed {L['iter']} passes (#701, 自拟)",
+                    "d": round(L["d"] / s, 5), "z0": z0, "fz0": L["fz0"], "z1": z1, "fz": L["fz"], "x0": round(L["x0"] / s, 5), "x1": round(L["x1"] / s, 5),
+                    "front": round(-neck["c"][1] / s, 4), "ffront": L["ffront"], "smooth": {"iter": L["iter"], "lam": L["lam"]}}]
   j = repair(base_ops + [tilt_op] + small + fops, final)
   if "quick" in opt: print(json.dumps({"repair": j, "glb": final})); sys.exit(0)   # --quick: the full-detail mesh only, for tuning a recipe by eye (no levels, no bake, no anchors)
   for t, e in (("60000", "0.02"), ("20000", "0.05"), ("6000", "0.1")):
@@ -59,6 +65,8 @@ if not only:
       f"--head={round(neck['z0'] / s - 0.002, 4)}", "--cage=0.0012", "--ray=0.0025")
 # paint anchors: the unbowed set turned with the head; then the lids, the mouth and the eight landmarks from the mesh
 if "anchors-from" in opt:
+  # the lips and lids are measured on `--measure=<glb>` (default the figure itself): lowerback moves the flesh from 0.0046 under the slit down, which face-ratios' crease search (4 cm either side of the slit) then reads as a different mouth; the same figure built without it has the same lips
+  measure = opt.get("measure") or final
   src = json.load(open(opt["anchors-from"])); a = src["anchors"]; mouth0 = list(a["mouth"])
   # only the face's named points turn with the head; the boxes' corners (far behind the face, they would rise when turned
   # and open a gap of robe colour across the cheeks) move down with the mouth instead
@@ -72,9 +80,9 @@ if "anchors-from" in opt:
   for k in ("jawMin", "chinMin"):
     if k in a: a[k][1] = round(a[k][1] + drop, 3)
   eyes = {"eyeL": a["eyeL"][:2], "eyeR": a["eyeR"][:2]}
-  pts2 = {**pts, "eyes": eyes}; json.dump(pts2, open(pj, "w")); r = json.loads(run(os.path.join(here, "face-ratios.py"), "mesh", final, pj))
+  pts2 = {**pts, "eyes": eyes}; json.dump(pts2, open(pj, "w")); r = json.loads(run(os.path.join(here, "face-ratios.py"), "mesh", measure, pj))
   if not all(k in r["eyes"] for k in ("eyeL", "eyeR")):   # #701: face-ratios looks for the carved lid in the frame the bow is turned back to; where the bow carries the eye out of its search window (Krakucchanda: lids at 7.01 m, bowed guess 6.87) the guess is where the eye stood before the bow
-    pts2 = {**pts, "eyes": eyes0}; json.dump(pts2, open(pj, "w")); r = json.loads(run(os.path.join(here, "face-ratios.py"), "mesh", final, pj))
+    pts2 = {**pts, "eyes": eyes0}; json.dump(pts2, open(pj, "w")); r = json.loads(run(os.path.join(here, "face-ratios.py"), "mesh", measure, pj))
   e = r["eyes"]; a["lidL"] = [a["eyeL"][0], e["eyeL"]["y"], e["eyeL"]["rise"]]; a["lidR"] = [a["eyeR"][0], e["eyeR"]["y"], e["eyeR"]["rise"]]
   c = r["corners"]; a["lipHalf"] = round((abs(c["L"]) + abs(c["R"])) / 2, 3)
   # the lip's paint covers the carved lips, from 2.5 cm over the upper lip's foremost point to 1.5 cm under the lower's, and
