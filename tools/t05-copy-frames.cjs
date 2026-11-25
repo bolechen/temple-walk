@@ -2,7 +2,7 @@
 // him before the stele, the copy begun, the observances' clock held (`__riteClock`) and stepped to each moment, and a picture
 // taken from the eye as the page has it then: the leaf taken out, the board raised, reading, the brush down, writing, reading
 // again, the brush stopped, put away. Also the observation's stroke at C02 (`--p1`).
-//   node tools/t05-copy-frames.cjs [outdir] [--p1] [--size=1280x720] [--q=high]
+//   node tools/t05-copy-frames.cjs [outdir] [--p1] [--size=1280x720] [--q=high] [--times=0.6,0.8,1.0]
 // → <outdir>/copy-<n>-<moment>.png and copy-sheet.jpg (a contact sheet, 1 MB at most), and frames.json.
 const path = require("path"), fs = require("fs");
 const { chromium } = require("playwright");
@@ -33,23 +33,25 @@ const STROKE = [[0.5, "取纸"], [1.9, "抬头看檐"], [3.0, "落笔"], [3.9, "
   // Once his hands are on the leaf the clock is held and stepped: each moment is a frame of the page as it is drawn then.
   for (let i = 0; i < 40 && !(await page.evaluate(() => window.__rites().writing.leaf)); i++) await frames(1);   // (he takes the leaf on the first steps of the held clock)
   await page.waitForFunction(() => window.__rites().writing.held !== undefined, null, { timeout: 120000 }).catch(async (e) => { console.error(JSON.stringify(await page.evaluate(() => ({ page: window.__page(), yard: (({ x, z, staged, target, route, frames }) => ({ x, z, staged, target, route, frames }))(window.__yard()), ui: window.__ui() })))); throw e; });
-  const list = P1 ? STROKE : COPY, shots = [];
+  // --times=0.6,0.8,…: those moments instead of the named ones (a strip of the swing there, for the art review), named by their seconds.
+  const TIMES = (flag("times", "") || "").split(",").filter(Boolean).map(Number);
+  const list = TIMES.length ? TIMES.map((t) => [t, `${t.toFixed(1)}s`]) : P1 ? STROKE : COPY, shots = [];
   let held = 0;
   for (const [secs, name] of list) {
     while (held < secs * 1000) { const step = Math.min(250, secs * 1000 - held); await page.evaluate((ms) => window.__riteClock(ms), step); held += step; await frames(1); }
     await frames(2);
-    const file = path.join(out, `${P1 ? "stroke" : "copy"}-${shots.length + 1}-${name}.png`);
+    const file = path.join(out, `${TIMES.length ? "strip" : P1 ? "stroke" : "copy"}-${shots.length + 1}-${name}.png`);
     await page.screenshot({ path: file });
     shots.push({ file, secs, name, writing: await page.evaluate(() => window.__rites().writing), director: await page.evaluate(() => { const d = window.__director(); return { phase: d.phase, id: d.id, w: d.w, cuts: d.cuts }; }) });
   }
   await page.evaluate(() => window.__riteClock(null));
-  fs.writeFileSync(path.join(out, `${P1 ? "stroke" : "copy"}-frames.json`), JSON.stringify({ errors, shots: shots.map((s) => ({ ...s, file: path.basename(s.file) })) }, null, 1));
+  fs.writeFileSync(path.join(out, `${TIMES.length ? "strip" : P1 ? "stroke" : "copy"}-frames.json`), JSON.stringify({ errors, shots: shots.map((s) => ({ ...s, file: path.basename(s.file) })) }, null, 1));
   // The contact sheet: four across, each frame at a quarter of its size with its name under it.
   const cw = Math.round(W / 2.5), ch = Math.round(H / 2.5), cols = 4, rows = Math.ceil(shots.length / cols), pad = 28;
   const tiles = await Promise.all(shots.map(async (s, i) => ({ input: await sharp(s.file).resize(cw, ch).jpeg({ quality: 80 }).toBuffer(), left: (i % cols) * cw, top: Math.floor(i / cols) * (ch + pad) })));
   const labels = shots.map((s, i) => `<text x="${(i % cols) * cw + 8}" y="${Math.floor(i / cols) * (ch + pad) + ch + 20}" font-size="18" fill="#222">${i + 1}. ${s.name} (${s.secs} s)</text>`).join("");
   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${cols * cw}" height="${rows * (ch + pad)}"><rect width="100%" height="100%" fill="#efe9dc"/>${labels}</svg>`);
-  await sharp(svg).composite(tiles).jpeg({ quality: 72 }).toFile(path.join(out, `${P1 ? "stroke" : "copy"}-sheet.jpg`));
+  await sharp(svg).composite(tiles).jpeg({ quality: 72 }).toFile(path.join(out, `${TIMES.length ? "strip" : P1 ? "stroke" : "copy"}-sheet.jpg`));
   console.log(JSON.stringify({ out, errors: errors.length, frames: shots.length }));
   await browser.close(); srv.close();
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }

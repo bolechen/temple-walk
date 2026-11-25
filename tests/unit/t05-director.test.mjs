@@ -11,7 +11,7 @@ import * as THREE from "three";
 import { buildSite, createWalker } from "../../app/levels/t05/site.js";
 import { PAGE } from "../../app/levels/t05/page.js";
 import { followEye } from "../../app/src/eye.js";
-import { DIRECT, shotPose, createDirector, placePoint, turnBetween, durations } from "../../app/src/director.js";
+import { DIRECT, shotPose, createDirector, placePoint, turnBetween, durations, planSwing, blendPose, pose } from "../../app/src/director.js";
 
 const named = (k) => Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) });
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= named(k)) : (t[k] ||= named(k))) });
@@ -134,6 +134,25 @@ test("every swing there and back is made, never cut: within the turn and speed l
       run(d, cam, centre, Math.ceil((home + 0.2) / DT), check);
       assert.equal(d.state().phase, "idle", `${id} from yaw ${k * 30}°: not back with him`);
       assert.equal(d.state().cuts, 0, `${id} from yaw ${k * 30}°: a swing was cut`); assert.equal(veil, 0, "the ink was drawn");
+    }
+  }
+});
+
+// The art review of #728 (the strip of the swing to the stele, 2026-11-25): from where the following eye stands as he comes up the
+// pavilion's steps (behind him), the eye swung round past the south-west column, which then stood between it and him for a part
+// of a second, filling the picture. Not "through" anything, so the test above passed it. Here: on the swing there from behind him
+// and on the way back, no column stands between the eye and his head.
+test("swung to the stele from behind him and back, no column ever stands between the eye and him", () => {
+  const p = site.places.copy, foot = at(p), centre = centreOf(p, foot), head = new THREE.Vector3(p.at[0], foot + 1.05, p.at[1]);
+  const cols = site.walk.solids.filter((r) => r.top === undefined && r.x1 - r.x0 < 0.5 && r.z1 - r.z0 < 0.5);   // the pavilion's four columns, as stele.js writes them
+  assert.equal(cols.length, 4, "the four columns");
+  const hidden = (eye) => { const n = Math.ceil(eye.distanceTo(head) / 0.04); for (let i = 1; i < n; i++) { const q = eye.clone().lerp(head, i / n); if (cols.some((r) => q.x > r.x0 - 0.05 && q.x < r.x1 + 0.05 && q.z > r.z0 - 0.05 && q.z < r.z1 + 0.05)) return true; } return false; };
+  for (const yaw of [0, -0.4, 0.4]) {   // behind him, and a little to either side, as he comes up the steps
+    const cam = follower(p, foot, Math.PI - p.face + yaw), a = pose(); a.p.copy(cam.position); a.q.copy(cam.quaternion); a.fov = 50;
+    const b = shotPose(p, p.shot, foot, 0), plan = planSwing(walker, a, b, centre, foot), o = pose();
+    for (const [from, to] of [[a, b], [b, a]]) for (let k = 0; k <= 60; k++) {
+      blendPose(from, to, k / 60, centre, o, plan.route);
+      assert.ok(!hidden(o.p), `from yaw ${yaw}: at ${(k / 60).toFixed(2)} of the swing a column stands between the eye at ${o.p.toArray().map((v) => v.toFixed(2))} and him (${JSON.stringify(plan.route)})`);
     }
   }
 });
