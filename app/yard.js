@@ -3,6 +3,7 @@
 import { TRAILER } from "./src/trailer-boot.js";   // first: in trailer mode (#610) it replaces the page's clock before anything reads it
 import { mulberry32 } from "./src/blink.js";   // (the trailer's seeded air and cloth, #610)
 import { debugGate } from "./src/debuggate.js";
+import { installReview } from "./src/review.js";
 import { MAIN, photoUrl } from "./src/goshuin.js";
 import * as THREE from "three";
 import { FOG_DENSITY, U } from "./src/glsl.js";
@@ -1342,6 +1343,7 @@ window.__updates = (now) => (updates ? (now ? updates.ask().then(() => updates.s
 window.__yard = () => ({ opacity: +faded.toFixed(3), monkShown: monk.group.visible, monkWorld: (() => { const b = monkWorld(); return { min: b.min.toArray().map((v) => +v.toFixed(3)), max: b.max.toArray().map((v) => +v.toFixed(3)), near: +monkNear().toFixed(3) }; })(), shadowY: +monk.shadow.getWorldPosition(new THREE.Vector3()).y.toFixed(3), shadowOp: +monk.shadow.material.opacity.toFixed(3), inside, up: upIn ? upIn.id : null, stair: inside && hallIn.room.stair ? hallIn.room.stair.at : null, room: inside ? hallIn.room.id : null, doorway: inside ? hallIn.outlook.material.uniforms.uHas.value : null, tier: quality.name, scale: +quality.scale.toFixed(2), planar: quality.planar, governed: governor.level, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), yaw: +yaw.toFixed(3), pitch: +pitch.toFixed(3), h: +walker.heightAt(pos.x, pos.z).toFixed(2), footY: +monk.group.position.y.toFixed(4), groundY: +walker.heightAt(pos.x, pos.z).toFixed(4), dropping: !!hop, staged: stage ? stage.pose || "stand" : null, climbing: !!climb, climbs, pose: stage ? stage.pose : null, jumping: !!leap, bodyY: +(monk.group.position.y + monk.group.children[0].position.y).toFixed(4), dressed: monk.dressed, body, skirt: monk.skirt, lid: +monk.lid.value.toFixed(2), target: target && [+target.x.toFixed(2), +target.z.toFixed(2)], goal: (() => { const g = planning ? planGoal : route.length ? route[route.length - 1] : target; return g ? [+g.x.toFixed(2), +g.z.toFixed(2)] : null; })(), route: route.length, running, frames, tris: load.tris, calls: load.calls, season: state.season, time: state.time, view, fov: +camera.fov.toFixed(1) });
 // For the picture tools: the eye stood anywhere, looking at a point, as the close's camera is (`__look()` lets it go).
 window.__look = (at, to) => { cine = at ? (camera) => { camera.position.set(at[0], at[1], at[2]); camera.lookAt(to[0], to[1], to[2]); } : null; if (!at) follow.reset(); return !!cine; };
+installReview({ monk, camera, dev: !!import.meta.env.DEV, hostname: location.hostname, search: location.search });   // tools/review-sheet.cjs: the workbench only, and only with ?review=1
 window.__views = Object.keys(site.views); window.__merged = merged; window.__textures = textureState;
 // The address of the view he has now, for the console: where he stands and looks, the mood, the hall or balcony he is
 // in, and `devpose` so that a dev server opened with it will follow him. It writes nothing into this page's address and
