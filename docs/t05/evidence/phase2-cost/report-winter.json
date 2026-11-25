@@ -1,0 +1,1490 @@
+{
+  "started": "2026-11-25T06:34:37.978Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-arrive",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 54.1,
+      "ms": 18.48,
+      "cost": 9,
+      "loadMs": 13439,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 558,
+        "decodeMs": 153,
+        "prepareMs": 963,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 8986.9,
+        "spikes": [
+          8987,
+          176
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam01",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam01",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 59.3,
+      "ms": 16.86,
+      "cost": 7.03,
+      "loadMs": 4726,
+      "tris": 99766,
+      "calls": 73,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 551,
+        "decodeMs": 140,
+        "prepareMs": 840,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 809.9,
+        "spikes": [
+          810
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        44
+      ]
+    },
+    {
+      "view": "cam02",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam02",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 55.3,
+      "ms": 18.08,
+      "cost": 10.52,
+      "loadMs": 4910,
+      "tris": 99162,
+      "calls": 70,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 542,
+        "decodeMs": 136,
+        "prepareMs": 875,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 886.2,
+        "spikes": [
+          886
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        27
+      ]
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam03",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 62.4,
+      "ms": 16.03,
+      "cost": 8.22,
+      "loadMs": 5899,
+      "tris": 80986,
+      "calls": 50,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 548,
+        "decodeMs": 137,
+        "prepareMs": 888,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 3.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1952.7,
+        "spikes": [
+          1953
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam04",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam04",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 64.7,
+      "ms": 15.46,
+      "cost": 7.95,
+      "loadMs": 4761,
+      "tris": 48788,
+      "calls": 42,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 534,
+        "decodeMs": 153,
+        "prepareMs": 914,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 829,
+        "spikes": [
+          829
+        ],
+        "live": null
+      },
+      "at": [
+        19,
+        -8
+      ]
+    },
+    {
+      "view": "cam05",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam05",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 65.1,
+      "ms": 15.36,
+      "cost": 6.4,
+      "loadMs": 4749,
+      "tris": 48788,
+      "calls": 42,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 563,
+        "decodeMs": 138,
+        "prepareMs": 878,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 851.8,
+        "spikes": [
+          852
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -9
+      ]
+    },
+    {
+      "view": "cam06",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam06",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 64.6,
+      "ms": 15.48,
+      "cost": 7.71,
+      "loadMs": 4778,
+      "tris": 48788,
+      "calls": 42,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 565,
+        "decodeMs": 147,
+        "prepareMs": 907,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 872.5,
+        "spikes": [
+          873
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -2
+      ]
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "winter",
+      "time": "day",
+      "label": "winter-cam07",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 53.8,
+      "ms": 18.59,
+      "cost": 7.67,
+      "loadMs": 5133,
+      "tris": 328438,
+      "calls": 133,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 601,
+        "decodeMs": 152,
+        "prepareMs": 918,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1126.4,
+        "spikes": [
+          1126
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-34282d6-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s0/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s0/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-e8d16c0-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s1/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s1/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s1/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-0ed3296-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s2/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s2/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s2/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-db61d73-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s3/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s3/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s3/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-9f21e03-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s4/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s4/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s4/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-29fd055-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 54.4,
+      "ms": 18.38,
+      "cost": 8.29,
+      "loadMs": 5016,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 503,
+        "decodeMs": 155,
+        "prepareMs": 873,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 1130,
+        "spikes": [
+          1130
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-34282d6-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s0/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s0/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-e8d16c0-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s1/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s1/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s1/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-0ed3296-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s2/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s2/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s2/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-db61d73-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s3/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s3/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s3/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-9f21e03-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s4/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s4/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s4/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-29fd055-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 60.8,
+      "ms": 16.45,
+      "cost": 8.53,
+      "loadMs": 4796,
+      "tris": 80986,
+      "calls": 50,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 498,
+        "decodeMs": 146,
+        "prepareMs": 927,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 3.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 941.8,
+        "spikes": [
+          942
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-34282d6-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s0/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s0/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-e8d16c0-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s1/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s1/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s1/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-0ed3296-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s2/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s2/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s2/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-db61d73-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s3/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s3/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s3/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-9f21e03-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s4/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s4/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s4/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-29fd055-r0",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 54.9,
+      "ms": 18.21,
+      "cost": 8.31,
+      "loadMs": 4894,
+      "tris": 328438,
+      "calls": 133,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 523,
+        "decodeMs": 155,
+        "prepareMs": 928,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 875.6,
+        "spikes": [
+          876
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-29fd055-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 53.3,
+      "ms": 18.76,
+      "cost": 8.02,
+      "loadMs": 4880,
+      "tris": 328442,
+      "calls": 135,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 582,
+        "decodeMs": 151,
+        "prepareMs": 895,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 906.3,
+        "spikes": [
+          906
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-9f21e03-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s4/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s4/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s4/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-db61d73-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s3/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s3/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s3/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-0ed3296-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s2/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s2/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s2/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-e8d16c0-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s1/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s1/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s1/?q=hi"
+    },
+    {
+      "view": "arrive",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-arrive-34282d6-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s0/?q=high&show=arrive&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s0/?q=hi"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-29fd055-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 62.8,
+      "ms": 15.92,
+      "cost": 8.2,
+      "loadMs": 4798,
+      "tris": 80986,
+      "calls": 50,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 632,
+        "decodeMs": 163,
+        "prepareMs": 860,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 3.660842829491525,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 792.4,
+        "spikes": [
+          792
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-9f21e03-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s4/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s4/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s4/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-db61d73-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s3/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s3/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s3/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-0ed3296-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s2/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s2/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s2/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-e8d16c0-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s1/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s1/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s1/?q=hig"
+    },
+    {
+      "view": "cam03",
+      "as": "third",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam03-34282d6-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s0/?q=high&show=cam03&view=third&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s0/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-29fd055-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "",
+      "fps": 55.2,
+      "ms": 18.12,
+      "cost": 7.77,
+      "loadMs": 4724,
+      "tris": 328438,
+      "calls": 133,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118588,
+        "inflated": 29150000,
+        "fetchMs": 477,
+        "decodeMs": 146,
+        "prepareMs": 889,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 879.8,
+        "spikes": [
+          880
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-9f21e03-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s4/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s4/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s4/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-db61d73-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s3/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s3/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s3/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-0ed3296-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s2/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s2/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s2/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-e8d16c0-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s1/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s1/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s1/?q=hig"
+    },
+    {
+      "view": "cam07",
+      "as": "first",
+      "level": "t05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "scale": 1,
+      "season": "summer",
+      "time": "day",
+      "label": "summer-cam07-34282d6-r1",
+      "before": "await new Promise((r) => { const t0 = performance.now(); const f = () => ((window.__eyeSpace && window.__eyeSpace().state === \"ready\") || performance.now() - t0 > 60000 ? setTimeout(r, 3000) : setTimeout(f, 200)); f(); });",
+      "path": "s0/",
+      "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://127.0.0.1:43613/s0/?q=high&show=cam07&view=first&season=summer&time=day&level=t05\nCall log:\n  - navigating to \"http://127.0.0.1:43613/s0/?q=hig"
+    }
+  ],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "29fd055863ca8633680e6ba8e6ed9560408cec90",
+    "entry": "assets/index-zgKBN7cY.js",
+    "files": 193,
+    "sha256": "de979370063059b35bb92322f9cc8efeb87429ad514ff1212d971c052c840bdf"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-25T06:38:32.379Z"
+}
