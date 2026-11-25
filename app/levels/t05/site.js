@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
-import { buildHall, OUTER, FILL } from "./hall.js";
+import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
 import { buildAltar } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE } from "./axis.js";
 import { buildTower } from "./tower.js";
@@ -53,6 +53,13 @@ export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false, crest: 0.
  * from there: 65° from his eyes is the walk's own angle, and the same reason makes 50° the walk's from behind (the T05 lead, after the art director's ruling, 2026-11-21).
  */
 export const LENS = Object.freeze({ cam06: Object.freeze({ first: 65, third: 50 }) });
+
+/**
+ * The named views that stand inside the great hall, which a visitor cannot reach while its doors are shut (HALL_DOORS in ./hall.js; the first release,
+ * docs/t05/DECISIONS.md, 先行版关殿门). They stay in `views` (the pictures are still drawn from them, and come back with the hall), but
+ * `site.closedViews` tells the floor's bake not to ask that they be walked to (tools/walk/scene.mjs) and tools/cameras.mjs to mark them closed.
+ */
+export const INSIDE_VIEWS = Object.freeze(["d", "e", "f", "sakya", "cam04", "cam05", "cam06"]);
 
 export function buildSite(M) {
   Object.assign((M.steps.userData.stairStyle ||= {}), STAIR_STYLE);   // (one page walks one level, so the material is this level's for good)
@@ -198,7 +205,7 @@ export function buildSite(M) {
   // stations' views above under the handoff's names, the same poses so that the two can never part; cam07 is the axis's own, in the inner gate's passage.
   Object.assign(views, { cam01: views.a, cam02: views.b, cam03: views.c, cam04: views.d, cam05: views.e, cam06: views.f });
   return {
-    root, walk, shade, closed: ax.closed, paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
+    root, walk, shade, closed: [...ax.closed, ...hall.closed], closedViews: HALL_DOORS.shut ? [...INSIDE_VIEWS] : [], paving, hall: null, halls: [], buildings, lofts: {}, doorways: {}, views, viewUp: {}, lens: LENS,
     places: {}, seats: [], drawnSeats: [], cedars: [], trees: [], strikers: [], start: views.arrive, censer: null, sunFocus: [0, 10], fogShut: hall.fogShut, tick, lit,
   };
 }
