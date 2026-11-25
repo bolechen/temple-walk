@@ -17,7 +17,7 @@ export const HOLD = Object.freeze({ board: [0.03, 0.8, 0.25], tilt: 0.35, grip: 
 /**
  * @param {{ act: any, play: (secs: number, fn: (u: number) => void, on: () => boolean) => Promise<boolean>, homeward: (u: number, secs: number, after?: number) => void,
  *   at: (x: number, y: number, z: number, out?: THREE.Vector3) => THREE.Vector3, dir: (x: number, y: number, z: number, out?: THREE.Vector3) => THREE.Vector3,
- *   scene: THREE.Object3D, G: THREE.Object3D, head: THREE.Object3D, sound?: (secs: number) => void,
+ *   scene: THREE.Object3D, G: THREE.Object3D, head: THREE.Object3D, sound?: (secs: number) => void, each?: (f: () => void) => void,
  *   stele?: { face: number }, handR?: () => THREE.Vector3, handL?: () => THREE.Vector3 }} o
  */
 export function createWriting(o) {
@@ -30,7 +30,8 @@ export function createWriting(o) {
   if (tex) tex.colorSpace = THREE.SRGBColorSpace;
   const leaf = new THREE.Group();
   const paper = new THREE.Mesh(new THREE.PlaneGeometry(LEAF.w, LEAF.h).translate(0, 0, 0.004), new THREE.MeshStandardMaterial({ map: tex, color: tex ? 0xffffff : 0xefe6d2, roughness: 0.92, side: THREE.DoubleSide }));
-  const board = new THREE.Mesh(new THREE.BoxGeometry(LEAF.w + 0.02, LEAF.h + 0.02, 0.008), new THREE.MeshStandardMaterial({ color: 0x4a3626, roughness: 0.8 }));
+  // The board is 6 mm thick; the paper lies a millimetre over its face (on one plane they flicker) and the brush's tip a millimetre over that.
+  const board = new THREE.Mesh(new THREE.BoxGeometry(LEAF.w + 0.02, LEAF.h + 0.02, 0.006), new THREE.MeshStandardMaterial({ color: 0x4a3626, roughness: 0.8 }));
   leaf.add(board, paper);
   // The brush: a bamboo shaft and its tip of hair, wet with ink. Its origin is the tip of the hair.
   const brush = new THREE.Group();
@@ -58,12 +59,16 @@ export function createWriting(o) {
     R.at.copy(brush.position).addScaledVector(up, HOLD.grip); dir(0.25, -0.35, 1, R.fingers); dir(1, 0.1, 0, R.palm);
     onPaper(-0.56, -0.05, 0, L.at); dir(-0.2, 0.35, 1, L.fingers); dir(-1, 0.2, 0, L.palm);
   };
+  // Posed at once (`?show=shot-copy`, `__poseRite`), he holds the brush on the paper; the walk turns him to the place a
+  // frame later, so the board and his hands follow him every frame until he really writes or rests.
+  let posed = false;
+  o.each?.(() => { if (posed && leaf.visible) { placeLeaf(1); hold(onPaper(0.3, 0.05, 0, tA), 0); } });
   const near = (p) => { if (o.stele) { const s = o.stele, d = Math.max(0, p.z - s.face) /* the face looks south: +z */; state.nearest = Math.min(state.nearest, Math.abs(d) < 1e-9 ? 0 : d); } };
   const track = () => { if (!o.stele) return; for (const b of [o.handR?.(), o.handL?.()]) if (b) near(b); near(brush.position); near(leaf.position); };
 
   /** He takes them out and raises the board. */
   async function takeUp(on) {
-    leaf.visible = brush.visible = true; state.held = 1; redraw();
+    posed = false; leaf.visible = brush.visible = true; state.held = 1; redraw();
     return play(1.0, (u) => { const k = ease(u); placeLeaf(k); hold(onPaper(0.2, 0.3, 0.06 * (2 - k), tA), 0); act.hands.left.w = act.hands.right.w = k; act.bow = 0.12 * k; track(); }, on);
   }
   /** He puts them away. */
@@ -125,11 +130,11 @@ export function createWriting(o) {
     state.writing = false;
     return putAway(on);
   }
-  function rest() { leaf.visible = brush.visible = false; state.held = 0; state.writing = false; }
+  function rest() { posed = false; leaf.visible = brush.visible = false; state.held = 0; state.writing = false; }
   return {
     copyLine, strokeLine, rest, page,
     /** Poses him at the moment the brush is on the paper, at once (`?show=shot-copy`, `__poseRite`). */
-    pose(w = {}) { Object.assign(page, { stroke: 0, note: "", copy: w.text || "", copyK: 0.5, from: "" }); leaf.visible = brush.visible = true; placeLeaf(1); hold(onPaper(0.3, 0.05, 0, tA), 0); act.hands.left.w = act.hands.right.w = 1; act.bow = 0.12; act.nod = 0.16; redraw(); },
+    pose(w = {}) { posed = true; Object.assign(page, { stroke: 0, note: "", copy: w.text || "", copyK: 0.5, from: "" }); leaf.visible = brush.visible = true; placeLeaf(1); hold(onPaper(0.3, 0.05, 0, tA), 0); act.hands.left.w = act.hands.right.w = 1; act.bow = 0.12; act.nod = 0.16; redraw(); },
     track,
     state: () => ({ ...state, nearest: Number.isFinite(state.nearest) ? +state.nearest.toFixed(3) : null, leaf: leaf.visible, brush: brush.visible, at: leaf.position.toArray().map((v) => +v.toFixed(3)) }),
     resetNearest() { state.nearest = Infinity; },

@@ -437,7 +437,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // ================= Writing on a temple's own page =================
   // T05's observation and the copy of the stele (src/writing.js): the leaf and the brush, on this same clock and into this same `act`.
   const copyPlace = Object.values(places).find((p) => p.stele);
-  const writing = createWriting({ act, play, homeward, at, dir, scene, G, head: B.head, sound: (s) => { if (typeof window !== "undefined") brushSound(s); },
+  const writing = createWriting({ act, play, homeward, at, dir, scene, G, head: B.head, each: (f) => always.push(f), sound: (s) => { if (typeof window !== "undefined") brushSound(s); },
     stele: copyPlace?.stele, handR: () => B.rightHand.getWorldPosition(tC), handL: () => B.leftHand.getWorldPosition(V()) });
 
   // ---- Between observances: his hands are his own again, and what was in them goes back where it belongs ----

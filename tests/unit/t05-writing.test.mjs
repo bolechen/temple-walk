@@ -76,3 +76,34 @@ test("broken off, the writing stops at once and leaves nothing in his hands", as
   assert.equal(s.ok, false, "broken off, it reports so");
   assert.ok(!s.leaf.visible && !s.brush.visible, "rest() puts the leaf and the brush away");
 });
+
+// `?show=shot-copy` and `__poseRite` pose him at once (writing.pose), before the walk has turned him to the place: the
+// leaf must follow him there, held before his chest with its paper turned up to him, as it is while he really writes.
+test("posed at once and then turned to the place, the leaf is held before him with its paper up", async () => {
+  const monk = createMonk(), G = monk.group, scene = new THREE.Scene(), ticks = []; scene.add(G);
+  const y = { monk, scene, site, M, onTick: (f) => ticks.push(f), strike: () => {}, direct: () => {}, directed: () => false, directArrived: () => false, directOut: () => 1 };
+  const rites = createRites(y);
+  G.position.set(0, 0, 0); G.rotation.y = 0; G.updateMatrixWorld(true);
+  rites.writing.pose({ text: STELE_TEXT.lines[0].text });
+  const p = site.places.copy, floor = walker.heightAt(p.at[0], p.at[1]);
+  G.position.set(p.at[0], floor, p.at[1]); G.rotation.y = p.face; G.updateMatrixWorld(true);   // the walk stands him there a frame later
+  for (let i = 0; i < 3; i++) { now += 50; for (const f of ticks) f(); G.updateMatrixWorld(true); }
+  let leaf = null; scene.traverse((o) => { if (!leaf && o.userData.part === "writing" && o.parent === scene) leaf = o; });
+  const local = G.worldToLocal(leaf.position.clone());
+  assert.ok(local.distanceTo(new THREE.Vector3(0.03, 0.8, 0.25)) < 0.02, `the board stands where he holds it, before his chest: ${local.toArray().map((v) => v.toFixed(3))}`);
+  const up = new THREE.Vector3(0, 0, 1).applyQuaternion(leaf.quaternion), toHim = new THREE.Vector3(0, 0, -1).applyQuaternion(G.quaternion);
+  assert.ok(up.y > 0.5 && up.dot(toHim) > 0.2, `its paper faces up and toward him (${up.toArray().map((v) => v.toFixed(2))})`);
+  rites.rest(); assert.ok(!leaf.visible, "rest() puts it away");
+});
+
+// The paper lies on the board, not in its face: two faces on one plane flicker and, from some angles and on some cards,
+// show the board through the paper (a dark wedge across the leaf on a T4, the whole leaf dark in software).
+test("the paper lies a millimetre clear of the board's face, and the brush's tip clear of the paper", () => {
+  const scene = new THREE.Scene(), ticks = [], monk = createMonk(); scene.add(monk.group);
+  createRites({ monk, scene, site, M, onTick: (f) => ticks.push(f), strike: () => {}, direct: () => {}, directed: () => false, directArrived: () => false, directOut: () => 1 });
+  let leaf = null; scene.traverse((o) => { if (!leaf && o.userData.part === "writing" && o.parent === scene) leaf = o; });
+  const [board, paper] = leaf.children; board.geometry.computeBoundingBox(); paper.geometry.computeBoundingBox();
+  const gap = paper.geometry.boundingBox.min.z - board.geometry.boundingBox.max.z;
+  assert.ok(gap >= 0.0008, `the paper is ${(gap * 1000).toFixed(2)} mm above the board's face`);
+  assert.ok(0.005 - paper.geometry.boundingBox.max.z >= 0.0005, "the brush's tip (5 mm off the leaf's middle) is above the paper");
+});
