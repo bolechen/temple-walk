@@ -5,10 +5,10 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildHall, HALL, BOARD, XS, ZS } = await import("../../app/levels/t05/hall.js");
-const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })) : (t[k] ||= new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))) });
+const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial({ side: THREE.FrontSide })) : (t[k] ||= new THREE.MeshBasicMaterial({ side: THREE.FrontSide }))) });
 
 test("no line of sight passes between two bracket sets through the gongyan band, on any of the hall's four faces", () => {
-  const h = buildHall(M), root = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+  const h = buildHall(M), root = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ side: THREE.FrontSide });
   // (the hall's parts are lists of geometry; site.js merges and draws them: here every one is a mesh, the shell's own and the walls', as it is drawn)
   for (const list of Object.values(h.parts)) if (Array.isArray(list)) for (const g of list) if (g.isBufferGeometry) root.add(new THREE.Mesh(g, mat));
   root.updateMatrixWorld(true);
@@ -23,7 +23,7 @@ test("no line of sight passes between two bracket sets through the gongyan band,
     const bLine = at + out * (off - BOARD.back), a = Math.min(pos[0], pos[pos.length - 1]), b = Math.max(pos[0], pos[pos.length - 1]);
     for (let u = a + 0.1; u < b; u += 0.35) {
       const top = ax ? underAt(u, bLine) : underAt(bLine, u);   // the roof's underside over this very point (lower over a hipped corner)
-      for (let y = cap + 0.05; y < top - 0.02; y += 0.3) for (const [dist, eye, slide] of [[6, HALL.floor + 1.7, 0], [14, 1.7, 0], [10, 9, 0], [12, HALL.floor + 1.7, 10], [12, 1.7, -10], [20, 6, 18], [20, 6, -18]]) {
+      for (let y = cap + 0.05; y < top - 0.02; y += 0.3) for (const [dist, eye, slide] of [[6, HALL.floor + 1.7, 0], [14, 1.7, 0], [10, 9, 0], [12, HALL.floor + 1.7, 10], [12, 1.7, -10], [20, 6, 18], [20, 6, -18], [3, 1.7, 0], [4, HALL.floor + 1.7, 6], [2.5, 1.7, -4]]) {
         const p = ax ? new THREE.Vector3(u, y, bLine) : new THREE.Vector3(bLine, y, u), o = ax ? new THREE.Vector3(u + slide, eye, bLine + out * dist) : new THREE.Vector3(bLine + out * dist, eye, u + slide);
         ray.set(o, p.clone().sub(o).normalize()); n++;
         const hit = ray.intersectObject(root, true)[0], depth = hit ? ax ? -(hit.point.z - bLine) * out : -(hit.point.x - bLine) * out : Infinity;   // how far past the board's plane (inward) the first thing is
