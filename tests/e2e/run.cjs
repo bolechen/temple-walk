@@ -644,12 +644,25 @@ const scenarios = {
     const room = () => t.page.evaluate(() => { const m = window.__music(); return { verb: m.verb, long: m.long, zone: m.zone, state: m.state }; });
     let r = await room(); expect(r.state === "running" && r.verb === "court" && !r.long, "out of doors T05 should be in the court's reverb: " + JSON.stringify(r));
     await t.until(async () => (await t.page.evaluate(() => window.__bird())).bed > 0, 30000, "T05's Z1 floor of sound (BED) never came up in the court");
-    await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
-    await t.until(async () => (await room()).verb === "hall", 300000, "under the great hall's roof the long reverb never took over");
-    r = await room(); expect(r.long === true, "the hall's reverb should be the long one: " + JSON.stringify(r));
+    const SHUT = hallDoorsShut();   // the great hall's doors are shut in the first release (HALL_DOORS in hall.js): the shut branch below stands in for the walk in, and this test turns back into the full one by itself the day they are opened
+    let verbs = new Set(), still = 0, last = null, s = null;
+    if (SHUT) {
+      // Nobody can come under the hall's roof, so the long reverb must never take over: he walks up the flight to the doorstep, comes to rest before the shut doors (the leg across them is searched round and ends before them),
+      // and the whole way, on the stair, on the terrace and at the sill, he is in the court's reverb with the court's floor of sound (Z2, the doorway's own mix, is not made yet: nothing changes there). The layer's
+      // inside half (the long reverb under the roof, and leaving it) waits for the doors: HALL_DOORS `shut: false` runs the walk in below.
+      await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
+      await t.until(async () => { s = await t.state(); const r = await room(); verbs.add(r.verb + (r.long ? "+long" : "")); still = last && Math.hypot(s.x - last[0], s.z - last[1]) < 0.01 ? still + 1 : 0; last = [s.x, s.z]; return still > 30; }, 300000, "he never came to rest before the shut doors");
+      expect(s.z > 0.2 && s.z < 3 && Math.abs(s.h - 3) < 0.1, `he should stand before the shut doors, outside: ${JSON.stringify({ z: s.z, h: s.h })}`);
+      expect([...verbs].join() === "court", "before the shut doors the reverb should stay the court's all the way: " + [...verbs].join());
+      expect((await t.page.evaluate(() => window.__bird())).bed > 0, "the court's floor of sound should still be there at the doors");
+    } else {
+      await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
+      await t.until(async () => (await room()).verb === "hall", 300000, "under the great hall's roof the long reverb never took over");
+      r = await room(); expect(r.long === true, "the hall's reverb should be the long one: " + JSON.stringify(r));
+    }
     const peak = await t.page.evaluate(() => { const x = window.__listen(); return x.peak ?? x.rms ?? 0; }); expect(Number.isFinite(peak), "the mix could not be read");
     await t.page.evaluate(() => window.__walk([[0, 2], [0, 14.4], [0, 20]]));
-    await t.until(async () => (await room()).verb === "court", 300000, "coming out of the hall the court's reverb never came back");
+    await t.until(async () => (await room()).verb === "court", 300000, "coming back out the court's reverb never came back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // T05 keeps its own place and the prologue's save is not touched (S4, docs/t05/LEVEL-SPLIT.md; the first edition of T05 on production):
@@ -2878,8 +2891,10 @@ const scenarios = {
     const R = () => t.page.evaluate(() => window.__rites().closing);
     await t.page.keyboard.press("Escape"); await t.until(async () => (await R()) === false, 60000, "the eye did not come home from the far view");
     // with the eye home the slips are on the picture: the veil's class hides them and nothing else does, and they come back when it goes (#726)
-    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); for (let i = 0; i < 60 && op() === "0"; i++) await new Promise((r) => setTimeout(r, 250));   /* (the slips fade back in once the eye is home) */
-      const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
+    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, stir = () => dispatchEvent(new MouseEvent("mousemove")), nap = () => new Promise((r) => setTimeout(r, 1700));   /* (the slips' opacity transition is 1.2 s: read well after it, and each stretch stays inside the 4.5 s before `calm`) */
+      /* (a fine pointer's slips also fade to nothing once the mouse has rested 4.5 s, `body.calm`: wake them with a move, as a visitor's hand does, so that only the veil is being tested) */
+      stir(); for (let i = 0; i < 60 && op() === "0"; i++) await new Promise((r) => setTimeout(r, 250));   /* (the slips fade back in once the eye is home) */
+      stir(); await nap(); const before = op(); stir(); document.body.classList.add("veiled"); await nap(); const on = op(); stir(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
       expect(o.on === "0" && o.after !== "0" && o.before !== "0", "the veil's class should hide the slips and give them back: " + JSON.stringify(o)); }
     await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookMoreBtn"); await t.until(() => shown("#bookMore"), 10000, "更多"); await t.page.click("#bookReplay");
     await t.until(async () => (await R()) === true, 120000, "the close did not play again");
