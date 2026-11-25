@@ -630,12 +630,25 @@ const scenarios = {
     const room = () => t.page.evaluate(() => { const m = window.__music(); return { verb: m.verb, long: m.long, zone: m.zone, state: m.state }; });
     let r = await room(); expect(r.state === "running" && r.verb === "court" && !r.long, "out of doors T05 should be in the court's reverb: " + JSON.stringify(r));
     await t.until(async () => (await t.page.evaluate(() => window.__bird())).bed > 0, 30000, "T05's Z1 floor of sound (BED) never came up in the court");
-    await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
-    await t.until(async () => (await room()).verb === "hall", 300000, "under the great hall's roof the long reverb never took over");
-    r = await room(); expect(r.long === true, "the hall's reverb should be the long one: " + JSON.stringify(r));
+    const SHUT = hallDoorsShut();   // the great hall's doors are shut in the first release (HALL_DOORS in hall.js): the shut branch below stands in for the walk in, and this test turns back into the full one by itself the day they are opened
+    let verbs = new Set(), still = 0, last = null, s = null;
+    if (SHUT) {
+      // Nobody can come under the hall's roof, so the long reverb must never take over: he walks up the flight to the doorstep, comes to rest before the shut doors (the leg across them is searched round and ends before them),
+      // and the whole way, on the stair, on the terrace and at the sill, he is in the court's reverb with the court's floor of sound (Z2, the doorway's own mix, is not made yet: nothing changes there). The layer's
+      // inside half (the long reverb under the roof, and leaving it) waits for the doors: HALL_DOORS `shut: false` runs the walk in below.
+      await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
+      await t.until(async () => { s = await t.state(); const r = await room(); verbs.add(r.verb + (r.long ? "+long" : "")); still = last && Math.hypot(s.x - last[0], s.z - last[1]) < 0.01 ? still + 1 : 0; last = [s.x, s.z]; return still > 30; }, 300000, "he never came to rest before the shut doors");
+      expect(s.z > 0.2 && s.z < 3 && Math.abs(s.h - 3) < 0.1, `he should stand before the shut doors, outside: ${JSON.stringify({ z: s.z, h: s.h })}`);
+      expect([...verbs].join() === "court", "before the shut doors the reverb should stay the court's all the way: " + [...verbs].join());
+      expect((await t.page.evaluate(() => window.__bird())).bed > 0, "the court's floor of sound should still be there at the doors");
+    } else {
+      await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
+      await t.until(async () => (await room()).verb === "hall", 300000, "under the great hall's roof the long reverb never took over");
+      r = await room(); expect(r.long === true, "the hall's reverb should be the long one: " + JSON.stringify(r));
+    }
     const peak = await t.page.evaluate(() => { const x = window.__listen(); return x.peak ?? x.rms ?? 0; }); expect(Number.isFinite(peak), "the mix could not be read");
     await t.page.evaluate(() => window.__walk([[0, 2], [0, 14.4], [0, 20]]));
-    await t.until(async () => (await room()).verb === "court", 300000, "coming out of the hall the court's reverb never came back");
+    await t.until(async () => (await room()).verb === "court", 300000, "coming back out the court's reverb never came back");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // T05 keeps its own place and the prologue's save is not touched (S4, docs/t05/LEVEL-SPLIT.md; the first edition of T05 on production):
