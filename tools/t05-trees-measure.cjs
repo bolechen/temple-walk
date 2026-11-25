@@ -1,16 +1,19 @@
-// Measures T05's grown trees on J01 against the art director's lines of 2026-11-25 (docs/t05/DECISIONS.md, 真树与远景): in each judged framing
-// (cam01, cam07, the arrival looking south) every 8 px of the picture is asked what lies there (`__pick`) and the colour under it is read as CIE
-// Lab (D65). Reported: the needles in the sun (L* ≥ 30) and in the shade, with the darkest tenth (the crowns' undersides, L* ≥ 12 asked); the bare
-// wood (L* 20–30 asked against the sky); the poplars' pale bark (L* 55–65 asked); in each half of the picture, the share of its width where a tree
-// stands against the sky (cam01: a quarter or less each side); and the highest tree pixel against the great hall's eave (cam01: no tree top above
-// it). Software rendering: the shapes and the order of lightness hold, the absolute values want a T4.
+// Measures T05's trees, air and ground on J01 against the art director's lines of 2026-11-25 (#573, comment 7164808177; docs/t05/DECISIONS.md, 真树与远景):
+// in cam01, cam07 and the arrival looking south every 8 px of the picture is asked what lies there (`__pick`) and the colour under it is read as CIE Lab
+// (D65). Software rendering (SwiftShader): the shapes and the order of lightness hold, the absolute values want a T4.
+//   cam07: the trees' share of each side of the gateway's opening (25% or more each), the white wall seen in it (half of main's or less), the shadow bands
+//          down the path (3 or more, 10 L* darker than the sunlit stone), the hall against the archway (12 L* apart or less), the sky (b* -20±3, L* 76-82),
+//          the withered grass beside the path (hue 75-90°, chroma 9 or less, not lighter than the paving);
+//   cam01: the sunlit platform (b* +1 or more) and the hall's front in shade (b* -4 or less), the trees at each side (8-15% of the width), the highest tree
+//          against the eave;
+//   south: the poplars' bark (L* 55-65), and any bough within 5 m of the eye in the picture's corners (none).
 // usage: node tools/t05-trees-measure.cjs <outdir> [--query=k=v&…] [--views=cam01,cam07,south]
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const { site, serve } = require("./site.cjs");
 
 const VIEWS = { cam01: "show=cam01", cam07: "show=cam07", south: "cam=0,215,3.1416,0.03" };
-const TREE = /^(dryNeedles|treeBark|paleBark)$/;
+const TREE = /^(dryNeedles|treeBark|paleBark)$/, SKY = "ShaderMaterial|sky", PAVING = "ShaderMaterial|ground";
 
 function lab([r, g, b]) {
   const lin = (c) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
@@ -19,8 +22,8 @@ function lab([r, g, b]) {
   const f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
   return [116 * f(Y) - 16, 500 * (f(X) - f(Y)), 200 * (f(Y) - f(Z))];
 }
-const q = (xs, p) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); return +s[Math.min(s.length - 1, Math.floor(p * s.length))].toFixed(1); };
-const stats = (list) => (list.length ? { n: list.length, L: q(list.map((c) => c[0]), 0.5), L10: q(list.map((c) => c[0]), 0.1), L90: q(list.map((c) => c[0]), 0.9), C: q(list.map((c) => Math.hypot(c[1], c[2])), 0.5) } : { n: 0 });
+const med = (xs) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); return +s[s.length >> 1].toFixed(1); };
+const stats = (cs) => (cs.length ? { n: cs.length, L: med(cs.map((c) => c[0])), a: med(cs.map((c) => c[1])), b: med(cs.map((c) => c[2])), C: med(cs.map((c) => Math.hypot(c[1], c[2]))), h: med(cs.filter((c) => Math.hypot(c[1], c[2]) >= 2).map((c) => ((Math.atan2(c[2], c[1]) * 180) / Math.PI + 360) % 360)) } : { n: 0 });
 
 (async () => {
   const out = process.argv[2] || "tools/out/t05-trees"; fs.mkdirSync(out, { recursive: true });
@@ -35,33 +38,51 @@ const stats = (list) => (list.length ? { n: list.length, L: q(list.map((c) => c[
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 300000 });
     await page.waitForTimeout(1500);
     const png = await page.screenshot({ path: path.join(out, `${name}.png`) });
-    const S = 8, samples = await page.evaluate(async ([b64, S]) => {
+    const S = 8, { w, h, res } = await page.evaluate(async ([b64, S]) => {
       const img = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob());
       const c = new OffscreenCanvas(img.width, img.height), x2 = c.getContext("2d"); x2.drawImage(img, 0, 0);
       const d = x2.getImageData(0, 0, img.width, img.height).data, res = [];
       for (let y = S / 2; y < img.height; y += S) for (let x = S / 2; x < img.width; x += S) {
-        const h = window.__pick(x, y, 1)[0], i = (y * img.width + x) * 4;
-        res.push({ x, y, m: h ? h.material : "sky", part: h ? h.part : null, d: h ? h.distance : Infinity, rgb: [d[i], d[i + 1], d[i + 2]] });
+        const p = window.__pick(x, y, 1)[0], i = (y * img.width + x) * 4;
+        res.push({ x, y, m: p ? `${p.material}|${p.part}` : "none", mat: p ? p.material : "none", d: p ? p.distance : Infinity, rgb: [d[i], d[i + 1], d[i + 2]] });
       }
       return { w: img.width, h: img.height, res };
     }, [png.toString("base64"), S]);
-    const { w, res } = samples, sun = [], shade = [], bark = [], pale = [], mats = {};
-    for (const s of res) {
-      mats[s.m] = (mats[s.m] || 0) + 1;
-      const c = lab(s.rgb);
-      if (s.m === "dryNeedles") (c[0] >= 30 ? sun : shade).push(c); else if (s.m === "treeBark") bark.push(c); else if (s.m === "paleBark") pale.push(c);
+    for (const s of res) s.c = lab(s.rgb);
+    const of = (f) => res.filter(f).map((s) => s.c), r = { sky: stats(of((s) => s.m === SKY)), paving: stats(of((s) => s.m === PAVING && s.d < 60)) };
+    const cols = [...new Set(res.map((s) => s.x))].sort((a, b) => a - b);
+    if (name === "cam07") {
+      // the opening: the columns where, at mid-height, the picture is not the gate's own pillars (wood within 5 m)
+      const open = cols.filter((x) => { const s = res.find((q) => q.x === x && Math.abs(q.y - h * 0.45) < S); return s && !(s.mat === "woodV" && s.d < 5); });
+      const mid = (open[0] + open[open.length - 1]) / 2, treeCol = (x) => res.some((q) => q.x === x && TREE.test(q.mat) && q.d > 2);
+      r.opening = { width: open.length, treesLeft: +(open.filter((x) => x < mid && treeCol(x)).length / open.length).toFixed(3), treesRight: +(open.filter((x) => x >= mid && treeCol(x)).length / open.length).toFixed(3), wallSamples: res.filter((q) => q.mat === "plaster" && open.includes(q.x) && q.d > 5).length };
+      // the path straight ahead, from the picture's foot up to the archway: runs of shade
+      const path = res.filter((q) => q.m === PAVING && Math.abs(q.x - w / 2) < 40 && q.d < 18 && q.d > 2).sort((a, b) => b.y - a.y), rows = [...new Set(path.map((q) => q.y))].map((y) => med(path.filter((q) => q.y === y).map((q) => q.c[0])));
+      const lit = Math.max(...rows), dark = rows.map((L) => L < lit - 10); let bands = 0; dark.forEach((v, i) => { if (v && !dark[i - 1]) bands++; });
+      r.pathShade = { bands, litL: lit, darkestL: Math.min(...rows) };
+      // the hall through the archway's middle bay against the archway's timber
+      const bay = (q) => Math.abs(q.x - w / 2) < 50;
+      r.hall = stats(of((q) => bay(q) && q.d > 60 && q.m !== SKY && q.mat !== "none")); r.archway = stats(of((q) => q.d > 12 && q.d < 40 && /^(woodV|woodX|beam|fascia|lattice)$/.test(q.mat) && Math.abs(q.x - w / 2) < 260));
+      r.hallVsArchway = r.hall.n && r.archway.n ? +Math.abs(r.hall.L - r.archway.L).toFixed(1) : null;
+      r.grass = stats(of((q) => q.mat === "dryGrass" || q.mat === "dryEarth"));
     }
-    // where a tree stands against the sky: a column whose highest tree sample is above every sample of anything else but the sky in it
-    const cols = new Map(); for (const s of res) { const col = cols.get(s.x) || cols.set(s.x, { tree: Infinity, other: Infinity }).get(s.x); if (TREE.test(s.m)) col.tree = Math.min(col.tree, s.y); else if (s.m !== "sky") col.other = Math.min(col.other, s.y); }
-    const half = (side) => { const xs = [...cols.entries()].filter(([x]) => (side < 0 ? x < w / 2 : x >= w / 2)); return +(xs.filter(([, c]) => c.tree < c.other).length / xs.length).toFixed(3); };
-    const treeTop = Math.min(...res.filter((s) => TREE.test(s.m)).map((s) => s.y));
-    // the great hall's eave: the lowest sample of its roof tile in the middle fifth of the picture
-    const roofMat = Object.keys(mats).find((m) => /^tile$/i.test(m)) || "tile";
-    const eave = Math.max(...res.filter((s) => s.m === roofMat && s.x > w * 0.4 && s.x < w * 0.6 && s.d < 120).map((s) => s.y));
-    report[name] = { needlesSun: stats(sun), needlesShade: stats(shade), bareWood: stats(bark), poplarBark: stats(pale), treeAgainstSky: { left: half(-1), right: half(1) }, treeTopRow: treeTop, eaveRow: Number.isFinite(eave) ? eave : null, treeOverEave: Number.isFinite(eave) ? treeTop < eave : null };
-    console.log(name, JSON.stringify(report[name]));
+    if (name === "cam01") {
+      const stone = res.filter((q) => q.mat === "stone" && q.d < 70).map((q) => q.c), Ls = stone.map((c) => c[0]).sort((a, b) => a - b), cut = Ls[Math.floor(Ls.length * 0.6)] ?? 0;
+      r.platformSunlit = stats(stone.filter((c) => c[0] >= cut));
+      r.frontShade = stats(of((q) => /^(woodV|lattice|plaster|woodX)$/.test(q.mat) && q.d > 35 && q.d < 75 && q.c[0] < 45));
+      const treeCol = (x) => res.some((q) => q.x === x && TREE.test(q.mat) && q.d < 80);
+      r.treesWidth = { left: +(cols.filter((x) => x < w / 2 && treeCol(x)).length / cols.length).toFixed(3), right: +(cols.filter((x) => x >= w / 2 && treeCol(x)).length / cols.length).toFixed(3) };
+      const top = Math.min(...res.filter((q) => TREE.test(q.mat) && q.d < 80).map((q) => q.y)), eave = Math.max(...res.filter((q) => q.mat === "tile" && Math.abs(q.x - w / 2) < w * 0.15).map((q) => q.y));
+      r.treeTopRow = Number.isFinite(top) ? top : null; r.eaveRow = Number.isFinite(eave) ? eave : null; r.treeOverEave = Number.isFinite(top) && Number.isFinite(eave) ? top < eave : null;
+    }
+    if (name === "south") {
+      r.poplarBark = stats(of((q) => q.mat === "paleBark"));
+      r.nearBoughsInCorners = res.filter((q) => TREE.test(q.mat) && q.d < 5 && (q.x < w * 0.2 || q.x > w * 0.8) && (q.y < h * 0.2 || q.y > h * 0.8)).length;
+    }
+    r.needles = stats(of((q) => q.mat === "dryNeedles")); r.bareWood = stats(of((q) => q.mat === "treeBark"));
+    report[name] = r;
+    console.log(name, JSON.stringify(r));
     fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1));   // (after each view, so that a slow run keeps what it has)
   }
-  fs.writeFileSync(path.join(out, "report.json"), JSON.stringify(report, null, 1));
   await br.close(); srv.close();
 })();
