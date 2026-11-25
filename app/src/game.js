@@ -20,6 +20,7 @@ import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
 import { readLevelPlace, writeLevelPlace, clearLevelPlace, clearLevelPage } from "./levelsave.js";
 import { createLevelPage } from "./levelpage.js";
+import { drawStroke, seeded as seededRun } from "./pagework.js";
 import { track } from "./analytics.js";
 import { titleHow } from "./titlehow.js";
 import { t, lang, glyphs, FONT } from "./i18n.js";
@@ -231,7 +232,12 @@ export function createGame(y) {
     const lines = cut ? text.replace(/[，、。；]/g, "") : phrases(text);   // the stone has no stops: the copy is as cut, as on the leaf
     // The stroke of ink across the top of the page, as on the leaf he held: there once the observation has put it there.
     const sheet = $("slip")?.querySelector(".paper");
-    if (sheet && !sheet.querySelector(".page-stroke")) { const i = document.createElement("i"); i.className = "page-stroke"; i.setAttribute("aria-hidden", "true"); sheet.prepend(i); }
+    if (sheet && !sheet.querySelector(".page-stroke")) {
+      // Drawn with the leaf's own brush (pagework.js, drawStroke): pressed down at its start, dry and broken at its end.
+      const c = document.createElement("canvas"), g = c.getContext("2d"), W = 480, H = 48; c.width = W; c.height = H; c.className = "page-stroke"; c.setAttribute("aria-hidden", "true");
+      if (g) drawStroke(g, W * 0.02, W * 0.98, H / 2, H * 0.36, 1, seededRun(11));
+      sheet.prepend(c);
+    }
     $("slip")?.classList.add("own-page"); $("slip")?.classList.toggle("cut", cut); $("slip")?.classList.toggle("stroke", !!v.stroke);
     holdOut(lines, from, t("收下"), () => $("slip")?.classList.remove("own-page", "cut", "stroke"));
     pageRow();
@@ -597,7 +603,8 @@ export function createGame(y) {
 
   // ---- The book ----
   // Once the book has been filled, the line at the foot of the view says once, ever, that the seasons are open.
-  const announce = () => { if (entered && journey.opened() && !journey.told() && y.hints?.say.seasons?.()) journey.tell(); };
+  // The same once turns the hour to the visitor's own (#726), and the line says both in one sentence; a level with no clock to follow says the old one.
+  const announce = () => { if (entered && journey.opened() && !journey.told()) { y.hints?.release?.();   /* (the far view's line about opening the book has done its work: the book was just shut) */ const clock = !!y.followHour?.(); if (y.hints?.say.seasons?.(clock)) journey.tell(); } };
   let page = null;
   async function openBook() {
     // The page opens at once, as bare paper, and is written on when drawn: on a slow phone the drawing takes a moment,
@@ -760,7 +767,8 @@ export function createGame(y) {
     const showWay = () => {
       if (arrival) { arrive(); return; }   // a lamp lit for him: that is where he is taken first
       let waited = 0;
-      const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
+      const filledAtEntry = journey.opened();   // (a book filled on this walk is told of when it is shut, with the hour, not by this timer, #726)
+      const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(() => filledAtEntry && announce(), 14000 * fast); };
       const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
     };
     // A friend's shared link names a scene (?from=, src/sharelink.js, #344): a first visit is shown the mountain as ever,
