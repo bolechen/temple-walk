@@ -104,8 +104,8 @@ export const HALL_HALF = FOOT.hall.x1;
 
 /** The monument pavilion's form (white box, own sizes: SOURCES.md): base height, column height and radius, their span centre to centre, the tie-beam's depth, how far the roof's edge reaches from the middle, and the pyramid's height. */
 export const MONUMENT_FORM = Object.freeze({ base: 0.45, column: 3.0, colR: 0.17, span: 3.1, beam: 0.3, eave: 2.5, roofH: 2.0 });
-/** The monument pavilion's place (月台西; ARCHITECTURE.md §3.2: 4–5 m square, off the 20 m middle way), against the terrace's west parapet. Held, not built. */
-export const MONUMENT = Object.freeze({ x0: -18.25, x1: -13.75, z0: 5.65, z1: 10.15, y: 3.0 });
+/** The monument pavilion's place (月台西; ARCHITECTURE.md §3.2: 4–5 m square, off the 20 m middle way), against the terrace's west parapet, moved out 2.25 m from the hall (z 7.9 to 12.4) so that its eave stands clear of the great hall's (the structure review of #573, second batch). Held, not built. */
+export const MONUMENT = Object.freeze({ x0: -18.25, x1: -13.75, z0: 7.9, z1: 12.4, y: 3.0 });
 /** The lamp table's place inside the great hall's door (SCOPE-OPTIONS.md (b)): a low table on the floor against the front wall, in the bay east of the three doors. Held, not built. */
 export const LAMP = Object.freeze({ x: 11.3, z: -1.2, y: 3.0, w: 1.4, d: 0.6, h: 0.85 });
 

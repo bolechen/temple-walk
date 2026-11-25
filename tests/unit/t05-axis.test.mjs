@@ -210,3 +210,17 @@ test("the monument pavilion is open on all four sides: between its columns, at t
   ray.set(new THREE.Vector3(mx, y, M0.z0 - 1), new THREE.Vector3(0, 0, 1));
   assert.ok(ray.intersectObject(site.root, true).some((h) => inside(h.point)), "the stele stands in the middle");
 });
+
+test("the monument pavilion's roof stands clear of the great hall's eave: a clear band of sky between its edge and the eave's (the structure review of #573, second batch, question 2: the eaves read as touching)", async () => {
+  const { HALL: H, ZS } = await import("../../app/levels/t05/hall.js");
+  const M0 = MONUMENT, F = AX.MONUMENT_FORM, mz = (M0.z0 + M0.z1) / 2, mx = (M0.x0 + M0.x1) / 2;
+  const hallEdgeZ = ZS[0] + H.overhang, hallUnder = H.eave - H.roof;                  // the hall's eave edge in front of its column line, and the underside of its fascia
+  const ceil = M0.y + F.base + F.column + 0.3 + F.beam, top = ceil + 0.1 + F.roofH + 0.6;   // the pavilion's finial
+  const horizontal = (mz - F.eave) - hallEdgeZ, vertical = hallUnder - top;
+  const dist = Math.hypot(horizontal, hallUnder - (ceil + 0.1));                       // from the pavilion's eave edge to the hall's: straight line
+  console.log(`monument-clearance: eave edge to eave edge ${horizontal.toFixed(2)} m across, ${(hallUnder - (ceil + 0.1)).toFixed(2)} m up (${dist.toFixed(2)} m straight); finial to the hall's fascia underside ${vertical.toFixed(2)} m up`);
+  assert.ok(horizontal >= 3.5, `${horizontal.toFixed(2)} m between the two eaves' edges in plan: at least 3.5 m`);
+  assert.ok(vertical >= 1.0, `${vertical.toFixed(2)} m of the pavilion's finial under the hall's fascia: at least 1 m`);
+  assert.ok(M0.x0 >= -TERRACE.w / 2 && M0.x0 - -TERRACE.w / 2 < 0.5, "and it still stands against the west parapet, as before");
+  assert.ok(mx < -10 && M0.z1 <= TERRACE.zS - 1.5, "clear of the middle way, and a stride in front of the terrace's south parapet");
+});
