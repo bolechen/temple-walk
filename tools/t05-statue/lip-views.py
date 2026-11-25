@@ -2,7 +2,7 @@
 # (10 m, long lens), from the side, and from a visitor's eye 10 m in front and 1.6 m up, with the figure on its 0.4 m plinth.
 # Blender's workbench, a studio light, no colour: shape only (software drawing says nothing of the real light, which is T4's).
 #
-#   python3 tools/t05-statue/lip-views.py <statue.glb> <out prefix> <face.json> [--turn=deg] [--mouth=y_stage_m] [--sidelens=mm] [--sidedy=m] [--sidey=file units, the face's depth the side view is aimed at]
+#   python3 tools/t05-statue/lip-views.py <statue.glb> <out prefix> <face.json> [--turn=deg] [--mouth=y_stage_m] [--unbow=deg] [--sidelens=mm] [--sidedy=m] [--sidey=file units, the face's depth the side view is aimed at]
 #
 # face.json is the figure's own (tools/t05-statue/<name>/face.json: "height", "fileHeight", "features.mouth"). Writes
 # <prefix>-front.png, -side.png, -below.png, 600 px square each. `--mouth` overrides the mouth's height (a bowed head's lies lower).
@@ -19,6 +19,12 @@ ob = bpy.context.view_layer.objects.active; mw = ob.matrix_world.copy(); ob.pare
 ob.data.transform(Matrix.Rotation(math.radians(float(opt.get("turn", 0))), 4, "Z")); ob.data.update()
 xs = [v.co.x for v in ob.data.vertices]; ys = [v.co.y for v in ob.data.vertices]; zs = [v.co.z for v in ob.data.vertices]
 ob.data.transform(Matrix.Translation((-(max(xs) + min(xs)) / 2, -(max(ys) + min(ys)) / 2, -min(zs)))); ob.data.update()   # centred, feet on 0
+if "unbow" in opt:   # the head turned back by the bow (face-build's --tilt) about the neck's pivot, to see the profile as the figure stands upright (#701): stage y up, z toward the viewer; here height is z and depth is -y
+  a = math.radians(float(opt["unbow"])); cy, cz = face["neck"]["c"]; ys_ = cy / s
+  for v in ob.data.vertices:
+    if v.co.z > ys_:
+      dh = v.co.z - ys_; dd = -v.co.y - cz / s; v.co.z = ys_ + dh * math.cos(a) + dd * math.sin(a); v.co.y = -(cz / s + dd * math.cos(a) - dh * math.sin(a))
+  ob.data.update()
 my = float(opt.get("mouth", face["features"]["mouth"][1])) / s   # file units
 # the face looks toward -y here; the head's centre in x is 0
 sc = bpy.context.scene; sc.render.engine = "BLENDER_WORKBENCH"; sc.display.shading.light = "STUDIO"; sc.display.shading.color_type = "SINGLE"; sc.display.shading.single_color = (0.8, 0.78, 0.74)

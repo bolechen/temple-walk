@@ -98,6 +98,73 @@ for _k, op in enumerate(spec["ops"]):
     snap = globals()["_snaps"][op["from"]]; u = np.clip((co[:, 2] - op["z1"]) / (op["z0"] - op["z1"]), 0, 1); w = u * u * (3 - 2 * u)
     before = co.copy(); co[:] = snap + (1 - w)[:, None] * (co - snap); mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "hold", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "left_above_z0_max": float(np.linalg.norm(co - snap, axis=1)[co[:, 2] >= op["z0"]].max())}); print(json.dumps(log[-1])); continue
+  if op["op"] == "chinshape":
+    # {"from", "z0", "s", "k_groove", "k_chin", "x0", "x1", "front", "ffront", "smooth", "xm", "bin"} (issue #701, the art director's third look at the lower face):
+    # the midline profile from the lower lip to the jaw is rebuilt from two things: its own ends (the lower lip's foremost point and a point `jaw` below the chin's
+    # tip) joined by a straight line, and the deviations from that line that the snapshot `from` (the figure as r3c, bowed) had: its groove under the lip kept to
+    # `k_groove` of its depth, its chin's bulge kept to `k_chin` of its height. The difference between that profile and the one now is pushed back across the
+    # face (whole within x0 of the middle, easing out by x1; only in front of `front`), then the points moved are relaxed as `lowerback` relaxes them, and any
+    # triangle turned over is eased back. Nothing above the slit's line moves (the lower lip's own peak is the top of the change, where the difference is nil).
+    # Windows (z below the slit z0, file units, given by the caller in metres/s): lip [lip0, lip1], groove [gr0, gr1] below the lip, chin: the tip is searched
+    # `chin0`..`chin1` below the groove, the jaw `jaw` below the tip.
+    sm_ = lambda u: u * u * (3 - 2 * u)
+    def prof(c, z0, zs, xm):
+      sel = (np.abs(c[:, 0]) < xm) & (c[:, 1] < op["front"]); zz = c[sel, 2]; dd = -c[sel, 1]; out = np.full(len(zs), np.nan)
+      for i, zc in enumerate(zs):
+        m_ = np.abs(zz - zc) < op["bin"] / 2
+        if m_.any(): out[i] = dd[m_].max()
+      ok = ~np.isnan(out); out = np.interp(zs, zs[ok][::-1], out[ok][::-1]) if ok.sum() > 3 else out
+      k_ = np.ones(5) / 5; return np.convolve(np.pad(out, 2, mode="edge"), k_, mode="valid")
+    z0 = op["z0"]; zs = z0 - np.arange(0, op["span"], op["bin"])
+    Pn = prof(co, z0, zs, op["xm"]); Ps = prof(globals()["_snaps"][op["from"]], z0, zs, op["xm"])
+    def feats(P):
+      i_l = np.nonzero((zs <= z0 - op["lip0"]) & (zs >= z0 - op["lip1"]))[0]; iL = i_l[np.argmax(P[i_l])]
+      zL = zs[iL]; i_g = np.nonzero((zs < zL - op["gr0"]) & (zs >= zL - op["gr1"]))[0]; iG = i_g[np.argmin(P[i_g])]
+      zG = zs[iG]; i_c = np.nonzero((zs < zG - op["chin0"]) & (zs >= zG - op["chin1"]))[0]; iC = i_c[np.argmax(P[i_c])]
+      zC = zs[iC]; iJ = int(np.argmin(np.abs(zs - (zC - op["jaw"])))); return iL, iG, iC, iJ
+    nL, nG, nC, nJ = feats(Pn); sL, sG, sC, sJ = feats(Ps)
+    # the snapshot's deviations from its own line, laid on the present figure's line (by the fraction of the way from the lip to the jaw)
+    line = lambda P, iL, iJ: np.interp(np.arange(len(P)), [iL, iJ], [P[iL], P[iJ]])
+    Bs = line(Ps, sL, sJ); rs = Ps - Bs; Bn = line(Pn, nL, nJ); T = Pn.copy()
+    for i in range(nL, nJ + 1):
+      t = (i - nL) / max(nJ - nL, 1); j = sL + t * (sJ - sL); rj = float(np.interp(j, np.arange(len(rs)), rs))
+      T[i] = Bn[i] + (op["k_groove"] * rj if rj < 0 else op["k_chin"] * rj)
+    delta = np.zeros(len(zs)); delta[nL:nJ + 1] = T[nL:nJ + 1] - Pn[nL:nJ + 1]   # + : forward (toward the viewer)
+    # c1 at both ends: ease the first and last tenth of the span
+    ramp = np.ones(len(zs)); n_ = max(nJ - nL, 1); e_ = max(int(op.get("ramp", 0.15) * n_), 2)
+    for i in range(nL, nL + e_ + 1): ramp[i] = sm_((i - nL) / e_)
+    for i in range(nJ - e_, nJ + 1): ramp[i] = sm_((nJ - i) / e_)
+    delta *= ramp
+    ks_ = int(op.get('dsmooth', 1))
+    if ks_ > 1: delta = np.convolve(np.pad(delta, ks_, mode='constant'), np.ones(ks_) / ks_, mode='same')[ks_:-ks_]
+    delta[:nL] = 0.0   # the smoothing of the difference must not spread it up past the lower lip's peak, into the slit
+    dz_ = np.interp(co[:, 2], zs[::-1], delta[::-1], left=0.0, right=0.0)
+    wx = 1 - sm_(np.clip((np.abs(co[:, 0]) - op["x0"]) / (op["x1"] - op["x0"]), 0, 1)); wf = sm_(np.clip((op["front"] - co[:, 1]) / op["ffront"], 0, 1)); w = wx * wf
+    before = co.copy(); co[:, 1] -= dz_ * w   # forward is -y
+    sp = op.get("smooth")
+    if sp:
+      cnt = np.bincount(ed.ravel(), minlength=len(co)).astype(float); wr = w * (np.abs(dz_) > 0)
+      for _ in range(sp["iter"]):
+        acc = np.zeros_like(co); np.add.at(acc, ed[:, 0], co[ed[:, 1]]); np.add.at(acc, ed[:, 1], co[ed[:, 0]])
+        mean = acc / np.maximum(cnt, 1)[:, None]; co += sp["lam"] * wr[:, None] * (mean - co)
+    if "_tri" not in globals(): globals()["_tri"] = np.array([list(pl.vertices) for pl in me.polygons], dtype=np.int64)
+    def _nrm2(c):
+      a_, b_, c_ = c[_tri[:, 0]], c[_tri[:, 1]], c[_tri[:, 2]]; x_ = np.cross(b_ - a_, c_ - a_); return x_ / np.maximum(np.linalg.norm(x_, axis=1, keepdims=True), 1e-30)
+    n_before = _nrm2(before); undone = 0
+    for _ in range(12):
+      bad = np.nonzero((_nrm2(co) * n_before).sum(1) < 0)[0]
+      if not len(bad): break
+      ring = np.full(len(co), 99); ring[_tri[bad].ravel()] = 0
+      for k_ in range(1, 7):
+        a_, b_ = ring[ed[:, 0]], ring[ed[:, 1]]; g_ = (a_ == k_ - 1) & (b_ == 99); ring[ed[g_, 1]] = k_; g_ = (b_ == k_ - 1) & (a_ == 99); ring[ed[g_, 0]] = k_
+      f_ = np.where(ring < 7, 1 - 0.5 * (1 - ring / 7.0), 1.0); co[:] = before + f_[:, None] * (co - before); undone += 1
+    mv = np.linalg.norm(co - before, axis=1); sc_ = op.get("s", 1.0)
+    log.append({"op": "chinshape", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "fold_passes": undone,
+                "above_z0_max_move": float(mv[before[:, 2] > op["z0"]].max()) if (before[:, 2] > op["z0"]).any() else 0.0,
+                "profile_mm": {"lip": round(float(Pn[nL]) * sc_ * 1000, 1), "groove_now": round(float(Pn[nG]) * sc_ * 1000, 1), "chin_now": round(float(Pn[nC]) * sc_ * 1000, 1), "jaw_now": round(float(Pn[nJ]) * sc_ * 1000, 1),
+                               "snapshot_lip": round(float(Ps[sL]) * sc_ * 1000, 1), "snapshot_groove": round(float(Ps[sG]) * sc_ * 1000, 1), "snapshot_chin": round(float(Ps[sC]) * sc_ * 1000, 1), "snapshot_jaw": round(float(Ps[sJ]) * sc_ * 1000, 1),
+                               "groove_depth_snapshot": round(float(-rs[sG]) * sc_ * 1000, 1), "chin_bulge_snapshot": round(float(rs[sC]) * sc_ * 1000, 1), "delta_max": round(float(np.abs(delta).max()) * sc_ * 1000, 1)}})
+    print(json.dumps(log[-1])); continue
   if op["op"] == "lowerback":
     # {"d", "z0", "z1", "fz", "x0", "x1", "front", "ffront", "smooth": {"iter", "lam"}}: the lower face (lower lip, chin and jaw as one mass)
     # pressed back by up to d (+y: away from the viewer), whole between z1 and z0 (z0 the slit's side), easing to nothing over fz below z1
