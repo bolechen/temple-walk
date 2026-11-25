@@ -20,6 +20,7 @@ import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
 import { readLevelPlace, writeLevelPlace, clearLevelPlace, clearLevelPage } from "./levelsave.js";
 import { createLevelPage } from "./levelpage.js";
+import { drawStroke, seeded as seededRun } from "./pagework.js";
 import { track } from "./analytics.js";
 import { titleHow } from "./titlehow.js";
 import { t, lang, glyphs, FONT } from "./i18n.js";
@@ -231,7 +232,12 @@ export function createGame(y) {
     const lines = cut ? text.replace(/[，、。；]/g, "") : phrases(text);   // the stone has no stops: the copy is as cut, as on the leaf
     // The stroke of ink across the top of the page, as on the leaf he held: there once the observation has put it there.
     const sheet = $("slip")?.querySelector(".paper");
-    if (sheet && !sheet.querySelector(".page-stroke")) { const i = document.createElement("i"); i.className = "page-stroke"; i.setAttribute("aria-hidden", "true"); sheet.prepend(i); }
+    if (sheet && !sheet.querySelector(".page-stroke")) {
+      // Drawn with the leaf's own brush (pagework.js, drawStroke): pressed down at its start, dry and broken at its end.
+      const c = document.createElement("canvas"), g = c.getContext("2d"), W = 480, H = 48; c.width = W; c.height = H; c.className = "page-stroke"; c.setAttribute("aria-hidden", "true");
+      if (g) drawStroke(g, W * 0.02, W * 0.98, H / 2, H * 0.36, 1, seededRun(11));
+      sheet.prepend(c);
+    }
     $("slip")?.classList.add("own-page"); $("slip")?.classList.toggle("cut", cut); $("slip")?.classList.toggle("stroke", !!v.stroke);
     holdOut(lines, from, t("收下"), () => $("slip")?.classList.remove("own-page", "cut", "stroke"));
     pageRow();

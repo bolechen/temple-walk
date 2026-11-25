@@ -11,8 +11,10 @@ import { LEAF, drawPage } from "./pagework.js";
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const ease = (u) => u * u * (3 - 2 * u), mix = (a, b, u) => a + (b - a) * u;
 
-/** Where the board is held in his own frame (x to his left, y up from his soles, z the way he faces), and how far the brush is held up its shaft. */
-export const HOLD = Object.freeze({ board: [0.03, 0.8, 0.25], tilt: 0.35, grip: 0.105, shaft: 0.17 });
+/** Where the board is held in his own frame (x to his left, y up from his soles, z the way he faces), and how far the brush is held up its shaft.
+ * The board sits a little to his left and below his chin, the brush leaning forward over it (`lean`), so that seen over his left shoulder
+ * the hand that writes stands clear of his ear rather than against it (#744). */
+export const HOLD = Object.freeze({ board: [0.08, 0.72, 0.3], tilt: 0.4, grip: 0.075, shaft: 0.17, lean: 0.6 });
 
 /**
  * @param {{ act: any, play: (secs: number, fn: (u: number) => void, on: () => boolean) => Promise<boolean>, homeward: (u: number, secs: number, after?: number) => void,
@@ -53,7 +55,7 @@ export function createWriting(o) {
   const onPaper = (u, v, lift = 0, out = V()) => out.set(u * LEAF.w, v * LEAF.h, 0.005 + lift).applyMatrix4(leaf.matrixWorld);
   // His right hand holds the brush up its shaft, upright over the paper; the left holds the board by its left edge.
   const hold = (tip, lift = 0) => {
-    const up = dir(0, 1, 0.18, tB);
+    const up = dir(0, 1, HOLD.lean, tB);
     brush.position.copy(tip).addScaledVector(up, lift); brush.quaternion.setFromUnitVectors(V(0, 1, 0), up);
     const R = act.hands.right, L = act.hands.left;
     R.at.copy(brush.position).addScaledVector(up, HOLD.grip); dir(0.25, -0.35, 1, R.fingers); dir(1, 0.1, 0, R.palm);
