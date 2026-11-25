@@ -162,7 +162,7 @@ test("seated on a cushion his hat is off his back and stands on its rim beside t
   assert.ok(again.distanceTo(backAt) < 0.01 && m.parts.straps.visible, `standing again, the hat is on his back (${again.distanceTo(backAt).toFixed(3)} m from where it hung)`);
 });
 
-test("asked to, he lays the hat at his left; and beside every cushion of the level the side the page chooses is clear of everything drawn there", async () => {
+test("asked to, he lays the hat at his left; and beside every cushion of the level the side the page chooses is clear of everything drawn there, and so is his robe", async () => {
   const m = createMonk(); m.group.position.y = TOP; for (let i = 0; i < 120; i++) m.update(1 / 30, 0, "sit", i / 30, () => 0, { hat: 1 });
   m.group.updateMatrixWorld(true); assert.ok(new THREE.Box3().setFromObject(m.parts.hat, true).getCenter(V()).x > 0.4, "the hat is at his left");
   const { buildSite, createWalker } = await import("../../app/src/site.js"), { buildInteriors } = await import("../../app/src/interior.js"), { hatSide } = await import("../../app/src/hatside.js");
@@ -185,6 +185,18 @@ test("asked to, he lays the hat at his left; and beside every cushion of the lev
     assert.equal(hits, 0, `beside the cushion at (${s.at.map((q) => q.toFixed(2))}) in ${s.room || "the open"}, something drawn stands where the hat is laid (at his ${side > 0 ? "left" : "right"})`);
   }
   walker.setRoom(null);
+  // and the robe, as he sits on each, passes into nothing drawn beside it (#664: the tea house's corner cushions lay so
+  // near its wall that the lap went 4 cm into it): a point inside a closed thing meets it an odd number of times going
+  // straight up within 0.8 m (a roof higher than that is not asked).
+  const seated0 = createMonk(); for (let i = 0; i < 120; i++) seated0.update(1 / 30, 0, "sit", i / 30, () => -TOP, {}); seated0.group.updateMatrixWorld(true);
+  const lapPts = points(seated0.parts.robe, (i) => i < seated0.robeBody).filter((q) => q.y < 0.12), ray = new THREE.Raycaster(), up = V(0, 1, 0);
+  for (const s of [...site.seats, ...rooms.seats]) {
+    if (s.kind !== "cushion") continue;
+    const c = Math.cos(s.face), sn = Math.sin(s.face), at = lapPts.map((q) => V(s.at[0] + q.x * c + q.z * sn, s.top + q.y, s.at[1] - q.x * sn + q.z * c)), box = new THREE.Box3().setFromPoints(at);
+    const near = meshes.filter(([, b]) => b.intersectsBox(box) && !(b.max.y - b.min.y < 0.12 && Math.hypot((b.min.x + b.max.x) / 2 - s.at[0], (b.min.z + b.max.z) / 2 - s.at[1]) < 0.05)).map(([o]) => o);
+    let inside = 0; for (const p of at) { ray.set(p, up); ray.far = 0.8; if (ray.intersectObjects(near, false).length % 2) inside++; }
+    assert.equal(inside, 0, `seated on the cushion at (${s.at.map((q) => q.toFixed(2))}) in ${s.room || "the open"}, ${inside} points of his robe are inside something drawn there`);
+  }
   assert.ok(cushions >= 30 && lefts >= 3, `${cushions} cushions, the hat at his left beside ${lefts} of them`);
 });
 
@@ -201,4 +213,11 @@ test("where the robe comes down onto the cushion it is pressed into a crease and
     checked++;
   }
   assert.ok(checked >= 40, `${checked} columns checked`);
+});
+
+test("seated on a cushion his shadow lies on the floor under it, not through his robe", () => {
+  // (the shadow is a see-through sheet; at the seat's height it cut a dark ring round the skirt, the first art review's
+  // 「袍下段一圈台阶折痕」)
+  const m = seated(); const y = m.shadow.getWorldPosition(V()).y, robe = points(m.parts.robe, (i) => i < m.robeBody), low = Math.min(...robe.map((v) => v.y));
+  assert.ok(y < low - 0.01 && y > -TOP, `the shadow at ${y.toFixed(3)} m, the robe's lowest ${low.toFixed(3)} m, the floor ${-TOP} m`);
 });

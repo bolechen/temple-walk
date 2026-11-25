@@ -42,6 +42,8 @@ const LEG = THIGH + SHIN;
 // only then lets itself down onto the one below, toe first (a foot lifted on the way down is what read as a high knee).
 // Where the pelvis stands is decided by the feet that bear him, not by the slope.
 export const STAIRGAIT = { upBy: 0.42, upClear: 0.034 * LEG, upToe: 0.2, downFrom: 0.35, downTo: 0.95, downClear: 0.008 * LEG, downToe: 0.35, flat: 0.09 * LEG, kind: 0.08 * LEG, sag: 0.1 * LEG, upFollow: 0.5, toeLen: 0.117, heelLen: 0.072 };
+// Seated on a cushion his shadow lies this far below the seat, on the floor the cushion (geo.js CUSHION, 0.104 m) stands on.
+const SHADOW_SIT = 0.13;
 const SIT_DROP = 0.41;   // seated on a stool, how far he comes down: his hip joints about 9 cm above the seat
 // Cross-legged on a cushion he sits a little deeper, his hip joints about 6 cm over its crown: the design sheet's seated
 // figure is 2.7 heads from the cushion to his crown (#664), and a cushion gives under him.
@@ -77,7 +79,7 @@ const rodsOf = () => {
 let seatRods = rodsOf();
 // Cloth over a rod of radius r, at a distance d to the side of its middle line: round over the top, then falling away
 // at the slope it has where the round is left (LAP.cap of the radius out), as cloth hangs from a knee.
-export const LAP = { cap: 0.9, sharp: 95, belly: 10, back: 9, pool: 0.034, tail: 0.016, lie: 0.022, thick: 0.004, taut: 0.6, hollow: 0.9, droop: 0.006, trail: 0.018, hem: 0.012, roll: 0.006 };
+export const LAP = { cap: 0.9, sharp: 95, belly: 10, back: 9, pool: 0.034, tail: 0.03, lie: 0.02, thick: 0.004, taut: 0.6, hollow: 0.9, droop: 0.006, trail: 0.018, hem: 0.008, roll: 0.005, press: 0.03, sitFrom: 0.1, sitTo: 0.9, soft: 4 };
 const overRod = (d, r) => { const c = LAP.cap, e = c * r; return d < e ? Math.sqrt(r * r - d * d) : r * Math.sqrt(1 - c * c) - (c / Math.sqrt(1 - c * c)) * (d - e); };
 /** How high the folded legs hold the cloth at a point of the seat's frame (above the cushion's crown); far from them it falls below any floor. */
 export function legsTop(x, z) {
@@ -409,13 +411,16 @@ export function createMonk(opts = {}) {
     const hull = [], taut = LAP.taut * (1 - LAP.hollow * Math.exp(-sq(a / 0.62)));
     for (const q of pts) { while (hull.length > 1) { const a = hull[hull.length - 2], b = hull[hull.length - 1]; if ((b.y - a.y) * (q.rho - a.rho) <= (q.y - a.y) * (b.rho - a.rho)) hull.pop(); else break; } hull.push(q); }
     for (let i = 0, k = 0; i < pts.length; i++) { while (k < hull.length - 2 && hull[k + 1].rho < pts[i].rho) k++; const a = hull[k], b = hull[k + 1], line = a.y + (b.y - a.y) * (pts[i].rho - a.rho) / (b.rho - a.rho); if (line > pts[i].y) pts[i].y += taut * (line - pts[i].y); }
+    // Cloth has no corners: the line is smoothed over a finger's width, so that where it leaves the legs or comes down
+    // onto the cushion it turns, and does not fold in a ring (the first art review: 「袍下段一圈台阶折痕」).
+    for (let pass = 0; pass < LAP.soft; pass++) { const ys = pts.map((q) => q.y); for (let i = 2; i < pts.length - 2; i++) pts[i].y = (ys[i - 2] + 2 * ys[i - 1] + 3 * ys[i] + 2 * ys[i + 1] + ys[i + 2]) / 9; }
     // Where it comes down onto the cushion the cloth is pressed into a crease, and its hem rolls up a little at the end
     // (the sheet has both, and the art review asked for them back): over `LAP.hem` at its end the cloth lies pressed on
     // the cushion and then lifts `LAP.roll` at its edge.
     if (pooled >= 0) {
       const end = pts[pts.length - 1].rho, from = end - LAP.hem;
       // the crease: just before the hem the cloth is pressed down onto the cushion; then the hem rolls up off it
-      for (const q of pts) { if (q.rho < from - 0.012) continue; const g = cushionAt(q.x, q.z) + LAP.thick; const press = smooth(from - 0.012, from, q.rho); q.y = g + (1 - press) * Math.max(0, q.y - g) + LAP.roll * smooth(from, end, q.rho) * (1 - 0.5 * smooth(end - 0.002, end, q.rho)); }
+      for (const q of pts) { if (q.rho < from - LAP.press) continue; const g = cushionAt(q.x, q.z) + LAP.thick; const press = smooth(from - LAP.press, from, q.rho); q.y = g + (1 - press) * Math.max(0, q.y - g) + LAP.roll * smooth(from, end, q.rho) * (1 - 0.5 * smooth(end - 0.002, end, q.rho)); }
     }
     let len = 0; for (let i = 1; i < pts.length; i++) { len += Math.hypot(pts[i].rho - pts[i - 1].rho, pts[i].y - pts[i - 1].y); pts[i].len = len; }
     return { pts, len };
@@ -430,7 +435,9 @@ export function createMonk(opts = {}) {
   const rows = [
     { y: 0.68, k: 0.9, inner: 1 }, { y: 0.61, k: 0.92, inner: 1 }, { y: 0.54, k: 0.93, inner: 1 }, { y: 0.46, k: 0.94, inner: 1 }, { y: 0.38, k: 0.948, inner: 1 },
     { y: 0.32, k: 0.958, inner: 1 }, { y: 0.286, k: 0.972, inner: 1 }, { y: 0.2785, k: 0.99, inner: 1 },
-    ...PROF.map((p) => ({ y: p.y, k: 1 })),
+    // (just above the hem the skirt has a few rows more than its profile: seated, the last few centimetres of each column
+    // hold the crease and the rolled hem, and one row's step drew them as a flat band, #664)
+    ...PROF.flatMap((p, i) => (i < 3 && PROF[i + 1] ? [0, 0.25, 0.5, 0.75].map((f) => ({ y: p.y + (PROF[i + 1].y - p.y) * f, k: 1 })) : [{ y: p.y, k: 1 }])),
     { y: 0.868, k: 0.84, inner: 1 },
   ];
   // Seated on a cushion (#664, refs/monk-poses-v6-2026-11-23-sitting.webp): the skirt lies over his folded legs. Each
@@ -666,7 +673,7 @@ export function createMonk(opts = {}) {
     // covers it, and the whole cuff is opened wider, as the drawing has a sleeve that reaches the lap.
     const sleeve = (sit) => grid(srows.length, NC + 1, (i, j) => {
       const th = Math.PI + (TAU * j) / NC, c = Math.cos(th), sn = Math.sin(th), row = srows[i], fore = s * sn;
-      const tEnd = 0.214 + 0.016 * Math.pow(Math.max(0, -c), 1.4) + sit * (SLEEVE_SIT.hang * Math.pow(Math.max(0, -fore), 1.2) + SLEEVE_SIT.side * (1 - fore * fore) - SLEEVE_SIT.cut * Math.max(0, fore));
+      const tEnd = 0.214 + 0.016 * Math.pow(Math.max(0, -c), 1.4) + sit * (SLEEVE_SIT.hang * Math.sqrt(Math.max(0, 0.5 - 0.5 * fore)) + SLEEVE_SIT.side * (1 - fore * fore) - SLEEVE_SIT.cut * Math.max(0, fore));
       const t = -0.032 + (tEnd + 0.032) * row.v - row.back, vv = clamp((t + 0.032) / 0.255, 0, 1);
       const open = 1 + sit * SLEEVE_SIT.open * smooth(0.35, 1, row.v);
       const rO = (0.053 + 0.02 * smooth(0, 1, vv)) * row.k * (1 - 0.14 * Math.max(0, -c) * smooth(0.15, 0.8, vv)) * open;
@@ -1180,8 +1187,10 @@ export function createMonk(opts = {}) {
       // (Landing from a seat, `crouch` lets his knees give a little under him before he stands straight.)
       // (A worn body, made elsewhere, sits as it did: the seat worked out here is for the robe built here, `lapSeat`.)
       const lapSeat = !dressed;
-      B.root.position.z = lapSeat ? -SEAT_LEGS.back * seat : 0;
-      B.root.position.y = lift - SIT_DROP * perch - (lapSeat ? CUSHION_DROP : SIT_DROP) * seat + Math.sin(t * 0.9) * 0.006 * seat - (rise ? Math.max(0, grounding.crouch || 0) : 0);
+      B.root.position.z = lapSeat ? -SEAT_LEGS.back * smooth(LAP.sitFrom, LAP.sitTo, seat) : 0;
+      // (onto a cushion he comes down as the robe is laid over his folding legs, the one with the other: `down` is both)
+      const down = lapSeat ? smooth(LAP.sitFrom, LAP.sitTo, seat) : seat;
+      B.root.position.y = lift - SIT_DROP * perch - (lapSeat ? CUSHION_DROP : SIT_DROP) * down + Math.sin(t * 0.9) * 0.006 * seat - (rise ? Math.max(0, grounding.crouch || 0) : 0);
 
       // The spine, posed directly: the pelvis turns with the leading leg, the chest against it; he leans into his walk,
       // bows to pray, and otherwise carries his face a little up.
@@ -1304,8 +1313,11 @@ export function createMonk(opts = {}) {
           } else {
             // (the seat's frame is his own, with the cushion's crown at his feet: SEAT_LEGS)
             const leg = seatRods[i];
-            kneeL.copy(hipL).addScaledVector(tv.set(leg.knee[0], leg.knee[1], leg.knee[2] - SEAT_LEGS.back).sub(hipL).normalize(), THIGH);
-            ankL.copy(kneeL).addScaledVector(tv.set(leg.ankle[0], leg.ankle[1], leg.ankle[2] - SEAT_LEGS.back).sub(kneeL).normalize(), SHIN);
+            // (while he is still coming down the legs are folded under him at the height his hips have reached, so they go
+            // down with him under the robe, rather than lying on the cushion below a body still in the air)
+            const high = CUSHION_DROP * (1 - down);
+            kneeL.copy(hipL).addScaledVector(tv.set(leg.knee[0], leg.knee[1] + high, leg.knee[2] - SEAT_LEGS.back).sub(hipL).normalize(), THIGH);
+            ankL.copy(kneeL).addScaledVector(tv.set(leg.ankle[0], leg.ankle[1] + high, leg.ankle[2] - SEAT_LEGS.back).sub(kneeL).normalize(), SHIN);
           }
           group.localToWorld(kneeW.copy(kneeL)); group.localToWorld(ankW.copy(ankL)); group.localToWorld(hipW.copy(hipL));
           const pole = tv2.copy(kneeW).sub(hipW.add(ankW).multiplyScalar(0.5));   // (hipW is not needed after this)
@@ -1341,7 +1353,7 @@ export function createMonk(opts = {}) {
         group.updateMatrixWorld(true);
         if (mode === "pray") anchor.localToWorld(tv.set(s * 0.0125, 0.02, 0.165));
         else if (mode === "lap" && !lapSeat) anchor.localToWorld(tv.set(s * 0.012, 0.055 + (s > 0 ? 0.012 : 0), 0.13));
-        else if (mode === "lap") { tv.copy(lapHands[n].wrist); tv.z -= SEAT_LEGS.back; tv.y += CUSHION_DROP * (1 - seat); group.localToWorld(tv); }
+        else if (mode === "lap") { tv.copy(lapHands[n].wrist); tv.z -= SEAT_LEGS.back; tv.y += CUSHION_DROP * (1 - down); group.localToWorld(tv); }
         else anchor.localToWorld(tv.set(s * 0.085, 0.062, 0.14));
         reach(ua, la, UPPER, FORE, tv, (mode === "lap" && !lapSeat ? tv2.set(s, -0.2, -0.6) : mode === "lap" ? tv2.set(s * LAP_HAND.elbow[0], LAP_HAND.elbow[1], LAP_HAND.elbow[2]) : tv2.set(s, mode === "pray" ? -1.3 : -0.8, mode === "pray" ? -0.35 : -0.5)).applyQuaternion(gq), -1);
         ua.updateMatrixWorld(true);
@@ -1376,7 +1388,11 @@ export function createMonk(opts = {}) {
       // always did up to SKIRT_FREE and eases to SKIRT_REACH, past which no bone turns on the knee's account.
       const reachOf = (x, to = SKIRT_REACH, free = SKIRT_FREE) => x <= free ? x : free + (to - free) * Math.tanh((x - free) / (to - free));
       const kneeLift = (k, to) => reachOf(0.9 * Math.max(0, k), to) / 0.9, backTurn = (k) => reachOf(tr + 0.7 * Math.max(0, -k), SKIRT_BACK_REACH, SKIRT_BACK_FREE);
-      const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
+      // (Sitting down onto a cushion the knees come up as the legs fold, and the skirt's bones would lift the cloth with
+      // them into a ring held out at the height of his lap; the robe built here is laid over the folded legs by its
+      // own shape there, so the knees do not lift it, #664.)
+      const kneeK = !dressed ? 1 - smooth(0, 0.25, seat) : 1;
+      const fwd = kneeK * kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1]) * kneeK), lf = kneeK * kneeLift(thigh[0], SKIRT_SIDE), rt = kneeK * kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt drapes smoothly over his lap and thighs, the sides open over his knees, the back rests on the seat.
       // Climbing stairs: a high knee pushes the code robe's cloth over it forward without lifting the whole hem into a flat board (#615, #642).
       const kneePush = (k) => (dressed || sitW > 0.05 ? 0 : 0.105 * smooth(0.48, 1.48, k));
@@ -1384,7 +1400,7 @@ export function createMonk(opts = {}) {
       B.robeFront.position.z += pushF; B.robeFront.position.y -= 0.25 * pushF;
       B.robeLeft.position.z += 0.65 * pushL; B.robeLeft.position.x += 0.14 * pushL;
       B.robeRight.position.z += 0.65 * pushR; B.robeRight.position.x -= 0.14 * pushR;
-      const sitDrape = !dressed && robe.morphTargetInfluences?.length ? smooth(0, 1, seat) : 0;
+      const sitDrape = !dressed && robe.morphTargetInfluences?.length ? smooth(LAP.sitFrom, LAP.sitTo, seat) : 0;   // (the lap is laid as he comes down and his legs fold under it, #664)
       if (robe.morphTargetInfluences?.length) robe.morphTargetInfluences[0] = sitDrape;
       if (skin.morphTargetInfluences?.length) skin.morphTargetInfluences[0] = !dressed ? smooth(0, 1, seat) * (1 - palms) : 0;
       const boneSeat = dressed ? seat : 0;
@@ -1408,12 +1424,14 @@ export function createMonk(opts = {}) {
 
       // The shadow keeps to the ground and to the sun, whichever way he turns.
       const a = sun.az - group.rotation.y, off = (sun.len - 1) * 0.42;
+      // (On a cushion it lies on the floor the cushion stands on, SHADOW_SIT under the seat: at the seat's own height the
+      // patch, a sheet seen through, cut through his robe in a dark ring, #664.)
       // In the air (a jump, a hop off a porch) the patch stays on the floor under him, as far below the group as that floor
       // is, and thins and spreads with the height (to six tenths as dark and a fifth wider at a jump's top, 0.46 m);
       // seated, or on the way to a seat, it goes with him as before.
       const free = 1 - Math.max(seat, perch), under = free > 0 && surfaceAt ? surfaceAt(group.position.x, group.position.z) : 0;
       const up = free > 0 && Number.isFinite(under) ? Math.max(0, group.position.y - under) * free : 0, jumpAir = Math.min(1, up / 0.46);
-      patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
+      patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up - SHADOW_SIT * seat, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
       group.updateMatrixWorld(true);
       if (helpers.length) driveHelpers(false);
     },
