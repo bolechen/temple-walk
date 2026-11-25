@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createMonk } from "../../app/src/monk.js";
+import { CUSHION } from "../../app/src/geo.js";
 import { bodyOf, skinMaterial, tintCloth } from "../../app/src/novice.js";
 import { lidShader, eyeSkin } from "../../app/src/blink.js";
 import { helpersOf, relayBeads } from "../novice-rig.mjs";
@@ -12,7 +13,7 @@ import { teaBowl } from "../../app/src/rites.js";
 
 const W = 300, H = 640;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-renderer.setSize(W, H); renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.setSize(W, H); renderer.setPixelRatio(1); renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.62;
 renderer.shadowMap.enabled = true; document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x8e9497);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
@@ -24,7 +25,8 @@ const floorM = new THREE.MeshStandardMaterial({ color: 0x6f7375, roughness: 0.9 
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(8, 8), floorM); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 const seatM = new THREE.MeshStandardMaterial({ color: 0x5a4636, roughness: 0.8 });
 const stool = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.44, 24), seatM); stool.position.y = -0.22; stool.castShadow = stool.receiveShadow = true;
-const cushion = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.23, 0.104, 24), new THREE.MeshStandardMaterial({ color: 0x8a6a3a, roughness: 0.95 })); cushion.position.y = -0.052; cushion.receiveShadow = true;
+// the cushion as the place draws it (geo.js CUSHION, a lathe of that outline), its crown at the seat's height
+const cushion = new THREE.Mesh(new THREE.LatheGeometry(CUSHION.map(([r, y]) => new THREE.Vector2(r, y)), 40), new THREE.MeshStandardMaterial({ color: 0x5c4434, roughness: 0.95, side: THREE.DoubleSide })); cushion.position.y = -0.104; cushion.receiveShadow = true;
 
 let monk = null;
 function fresh() {
@@ -84,6 +86,8 @@ const POSES = {
   },
   chair: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "chair", i / 30, () => -0.44, {}); },
   sit: (m) => { for (let i = 0; i < 100; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },
+  // half way down onto the cushion (#664: the hat on its way off his back, the skirt between the two shapes)
+  sitting: (m, f = 9) => { for (let i = 0; i < f; i++) m.update(1 / 30, 0, "sit", i / 30, () => -0.104, {}); },   // `--walk=<frame>` picks the frame
   // Two of the observances' hand places, as rites.js sets them (issue #246: do the hands still meet the body?): the bowl
   // of tea held in both hands at his lips, and the incense raised between his palms to the brow. Each frame the hands
   // are sent where rites.js would send them from the bones of the frame before.
@@ -115,9 +119,9 @@ function hold(m, set, pose = false, floorY = 0) {
 /** Pose him and look from `yaw` (0: before him) and `pitch`; returns a PNG data URL. */
 function shot(pose, yaw, pitch = 0.08, frame, near = 1) {
   scene.remove(bowl); const m = fresh(); dress(m); showFaces(m); POSES[pose](m, frame); if (stage.lid != null) m.lid.value = stage.lid; for (const n of stage.hide || []) if (m.parts[n]) m.parts[n].visible = false; m.group.updateMatrixWorld(true);
-  const seated = pose === "chair" || pose === "sit" || pose === "teaSeat";
-  scene.remove(stool, cushion); if (pose !== "tea" && pose !== "teaSeat") scene.remove(bowl); if (pose === "chair" || pose === "teaSeat") scene.add(stool); if (pose === "sit") scene.add(cushion);
-  floor.position.y = pose === "chair" || pose === "teaSeat" ? -0.44 : pose === "sit" ? -0.104 : 0;
+  const seated = pose === "chair" || pose === "sit" || pose === "sitting" || pose === "teaSeat";
+  scene.remove(stool, cushion); if (pose !== "tea" && pose !== "teaSeat") scene.remove(bowl); if (pose === "chair" || pose === "teaSeat") scene.add(stool); if (pose === "sit" || pose === "sitting") scene.add(cushion);
+  floor.position.y = pose === "chair" || pose === "teaSeat" ? -0.44 : pose === "sit" || pose === "sitting" ? -0.104 : 0;
   const cy = (seated ? 0.35 : 0.6) * (near > 1 ? 0.0 : 1) + (near > 1 ? stage.focus ?? (seated ? 0.3 : 0.6) : 0), d = 3.3 / near;
   camera.position.set(Math.sin(yaw) * Math.cos(pitch) * d, cy + Math.sin(pitch) * d, Math.cos(yaw) * Math.cos(pitch) * d);
   const fx = near > 1 ? stage.focusX || 0 : 0; camera.position.x += fx; camera.lookAt(fx, cy, 0);

@@ -125,6 +125,7 @@
   "bamboo-sound.test.mjs": 0.1,
   "awake.test.mjs": 0.1,
   "asset-register.test.mjs": 0.1,
-  "analytics.test.mjs": 0.1
+  "analytics.test.mjs": 0.1,
+  "flush-faces.test.mjs": 8.9
  }
 }

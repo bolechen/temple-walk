@@ -222,8 +222,9 @@ export function buildSite(M) {
       for (const dx of [-0.42, 0, 0.42]) parts.glaze.push(lathe([[0, 0.012], [0.035, 0], [0.04, 0.012], [0.075, 0.05], [0.082, 0.062], [0.076, 0.062], [0.03, 0.02], [0, 0.02]], 14).translate(x + dx, y + 0.37, z + 0.05));
       parts.iron.push(lathe([[0, 0], [0.09, 0], [0.13, 0.05], [0.13, 0.11], [0.07, 0.16], [0.03, 0.17], [0, 0.19]], 12).translate(x + 0.55, y + 0.37, z - 0.12), new THREE.TorusGeometry(0.09, 0.008, 5, 12, Math.PI).translate(x + 0.55, y + 0.53, z - 0.12));
       parts.wood.push(new THREE.CylinderGeometry(0.012, 0.03, 0.11, 8).translate(x - 0.6, y + 0.425, z - 0.12));
-      for (const dx of [-1.12, 1.12]) { parts.straw.push(lathe(CUSHION, 28).translate(x + dx, y, z + 0.02));
-        const [cx, cz] = turn(x + dx, z + 0.02, 1), [tx, tz] = turn(x, z + 0.02, 1);
+      // (the cushions lie a hand's breadth off the wall: sat on cross-legged, his robe spreads 0.36 m from the middle, #664)
+      for (const dx of [-1.12, 1.12]) { parts.straw.push(lathe(CUSHION, 28).translate(x + dx, y, z + 0.07));
+        const [cx, cz] = turn(x + dx, z + 0.07, 1), [tx, tz] = turn(x, z + 0.07, 1);
         walk.posts.push({ x: cx - 16.6, z: cz + 14, r: 0.292 });   // a cushion is walked round, as the stools are: his shoes do not sink into the straw
         // and it is a seat, sat on cross-legged facing the table it lies beside
         const at = [cx - 16.6, cz + 14]; teaMats.push({ at, top: y + 0.104, face: Math.atan2(tx - cx, tz - cz), room: null, kind: "cushion" }); drawnSeats.push(at); }

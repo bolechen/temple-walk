@@ -32,7 +32,7 @@ export function loadOf(u) { return u < 0.5 ? 1 - smooth(0, 0.5, u) : smooth(0.5,
 const sq = (v) => v * v, clamp = THREE.MathUtils.clamp, damp = THREE.MathUtils.damp, TAU = Math.PI * 2;
 const col = (hex) => new THREE.Color(hex);
 const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
-const XV = V3(1, 0, 0), UPV = V3(0, 1, 0);
+const XV = V3(1, 0, 0), UPV = V3(0, 1, 0), ZV = V3(0, 0, 1);
 
 // His measure, in metres: 1.18 tall, 4.55 heads tall (refs/monk-sheet-v6-2026-11-22-eyes-closed.webp, #642), arms bound 38° from his sides.
 const APOSE = 0.66, UPPER = 0.2, FORE = 0.15, THIGH = 0.22, SHIN = 0.22, ANKLE = 0.06;
@@ -42,8 +42,95 @@ const LEG = THIGH + SHIN;
 // only then lets itself down onto the one below, toe first (a foot lifted on the way down is what read as a high knee).
 // Where the pelvis stands is decided by the feet that bear him, not by the slope.
 export const STAIRGAIT = { upBy: 0.42, upClear: 0.034 * LEG, upToe: 0.2, downFrom: 0.35, downTo: 0.95, downClear: 0.008 * LEG, downToe: 0.35, flat: 0.09 * LEG, kind: 0.08 * LEG, sag: 0.1 * LEG, upFollow: 0.5, toeLen: 0.117, heelLen: 0.072 };
-const SIT_DROP = 0.41;   // seated, how far he comes down: his hip joints about 9 cm above the seat
+// Seated on a cushion his shadow lies this far below the seat, on the floor the cushion (geo.js CUSHION, 0.104 m) stands on.
+const SHADOW_SIT = 0.13;
+const SIT_DROP = 0.41;   // seated on a stool, how far he comes down: his hip joints about 9 cm above the seat
+// Cross-legged on a cushion he sits a little deeper, his hip joints about 6 cm over its crown: the design sheet's seated
+// figure is 2.7 heads from the cushion to his crown (#664), and a cushion gives under him.
+const CUSHION_DROP = 0.44;
+// Seated on a cushion, the sleeves (#664): how far the cuff is drawn up the arm on the side the forearm leaves by (`cut`),
+// how far it hangs on past the elbow behind it (`hang`) and at the two sides between (`side`), and how much wider it opens.
+// Sitting down on a cushion, by how far he has come down (0 standing, 1 seated): the skirt's bones stop following his
+// knees at once (`KNEE_FADE`), the robe spreads into its seated lap (`DRAPE`) ahead of the legs folding out under it
+// (`LEG_FOLD`), so that at every frame the knees are under cloth. Folded on one schedule, the knees stood out of the
+// front of the robe for a few frames, as high as his hands (the first art review of #680).
+const KNEE_FADE = [0, 0.25], LEG_FOLD = [0.25, 0.9], DRAPE = [0.05, 0.7];
+export const SLEEVE_SIT = { cut: 0.07, hang: 0.055, side: 0.012, open: 0.05, round: 0.8, bevel: 0.45 };
+// Seated on a cushion, where his folded legs lie (#664, refs/monk-poses-v6-2026-11-23-sitting.webp), in the seat's frame:
+// x to his left, y up from the cushion's crown, z the way he faces, his hips over the origin (the cushion's middle is
+// `back` before them). The knees are out to the
+// sides and forward, about as high as the hips; the shins come in before him, the left in front of the right, and the
+// feet lie on past the ankles. `r` is how thick each part is under the cloth (trousers and robe together), which is what
+// the robe is draped over (`lapTop`): the lap is made by the legs, and the hands are laid on it.
+export const SEAT_LEGS = {
+  hip: [0.086, 0.06, 0], knee: [0.179, 0.083, 0.18], ankle: { left: [0, 0.062, 0.255], right: [0.01, 0.064, 0.222] },
+  r: { hip: 0.084, knee: 0.08, ankle: 0.054, foot: 0.046 }, footLen: 0.1, tuck: 0.3,
+  // He sits back on the cushion, as the sheet has him: his hips this far behind its middle, so that the lap lies over
+  // the middle of it and its hem reaches the rim before him and at the knees, and stops short of it behind.
+  back: 0.05,
+};
+/** The folded legs as tapered rods, [from, to, radius at each end], in the seat's frame. */
+const rodsOf = () => {
+  const L = SEAT_LEGS, out = [];
+  for (const [n, s] of /** @type {[string, number][]} */ ([["left", 1], ["right", -1]])) {
+    const hip = [s * L.hip[0], L.hip[1], L.hip[2]], knee = [s * L.knee[0], L.knee[1], L.knee[2]], ank = L.ankle[n];
+    // the joints as the skeleton will have them: each bone its own length along the way given
+    const along = (a, b, len) => { const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], l = Math.hypot(...d); return a.map((v, i) => v + (d[i] / l) * len); };
+    const K = along(hip, knee, THIGH), A = along(K, ank, SHIN), T = [A[0] - s * L.footLen, A[1] - 0.008, A[2] + 0.012];
+    out.push({ n, s, hip, knee: K, ankle: A, toe: T, rods: [[hip, K, L.r.hip, L.r.knee], [K, A, L.r.knee, L.r.ankle], [A, T, L.r.foot, L.r.foot * 0.9]] });
+  }
+  return out;
+};
+let seatRods = rodsOf();
+// Cloth over a rod of radius r, at a distance d to the side of its middle line: round over the top, then falling away
+// at the slope it has where the round is left (LAP.cap of the radius out), as cloth hangs from a knee.
+export const LAP = { cap: 0.9, sharp: 95, belly: 10, back: 11, pool: 0.034, tail: 0.03, lie: 0.02, thick: 0.004, taut: 0.6, hollow: 0.9, droop: 0.012, trail: 0.018, hem: 0.008, roll: 0.005, press: 0.03, sitFrom: 0.1, sitTo: 0.9, soft: 4 };
+const overRod = (d, r) => { const c = LAP.cap, e = c * r; return d < e ? Math.sqrt(r * r - d * d) : r * Math.sqrt(1 - c * c) - (c / Math.sqrt(1 - c * c)) * (d - e); };
+/** How high the folded legs hold the cloth at a point of the seat's frame (above the cushion's crown); far from them it falls below any floor. */
+export function legsTop(x, z) {
+  let sum = 0;
+  for (const leg of seatRods) for (const [a, b, ra, rb] of leg.rods) {
+    const dx = b[0] - a[0], dz = b[2] - a[2], t = clamp(((x - a[0]) * dx + (z - a[2]) * dz) / (dx * dx + dz * dz), 0, 1);
+    const d = Math.hypot(x - a[0] - dx * t, z - a[2] - dz * t), h = a[1] + (b[1] - a[1]) * t + overRod(d, ra + (rb - ra) * t);
+    sum += Math.exp(LAP.sharp * h);
+  }
+  return Math.log(sum) / LAP.sharp;
+}
+// The cushion's top, as a height above its crown, at a distance from its middle (geo.js CUSHION, held by monk.test);
+// past its rim the cloth hangs a little way down its side.
+const cushionTop = (r) => r <= 0.1 ? 0 : r <= 0.262 ? -0.012 * (r - 0.1) / 0.162 : -0.012 - LAP.droop * smooth(0.262, 0.3, r);
+/** The lap: how high the robe lies at a point before him or beside him, over his legs or on the cushion (the seat's frame). */
+const cushionAt = (x, z) => cushionTop(Math.hypot(x, z - SEAT_LEGS.back));
+export function lapTop(x, z) { return Math.max(cushionAt(x, z) + LAP.thick, legsTop(x, z)); }
+// Seated on a cushion, where the hat is laid (#664): in his own frame, to his right and a little behind his knees, turned
+// a little; `seat` is the height of a cushion (geo.js CUSHION), `deep` the furthest below the seat a floor is believed,
+// `arc` how high over the straight way it is carried.
+export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, arc: 0.1 };
+// Seated on a cushion, the hands in the lap (#664; refs/monk-poses-v6-2026-11-23-sitting.webp; the owner's photograph of
+// the meditation seal, 2026-11-25): palms up against his belly, the right below and the left lying on it (`stack` higher,
+// its fingers over the right's), each palm's middle `x` to its own side and `z` before his hips, the fingers running in
+// toward the other hand and `out` forward; the thumbs rise from the far edge of the palms and meet over the middle,
+// `thumb.up` over the left palm and `thumb.fwd` before the palms' middle (each rising to `arch` of that height within
+// `turn` of its way in), so that thumbs and fingers close round an open oval. How high the hands lie is not written here: they are let down onto the cloth as the lap has it
+// (`layHands`), each lying no steeper than `tip`. In the lap the hands are drawn `big` times their standing size and
+// plump (the sheet's are a small child's mitts), `x` being where the middle of each hand's length lies: the two lie
+// deep over each other, the left's fingers on the right's fingers and palm, so that from before him there is little
+// more than one hand's width to see. `elbow` is the way the elbows are drawn.
+// The two thumbs are one even arch (the first art review of #680 found the left a level bar and the right a hook, since
+// the left hand lies higher): each leaves its own palm at `thumb.root` above or below the palm's middle, leans `lean` of
+// the way forward to the meeting place before it turns in, and the tips' middles lie `gap` to either side of the
+// middle, just touching. The wrist's ball is pressed to `wrist` of its thickness, as flat as the hand is.
+export const LAP_HAND = { x: 0.002, z: 0.1625, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.022, fwd: 0.036, gap: 0.008, turn: 0.35, arch: 1.0, thick: 1.25, lean: 0.75, root: { left: -0.006, right: 0.012 } }, wrist: 0.75 };
+// A hand lying palm up, as rods along its fingers' way from the wrist's middle: how far along, how thick it is there
+// (the wrist's ball, the palm, the knuckles, the fingertips) and how far to either side it reaches.
+const HAND_ROD = [[0, 0.027 * LAP_HAND.wrist, 0], [0.03, 0.0118, 0.022], [0.052, 0.0105, 0.018], [0.082, 0.0105, 0.014]].map(([d, r, w], i) => (i ? [d * LAP_HAND.big, r * LAP_HAND.big, w * LAP_HAND.big] : [d, r, w]));
+const HAND_MID = 0.045 * LAP_HAND.big;   // from the wrist to the middle of the hand's length
+const HAND_SHIFT = [-0.0045, -0.002, 0];   // how the palm and its fingers are set against the wrist's bone (buildHand)
 const SKULL = V3(0, 1.049, 0.006), R = 0.131;
+// The light under his chin (#664): the skull's normals that look more than `from` downward keep only `keep` of the rest
+// of their tilt, and the neck's own colour goes from `low` at the collar to `top` under the jaw, darkening from `from`
+// of the way up it.
+const JAW = { from: 0.3, keep: 0.35 }, NECK_SHADE = { low: 0.96, top: 0.7, from: 0.3 };
 const FOOT_X = 0.09, FOOT_Z = 0.012, TOE_OUT = 0.08;
 /** @type {[string, number][]} */
 const SIDES = [["left", 1], ["right", -1]];   // he faces +z, so his left hand is on +x
@@ -158,6 +245,11 @@ function weld(g) {
   for (const ids of map.values()) if (ids.length > 1) { let x = 0, y = 0, z = 0; for (const i of ids) { x += nr.getX(i); y += nr.getY(i); z += nr.getZ(i); } const l = Math.hypot(x, y, z) || 1; for (const i of ids) nr.setXYZ(i, x / l, y / l, z / l); }
   return g;
 }
+// A capsule from one point to another, of radius r (points as [x, y, z]).
+function seg(a, b, r) {
+  const A = V3(...a), d = V3(...b).sub(A), l = d.length();
+  return new THREE.CapsuleGeometry(r, l, 4, 8).translate(0, l / 2, 0).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UPV, d.normalize())).translate(A.x, A.y, A.z);
+}
 function flip(g) { const ix = g.index.array; for (let i = 0; i < ix.length; i += 3) { const t = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = t; } g.index.needsUpdate = true; return g; }
 function paint(g, c) {
   const p = g.attributes.position, a = new Float32Array(p.count * 3);
@@ -224,7 +316,45 @@ const onFace = (az, el, lift = 0) => deform(V3(Math.sin(az) * Math.cos(el), Math
 
 const spring = (k = 70, c = 9) => ({ x: 0, v: 0, step(target, dt) { for (let left = dt; left > 1e-6; left -= 1 / 60) { const h = Math.min(left, 1 / 60); this.v += (k * (target - this.x) - c * this.v) * h; this.x += this.v * h; } return this.x; } });
 
+// The hand as one soft mitt (#664: the owner wanted the jointed fingers gone), in the hand's own frame: from the wrist
+// along -y to the fingertips, the palm toward +z. `w` is its half width at the palm and `wf` at the fingers, `h` its half
+// thickness there and `hf`, `L` its length from `y0`; past `at` of the way the fingers bend up toward the palm by `curl`
+// (a curve, so they cup), and across it the edges come up by `cup`. A unit sphere is drawn out into that shape, its
+// cross-section kept nearly full to the ends (`full`) so the sides are flat and the ends round. The fingers are closed
+// together: `groove` is how deep the lines between them are, `tips` how much further the middle ones reach.
+export const HAND_SHAPE = {
+  stand: { w: 0.0245, wf: 0.0215, h: 0.0145, hf: 0.0085, L: 0.076, y0: -0.003, at: 0.5, curl: 0.012, cup: 0.0015, full: 0.35, groove: 0.0012, tips: 0.04 },
+  lap: { w: 0.0215, wf: 0.0205, h: 0.013, hf: 0.009, L: 0.078, y0: -0.003, at: 0.5, curl: 0.004, cup: 0.004, full: 0.3, groove: 0.003, tips: 0.035, heel: 0.004 },
+};
+function mitt(M) {
+  const g = new THREE.SphereGeometry(1, 28, 18), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const nx = p.getX(i), ny = p.getY(i), nz = p.getZ(i), rho = Math.hypot(nx, nz), t = (1 - ny) / 2;
+    const f = smooth(M.at - 0.1, M.at + 0.2, t), w = M.w + (M.wf - M.w) * f, h = M.h + (M.hf - M.h) * f + (M.heel || 0) * (1 - smooth(0.05, 0.4, t));
+    const k = rho > 1e-6 ? Math.pow(rho, M.full) / rho : 0, x = nx * k * w;
+    const bend = Math.max(0, t - M.at) / (1 - M.at);
+    // the four fingers: closed together, so only shallow grooves between them over the last part, and their tips
+    // rounded one by one, the middle two the longest
+    const u = x / w, fing = smooth(M.at, M.at + 0.15, t), groove = M.groove * fing * Math.pow(Math.max(0, Math.cos(2 * Math.PI * u)), 3) * (1 - sq(u));
+    const tipY = M.L * M.tips * (1 - sq(u)) * smooth(0.82, 1, t) - M.L * 0.02 * Math.abs(Math.sin(2 * Math.PI * u)) * smooth(0.9, 1, t);
+    const z = nz * k * (h - groove) + M.curl * bend * bend + M.cup * sq(u) * smooth(0.15, 0.9, t);
+    p.setXYZ(i, x, M.y0 - t * M.L - tipY, z);
+  }
+  g.deleteAttribute("uv"); g.computeVertexNormals(); return weld(g);
+}
+// A thumb as one tube from its root through the pull of `mid` to its tip, `r0` thick at the root and `r1` at the tip,
+// closed with a ball at each end; always the same number of points, so the standing and the lap's can be morphed.
+function thumbTube(a, mid, b, r0, r1) {
+  const curve = new THREE.QuadraticBezierCurve3(V3(...a), V3(...mid), V3(...b)), pts = curve.getPoints(10);
+  const fr = frames(pts, (q, i) => V3(0, 0, 1).cross(curve.getTangent(i / 10)).lengthSq() > 1e-6 ? V3(0, 0, 1) : V3(1, 0, 0));
+  fr.forEach((q, i) => { q.k = r0 + (r1 - r0) * (i / 10); });
+  const tube = sweep(fr, oval(1, 1, 10)), parts = [tube];
+  for (const [q, r] of [[pts[0], r0], [pts[10], r1]]) parts.push(new THREE.SphereGeometry(r, 10, 8).translate(q.x, q.y, q.z));
+  return mergeGeometries(parts.map((q) => { q.deleteAttribute("uv"); return q; }));
+}
+
 export function createMonk(opts = {}) {
+  seatRods = rodsOf();
   // ---- The skeleton, in the A-pose he was drawn in (4.55 heads tall, arms 38°) ----
   const group = new THREE.Group(), bones = [], B = {};
   const bone = (name, parent, x, y, z) => { const b = new THREE.Bone(); b.name = name; b.position.set(x, y, z); (parent || group).add(b); bones.push(b); B[name] = b; return b; };
@@ -268,8 +398,146 @@ export function createMonk(opts = {}) {
   const ARM = SIDES.map(([n, s]) => { const J = at(n + "UpperArm"), d = V3(s * Math.sin(APOSE), -Math.cos(APOSE), 0), o = V3(s * Math.cos(APOSE), Math.sin(APOSE), 0); return { n, s, J, d, o, e2: d.clone().cross(o) }; });
   const along = ({ J, d }, x, y, z) => V3(x, y, z).sub(J).dot(d);
 
+  // ---- Seated on a cushion: the line of each column of the skirt, the cloth's height, and where the hands lie on it ----
+  const NT = 64;
+  const WAIST = 0.645, waistY = WAIST - CUSHION_DROP, SKIRT_END = 0.277;
+  const lapLine = (a) => {
+    const s = Math.sin(a), c = Math.cos(a), cz = zOffAt(WAIST), wx = rxAt(WAIST) * s, wz = rzAt(WAIST, c) * c, rw = Math.hypot(wx, wz), nx = wx / rw, nz = wz / rw;
+    const fall = LAP.belly + (LAP.back - LAP.belly) * smooth(0.3, -0.5, c), STEP = 0.002, pts = [];
+    let pooled = -1;
+    for (let k = 0; k < 260; k++) {
+      const rho = k * STEP, x = wx + nx * rho, z = cz + wz + nz * rho, ground = cushionAt(x, z) + LAP.thick;
+      let h = Math.max(waistY - fall * rho, legsTop(x, z)) - ground;
+      // once the cloth is nearly down it runs out along the cushion, thinning, and ends
+      if (pooled < 0 && h < LAP.pool && rho > 0.02) pooled = rho;
+      if (pooled >= 0) h = Math.min(Math.max(h, 0), LAP.pool) * Math.exp(-(rho - pooled) / LAP.tail);
+      pts.push({ rho, x, z, y: ground + Math.max(0, h), len: 0 });
+      if (pooled >= 0 && rho > pooled + LAP.lie + LAP.trail * smooth(-0.3, -0.9, c)) break;   // (behind him it trails a little further)
+    }
+    // Cloth does not follow every hollow: between the waist and the knees, and from a knee to the cushion, it is drawn
+    // nearly straight over whatever stands highest (`taut` of the way from where it would lie to that straight line).
+    // Straight before his belly it is let lie: there the hands press it into the hollow between his thighs.
+    const hull = [], taut = LAP.taut * (1 - LAP.hollow * Math.exp(-sq(a / 0.62)));
+    for (const q of pts) { while (hull.length > 1) { const a = hull[hull.length - 2], b = hull[hull.length - 1]; if ((b.y - a.y) * (q.rho - a.rho) <= (q.y - a.y) * (b.rho - a.rho)) hull.pop(); else break; } hull.push(q); }
+    for (let i = 0, k = 0; i < pts.length; i++) { while (k < hull.length - 2 && hull[k + 1].rho < pts[i].rho) k++; const a = hull[k], b = hull[k + 1], line = a.y + (b.y - a.y) * (pts[i].rho - a.rho) / (b.rho - a.rho); if (line > pts[i].y) pts[i].y += taut * (line - pts[i].y); }
+    // Cloth has no corners: the line is smoothed over a finger's width, so that where it leaves the legs or comes down
+    // onto the cushion it turns, and does not fold in a ring (the first art review: 「袍下段一圈台阶折痕」).
+    for (let pass = 0; pass < LAP.soft; pass++) { const ys = pts.map((q) => q.y); for (let i = 2; i < pts.length - 2; i++) pts[i].y = (ys[i - 2] + 2 * ys[i - 1] + 3 * ys[i] + 2 * ys[i + 1] + ys[i + 2]) / 9; }
+    // Where it comes down onto the cushion the cloth is pressed into a crease, and its hem rolls up a little at the end
+    // (the sheet has both, and the art review asked for them back): over `LAP.hem` at its end the cloth lies pressed on
+    // the cushion and then lifts `LAP.roll` at its edge.
+    if (pooled >= 0) {
+      const end = pts[pts.length - 1].rho, from = end - LAP.hem;
+      // the crease: just before the hem the cloth is pressed down onto the cushion; then the hem rolls up off it
+      for (const q of pts) { if (q.rho < from - LAP.press) continue; const g = cushionAt(q.x, q.z) + LAP.thick; const press = smooth(from - LAP.press, from, q.rho); q.y = g + (1 - press) * Math.max(0, q.y - g) + LAP.roll * smooth(from, end, q.rho) * (1 - 0.5 * smooth(end - 0.002, end, q.rho)); }
+    }
+    let len = 0; for (let i = 1; i < pts.length; i++) { len += Math.hypot(pts[i].rho - pts[i - 1].rho, pts[i].y - pts[i - 1].y); pts[i].len = len; }
+    return { pts, len };
+  };
+  const lapLines = Array.from({ length: NT + 1 }, (_, j) => lapLine(-Math.PI + (TAU * j) / NT));
+  const onLine = ({ pts, len }, u) => {   // the point a share `u` of the way along a column's line
+    const want = u * len; let k = 1; while (k < pts.length - 1 && pts[k].len < want) k++;
+    const p = pts[k - 1], q = pts[k], f = clamp((want - p.len) / (q.len - p.len || 1), 0, 1);
+    return [p.x + (q.x - p.x) * f, p.y + (q.y - p.y) * f, p.z + (q.z - p.z) * f];
+  };
+  /** @type {{ y: number, k: number, inner?: number }[]} */
+  const rows = [
+    { y: 0.68, k: 0.9, inner: 1 }, { y: 0.61, k: 0.92, inner: 1 }, { y: 0.54, k: 0.93, inner: 1 }, { y: 0.46, k: 0.94, inner: 1 }, { y: 0.38, k: 0.948, inner: 1 },
+    { y: 0.32, k: 0.958, inner: 1 }, { y: 0.286, k: 0.972, inner: 1 }, { y: 0.2785, k: 0.99, inner: 1 },
+    // (just above the hem the skirt has a few rows more than its profile: seated, the last few centimetres of each column
+    // hold the crease and the rolled hem, and one row's step drew them as a flat band, #664)
+    ...PROF.flatMap((p, i) => (i < 3 && PROF[i + 1] ? [0, 0.25, 0.5, 0.75].map((f) => ({ y: p.y + (PROF[i + 1].y - p.y) * f, k: 1 })) : [{ y: p.y, k: 1 }])),
+    { y: 0.868, k: 0.84, inner: 1 },
+  ];
+  // Seated on a cushion (#664, refs/monk-poses-v6-2026-11-23-sitting.webp): the skirt lies over his folded legs. Each
+  // column of it leaves the waist where it is as he stands, drops down his belly (or his back), runs out over the legs
+  // wherever they hold it up (`legsTop`) and comes down to lie on the cushion, pooling a little and ending in a hem that
+  // rolls out; so the lap is as wide and as high as the legs under it, the widest at the knees, level before his belly
+  // where the shins cross and the hands rest. A column's points are set out along that line by how far down the
+  // standing skirt each is. The heights are measured up from the seat; the bind pose is SIT_DROP higher.
+  const torsoSit = grid(rows.length, NT + 1, (i, j) => {
+    const { y: y0, k, inner } = rows[i], a = -Math.PI + (TAU * j) / NT, s = Math.sin(a), c = Math.cos(a);
+    const vDip = Math.max(0, 1 - Math.abs(a) / 0.85) * 0.068 * smooth(0.75, 0.876, y0);
+    const y = y0 - vDip, m = 1 - 0.005 * smooth(0.295, 0.277, y0) * (inner ? 0 : 1);
+    const x = rxAt(y) * k * m * s, z = zOffAt(y) + rzAt(y, c) * k * m * c;
+    const u = clamp((WAIST - y0) / (WAIST - SKIRT_END), 0, 1);
+    if (u <= 0) return [x, y, z, (j / NT) * 5, y * 7];
+    const line = lapLines[j];
+    let [lx, ly, lz] = onLine(line, u);
+    // The lining has only a few rows down the skirt, and straight between them it would cut up through a lap that rises
+    // and falls; seated it is never seen, so it is laid low inside the skirt, meeting the cloth at the hem.
+    if (inner) { const [ex, ey, ez] = onLine(line, 1), g = cushionAt(lx, lz) + 0.002; lx = ex + (lx - ex) * 0.96; lz = ez + (lz - ez) * 0.96; ly = Math.min(ly - 0.004, Math.max(g, ey - 0.002) + (ly - ey) * 0.15); }
+    const blend = smooth(0, 0.06, u);
+    return [x + (lx - x) * blend, y + (ly + CUSHION_DROP - y) * blend, z + (lz - z) * blend, (j / NT) * 5, y * 7];
+  });
+  weld(torsoSit);
+  // How high the cloth of the lap lies at a point of the seat's frame: the seated skirt's own triangles, as they will be
+  // drawn, laid into half-centimetre squares (the highest in each).
+  const CELL = 0.005, SPAN = 92, cloth = new Float32Array((2 * SPAN + 1) * (2 * SPAN + 1)).fill(-9);
+  {
+    const P = torsoSit.attributes.position, ix = torsoSit.index.array, W = 2 * SPAN + 1, top = waistY + CUSHION_DROP + 0.002;
+    for (let k = 0; k < ix.length; k += 3) {
+      const [a, b, c] = [ix[k], ix[k + 1], ix[k + 2]].map((i) => [P.getX(i), P.getY(i), P.getZ(i)]);
+      if (Math.max(a[1], b[1], c[1]) > top) continue;   // (above the waist: not the lap)
+      const n = Math.ceil(Math.max(Math.hypot(b[0] - a[0], b[2] - a[2]), Math.hypot(c[0] - a[0], c[2] - a[2]), Math.hypot(c[0] - b[0], c[2] - b[2])) / (CELL * 0.5)) + 1;
+      for (let i = 0; i <= n; i++) for (let j = 0; j <= n - i; j++) {
+        const u = i / n, v = j / n, w = 1 - u - v, x = a[0] * w + b[0] * u + c[0] * v, y = a[1] * w + b[1] * u + c[1] * v - CUSHION_DROP, z = a[2] * w + b[2] * u + c[2] * v;
+        const cx = Math.round(x / CELL) + SPAN, cz = Math.round(z / CELL) + SPAN; if (cx < 0 || cz < 0 || cx >= W || cz >= W) continue;
+        if (y > cloth[cz * W + cx]) cloth[cz * W + cx] = y;
+      }
+    }
+  }
+  const clothTop = (x, z) => {
+    const fx = clamp(x / CELL + SPAN, 0, 2 * SPAN - 1e-6), fz = clamp(z / CELL + SPAN, 0, 2 * SPAN - 1e-6), ix = Math.floor(fx), iz = Math.floor(fz), u = fx - ix, v = fz - iz, W = 2 * SPAN + 1;
+    // (within the waist there is no skirt, only his belly: a square there counts as the lowest of the squares beside it)
+    const c = [cloth[iz * W + ix], cloth[iz * W + ix + 1], cloth[(iz + 1) * W + ix], cloth[(iz + 1) * W + ix + 1]], low = Math.min(...c.filter((y) => y > -8), 9), g = (y) => (y < -8 ? (low > 8 ? 0 : low) : y);
+    return (g(c[0]) * (1 - u) + g(c[1]) * u) * (1 - v) + (g(c[2]) * (1 - u) + g(c[3]) * u) * v;
+  };
+  // The hands are let down onto that cloth (#664). Each lies along a straight way from its wrist toward the other hand;
+  // of the slopes it might lie at, the one that brings its palm lowest with every part of it clear of what is under it
+  // is taken: under the right hand the cloth, under the left the cloth and the right hand. All in the seat's frame.
+  const layHands = () => {
+    const out = {}, under = [];
+    for (const [n, s] of /** @type {[string, number][]} */ ([["right", -1], ["left", 1]])) {
+      const hx = -s / Math.hypot(1, LAP_HAND.out), hz = LAP_HAND.out / Math.hypot(1, LAP_HAND.out), px = s * LAP_HAND.x, pz = LAP_HAND.z;
+      const floorAt = (x, z) => { let y = clothTop(x, z); for (const u of under) { const d = (x - u.wrist.x) * u.f.x + (z - u.wrist.z) * u.f.z, side = Math.abs((x - u.wrist.x) * u.f.z - (z - u.wrist.z) * u.f.x); if (d > -0.02 && d < 0.09 * LAP_HAND.big && side < 0.03 * LAP_HAND.big) y = Math.max(y, u.wrist.y + u.f.y * d + (d < 0.015 ? 0.0165 : (d < 0.045 * LAP_HAND.big ? 0.0118 : 0.0105) * LAP_HAND.big)); } return y; };
+      let best = null;
+      for (let sl = -LAP_HAND.tip; sl <= LAP_HAND.tip + 1e-9; sl += 0.02) {
+        const l = Math.hypot(1, sl), f = V3(hx / l, sl / l, hz / l), cosl = 1 / l; let wy = -9;
+        // (the wrist's plan place: the palm's middle is 0.03 along the hand from it)
+        const wx = px - f.x * HAND_MID, wz = pz - f.z * HAND_MID;
+        for (const [d, r, side] of HAND_ROD) for (const k of side ? [-1, 0, 1] : [0]) {
+          const x = wx + f.x * d + hz * k * side, z = wz + f.z * d - hx * k * side;
+          wy = Math.max(wy, floorAt(x, z) + r / cosl + 0.003 - f.y * d);
+        }
+        const palm = wy + f.y * HAND_MID;
+        if (!best || palm + 0.004 * Math.abs(sl) < best.score) best = { score: palm + 0.004 * Math.abs(sl), wrist: V3(wx, wy, wz), f, palm: V3(wx + f.x * HAND_MID, palm, wz + f.z * HAND_MID) };
+      }
+      // the hand's own frame there: fingers toward -y, the palm up along +z as nearly as the fingers' way lets it
+      const y = best.f.clone().negate(), z = V3(0, 1, 0).addScaledVector(best.f, -best.f.y).normalize(), x = V3().crossVectors(y, z);
+      best.q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z)); best.s = s;
+      out[n] = best; under.push(best);
+    }
+    // The thumbs' tips meet over the middle, a little apart to either side; each is worked back into its own hand's frame
+    // (the right hand is the left's mirror, so its own x is counted the other way).
+    const T = LAP_HAND.thumb, meet = V3(0, out.left.palm.y + T.up, (out.left.palm.z + out.right.palm.z) / 2 + T.fwd);
+    for (const n of ["left", "right"]) {
+      const h = out[n], tip = meet.clone(); tip.x += h.s * T.gap;
+      tip.sub(h.wrist).applyQuaternion(h.q.clone().invert()); tip.x *= h.s; tip.sub(V3(...HAND_SHIFT)).divideScalar(LAP_HAND.big);
+      const reach = -tip.y, up = tip.z;
+      // (the thumb is long and leaves the palm at its heel, as the owner's photograph of the seal has it)
+      const by = -0.008;
+      // (it rises from the heel of the palm and comes into the meeting level, the pull `turn` of the way along at the tip's height, so that the two together are one arch with a level top, not a peak)
+      h.thumb = { base: [0.016, by, T.root[n]], joint: [T.lean * tip.x + (1 - T.lean) * 0.016, by + T.turn * (tip.y - by), tip.z * T.arch], tip: tip.toArray() };   // (the pull level with the tip: each thumb comes into the meeting level, so the two read as one arch)
+      h.meet = meet;
+    }
+    return out;
+  };
+  const lapHands = layHands();
+
   // ---- Skin: head, neck, forearms, hands, one mesh ----
-  const skinParts = [];
+  const skinParts = [], skinMudraParts = [];
+  const pushSkin = (base, mudra = base) => { skinParts.push(base); skinMudraParts.push(mudra); };
   {
     const g = new THREE.SphereGeometry(R, 48, 32), p = g.attributes.position, clr = new Float32Array(p.count * 3), c = new THREE.Color();
     for (let i = 0; i < p.count; i++) {
@@ -281,7 +549,12 @@ export function createMonk(opts = {}) {
       const q = deform(n.multiplyScalar(R)).add(SKULL); p.setXYZ(i, q.x, q.y, q.z);
     }
     g.setAttribute("color", new THREE.BufferAttribute(clr, 3)); weld(g);
-    skinParts.push(finish(g, null, IDX.head));
+    // Under the chin (#664). He casts no shadow on himself, so the underside of his jaw, which faces the ground and takes
+    // only the ground's light, came out darker than the neck right below it, which faces the sky's side light and has
+    // nothing over it: a dark band between two lighter ones, read as a beard. The jaw's underside is turned a little
+    // toward the horizon for the light (its normals only, JAW), and the neck is shaded where the head stands over it (NECK_SHADE).
+    { const nr = g.attributes.normal; for (let i = 0; i < nr.count; i++) { const y = nr.getY(i); if (y >= -JAW.from) continue; const y2 = -JAW.from + (y + JAW.from) * JAW.keep, k = Math.sqrt((1 - y2 * y2) / Math.max(1e-9, 1 - y * y)); nr.setXYZ(i, nr.getX(i) * k, y2, nr.getZ(i) * k); } }
+    pushSkin(finish(g, null, IDX.head));
     // Face strokes (refs/monk-poses-v6-2026-11-23-gassho-head.webp):
     // short flat rounded-cap brows, gentle downward U-arc closed eyes (no eyelashes), small button nose, tiny shallow smile.
     const stroke = (pts, width, color, depthRatio = 0.5, cap = true) => {
@@ -296,14 +569,14 @@ export function createMonk(opts = {}) {
     const arc = (n, f) => Array.from({ length: n + 1 }, (_, i) => f((2 * i) / n - 1));
     for (const s of [1, -1]) {
       // Closed eyes: gentle downward-curving smile arc, no eyelashes
-      skinParts.push(stroke(arc(12, (t) => [s * (0.46 + 0.12 * t), -0.15 - 0.046 * (1 - t * t)]), (u) => 0.0026 + 0.0014 * Math.sin(Math.PI * u), PAL.lash, 0.52));
+      pushSkin(stroke(arc(12, (t) => [s * (0.46 + 0.12 * t), -0.15 - 0.046 * (1 - t * t)]), (u) => 0.0026 + 0.0014 * Math.sin(Math.PI * u), PAL.lash, 0.52));
       // Short flat rounded brows (uniform pill bar with barely a gentle lift)
-      skinParts.push(stroke(arc(10, (t) => [s * (0.465 + 0.118 * t), 0.195 + 0.015 * (1 - t * t)]), () => 0.0058, PAL.brow, 0.48));
+      pushSkin(stroke(arc(10, (t) => [s * (0.465 + 0.118 * t), 0.195 + 0.015 * (1 - t * t)]), () => 0.0058, PAL.brow, 0.48));
     }
     // Small sweet shallow smile mouth
-    skinParts.push(stroke(arc(10, (t) => [0.115 * t, -0.505 + 0.036 * t * t]), (u) => 0.0013 + 0.0007 * Math.sin(Math.PI * u), PAL.lip, 0.48));
+    pushSkin(stroke(arc(10, (t) => [0.115 * t, -0.505 + 0.036 * t * t]), (u) => 0.0013 + 0.0007 * Math.sin(Math.PI * u), PAL.lip, 0.48));
     // Cute small rounded button nose
-    skinParts.push(finish(new THREE.SphereGeometry(0.0106, 14, 10).scale(1.04, 0.84, 0.96).translate(...onFace(0, -0.34, -0.0012).toArray()), PAL.skin.clone().lerp(PAL.blush, 0.18), IDX.head));
+    pushSkin(finish(new THREE.SphereGeometry(0.0106, 14, 10).scale(1.04, 0.84, 0.96).translate(...onFace(0, -0.34, -0.0012).toArray()), PAL.skin.clone().lerp(PAL.blush, 0.18), IDX.head));
     // Low-set plump C-cup ears (ear top roughly level with closed eyes, y = 0.95..1.01, smooth clay lobe)
     for (const s of [1, -1]) {
       const ear = mergeGeometries([
@@ -313,7 +586,7 @@ export function createMonk(opts = {}) {
       ]);
       if (s < 0) { ear.scale(-1, 1, 1); flip(ear); }
       ear.rotateY(-s * 0.26).translate(...onFace(s * 1.58, -0.45, -0.002).toArray());
-      skinParts.push(finish(ear, null, IDX.head));
+      pushSkin(finish(ear, null, IDX.head));
     }
     // Sturdy child's neck + throat extending cleanly behind the crossed cream V-collar (zero seam!)
     {
@@ -323,10 +596,10 @@ export function createMonk(opts = {}) {
         const flare = 1 + 0.07 * sq(Math.max(0, u - 0.6) / 0.4);
         const rx = 0.049 * flare, rz = 0.046 * flare;
         const frontChest = 0.026 * smooth(0.55, 0, u) * Math.max(0, Math.cos(a));
-        return [rx * Math.sin(a), y, rz * Math.cos(a) - 0.001 + frontChest, 0, 0, PAL.skin.clone().multiplyScalar(0.95 + 0.05 * smooth(0.85, 0.35, u))];
+        return [rx * Math.sin(a), y, rz * Math.cos(a) - 0.001 + frontChest, 0, 0, PAL.skin.clone().multiplyScalar(NECK_SHADE.low - (NECK_SHADE.low - NECK_SHADE.top) * smooth(NECK_SHADE.from, 0.95, u))];
       });
       weld(nk);
-      skinParts.push(finish(nk, null, (x, y) => {
+      pushSkin(finish(nk, null, (x, y) => {
         const h = smooth(0.896, 0.922, y), c2 = smooth(0.875, 0.848, y);
         return [[IDX.head, h], [IDX.chest, c2], [IDX.neck, Math.max(0, 1 - h - c2)]];
       }));
@@ -342,32 +615,40 @@ export function createMonk(opts = {}) {
         return [q.x, q.y, q.z, 0, 0];
       });
       weld(fa);
-      skinParts.push(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.175, 0.215, t), h = 0.5 * smooth(UPPER + FORE - 0.02, UPPER + FORE, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
-      // The hand in its own frame: spherical wrist ball near (0,0,0), palm & fingers gently angled down (-0.46 rad around wrist)
-      /** @type {THREE.BufferGeometry[]} */
-      const palmParts = [new THREE.SphereGeometry(1, 14, 10).scale(0.0245, 0.0285, 0.015).translate(0, -0.026, 0.002)];
-      [[0.0135, 0.026], [0.0045, 0.032], [-0.0048, 0.03], [-0.0138, 0.024]].forEach(([fx, len], k) =>
-        palmParts.push(new THREE.CapsuleGeometry(0.0064 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(-0.18 - k * 0.03).rotateZ(fx * 1.6).translate(fx, -0.048, 0.003)));
-      palmParts.push(new THREE.CapsuleGeometry(0.0074, 0.019, 4, 8).translate(0, -0.0095, 0).rotateZ(0.24).rotateX(-0.55).translate(0.012, -0.018, 0.009));
-      const palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(-0.46).translate(-0.0045, -0.002, 0);
-      const wrist = new THREE.SphereGeometry(0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");
-      const hand = mergeGeometries([wrist, palm]);
-      if (s < 0) { hand.scale(-1, 1, 1); flip(hand); }
-      hand.applyMatrix4(B[n + "Hand"].matrixWorld);
-      skinParts.push(finish(hand, PAL.skin, IDX[n + "Hand"]));
+      pushSkin(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.175, 0.215, t), h = 0.5 * smooth(UPPER + FORE - 0.02, UPPER + FORE, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
+      // The hand in its own frame: a ball at the wrist, then the hand itself as one soft mitt, palm and fingers in one piece
+      // as the sheet's clay hands are (the owner on the jointed fingers, 2026-11-25: 「重做手指」), and the thumb as one
+      // tube. Standing, the fingers hang a little curled and the hand is turned down at the wrist (-0.46 rad); in the lap
+      // (法界定印, a morph) the fingers are shorter, rounder and cupped up with the palm, and the thumb arches over to the
+      // other's. Both are built by the same two functions with the same counts, so a morph moves each point to its own.
+      const buildHand = (mudra) => {
+        const M = mudra ? HAND_SHAPE.lap : HAND_SHAPE.stand;
+        /** @type {THREE.BufferGeometry[]} */
+        const palmParts = [mitt(M)];
+        // The thumb. In the lap (法界定印) it rises off the far edge of the palm and comes over toward the other hand, so that
+        // the two tips meet in the middle over the fingers and the thumbs and the fingers below them close round an open
+        // oval, not a peak. Where each tip must be for that is worked out with the hands' places (layHands).
+        if (mudra) {
+          const t = lapHands[s > 0 ? "left" : "right"].thumb, K = LAP_HAND.thumb.thick;
+          palmParts.push(thumbTube(t.base, t.joint, t.tip, 0.0088 * K, 0.0078 * K));
+        } else {
+          // Standing, the thumb lies along the side of the hand, a little apart from it.
+          const at = (y) => V3(0, y, 0).applyAxisAngle(ZV, 0.24).applyAxisAngle(XV, -0.55).add(V3(0.012, -0.018, 0.009)).toArray();
+          palmParts.push(thumbTube(at(0), at(-0.0095), at(-0.019), 0.0076, 0.0072));
+        }
+        const big = mudra ? LAP_HAND.big : 1, palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(mudra ? 0 : -0.46).scale(big, big, big).translate(-0.0045, -0.002, 0);
+        const wrist = new THREE.SphereGeometry(mudra ? 0.0262 : 0.0245, 14, 10).scale(1, 1, mudra ? LAP_HAND.wrist : 1).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");   // (in the lap the wrist bends further, and a ball the forearm's own size flickered against its end)
+        const hand = mergeGeometries([wrist, palm]);
+        if (s < 0) { hand.scale(-1, 1, 1); flip(hand); }
+        hand.applyMatrix4(B[n + "Hand"].matrixWorld);
+        return finish(hand, PAL.skin, IDX[n + "Hand"]);
+      };
+      pushSkin(buildHand(false), buildHand(true));
     }
   }
 
   // ---- The robe: clean A-line body & skirt, wide sleeves, crisp crossed cream V-collar, lapel, sash with twin knot & single flat tail ----
   const robeParts = [];
-  /** @type {{ y: number, k: number, inner?: number }[]} */
-  const rows = [
-    { y: 0.68, k: 0.9, inner: 1 }, { y: 0.61, k: 0.92, inner: 1 }, { y: 0.54, k: 0.93, inner: 1 }, { y: 0.46, k: 0.94, inner: 1 }, { y: 0.38, k: 0.948, inner: 1 },
-    { y: 0.32, k: 0.958, inner: 1 }, { y: 0.286, k: 0.972, inner: 1 }, { y: 0.2785, k: 0.99, inner: 1 },
-    ...PROF.map((p) => ({ y: p.y, k: 1 })),
-    { y: 0.868, k: 0.84, inner: 1 },
-  ];
-  const NT = 64;
   const torso = grid(rows.length, NT + 1, (i, j) => {
     const { y: y0, k, inner } = rows[i], a = -Math.PI + (TAU * j) / NT, s = Math.sin(a), c = Math.cos(a);
     // Smooth parametric V-neckline along the top rows so the torso edge tucks cleanly behind the crossed cream collar bands (zero stair-stepping)
@@ -385,6 +666,8 @@ export function createMonk(opts = {}) {
   robeParts.push(finish(torso, null, robeW, true));
   const torsoCount = torso.attributes.position.count;
   // Wide conical sleeves to the elbow with crisp rolled cuff and dark interior lining
+  /** @type {[number, THREE.BufferGeometry][]} */
+  const sleeveSit = [];   // each sleeve as it is seated, and where it starts in the robe
   for (const arm of ARM) {
     const { J, d, o, e2, n, s } = arm, NC = 28, NA = 12;
     /** @type {{ v: number, k: number, back: number, lining?: number }[]} */
@@ -393,16 +676,23 @@ export function createMonk(opts = {}) {
       { v: 1, k: 0.94, back: 0.008, lining: 1 },
       { v: 1, k: 0.88, back: 0.052, lining: 1 },
     ];
-    const sl = grid(srows.length, NC + 1, (i, j) => {
-      const th = Math.PI + (TAU * j) / NC, c = Math.cos(th), sn = Math.sin(th), row = srows[i];
-      const tEnd = 0.214 + 0.016 * Math.pow(Math.max(0, -c), 1.4), t = -0.032 + (tEnd + 0.032) * row.v - row.back, vv = clamp((t + 0.032) / 0.255, 0, 1);
-      const rO = (0.053 + 0.02 * smooth(0, 1, vv)) * row.k * (1 - 0.14 * Math.max(0, -c) * smooth(0.15, 0.8, vv));
-      const rZ = (0.054 + 0.02 * smooth(0, 1, vv)) * row.k;
+    // `sit` is the sleeve as it hangs when he is seated on a cushion with his hands in his lap (#664): the elbow is bent
+    // toward the front of the arm (the side the bone's own z looks to), so there the cuff is drawn up the arm and the
+    // forearm comes out under it, not through its side; round the back of the elbow the cloth hangs on past it and
+    // covers it, and the whole cuff is opened wider, as the drawing has a sleeve that reaches the lap.
+    const sleeve = (sit) => grid(srows.length, NC + 1, (i, j) => {
+      const th = Math.PI + (TAU * j) / NC, c = Math.cos(th), sn = Math.sin(th), row = srows[i], fore = s * sn;
+      const tEnd = 0.214 + 0.016 * Math.pow(Math.max(0, -c), 1.4) + sit * (SLEEVE_SIT.hang * smooth(0, SLEEVE_SIT.round, Math.sqrt(Math.max(0, 0.5 - 0.5 * fore))) + SLEEVE_SIT.side * (1 - fore * fore) - SLEEVE_SIT.cut * Math.max(0, fore));
+      const t = -0.032 + (tEnd + 0.032) * row.v - row.back, vv = clamp((t + 0.032) / 0.255, 0, 1);
+      const open = (1 + sit * SLEEVE_SIT.open * smooth(0.35, 1, row.v)) * (1 - sit * SLEEVE_SIT.bevel * sq(smooth(0.72, 1, row.v)) * Math.max(0, -fore));   // (and its hanging corner is turned in a little, so that it is round, not a point)
+      const rO = (0.053 + 0.02 * smooth(0, 1, vv)) * row.k * (1 - 0.14 * Math.max(0, -c) * smooth(0.15, 0.8, vv)) * open;
+      const rZ = (0.054 + 0.02 * smooth(0, 1, vv)) * row.k * open;
       const q = J.clone().addScaledVector(d, t).addScaledVector(o, rO * c + 0.006 * (1 - vv)).addScaledVector(e2, rZ * sn);
       q.x += s * 0.005 * (1 - vv);
       return [q.x, q.y, q.z, (j / NC) * 2, vv * 1.6, row.lining ? PAL.robeIn : PAL.robe];
     });
-    weld(sl);
+    const sl = weld(sleeve(0));
+    sleeveSit.push([robeParts.reduce((k, g) => k + g.attributes.position.count, 0), weld(sleeve(1))]);
     robeParts.push(finish(sl, null, (x, y, z) => {
       if (Math.abs(x) < 0.052) return [[IDX.chest, 1]];
       const t = along(arm, x, y, z), w = smooth(-0.024, 0.068, t);
@@ -535,6 +825,22 @@ export function createMonk(opts = {}) {
   const beadM = new THREE.MeshStandardMaterial({ color: 0x9e4e26, roughness: 0.34, metalness: 0.02, envMapIntensity: 0.85 });
   const skinned = (parts, mat) => { const m = new THREE.SkinnedMesh(mergeGeometries(parts), mat); m.frustumCulled = false; m.receiveShadow = true; group.add(m); return m; };
   const skin = skinned(skinParts, skinM), robe = skinned(robeParts, clothM), legs = skinned(legParts, clothM), shoes = skinned(shoeParts, shoeM);
+  {
+    const skinMudra = mergeGeometries(skinMudraParts);
+    skin.geometry.morphAttributes.position = [skinMudra.attributes.position];
+    skin.geometry.morphAttributes.normal = [skinMudra.attributes.normal];
+    skin.updateMorphTargets();
+  }
+  {
+    const basePos = robe.geometry.attributes.position.array, baseNorm = robe.geometry.attributes.normal.array;
+    const sitPos = new Float32Array(basePos), sitNorm = new Float32Array(baseNorm);
+    sitPos.set(torsoSit.attributes.position.array, 0);
+    sitNorm.set(torsoSit.attributes.normal.array, 0);
+    for (const [at, g] of sleeveSit) { sitPos.set(g.attributes.position.array, at * 3); sitNorm.set(g.attributes.normal.array, at * 3); }
+    robe.geometry.morphAttributes.position = [new THREE.BufferAttribute(sitPos, 3)];
+    robe.geometry.morphAttributes.normal = [new THREE.BufferAttribute(sitNorm, 3)];
+    robe.updateMorphTargets();
+  }
   const straps = skinned(strapParts, clothM); straps.visible = true;   // shown whenever the hat is on his back (panel 4)
   const skeleton = new THREE.Skeleton(bones);
   for (const m of [skin, robe, legs, shoes, straps]) m.bind(skeleton);
@@ -564,7 +870,7 @@ export function createMonk(opts = {}) {
     beadMesh = rigid(mergeGeometries(beads), beadM, B.chest);
   }
   // The bamboo hat (refs/monk-props-v6 & panel 4): 40 cm shallow cone (height/diam ~0.36) with radial ribs, rolled rim, apex cap and inner head-ring.
-  let hat;
+  let hat; const hatOff = new THREE.Matrix4();
   {
     const RH = 0.198, HH = 0.136;
     const prof = [[0, HH + 0.01], [0.012, HH + 0.008], [0.018, HH + 0.002], [0.021, HH - 0.004]];
@@ -581,6 +887,8 @@ export function createMonk(opts = {}) {
       paint(new THREE.TorusGeometry(0.078, 0.0055, 6, 28).rotateX(Math.PI / 2).translate(0, HH * 0.42, 0), new THREE.Color(0.88, 0.82, 0.72)),
     ];
     const g = mergeGeometries(parts.map((q) => { q.deleteAttribute("normal"); q.computeVertexNormals(); return q; })).rotateX(-(Math.PI / 2 - 0.1)).translate(0, -0.11, -0.016);
+    // (how the hat was turned and moved to hang on its bone, undone: `layHat` stands it on its rim with this)
+    hatOff.makeTranslation(0, -0.11, -0.016).multiply(new THREE.Matrix4().makeRotationX(-(Math.PI / 2 - 0.1))).invert();
     const tex = straw();
     hat = rigid(g, new THREE.MeshStandardMaterial({ map: tex, bumpMap: tex, bumpScale: 0.85, roughness: 0.82, vertexColors: true, side: THREE.DoubleSide, envMapIntensity: 0.32 }), B.hat);
   }
@@ -596,7 +904,7 @@ export function createMonk(opts = {}) {
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
   const blink = createBlink(), lid = { value: 0 }; let eyed = false, blinking = true;
-  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, hopW = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
+  let hatAt = 0, phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, hopW = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
   const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
   // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
@@ -619,11 +927,29 @@ export function createMonk(opts = {}) {
   }
   // The hands' own frame for a pose, in the frame of the bone they are placed against.
   function handFrame(mode, s, out) {
-    if (mode === "lap") { _z.set(0, 1, 0); _y.set(s, 0, -0.3).normalize(); }   // palms up in the lap, fingers in toward each other
+    if (mode === "lap") { _z.set(0, 1, 0); _y.set(s, 0, -0.3).normalize(); }   // (a worn body's: palms up in the lap, fingers in toward each other)
     else if (mode === "thigh") { _y.set(0, 0.15, -1).normalize(); _z.set(0, -1, -0.15).normalize(); }   // palms down on the thighs, fingers forward
     else { _y.set(0, -Math.cos(0.22), -Math.sin(0.22)); _z.set(-s, 0, 0); }   // fingers up and a little forward, palm to palm
     _x.crossVectors(_y, _z).normalize(); _z.crossVectors(_x, _y);
     return out.setFromRotationMatrix(_m.makeBasis(_x, _y, _z));
+  }
+  // Seated on a cushion his hat is not on his back (#664: the design sheet's seated figure has none, and behind a seated
+  // back it stood out like a shield): as he comes down it is taken off and laid on its rim on the floor at his right,
+  // HAT_OFF from his middle (at his left if the page says his right is taken: `grounding.hat` 1, hatside.js), and as he
+  // gets up it goes back. `k` is how far it has gone over (0 on his back, 1 laid down); between, it goes over on a low arc. The floor is what the cushion lies on: `surfaceAt` there, or, where that
+  // says nothing sensible (no floor given, or a drop beside the seat), a cushion's height under the seat.
+  const hatP0 = V3(), hatP1 = V3(), hatS = V3(), hatQ0 = new THREE.Quaternion(), hatQ1 = new THREE.Quaternion(), hatM = new THREE.Matrix4();
+  function layHat(k, surfaceAt, side) {
+    const x = -side * HAT_OFF.x;   // (HAT_OFF is written for his right)
+    group.updateMatrixWorld(true);
+    B.hat.matrixWorld.decompose(hatP0, hatQ0, hatS);
+    group.localToWorld(hatP1.set(x, 0, HAT_OFF.z));
+    const groupY = group.matrixWorld.elements[13]; let floor = surfaceAt ? surfaceAt(hatP1.x, hatP1.z) - groupY : NaN;
+    if (!(floor <= 0.001 && floor > -HAT_OFF.deep)) floor = -HAT_OFF.seat;
+    hatM.makeRotationY(-side * HAT_OFF.turn).setPosition(x, floor + 0.006, HAT_OFF.z).multiply(hatOff).premultiply(group.matrixWorld).decompose(hatP1, hatQ1, hatS);
+    hatP0.lerp(hatP1, k); hatP0.y += HAT_OFF.arc * Math.sin(Math.PI * k); hatQ0.slerp(hatQ1, k);
+    hatM.compose(hatP0, hatQ0, hatS.set(1, 1, 1)).premultiply(_inv.copy(B.hat.parent.matrixWorld).invert()).decompose(B.hat.position, B.hat.quaternion, hatS);
+    B.hat.updateMatrixWorld(true);
   }
   // The skirt is lifted off any step it would pass into: its bones are shortened, never more than the cloth needs.
   const SK = SKIRT.map((n) => IDX[n]), hem = [];
@@ -775,7 +1101,11 @@ export function createMonk(opts = {}) {
   let dressed = false;
   return {
     group, skeleton, bones: B, parts: { skin, robe, legs, shoes, hat, straps }, steps,
+    /** Seated on a cushion, in the seat's frame (x to his left, y up from the cushion's crown, z the way he faces): each hand's wrist, palm, the way its fingers run and its thumb, where the thumbs meet, `clothTop(x, z)`, how high the lap's cloth lies, and the line each column of the skirt is laid along (`lines`, from behind him round by his right). */
+    lap: { hands: lapHands, clothTop, legs: seatRods, handMid: HAND_MID, lines: lapLines },
     get dressed() { return dressed; },
+    /** How many of the robe's points, from its first, are its body (trunk and skirt); the sleeves, collar and sash come after them. */
+    get robeBody() { return dressed ? robe.geometry.attributes.position.count : torsoCount; },
     // Put the sculpted body (tools/novice.mjs, app/shared/models/novice.glb) on the skeleton in place of the one built here:
     // `geometries` holds a skinned geometry for each of skin, robe, legs and shoes, its joints numbered as `skeleton.bones`
     // are, `material` is what they are drawn with, `robeColor` the robe's own colour (no longer used: it coloured a lap of cloth that seated legs have replaced). The skeleton,
@@ -822,12 +1152,13 @@ export function createMonk(opts = {}) {
     // `grounding.act` is what an observance asks of him over the pose (rites.js): `bow` and `twist` of the trunk and
     // `nod` of the head in radians, `look` the head turned aside (radians, + to his left), `breath` from -1 (out) to 1 (in), and for either hand a place in the world to
     // reach (`hands.left.at`), which way its fingers and palm turn there, and how far it has gone over (`w`, 0 to 1).
+    // `grounding.hat` says which side of a cushion his hat is laid on (-1 or nothing his right, 1 his left).
     // `grounding.rise` (0 as he leaves the seat, 1 stood up) and `grounding.crouch` (how far his knees give as he lands,
     // in metres) are the getting-up-from-a-seat pose's.
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
       dt = Math.min(Math.max(dt || 0, 0), 0.1); speed = Math.max(0, speed || 0);
       bones.forEach((b, i) => { b.position.copy(rest[i][0]); b.quaternion.copy(rest[i][1]); b.scale.set(1, 1, 1); });
-      if (pose === "bind") { legs.visible = shoes.visible = true; group.updateMatrixWorld(true); driveHelpers(true); return; }
+      if (pose === "bind") { legs.visible = shoes.visible = straps.visible = true; group.updateMatrixWorld(true); driveHelpers(true); return; }
       const pray = pose === true || pose === "pray", sit = pose === "sit", chair = pose === "chair", hop = pose === "hop", rise = pose === "rise", stairs = !!grounding.stairs, ease = (k) => Math.min(1, dt * k);
       const act = grounding.act || null, bow = act?.bow || 0, turnTo = act?.twist || 0, nod = act?.nod || 0, look = act?.look || 0, air = act && act.breath != null ? act.breath : null;
       // Getting up: how far it has gone, and the lean forward over his feet that carries him up (back straight as he lands).
@@ -863,7 +1194,12 @@ export function createMonk(opts = {}) {
         lift = clamp(bodyHeight - rootY, -0.35, 0.2);
       } else bodyHeight = rootY;
       // (Landing from a seat, `crouch` lets his knees give a little under him before he stands straight.)
-      B.root.position.y = lift - SIT_DROP * (seat + perch) + Math.sin(t * 0.9) * 0.006 * seat - (rise ? Math.max(0, grounding.crouch || 0) : 0);
+      // (A worn body, made elsewhere, sits as it did: the seat worked out here is for the robe built here, `lapSeat`.)
+      const lapSeat = !dressed;
+      B.root.position.z = lapSeat ? -SEAT_LEGS.back * smooth(LAP.sitFrom, LAP.sitTo, seat) : 0;
+      // (onto a cushion he comes down as the robe is laid over his folding legs, the one with the other: `down` is both)
+      const down = lapSeat ? smooth(LAP.sitFrom, LAP.sitTo, seat) : seat;
+      B.root.position.y = lift - SIT_DROP * perch - (lapSeat ? CUSHION_DROP : SIT_DROP) * down + Math.sin(t * 0.9) * 0.006 * seat - (rise ? Math.max(0, grounding.crouch || 0) : 0);
 
       // The spine, posed directly: the pelvis turns with the leading leg, the chest against it; he leans into his walk,
       // bows to pray, and otherwise carries his face a little up.
@@ -871,10 +1207,10 @@ export function createMonk(opts = {}) {
       B.hips.position.y += 0.0025 * breathe * (1 - gait);
       B.hips.position.z += 0.035 * perch;   // on a stool he sits toward its front edge, so that his shins hang clear of it
       B.hips.rotation.set(0, twist, 0.022 * Math.sin(phase) * gait);
-      B.spine.rotation.set(0.025 * gait + 0.04 * palms + 0.04 * seat + 0.05 * perch + 0.5 * bow + lean, -twist * 0.5 + 0.5 * turnTo, 0);
+      B.spine.rotation.set(0.025 * gait + 0.04 * palms + (lapSeat ? 0 : 0.04 * seat) + 0.05 * perch + 0.5 * bow + lean, -twist * 0.5 + 0.5 * turnTo, 0);
       B.chest.rotation.set(0.03 * gait + 0.05 * palms + 0.006 * breathe + 0.4 * bow + 0.6 * lean - 0.035 * (air || 0), -twist * 0.9 + 0.5 * turnTo, -0.012 * Math.sin(phase) * gait);
       B.neck.rotation.x = -0.03 * gait - 0.25 * lean;   // (rising, his face stays up as his trunk comes over his feet)
-      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) * (1 - perch) + 0.2 * palms + 0.14 * seat + 0.05 * perch + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4 + 0.6 * look, -0.018 * Math.sin(phase) * gait);
+      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) * (1 - perch) + 0.2 * palms + (lapSeat ? 0.04 : 0.14) * seat + 0.05 * perch + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4 + 0.6 * look, -0.018 * Math.sin(phase) * gait);
       // A breath taken on purpose shows: the chest fills and rises, the shoulders with it; the head keeps its size.
       if (air !== null) { const k = 0.5 + 0.5 * air; B.chest.scale.set(1 + 0.035 * k, 1, 1 + 0.06 * k); B.neck.scale.set(1 / (1 + 0.035 * k), 1, 1 / (1 + 0.06 * k)); B.chest.position.y += 0.007 * k; for (const [n] of SIDES) B[n + "Shoulder"].position.y += 0.006 * k; }
 
@@ -970,7 +1306,7 @@ export function createMonk(opts = {}) {
       // its edge, the shins folded before him, the left in front.
       // Sitting down (or unfolding off a stool into a hop), the seated legs are blended smoothly with the current legs.
       if (legSit > 0.02) {
-        const onStool = legKind === "chair", w = smooth(0.02, 0.9, legSit);
+        const onStool = legKind === "chair", w = !onStool && lapSeat ? smooth(LEG_FOLD[0], LEG_FOLD[1], legSit) : smooth(0.02, 0.9, legSit);
         group.updateMatrixWorld(true);
         SIDES.forEach(([n, s], i) => {
           const up = B[n + "UpperLeg"], lo = B[n + "LowerLeg"], ft = B[n + "Foot"];
@@ -979,10 +1315,18 @@ export function createMonk(opts = {}) {
           if (onStool) {
             kneeL.copy(hipL).addScaledVector(tv.set(s * 0.12, -0.05, 1).normalize(), THIGH);
             ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.08, -1, 0.14).normalize(), SHIN);
-          } else {
+          } else if (!lapSeat) {
             const front = s > 0 ? 0.04 : 0;
             kneeL.copy(hipL).addScaledVector(tv.set(s * 0.235, 0.075, 0.13 + front).sub(hipL).normalize(), THIGH);
             ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.959, 0, -0.283), SHIN); ankL.z += front * 0.5;
+          } else {
+            // (the seat's frame is his own, with the cushion's crown at his feet: SEAT_LEGS)
+            const leg = seatRods[i];
+            // (while he is still coming down the legs are folded under him at the height his hips have reached, so they go
+            // down with him under the robe, rather than lying on the cushion below a body still in the air)
+            const high = CUSHION_DROP * (1 - down);
+            kneeL.copy(hipL).addScaledVector(tv.set(leg.knee[0], leg.knee[1] + high, leg.knee[2] - SEAT_LEGS.back).sub(hipL).normalize(), THIGH);
+            ankL.copy(kneeL).addScaledVector(tv.set(leg.ankle[0], leg.ankle[1] + high, leg.ankle[2] - SEAT_LEGS.back).sub(kneeL).normalize(), SHIN);
           }
           group.localToWorld(kneeW.copy(kneeL)); group.localToWorld(ankW.copy(ankL)); group.localToWorld(hipW.copy(hipL));
           const pole = tv2.copy(kneeW).sub(hipW.add(ankW).multiplyScalar(0.5));   // (hipW is not needed after this)
@@ -998,6 +1342,8 @@ export function createMonk(opts = {}) {
           }
           ft.quaternion.setFromAxisAngle(XV, onStool ? 0.45 : 1.0);   // the feet hang, toes a little down; folded, they lie along the shin
           qc.copy(ft.quaternion); ft.quaternion.slerpQuaternions(q2, qc, w);
+          // Folded under the robe, the loose trousers are pressed in by the cloth lying on them (the joints stay where they are).
+          if (!onStool && !dressed) { const tuck = 1 - SEAT_LEGS.tuck * w; up.scale.set(tuck, 1, tuck); lo.scale.set(tuck, 1, tuck); }
         });
       }
 
@@ -1015,11 +1361,12 @@ export function createMonk(opts = {}) {
         const mode = palms >= Math.max(seat, perch) ? "pray" : perch > seat ? "thigh" : "lap", anchor = mode === "pray" ? B.chest : B.hips;
         group.updateMatrixWorld(true);
         if (mode === "pray") anchor.localToWorld(tv.set(s * 0.0125, 0.02, 0.165));
-        else if (mode === "lap") anchor.localToWorld(tv.set(s * 0.012, 0.055 + (s > 0 ? 0.012 : 0), 0.13));
+        else if (mode === "lap" && !lapSeat) anchor.localToWorld(tv.set(s * 0.012, 0.055 + (s > 0 ? 0.012 : 0), 0.13));
+        else if (mode === "lap") { tv.copy(lapHands[n].wrist); tv.z -= SEAT_LEGS.back; tv.y += CUSHION_DROP * (1 - down); group.localToWorld(tv); }
         else anchor.localToWorld(tv.set(s * 0.085, 0.062, 0.14));
-        reach(ua, la, UPPER, FORE, tv, tv2.set(s, mode === "pray" ? -1.3 : mode === "lap" ? -0.2 : -0.8, mode === "pray" ? -0.35 : mode === "lap" ? -0.6 : -0.5).applyQuaternion(gq), -1);
+        reach(ua, la, UPPER, FORE, tv, (mode === "lap" && !lapSeat ? tv2.set(s, -0.2, -0.6) : mode === "lap" ? tv2.set(s * LAP_HAND.elbow[0], LAP_HAND.elbow[1], LAP_HAND.elbow[2]) : tv2.set(s, mode === "pray" ? -1.3 : -0.8, mode === "pray" ? -0.35 : -0.5)).applyQuaternion(gq), -1);
         ua.updateMatrixWorld(true);
-        anchor.getWorldQuaternion(tq).multiply(handFrame(mode, s, tq2));
+        if (mode === "lap" && lapSeat) tq.copy(gq).multiply(lapHands[n].q); else anchor.getWorldQuaternion(tq).multiply(handFrame(mode, s, tq2));
         la.getWorldQuaternion(qa); hd.quaternion.copy(qa.invert().multiply(tq));
         qa.copy(ua.quaternion); qb.copy(la.quaternion); qc.copy(hd.quaternion);
         ua.quaternion.slerpQuaternions(q0, qa, w); la.quaternion.slerpQuaternions(q1, qb, w); hd.quaternion.slerpQuaternions(q2, qc, w);
@@ -1050,7 +1397,11 @@ export function createMonk(opts = {}) {
       // always did up to SKIRT_FREE and eases to SKIRT_REACH, past which no bone turns on the knee's account.
       const reachOf = (x, to = SKIRT_REACH, free = SKIRT_FREE) => x <= free ? x : free + (to - free) * Math.tanh((x - free) / (to - free));
       const kneeLift = (k, to) => reachOf(0.9 * Math.max(0, k), to) / 0.9, backTurn = (k) => reachOf(tr + 0.7 * Math.max(0, -k), SKIRT_BACK_REACH, SKIRT_BACK_FREE);
-      const fwd = kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1])), lf = kneeLift(thigh[0], SKIRT_SIDE), rt = kneeLift(thigh[1], SKIRT_SIDE);
+      // (Sitting down onto a cushion the knees come up as the legs fold, and the skirt's bones would lift the cloth with
+      // them into a ring held out at the height of his lap; the robe built here is laid over the folded legs by its
+      // own shape there, so the knees do not lift it, #664.)
+      const kneeK = !dressed ? 1 - smooth(KNEE_FADE[0], KNEE_FADE[1], seat) : 1;
+      const fwd = kneeK * kneeLift(Math.max(thigh[0], thigh[1])), back = backTurn(Math.min(thigh[0], thigh[1]) * kneeK), lf = kneeK * kneeLift(thigh[0], SKIRT_SIDE), rt = kneeK * kneeLift(thigh[1], SKIRT_SIDE);
       // Seated, the front of the skirt drapes smoothly over his lap and thighs, the sides open over his knees, the back rests on the seat.
       // Climbing stairs: a high knee pushes the code robe's cloth over it forward without lifting the whole hem into a flat board (#615, #642).
       const kneePush = (k) => (dressed || sitW > 0.05 ? 0 : 0.105 * smooth(0.48, 1.48, k));
@@ -1058,26 +1409,38 @@ export function createMonk(opts = {}) {
       B.robeFront.position.z += pushF; B.robeFront.position.y -= 0.25 * pushF;
       B.robeLeft.position.z += 0.65 * pushL; B.robeLeft.position.x += 0.14 * pushL;
       B.robeRight.position.z += 0.65 * pushR; B.robeRight.position.x -= 0.14 * pushR;
-      B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * seat - 0.78 * perch, 0, sd);
-      B.robeBack.rotation.set(back + 0.32 * seat + 0.22 * perch, 0, sd);
+      const sitDrape = !dressed && robe.morphTargetInfluences?.length ? smooth(DRAPE[0], DRAPE[1], seat) : 0;   // (the lap is laid a little before his legs fold under it, #664)
+      if (robe.morphTargetInfluences?.length) robe.morphTargetInfluences[0] = sitDrape;
+      if (skin.morphTargetInfluences?.length) skin.morphTargetInfluences[0] = !dressed ? smooth(0, 1, seat) * (1 - palms) : 0;
+      const boneSeat = dressed ? seat : 0;
+      B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * boneSeat - 0.78 * perch, 0, sd);
+      B.robeBack.rotation.set(back + 0.32 * boneSeat + 0.22 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
-      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.66 * seat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.64 * seat + 0.22 * perch);
-      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.66 * seat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.64 * seat - 0.22 * perch);
-      B.robeFront.scale.y = 1 - 0.04 * seat - 0.18 * perch; B.robeBack.scale.y = 1 - 0.3 * seat - 0.62 * perch;   // on a stool the back of the skirt is gathered on the seat
-      B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * seat - 0.14 * perch;
-      // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
-      B.sashTail.rotation.set(B.robeFront.rotation.x * (1 - 0.6 * sitW) - 2.2 * pushF + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
+      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.66 * boneSeat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.64 * boneSeat + 0.22 * perch);
+      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.66 * boneSeat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.64 * boneSeat - 0.22 * perch);
+      B.robeFront.scale.y = 1 - 0.04 * boneSeat - 0.18 * perch; B.robeBack.scale.y = 1 - 0.3 * boneSeat - 0.62 * perch;   // on a stool the back of the skirt is gathered on the seat
+      B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * boneSeat - 0.14 * perch;
+      // Seated, the sash's end tucks neatly at the waist under his wrists rather than poking over his hands.
+      B.sashTail.scale.y = 1 - (dressed ? 0 : 0.9 * seat);
+      B.sashTail.position.z -= dressed ? 0 : 0.01 * seat;
+      B.sashTail.rotation.set((dressed ? B.robeFront.rotation.x * (1 - 0.6 * sitW) : B.robeFront.rotation.x * (1 - 0.6 * perch) - 0.12 * seat) - 2.2 * pushF + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
       B.hat.rotation.set(0.15 + Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)) + 0.08 * seat + 0.12 * perch, 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
+      // On a cushion the hat comes off his back and its straps with it (they are not drawn while it is off).
+      const hatDown = smooth(0.15, 0.9, seat);
+      straps.visible = hatDown < 0.2;
+      if (hatDown <= 0) hatAt = 0; else { hatAt ||= grounding.hat === 1 ? 1 : -1; layHat(hatDown, surfaceAt, hatAt); }   // (the side is chosen as it leaves his back and kept until it is back)
       if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) liftHem(surfaceAt, dt);
 
       // The shadow keeps to the ground and to the sun, whichever way he turns.
       const a = sun.az - group.rotation.y, off = (sun.len - 1) * 0.42;
+      // (On a cushion it lies on the floor the cushion stands on, SHADOW_SIT under the seat: at the seat's own height the
+      // patch, a sheet seen through, cut through his robe in a dark ring, #664.)
       // In the air (a jump, a hop off a porch) the patch stays on the floor under him, as far below the group as that floor
       // is, and thins and spreads with the height (to six tenths as dark and a fifth wider at a jump's top, 0.46 m);
       // seated, or on the way to a seat, it goes with him as before.
       const free = 1 - Math.max(seat, perch), under = free > 0 && surfaceAt ? surfaceAt(group.position.x, group.position.z) : 0;
       const up = free > 0 && Number.isFinite(under) ? Math.max(0, group.position.y - under) * free : 0, jumpAir = Math.min(1, up / 0.46);
-      patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
+      patch.rotation.y = a; patch.scale.set(1 + 0.2 * jumpAir, 1, sun.len * (1 + 0.2 * jumpAir)); patch.position.set(Math.sin(a) * off, 0.03 - up - SHADOW_SIT * seat, Math.cos(a) * off); patch.material.opacity = sun.op * (1 - 0.4 * jumpAir);
       group.updateMatrixWorld(true);
       if (helpers.length) driveHelpers(false);
     },

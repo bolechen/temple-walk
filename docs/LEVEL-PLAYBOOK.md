@@ -281,3 +281,37 @@
 | 落下的东西 | `litter.js` | 叶、花瓣：每格 1/4 米，最多 7 片各记落点与编号，更旧的记成一堆的数量 | CPU 上的记录，每帧有变才上传一张 2N×N 的 RGBA16UI 小图（高档 256 KB，低档 144 KB） |
 
 压痕是连续的凹陷，用图；落下的东西是一件件有位置的东西，用记录（图只记「多少」，记不住「哪片在哪」，叶就会在眼前换位置）。下一关：松针、花瓣、香灰往 `litter.js` 记（换颜色和形状即可）；雨后的湿脚印往 `trail.js` 记（B 通道空着）。
+
+## 附录丁　给新物件声明参数，在调试面板里拖着调（#684）
+
+调试面板（`?debug`：开发服务器、PR 预览、canary 带 `?debug=1`）里有一组「物件」：选中一件参数化的东西，面板列出它的参数，拖动后**只重建这一件**，调好后「复制片段」得到一段按关卡自己的写法写的对象字面量，贴回关卡文件。做法学自 Polyfork（polyfork.dev：每个模型是带参数的 three.js 模块、浏览器里拖着调），只学做法，不用它的库、模型或 MCP。正式版不带这段代码（`app/src/objects-debug.js` 只在 `__DEPLOY__ !== "production"` 时被 `debug.js` 动态载入；`deploy.test.mjs` 在 production 构建里找不到它的标记 `objects-debug@684`）。面板关着、或没有 `?debug` 时不加载，也没有任何逐帧的工作：一次拖动一次重建。
+
+**一个关卡要做的：** 在 `app/levels/<关>/debug-objects.js` 里导出 `OBJECT_KINDS(ctx)`，返回若干「种类」。引擎按 `import.meta.glob` 找这个文件，和 `hall-views.js` 一样；没有这个文件的关卡，面板里这一组只写「本关还没有登记可调的物件」。
+
+```js
+export const OBJECT_KINDS = ({ W }) => [{
+  kind: "house", label: "墙外的屋",
+  schema: [                                   // 每个参数一行；顺序就是片段里键的顺序
+    { key: "x", type: "number", min: -300, max: 300, step: 0.01, default: 0 },   // step 的小数位也是片段保留的位数
+    { key: "w", label: "宽", type: "number", min: 4, max: 15, step: 0.1, default: 7 },
+    { key: "roof", label: "屋顶", type: "choice", options: ["gable", "hip", "shed"], default: "gable" },
+    { key: "tone", label: "瓦色档", type: "choice", options: [{ value: 0, label: "old" }, { value: 1, label: "grey" }, { value: 2, label: "pale" }], default: 1 },
+    { key: "alongX", type: "bool", default: true },
+    // fmt?: (v) => string, parse?: (n) => number   数据在文件里不是字面量写法时才写，要成对：fmt 写出，parse 把算出的数换回面板的单位
+    //   例：{ key: "yaw", type: "number", step: 0.5, fmt: (v) => `(${v} * Math.PI) / 180`, parse: (r) => r * 180 / Math.PI }  // 面板用度，文件用弧度
+  ],
+  items: () => [{ id: "7", label: "南排第 7 间" }],   // 可选的有哪些
+  read: (id) => ({ x: …, w: …, … }),                 // 这一件现在的参数（只读它，不改它）
+  rebuild: (id, params) => { … },                    // 按参数只重建这一件；不重建整站
+  near: (x, z) => id,                                // 可选：面板上「选离他最近的」
+  focus: (id) => {},                                 // 可选：选中时把镜头带过去
+}];
+```
+
+`schema` 的每一项是 `{ key, label?, type: "number" | "choice" | "bool", min?, max?, step?, options?, default, fmt? }`。写法的规则（`normalize`、`toSnippet`、`parseSnippet`，在 `app/src/objects-debug.js`）：
+
+- 数字夹在 `min`–`max` 里，按 `step` 的小数位取整；选项不在 `options` 里就拒绝；缺的键取 `default`；`schema` 里没有的键拒绝（贴错了种类）。
+- 片段是一个对象字面量，键按 `schema` 的顺序：`{ x: 12.34, z: -5.6, w: 8.2, roof: "hip", tone: 2, alongX: false }`。读回时**不执行**：只认数、字符串（单双引号）、`true`/`false`、注释和结尾逗号，数的位置还认由数、`*`、`/`、括号和 `Math.PI` 组成的算式（手写的小解析，其余一概拒绝；有 `parse` 的参数，算式的结果经 `parse` 换回面板的单位）。
+- 因此「参数 → 片段 → 再解析」结果相等（`tests/unit/objects-debug.test.mjs` 用一个假物件随机跑 300 组）。贴回关卡文件、把默认值改成它之后，画面应与面板里调出来的一样；**改默认外观要另开 PR、走审图**，面板只是帮你找数。
+
+**怎么量单件重建的耗时：** 面板「重建」一行是每次拖动时 `rebuild` 本身的毫秒数，「见到效果」是到下一帧画出为止；「量重建用时」按钮用当前参数连续重建 15 次，写出中位数和最大值（控制台里同样：`__objects.time(15)` 返回 `{ n, median, max, min }`）。开发服务器（`pnpm dev`）上量，验收线是中位数 < 200 ms；量过的数写进该物件所属 PR 的说明里，带上提交号。
