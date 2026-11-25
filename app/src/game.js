@@ -643,6 +643,7 @@ export function createGame(y) {
   const titleOn = free && (!y.level || !!y.level.title);   // the prologue's title rises in the prologue only
   awaitTitle(titleOn && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
   // The prologue's place is yunjing.place.v1; a level with a place of its own keeps it in yunjing.levels.v1 and the prologue's key is never read or written from there.
+  // (First edition: only a place out of doors, which is all T05 has: no room, no balcony; an older or tampered record is read by the same checks and settled below.)
   const ownPlace = !!y.level && !y.level.keepsPlace && !!y.level.keepsOwnPlace;
   let left = free ? (ownPlace ? (readLevelPlace(localStorage, levelId) && { ...readLevelPlace(localStorage, levelId), label: "", up: null, hall: null }) : readPlace(localStorage)) : null, kept = 0;
   if (left && left.up && !y.lofts[left.up]) left = null;

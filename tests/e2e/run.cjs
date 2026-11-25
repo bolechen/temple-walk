@@ -576,6 +576,16 @@ const scenarios = {
     expect((await t.page.textContent("#enterBtn")) === "接着走", "T05's title should offer to go on from where he stood");
     await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
     await t.page.waitForFunction(() => document.body.classList.contains("entered") && !window.__opening().active, null, { timeout: 60000 });
+    // 回到起点 in the pause menu puts him back at the foot of T05's way, and what is kept follows him (the first edition keeps outdoor places only: T05 has no room, no balcony).
+    await t.page.click("#menuBtn"); await t.until(() => t.page.isVisible("#menu"), 10000, "the menu chip did not open the menu"); await t.page.click("#menuHome"); await t.frames(3);
+    const home = await t.state(); expect(Math.hypot(home.x, home.z - 215) < 2 && !(await t.page.isVisible("#menu")), "回到起点 should put him back at T05's outer gate: " + JSON.stringify([home.x, home.z]));
+    // A damaged, out-of-range or tampered record is ignored: T05 still comes up, at the start, and the prologue's keys are as they were.
+    for (const bad of ["{", "null", '{"v":1,"place":{"t05":{"x":"0","z":50}}}', '{"v":1,"place":{"t05":{"x":0,"z":3000}}}', '{"v":1,"place":{"t05":{"x":4000,"z":4000,"yaw":1}}}', '{"v":9,"place":{"t05":{"x":0,"z":100}}}']) {
+      await t.page.evaluate((v) => localStorage.setItem("yunjing.levels.v1", v), bad);
+      await t.page.goto(base + "?level=t05&q=low&fast=1" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+      const at = await t.state(); expect(Math.hypot(at.x, at.z - 215) < 2, "a bad T05 record should leave him at the start: " + bad + " " + JSON.stringify([at.x, at.z]));
+    }
+    expect(JSON.stringify(await mine(t.page)) === JSON.stringify(T00), "the prologue's keys changed while T05 read damaged records: " + JSON.stringify(await mine(t.page)));
     // The prologue with no address: its own place and book, as seeded.
     await t.page.goto(base + "?q=low" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     expect(JSON.stringify(await mine(t.page)) === JSON.stringify(T00), "the prologue's keys changed: " + JSON.stringify(await mine(t.page)));
