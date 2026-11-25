@@ -41,6 +41,7 @@ cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/plate.webp"; [ -n "${KEEP_MODELS:
 if [ -n "${BASE_SITE:-}" ]; then cp -R "$BASE_SITE" "$STAGE/app/base"; find "$STAGE/app/base/shared/models" -type f ! -name "novice*.glb" -delete; rm -rf "$STAGE/app/base/plate.webp"; fi
 # Each run stages under runs/<run>, outside in/: two sessions sharing the bucket once overwrote each other's site
 # mid-job (a sync of in/ with --delete removes everything else under it).
+if [ -n "${EXTRA_BASES:-}" ]; then for kv in $EXTRA_BASES; do n="${kv%%=*}"; d="${kv#*=}"; cp -R "$d" "$STAGE/app/$n"; find "$STAGE/app/$n/shared/models" -type f ! -name "novice*.glb" -delete; rm -rf "$STAGE/app/$n/plate.webp"; done; fi   # EXTRA_BASES="s0=<dir> s1=<dir>": more builds, each served at <name>/, for turn-about measures of several commits
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null
 echo "run $RUN on $FLAVOR"
 COMMIT="$(git rev-parse HEAD)$(git diff --quiet HEAD -- app || echo +dirty)"   # recorded in report.json with the site's fingerprint
