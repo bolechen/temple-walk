@@ -231,14 +231,14 @@ function treeBark(M) {
 // Near the eye a lump's outline is frayed: where its surface turns away from the eye, holes are cut by the world-space grain, more of them the nearer the
 // rim, so that a crown seen within some forty metres ends in sprays with sky between them rather than in a smooth arc (#722 first art review: the nearest
 // cypresses read as mossy stones). Farther off the lumps are small enough on the screen that their outline is the crown's.
-const RAGGED = "{ float nd_=abs(dot(normal,normalize(vViewPosition))), near_=1.-smoothstep(28.,45.,length(vViewPosition)); if(near_>0.){ float f_=fbm3(vWP*vec3(11.,13.,11.)), g_=fbm3(vWP*vec3(5.,6.,5.)+3.1); if(!(f_*near_<=.44+1.4*nd_)) discard; if(!(g_*near_<=.63)) discard; } }";   // (fine and soft: small round scallops at the rim and small windows of sky, the mass kept whole; the art director's final review of #722: not torn black paper)
+const RAGGED = "{ float nd_=abs(dot(normal,normalize(vViewPosition))), near_=1.-smoothstep(28.,45.,length(vViewPosition)); if(near_>0.){ float f_=fbm3(vWP*vec3(11.,13.,11.)); if(!(f_*near_<=.44+1.4*nd_)) discard; if(!((1.-sg_)*near_<=.66)) discard; } }";   // (fine and soft: small round scallops at the rim and small windows of sky where the sprays' grain is thin, the mass kept whole; the art director's final review of #722: not torn black paper; two noises a fragment, the grain's own reused for the windows)
 function needleMat(M) {
   const base = dryMaterials(M).cedar, m = base.clone(), was = base.onBeforeCompile;
   m.onBeforeCompile = (sh, rr) => {
     was.call(base, sh, rr); sh.uniforms.uWindN = U.uWind; sh.uniforms.uTN = U.uT;
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform vec2 uWindN; uniform float uTN;").replace("#include <begin_vertex>", `#include <begin_vertex>
       { float a_=.025+.02*min(length(uWindN),3.); transformed.x+=sin(uTN*1.1+position.x*.7+position.y*.5)*a_+uWindN.x*.012; transformed.z+=cos(uTN*.83+position.z*.6+position.y*.4)*a_+uWindN.y*.012; }`);
-    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74)*(.45+.6*fbm3(vWP*vec3(9.,2.6,9.))+.25*fbm3(vWP*vec3(22.,6.,22.))),step(.5,vUv2.y));\n#include <normal_fragment_begin>\n" + RAGGED).replace("#include <lights_fragment_end>", "#include <lights_fragment_end>\nreflectedLight.indirectDiffuse*=1.7;");   // (a crown's side away from the sun takes more of the sky than a solid would: its sprays let the light in; the shaded side of a backlit crown no darker than L* 8, the art director)   // (an arborvitae's lump: yellower-brown)
+    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "float sg_=fbm3(vWP*vec3(9.,2.6,9.));\ndiffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74)*(.5+.75*sg_),step(.5,vUv2.y));\n#include <normal_fragment_begin>\n" + RAGGED).replace("#include <lights_fragment_end>", "#include <lights_fragment_end>\nreflectedLight.indirectDiffuse*=1.7;");   // (a crown's side away from the sun takes more of the sky than a solid would: its sprays let the light in; the shaded side of a backlit crown no darker than L* 8, the art director)   // (an arborvitae's lump: yellower-brown)
   };
   m.customProgramCacheKey = () => "dryNeedles"; m.name = "dryNeedles"; return m;
 }
