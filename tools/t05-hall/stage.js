@@ -492,7 +492,7 @@ function shoot(s) {
 let composer = null, useAO = Q.get("ao") !== "0";
 function buildComposer() {
   composer = new EffectComposer(renderer); composer.setSize(W, H); composer.addPass(new RenderPass(scene, camera));
-  const ao = new GTAOPass(scene, camera, W, H); ao.output = GTAOPass.OUTPUT.Default; ao.blendIntensity = 0.85;
+  const ao = new GTAOPass(scene, camera, W, H); ao.output = GTAOPass.OUTPUT.Default; ao.blendIntensity = +(Q.get("aoi") ?? 0.85);   // how much the occlusion darkens: `aoi` in the address, a spec's or a set's `aoi`
   ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 2, scale: 1, samples: 12 }); composer.addPass(ao); composer.addPass(new OutputPass());
 }
 function render() { if (useAO) { if (!composer) buildComposer(); composer.render(); } else renderer.render(scene, camera); }

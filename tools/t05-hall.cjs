@@ -34,7 +34,7 @@ const here = __dirname, root = path.join(here, "..");
   async function page(w, h) {
     const p = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
     p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400))); p.on("console", (m) => m.type() === "error" && errs.push(m.text().slice(0, 300)));
-    await p.goto(`http://127.0.0.1:${srv.address().port}/?w=${w}&h=${h}&ao=${spec.ao === false ? 0 : 1}`);
+    await p.goto(`http://127.0.0.1:${srv.address().port}/?w=${w}&h=${h}&ao=${spec.ao === false ? 0 : 1}&aoi=${spec.aoi ?? 0.85}`);
     await p.waitForFunction(() => window.hall?.ready, null, { timeout: 120000 });
     const list = (spec.statues || []).map((s, i) => ({ ...s, url: `/s/${i}.glb` }));
     const st = await p.evaluate((l) => window.hall.setStatues(l), list);

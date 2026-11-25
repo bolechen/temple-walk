@@ -86,7 +86,7 @@ if (process.env.SETS === "ship701") {
     shots.push({ name: "mid10-d1-" + n, shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "faceFrom10", over: { at: [X[i], 4.6, -7.6], look: [X[i], H, -18.1], fov: 11, exp: 3.2 }, ...lamp(i, true) } });
   }
   shots.push({ name: "cam03-d1", shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "cam03", ...lamp(3, true) } });
-  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [{ name: "ship", size: [1920, 1080], statues: L, shots }] } })); process.exit(0);
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [{ name: "ship", size: [1920, 1080], statues: L, shots, aoi: +(process.env.AOI || 0.4) }] } })); process.exit(0);
 }
 if (process.env.SETS === "masks370") {
   // what the masks cost (#370 round 6): the seven painted with and without their masks, inside the hall, at the high tier
