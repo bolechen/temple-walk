@@ -12,6 +12,7 @@
 // Sizes and how far each is sourced: docs/t05/SOURCES.md §11.
 import * as THREE from "three";
 import { box, smooth, plain } from "../../src/geo.js";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 /**
  * The roof's numbers (metres). `purlin`: how far in from the eave's edge the eave purlin lies, on the outermost tier of the
@@ -157,6 +158,21 @@ export function buildRoof(o) {
   /** A side outline (forward, up), scaled by k, thickened to `t` across with a rounded bevel `bev`, centred across. @param {number[][]} pts */
   const profiled = (pts, k, t, bev) => { const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x * k, y * k))), { depth: Math.max(0.01, t - 2 * bev), bevelEnabled: true, bevelThickness: bev, bevelSize: bev * 0.7, bevelSegments: 2, curveSegments: 3 }); return g.translate(0, 0, -Math.max(0.01, t - 2 * bev) / 2); };
 
+  /** A small seated figure: the turned outline, then given a front (+x, toward the corner): its knees drawn forward, narrower side
+   *  to side than front to back, leaning forward a little with the head carried forward, and a small knot on its crown, so that
+   *  close to it reads as a small crouching creature rather than a turned piece (#742's art review). */
+  const figure = () => {
+    const g = new THREE.LatheGeometry(FIGURE.map(([r, y]) => new THREE.Vector2(r, y)), 8), p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      if (x > 0) x *= 1 + 0.45 * smooth(0.03, 0.08, y) * (1 - smooth(0.13, 0.2, y));   // the knees
+      z *= 0.82; x += 0.07 * (y / 0.45) ** 2;                                             // narrower across; the lean
+      p.setXYZ(i, x, y, z);
+    }
+    const knot = new THREE.ConeGeometry(0.022, 0.05, 6).translate(0.075, 0.46, 0);
+    return mergeGeometries([plain(g), plain(knot)]);
+  };
+
   // ---- Rafters: round ones from the bracket sets out under the boards, square flying rafters over their ends. ----
   // Along each side they run straight out; past the corner column they fan, each aimed back at the corner column and
   // stopped where it meets the hip's line in plan, so that the two sides' fans meet along the corner beam.
@@ -300,22 +316,29 @@ export function buildRoof(o) {
     beasts.push(profiled(CHUISHOU, 1, 0.4, 0.05).rotateY(down).translate(P.x, top - 0.28, P.z));
     // (the hip's top where each sits: on the head, its swollen top, or on the lower stretch)
     const topAt = (/** @type {number} */ d) => { if (d >= HEAD) return LOW.h; const k = (10 * (HEAD - d)) / (HEAD - END); return LOW.h + 0.1 * smooth(0, 0.45, k / 10) + nose(k); };
-    for (const d of FIGS) { const F = at(d); beasts.push(new THREE.LatheGeometry(FIGURE.map(([r, y]) => new THREE.Vector2(r, y)), 8).rotateY(down).translate(F.x, F.y + topAt(d) - 0.04, F.z)); }
+    for (const d of FIGS) { const F = at(d); beasts.push(figure().rotateY(down).translate(F.x, F.y + topAt(d) - 0.04, F.z)); }
   }
   // The end ornaments (鸱尾), as the Liao halls carry them: one solid piece, broad where it stands on the ridge's end (about
   // eight tenths of its height across) and narrowing as it rises, its back a smooth curve set with a row of teeth like a fin,
   // its top turned in toward the ridge's middle in one short curled point; low on the inner side two jaws, the upper over the
   // ridge's cap and the lower at the tiles, take the ridge's end between them (the ridge's top is about four tenths of the way
   // up). Drawn as an outline in (in, up), the height 1, then thickened, with a deep rounded bevel so that its sides swell.
-  const OR = R.orn, BEV = { t: 0.075, s: 0.03 };
+  const OR = R.orn, BEV = { t: 0.09, s: 0.03 };   // (a deep rounded bevel: the sides swell)
   /** A smooth curve through points, sampled. @param {number[][]} pts @param {number} n */
   const curve = (pts, n) => new THREE.SplineCurve(pts.map(([u, y]) => new THREE.Vector2(u, y))).getPoints(n);
   // the back, from the foot on the outer side up over the top: teeth from a third of the way up to just under the curl,
   // each leaning up the back, as scales or a fin's rays do
   const back = curve([[-0.42, 0], [-0.45, 0.2], [-0.42, 0.42], [-0.35, 0.62], [-0.24, 0.8], [-0.08, 0.94], [0.08, 0.99]], 60);
+  // (the teeth not alike, as a fin's rays are not: small near the foot, growing up the back and smaller again under the beak, set a
+  // little unevenly, each leaning up the back by its own amount; evenly cut, the row read as a saw blade: #742's art review)
+  const TEETH = [15, 18, 22, 25, 29, 32, 36, 39, 43, 46, 50];
   const toothed = []; back.forEach((P, i) => {
     toothed.push(P);
-    if (i >= 14 && i <= 50 && i % 4 === 2) { const T = back[i + 1].clone().sub(back[i - 1]).normalize(), Nn = new THREE.Vector2(T.y, -T.x); toothed.push(P.clone().addScaledVector(Nn, -0.032).addScaledVector(T, 0.022)); }
+    const n = TEETH.indexOf(i);
+    if (n >= 0) {
+      const T = back[i + 1].clone().sub(back[i - 1]).normalize(), Nn = new THREE.Vector2(T.y, -T.x), f = Math.sin((Math.PI * (n + 0.6)) / (TEETH.length + 0.4));
+      toothed.push(P.clone().addScaledVector(Nn, -(0.018 + 0.026 * f) * (1 + 0.12 * Math.sin(n * 2.3))).addScaledVector(T, 0.014 + 0.012 * f + 0.004 * Math.cos(n * 1.7)));
+    }
   });
   const outline = [
     ...toothed,
@@ -334,7 +357,7 @@ export function buildRoof(o) {
   for (const s of [-1, 1]) {
     const x0 = s * rx, y0 = ridgeTop(rx) - 0.15, H = o.ridge + OR.top - y0, k = (1 - BEV.s / H) / top;
     const shape = new THREE.Shape(outline.map((P) => new THREE.Vector2(P.x * k * H, P.y * k * H)));
-    const body = new THREE.ExtrudeGeometry(shape, { depth: OR.t - 2 * BEV.t, bevelEnabled: true, bevelThickness: BEV.t, bevelSize: BEV.s, bevelSegments: 3, curveSegments: 4 });
+    const body = new THREE.ExtrudeGeometry(shape, { depth: OR.t - 2 * BEV.t, bevelEnabled: true, bevelThickness: BEV.t, bevelSize: BEV.s, bevelSegments: 4, curveSegments: 4 });
     body.translate(0, 0, -(OR.t - 2 * BEV.t) / 2);
     // turned so that "in" points to the ridge's middle: on the east end in is -x
     if (s > 0) body.rotateY(Math.PI);
