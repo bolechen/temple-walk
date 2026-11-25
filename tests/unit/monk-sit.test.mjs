@@ -135,8 +135,8 @@ test("the sleeves hang past the elbows, and the forearms come out under them", (
     // the elbow itself is within the sleeve: cloth on its outer side and behind it
     const outer = sleeve.filter((v) => Math.abs(v.clone().sub(elbow).dot(arm)) < 0.02);
     assert.ok(outer.some((v) => (v.x - elbow.x) * side > 0.03) && outer.some((v) => v.z < elbow.z - 0.03), `${s} elbow is covered on its outer side and behind`);
-    // and the forearm is not a stick held out: the elbow is beside his trunk, the wrist in his lap no higher than it by more than a finger
-    assert.ok(Math.abs(elbow.x) < 0.24 && elbow.z < 0.06 && wrist.y < elbow.y + 0.03, `${s} elbow hangs beside him (${elbow.toArray().map((v) => v.toFixed(2))})`);
+    // and the forearm is not a stick held out: the elbow is beside his trunk, the wrist in his lap no higher than it by more than two fingers (the left lies on the right, so its forearm is nearly level)
+    assert.ok(Math.abs(elbow.x) < 0.24 && elbow.z < 0.06 && wrist.y < elbow.y + 0.04, `${s} elbow hangs beside him (${elbow.toArray().map((v) => v.toFixed(2))})`);
   }
 });
 

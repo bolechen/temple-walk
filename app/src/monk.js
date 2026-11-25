@@ -109,7 +109,7 @@ export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, 
 // plump (the sheet's are a small child's mitts), `x` being where the middle of each hand's length lies: the two lie
 // deep over each other, the left's fingers on the right's fingers and palm, so that from before him there is little
 // more than one hand's width to see. `elbow` is the way the elbows are drawn.
-export const LAP_HAND = { x: 0.011, z: 0.163, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.012, fwd: 0.03, gap: 0.004, turn: 0.5, arch: 1.0, thick: 1.25 } };
+export const LAP_HAND = { x: 0.004, z: 0.163, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.012, fwd: 0.03, gap: 0.006, turn: 0.5, arch: 1.0, thick: 1.25 } };
 // A hand lying palm up, as rods along its fingers' way from the wrist's middle: how far along, how thick it is there
 // (the wrist's ball, the palm, the knuckles, the fingertips) and how far to either side it reaches.
 const HAND_ROD = [[0, 0.027, 0], [0.03, 0.013, 0.022], [0.052, 0.0115, 0.018], [0.082, 0.0115, 0.014]].map(([d, r, w], i) => (i ? [d * LAP_HAND.big, r * LAP_HAND.big, w * LAP_HAND.big] : [d, r, w]));
@@ -304,6 +304,43 @@ function deform(p) {
 const onFace = (az, el, lift = 0) => deform(V3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(R + lift)).add(SKULL);
 
 const spring = (k = 70, c = 9) => ({ x: 0, v: 0, step(target, dt) { for (let left = dt; left > 1e-6; left -= 1 / 60) { const h = Math.min(left, 1 / 60); this.v += (k * (target - this.x) - c * this.v) * h; this.x += this.v * h; } return this.x; } });
+
+// The hand as one soft mitt (#664: the owner wanted the jointed fingers gone), in the hand's own frame: from the wrist
+// along -y to the fingertips, the palm toward +z. `w` is its half width at the palm and `wf` at the fingers, `h` its half
+// thickness there and `hf`, `L` its length from `y0`; past `at` of the way the fingers bend up toward the palm by `curl`
+// (a curve, so they cup), and across it the edges come up by `cup`. A unit sphere is drawn out into that shape, its
+// cross-section kept nearly full to the ends (`full`) so the sides are flat and the ends round. The fingers are closed
+// together: `groove` is how deep the lines between them are, `tips` how much further the middle ones reach.
+export const HAND_SHAPE = {
+  stand: { w: 0.0245, wf: 0.0215, h: 0.0145, hf: 0.0085, L: 0.076, y0: -0.003, at: 0.5, curl: 0.012, cup: 0.0015, full: 0.35, groove: 0.0012, tips: 0.04 },
+  lap: { w: 0.0215, wf: 0.0205, h: 0.0145, hf: 0.0098, L: 0.078, y0: -0.003, at: 0.5, curl: 0.008, cup: 0.004, full: 0.3, groove: 0.0014, tips: 0.035 },
+};
+function mitt(M) {
+  const g = new THREE.SphereGeometry(1, 28, 18), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const nx = p.getX(i), ny = p.getY(i), nz = p.getZ(i), rho = Math.hypot(nx, nz), t = (1 - ny) / 2;
+    const f = smooth(M.at - 0.1, M.at + 0.2, t), w = M.w + (M.wf - M.w) * f, h = M.h + (M.hf - M.h) * f;
+    const k = rho > 1e-6 ? Math.pow(rho, M.full) / rho : 0, x = nx * k * w;
+    const bend = Math.max(0, t - M.at) / (1 - M.at);
+    // the four fingers: closed together, so only shallow grooves between them over the last part, and their tips
+    // rounded one by one, the middle two the longest
+    const u = x / w, fing = smooth(M.at, M.at + 0.15, t), groove = M.groove * fing * Math.pow(Math.max(0, Math.cos(2 * Math.PI * u)), 3) * (1 - sq(u));
+    const tipY = M.L * M.tips * (1 - sq(u)) * smooth(0.82, 1, t) - M.L * 0.02 * Math.abs(Math.sin(2 * Math.PI * u)) * smooth(0.9, 1, t);
+    const z = nz * k * (h - groove) + M.curl * bend * bend + M.cup * sq(u) * smooth(0.15, 0.9, t);
+    p.setXYZ(i, x, M.y0 - t * M.L - tipY, z);
+  }
+  g.deleteAttribute("uv"); g.computeVertexNormals(); return weld(g);
+}
+// A thumb as one tube from its root through the pull of `mid` to its tip, `r0` thick at the root and `r1` at the tip,
+// closed with a ball at each end; always the same number of points, so the standing and the lap's can be morphed.
+function thumbTube(a, mid, b, r0, r1) {
+  const curve = new THREE.QuadraticBezierCurve3(V3(...a), V3(...mid), V3(...b)), pts = curve.getPoints(10);
+  const fr = frames(pts, (q, i) => V3(0, 0, 1).cross(curve.getTangent(i / 10)).lengthSq() > 1e-6 ? V3(0, 0, 1) : V3(1, 0, 0));
+  fr.forEach((q, i) => { q.k = r0 + (r1 - r0) * (i / 10); });
+  const tube = sweep(fr, oval(1, 1, 10)), parts = [tube];
+  for (const [q, r] of [[pts[0], r0], [pts[10], r1]]) parts.push(new THREE.SphereGeometry(r, 10, 8).translate(q.x, q.y, q.z));
+  return mergeGeometries(parts.map((q) => { q.deleteAttribute("uv"); return q; }));
+}
 
 export function createMonk(opts = {}) {
   seatRods = rodsOf();
@@ -563,26 +600,25 @@ export function createMonk(opts = {}) {
       });
       weld(fa);
       pushSkin(finish(fa, PAL.skin, (x, y, z) => { const t = along(arm, x, y, z), l = smooth(0.175, 0.215, t), h = 0.5 * smooth(UPPER + FORE - 0.02, UPPER + FORE, t); return [[IDX[n + "UpperArm"], 1 - l], [IDX[n + "LowerArm"], l * (1 - h)], [IDX[n + "Hand"], l * h]]; }));
-      // The hand in its own frame: spherical wrist ball near (0,0,0), palm & fingers gently angled down (-0.46 rad around wrist).
-      // Also build the hand as it lies in the lap (法界定印, a morph): fingers flat and only a little cupped, the thumb in two joints.
+      // The hand in its own frame: a ball at the wrist, then the hand itself as one soft mitt, palm and fingers in one piece
+      // as the sheet's clay hands are (the owner on the jointed fingers, 2026-11-25: 「重做手指」), and the thumb as one
+      // tube. Standing, the fingers hang a little curled and the hand is turned down at the wrist (-0.46 rad); in the lap
+      // (法界定印, a morph) the fingers are shorter, rounder and cupped up with the palm, and the thumb arches over to the
+      // other's. Both are built by the same two functions with the same counts, so a morph moves each point to its own.
       const buildHand = (mudra) => {
+        const M = mudra ? HAND_SHAPE.lap : HAND_SHAPE.stand;
         /** @type {THREE.BufferGeometry[]} */
-        const palmParts = [new THREE.SphereGeometry(1, 14, 10).scale(mudra ? 0.0215 : 0.0245, mudra ? 0.03 : 0.0285, mudra ? 0.0135 : 0.015).translate(0, -0.026, mudra ? 0.001 : 0.002)];
-        [[0.0135, 0.026], [0.0045, 0.032], [-0.0048, 0.03], [-0.0138, 0.024]].forEach(([fx, len], k) =>
-          palmParts.push(new THREE.CapsuleGeometry(mudra ? 0.0084 - k * 0.0003 : 0.0064 - k * 0.0003, len, 4, 8).translate(0, -len / 2, 0).rotateX(mudra ? -0.3 : -0.18 - k * 0.03).rotateZ(mudra ? 0 : fx * 1.6).translate(mudra ? fx * 0.8 : fx, mudra ? -0.05 : -0.048, mudra ? 0.0015 : 0.003)));
+        const palmParts = [mitt(M)];
         // The thumb. In the lap (法界定印) it rises off the far edge of the palm and comes over toward the other hand, so that
         // the two tips meet in the middle over the fingers and the thumbs and the fingers below them close round an open
         // oval, not a peak. Where each tip must be for that is worked out with the hands' places (layHands).
         if (mudra) {
-          const t = lapHands[s > 0 ? "left" : "right"].thumb;
-          // laid along a curve from the base through the joint's pull to the tip, in three pieces, so the arch is round
-          const at = (u) => t.base.map((b, i) => (1 - u) * (1 - u) * b + 2 * (1 - u) * u * t.joint[i] + u * u * t.tip[i]);
-          const K = LAP_HAND.thumb.thick; palmParts.push(seg(at(0), at(1 / 3), 0.0088 * K), seg(at(1 / 3), at(2 / 3), 0.0083 * K), seg(at(2 / 3), at(1), 0.0078 * K));
+          const t = lapHands[s > 0 ? "left" : "right"].thumb, K = LAP_HAND.thumb.thick;
+          palmParts.push(thumbTube(t.base, t.joint, t.tip, 0.0088 * K, 0.0078 * K));
         } else {
-          // Standing, the thumb is one straight piece, laid as three so that the hand has as many points as the lap's (a
-          // morph moves each point by its number: a count that differed pulled the right arm's skin into spikes).
+          // Standing, the thumb lies along the side of the hand, a little apart from it.
           const at = (y) => V3(0, y, 0).applyAxisAngle(ZV, 0.24).applyAxisAngle(XV, -0.55).add(V3(0.012, -0.018, 0.009)).toArray();
-          palmParts.push(seg(at(0), at(-0.0063), 0.0074), seg(at(-0.0063), at(-0.0127), 0.0074), seg(at(-0.0127), at(-0.019), 0.0074));
+          palmParts.push(thumbTube(at(0), at(-0.0095), at(-0.019), 0.0076, 0.0072));
         }
         const big = mudra ? LAP_HAND.big : 1, palm = mergeGeometries(palmParts.map((g) => { g.deleteAttribute("uv"); return g; })).rotateZ(mudra ? 0 : -0.46).scale(big, big, big).translate(-0.0045, -0.002, 0);
         const wrist = new THREE.SphereGeometry(mudra ? 0.0262 : 0.0245, 14, 10).translate(-0.0045, 0, 0); wrist.deleteAttribute("uv");   // (in the lap the wrist bends further, and a ball the forearm's own size flickered against its end)
