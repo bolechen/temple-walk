@@ -1,0 +1,108 @@
+{
+ "normals": "tools/out/t05/seven/chestb/krakucchanda-normals.png",
+ "depth": "tools/out/t05/seven/chestb/krakucchanda-depth.png",
+ "rect": [
+  -1.5,
+  3.7,
+  1.5,
+  6.7
+ ],
+ "z": -0.6,
+ "out": "tools/t05-hall/paint/masks/krakucchanda-front-b.png",
+ "preview": "tools/out/t05/seven/chestb/krakucchanda-mask-preview.png",
+ "channels": [
+  {
+   "zone": "\u8892\u9732\u7684\u80f8",
+   "ch": 0,
+   "seeds": [
+    [
+     0,
+     6.0
+    ],
+    [
+     -0.25,
+     5.9
+    ],
+    [
+     0.25,
+     5.9
+    ],
+    [
+     0,
+     6.42
+    ],
+    [
+     -0.2,
+     6.4
+    ],
+    [
+     0.2,
+     6.4
+    ]
+   ],
+   "box": [
+    -0.5,
+    5.55,
+    0.55,
+    6.077
+   ],
+   "tol": 0.03,
+   "close": 0.03,
+   "blur": 0.012,
+   "stops": [
+    [
+     0,
+     5.3
+    ],
+    [
+     0,
+     5.1
+    ]
+   ]
+  },
+  {
+   "zone": "\u5185\u8863",
+   "ch": 2,
+   "seeds": [
+    [
+     0,
+     5.0
+    ],
+    [
+     0,
+     4.7
+    ],
+    [
+     0.1,
+     5.4
+    ]
+   ],
+   "box": [
+    -0.5,
+    4.35,
+    0.55,
+    5.7
+   ],
+   "tol": 0.03,
+   "close": 0.03,
+   "blur": 0.012
+  },
+  {
+   "zone": "\u8863\u7f18\u63cf\u91d1",
+   "ch": 1,
+   "ring_of": [
+    0,
+    1
+   ],
+   "width": 0.06,
+   "box": [
+    -0.75,
+    4.3,
+    0.8,
+    6.077
+   ],
+   "blur": 0.006,
+   "open": "below"
+  }
+ ]
+}

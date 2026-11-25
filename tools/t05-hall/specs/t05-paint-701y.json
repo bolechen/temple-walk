@@ -1,0 +1,504 @@
+{
+ "out": "tools/out/t05/after3/run",
+ "size": [
+  1920,
+  1080
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/r3c2/kasyapa-r3c.60000.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.97,
+    1.0,
+    1.03
+   ]
+  },
+  {
+   "url": "tools/out/t05/ship701b/krakucchanda-B4H10b.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-L2"
+  },
+  {
+   "url": "tools/out/t05/r3c2/sikhin-r3c.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/r3c2/vipasyin-r3c.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/ship701b/visvabhu-V3b.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701b/kanakamuni-K1Lb.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-L2"
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.96,
+    1.0,
+    1.05
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "join-krakucchanda",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -12.1
+     ],
+     "look": [
+      11.33,
+      10.75,
+      -18.1
+     ],
+     "fov": 16,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     12.13,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "mid10-krakucchanda",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     12.13,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "mid10-clay-krakucchanda",
+   "shoot": {
+    "paint": false,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     12.13,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "front10-krakucchanda",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -8.1
+     ],
+     "look": [
+      11.33,
+      9.9,
+      -18.1
+     ],
+     "fov": 45,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     12.13,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "join-visvabhu",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -12.1
+     ],
+     "look": [
+      -5.8,
+      10.930000000000001,
+      -18.1
+     ],
+     "fov": 16,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -5.0,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "mid10-visvabhu",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.38,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -5.0,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "mid10-clay-visvabhu",
+   "shoot": {
+    "paint": false,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.38,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -5.0,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "front10-visvabhu",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -8.1
+     ],
+     "look": [
+      -5.8,
+      9.9,
+      -18.1
+     ],
+     "fov": 45,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -5.0,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "join-kanakamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -12.1
+     ],
+     "look": [
+      -11.33,
+      10.72,
+      -18.1
+     ],
+     "fov": 16,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -10.53,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "mid10-kanakamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.17,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -10.53,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "mid10-clay-kanakamuni",
+   "shoot": {
+    "paint": false,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.17,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -10.53,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  },
+  {
+   "name": "front10-kanakamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -8.1
+     ],
+     "look": [
+      -11.33,
+      9.9,
+      -18.1
+     ],
+     "fov": 45,
+     "exp": 3.2
+    },
+    "lamp": 45,
+    "lampAt": [
+     -10.53,
+     7.07,
+     -14.0
+    ],
+    "lampColor": 16764826
+   }
+  }
+ ]
+}
