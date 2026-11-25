@@ -1,0 +1,108 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 154433,
+   "sha256": "f28f12c1ecbb17621b3e5b8480ab77af5c154a693a12bea66e349d4885922a0d",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/cam03-lip-kasyapa.png",
+   "bytes": 1080700,
+   "sha256": "72571042cee5efc82cf7fd06b29a14dfd54deed89145570dedc252e535fd0e0a",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/cam03-lip-sakyamuni.png",
+   "bytes": 1080700,
+   "sha256": "72571042cee5efc82cf7fd06b29a14dfd54deed89145570dedc252e535fd0e0a",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/face10-kasyapa.png",
+   "bytes": 539834,
+   "sha256": "aff8c40b255ea29ca4be6abb0dc3bd2374751eaa26ede1c346bf5d3d3b6abed9",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/face10-sakyamuni.png",
+   "bytes": 500560,
+   "sha256": "8adffd7b2a3f2b9abea0a73a34be26be75d946bdd3611f13fc15573712754ca2",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/face10d-kasyapa.png",
+   "bytes": 676664,
+   "sha256": "e9c535375a81d0a53e519a7d39ef39ded37e81045d3159f75d64cf58def21438",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/face10d-sakyamuni.png",
+   "bytes": 674053,
+   "sha256": "9fa17c011272ff1917a9e915174044cc4cae8328e9ffaec6da52cd5cc063a342",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/front4-kasyapa.png",
+   "bytes": 665518,
+   "sha256": "91d1af19fa96d52c9d6dfdbeca4095f1d207a18c29b22794b93f9a857971a2f4",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/front4-sakyamuni.png",
+   "bytes": 650695,
+   "sha256": "2c4941d12f3b402dd4aab3530db8141d648cf6a05f79edc648171cb50329ba02",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/mid10-clay-kasyapa.png",
+   "bytes": 596151,
+   "sha256": "db91834161cfabc462f2b4ee850012dfa5bafe58a1ad6dad1d136582dc183f8d",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/mid10-clay-sakyamuni.png",
+   "bytes": 536145,
+   "sha256": "16ec5b21632ed55ddb2bf49312fa023a2904a2245c549fecdcd94eaa7c9ff5d1",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/mid10-kasyapa.png",
+   "bytes": 539834,
+   "sha256": "aff8c40b255ea29ca4be6abb0dc3bd2374751eaa26ede1c346bf5d3d3b6abed9",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/mid10-sakyamuni.png",
+   "bytes": 502656,
+   "sha256": "c4f1f750230ce36a5ed5cdb1057ff946a16dd4e9a6a682800fc781de3db0e958",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/mouth-kasyapa.png",
+   "bytes": 576139,
+   "sha256": "bfa0e2ead116128d90e409fd6820b134c6bdb209d9fd4023a39dab869d8b6995",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/mouth-sakyamuni.png",
+   "bytes": 649870,
+   "sha256": "c3e7314cf5e98b1bd256553c32dd33ea0dc97f23544f9e25fe82d09ad1141a40",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/side7-kasyapa.png",
+   "bytes": 517449,
+   "sha256": "e07978e298b9ffddf5137dd0f85ee12739a4c6e9177326a7894c1837a8e7f6f4",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  },
+  {
+   "path": "png/side7-sakyamuni.png",
+   "bytes": 464828,
+   "sha256": "cf1d01e0f677f396ff1f6f9e53fb5f989adeca1a1d6c71ab5d74167f722ac8e5",
+   "rev": "3b0fdf68121ab7cf1fa295d0cd16ef1662d578f9"
+  }
+ ]
+}
