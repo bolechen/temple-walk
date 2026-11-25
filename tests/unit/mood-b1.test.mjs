@@ -19,5 +19,5 @@ test("every mood but summer day is main's, to the last number (lut, sun, sky, mi
 });
 test("summer day keeps its table's shape: the same fields, the colour table still the identity", () => {
   const now = take();
-  for (const k of ["plain", "t00"]) { const was = before[`${k}:summer-day`], is = now[`${k}:summer-day`]; assert.deepEqual(Object.keys(is).sort(), Object.keys(was).sort(), k); assert.deepEqual(is.lut, was.lut, `${k}: J01's colour table is the identity (the lift is made in the light)`); }
+  for (const k of ["plain", "t00"]) { const was = before[`${k}:summer-day`], is = now[`${k}:summer-day`]; assert.deepEqual(Object.keys(is).filter((x) => x !== "con").sort(), Object.keys(was).sort(), k); /* `con` is the one field J01 now names */ assert.deepEqual(is.lut, was.lut, `${k}: J01's colour table is the identity (the lift is made in the light)`); }
 });

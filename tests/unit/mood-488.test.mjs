@@ -11,7 +11,8 @@ const before = JSON.parse(readFileSync(new URL("./fixtures/mood-main-488.json", 
 const plain = (m) => JSON.parse(JSON.stringify(m));   // the fixture went through JSON
 
 test("a level that says nothing gets the table main had, for all sixteen seasons and hours", () => {
-  for (const s of SEASONS) for (const t of TIMES) { assert.deepEqual(plain(moodOf(s, t)), before[`${s}-${t}`], `${s} ${t}`); assert.deepEqual(plain(moodOf(s, t, undefined)), before[`${s}-${t}`]); }
+  for (const s of SEASONS) for (const t of TIMES) { if (s === "summer" && t === "day") continue;   // J01 is lifted on purpose (#524, mood-b1.test.mjs)
+    assert.deepEqual(plain(moodOf(s, t)), before[`${s}-${t}`], `${s} ${t}`); assert.deepEqual(plain(moodOf(s, t, undefined)), before[`${s}-${t}`]); }
 });
 test("T05 says only its winter day (J01): every other season and hour is main's, to the last number", () => {
   assert.equal(typeof t05.moodFor, "function");
@@ -23,7 +24,7 @@ test("T05 says only its winter day (J01): every other season and hour is main's,
       assert.ok(y / len >= 0.25 && y / len <= 0.35, `the sun's y ${(y / len).toFixed(3)} stands low, 0.25 to 0.35`);
       assert.ok(z > 0 && x > 0, "from the south-south-east, toward the walker coming north");
       assert.ok(now.cloud <= 0.2, "clear");
-    } else assert.deepEqual(now, before[`${s}-${t}`], `${s} ${t}`);
+    } else if (s === "summer" && t === "day") continue; else assert.deepEqual(now, before[`${s}-${t}`], `${s} ${t}`);
   }
 });
 test("the prologue changes autumn dusk's sun (direction, strength) and the glow round it, and nothing else, and no other season or hour at all", () => {
@@ -34,7 +35,7 @@ test("the prologue changes autumn dusk's sun (direction, strength) and the glow 
       const changed = Object.keys(now).filter((k) => JSON.stringify(now[k]) !== JSON.stringify(was[k]));
       assert.deepEqual(changed.sort(), ["bloom", "disk", "glow", "sun", "sunI"], "only the sun and the sky's own glow differ");
       assert.ok(Math.abs(now.sunI / was.sunI - 0.8) < 1e-9, "a fifth dimmer, so that no sunlit wall is brighter than the sky (#564), to part sun and shade by 1.4 to 2");
-    } else assert.deepEqual(now, was, `${s} ${t} must not move (J01 is summer by day; the other dusks are prototype 05's and the rest)`);
+    } else if (s === "summer" && t === "day") continue; else assert.deepEqual(now, was, `${s} ${t} must not move (J01 is summer by day; the other dusks are prototype 05's and the rest)`);
   }
 });
 test("the new autumn sun stands low in the north-west of the plan: shadows come toward the camera, the evening stays against the light", () => {
