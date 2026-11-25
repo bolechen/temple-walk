@@ -14,15 +14,15 @@ import { XS, HALL } from "./hall.js";
 // clean (no layered mist, thin haze). The numbers other than the sun's position are the project's own, set against ART.md's words and
 // judged on the named views (docs/t05/DECISIONS.md, 2026-11-24). Only winter by day is changed; the engine's other hours stand.
 // On 2026-11-25 the sky and the air were set against a photograph of the real temple on a clear morning after snow (internal
-// reference, not shipped): a blue zenith, a horizon that is not white, the far roofs clear, and the sun a little warmer and stronger
-// on the walls than the sky's light, so the shadows read. The haze over far land is 0.5, the art director's number; how blue the
-// zenith is stays the art director's call, the T05 lead's research (a dry, cold county, often a little haze) asking for it paler.
+// reference, not shipped): a blue zenith over a horizon still pale, the far roofs clear, and the sun a little warmer and stronger on
+// the walls than the sky's light, so the shadows read. The zenith, the haze (0.5) and the fog are the art director's numbers (#740):
+// a dry early-winter clear day, between the T05 lead's research (a cold county, often a little haze) and the photograph's deep blue.
 const J01_ELEV = (17 * Math.PI) / 180, J01_AZ = (152 * Math.PI) / 180;
 const J01 = {
   sun: [Math.cos(J01_ELEV) * Math.sin(J01_AZ), Math.sin(J01_ELEV), -Math.cos(J01_ELEV) * Math.cos(J01_AZ)],
   sunCol: [1, 0.965, 0.9], sunI: 3.2, cloud: 0.12, snow: 0, wet: 0,
   hemiS: [0.66, 0.79, 1], hemiG: [0.3, 0.31, 0.3], hemiI: 1.0,
-  fog: [0.62, 0.7, 0.8], fogD: 0.0036, zen: [0.11, 0.24, 0.6], hor: [0.6, 0.71, 0.86], haze: 0.5,
+  fog: [0.62, 0.7, 0.8], fogD: 0.0036, zen: [0.14, 0.28, 0.62], hor: [0.78, 0.85, 0.92], haze: 0.5,
   exp: 1.1, bloom: 0.16, glow: 0.35, hal: 0.12, mist: 0.35, fogLayer: [0.06, -6, 20, 2],
   sh: [0.93, 1, 1.035], hi: [1.01, 1, 0.97], sat: 1,
   lut: { lift: [0, 0.002, 0.006], gamma: [1, 1, 1.01], gain: [1, 1, 1], sat: 1.02, shadow: [0, 0, 0.005], light: [0.004, 0.002, -0.003] },
