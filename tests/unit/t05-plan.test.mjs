@@ -186,9 +186,9 @@ test("he walks into the hall across the threshold, to stations C, D, E and F, al
   for (const [x, z] of [[XS[0] + HALL.out - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
 });
 
-test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil", () => {
+test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil; its one place of its own is the stele's (stele.js)", () => {
   assert.equal(site.censer, null); assert.deepEqual(site.trees, []); assert.deepEqual(site.halls, []); assert.deepEqual(site.strikers, []);
-  assert.deepEqual(site.places, {}); assert.deepEqual(site.seats, []);
+  assert.deepEqual(Object.keys(site.places), ["copy"]); assert.deepEqual(site.seats, []);
   assert.equal(level.backdrop, null); assert.equal(level.grove, null);
   assert.deepEqual(Object.keys(level.zones), ["layers"], "sound layers only, no music zones: it has no melody yet (t05-sound.test.mjs)");
 });
