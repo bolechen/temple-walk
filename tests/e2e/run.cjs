@@ -706,10 +706,12 @@ const scenarios = {
     await t.until(async () => (await P()).near === "copy", 900000, "he never came to the stele, or 抄碑 was not offered there");
     expect((await t.page.textContent("#act span")) === "抄碑", "the button before the stele should say 抄碑");
     const cuts0 = (await D()).cuts || 0;
+    // The eye's weight on the stele's shot, kept every frame in the page: on a quick page it may arrive, rest its beat and go home between two looks from here.
+    await t.page.evaluate(() => { window.__copyEye = 0; const look = () => { const d = window.__director(); if (d.id === "copy") window.__copyEye = Math.max(window.__copyEye, d.w); requestAnimationFrame(look); }; requestAnimationFrame(look); });
     await t.page.keyboard.press("e");
     await t.until(async () => (await P()).writing.writing, 120000, "pressing E at the stele did not set him writing");
     pg = await P(); expect(pg.writing.leaf && pg.writing.brush, "he should hold the leaf and the brush: " + JSON.stringify(pg.writing));
-    await t.until(async () => (await D()).id === "copy" && (await D()).w > 0.95, 60000, "the eye never went to the stele's shot");
+    await t.until(async () => (await t.page.evaluate(() => window.__copyEye)) > 0.95, 60000, "the eye never went to the stele's shot");
     await t.until(async () => (await P()).page.stele, 300000, "the copied line was never put on the page");
     pg = await P();
     expect(pg.page.stele.line === "qifo" && pg.view.copy === "觀其寶殿崔嵬，儼居七佛", "the first line copied is the seven Buddhas' line, as cut: " + JSON.stringify(pg.view));
