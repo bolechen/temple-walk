@@ -76,7 +76,7 @@ if (process.env.SETS === "ship701") {
   const lamp = (i, D1 = false) => (D1 ? { lamp: 1.5, lampAt: [X[i], 4.12, -15.75], lampColor: 0xffb070, lampDist: 2.0, noFloor: true, keyI: KEY, keyAim: AIM } : { lamp: 0, noFloor: true, keyI: KEY, keyAim: AIM });
   const shots = [{ name: "cam03-winter", shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "cam03", ...lamp(3) } }];
   // what the director asked for after the T4 of 225000: cam03, the mid10 of each figure (painted and as clay) and join, and the aisle view from the middle of
-  // the hall (a camera 3 m toward the middle and 7.4 m out, 5.6 m up, so the neighbour's lotus leaves the foreground; the trial positions are df9)
+  // the hall (a camera 3 m toward the middle and 7.4 m out, 5.6 m up, so the lotus of the next figure leaves the foreground; the trial positions are df9)
   for (const i of [0, 1, 2, 3, 4, 5, 6]) {
     const n = N[i].replace(/-.*/, ""), H = HEAD[i];
     const put = (name, over, paint = { envIntensity: 0.6 }) => shots.push({ name, shoot: { paint, mood: "winter", view: "faceFrom10", over: { ...over, exp: 3.2 }, ...lamp(i) } });
