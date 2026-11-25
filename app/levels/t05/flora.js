@@ -94,7 +94,8 @@ function lump(out, at, sx, sy, sz, yaw, centre, crownR, detail, salt) {
 export function growTree(t, far = false) {
   const { kind, x, z, h } = t, y = t.y ?? 0, env = t.env || null, yaw = t.yaw ?? hashAt(x, z, 9) * 6.283, rnd = mulberry(seedAt(x, z, 3));
   const r = t.r ?? h * 0.037, gen = /** @type {any} */ (new TreeGenerator(null)), P = GROW[kind](h, r, far);
-  if (env) { const top = env.base + 2 * env.ry; Object.assign(P, { trunkRadius: r, rootFlare: 0.3, gnarl: [0.008, ...P.gnarl.slice(1)], trunkLength: env.base + env.ry * (kind === "pine" ? 0.9 : 1.2), trunkClear: (env.base + 0.3) / (env.base + env.ry * (kind === "pine" ? 0.9 : 1.2)), lengthRatio: [Math.min(0.5, (env.rx * 1.05) / (env.base + env.ry)), 0.42], branchLengthFalloff: 0.3 }); P.top = top; }
+  if (env) { const top = env.base + 2 * env.ry; Object.assign(P, { trunkRadius: r, rootFlare: 0.3, gnarl: [0, ...P.gnarl.slice(1)], trunkLength: env.base + env.ry * (kind === "pine" ? 0.9 : 1.2), trunkClear: (env.base + 0.3) / (env.base + env.ry * (kind === "pine" ? 0.9 : 1.2)), lengthRatio: [Math.min(0.5, (env.rx * 1.05) / (env.base + env.ry)), 0.42], branchLengthFalloff: 0.3 }); P.top = top; }
+  if (t.crownFrom) P.trunkClear = Math.min(0.6, (t.crownFrom + 0.2) / P.trunkLength);   // (no bough below where its needles start: he walks the earth beside it)
   const lean = env ? 0 : kind === "pine" ? 0.07 + 0.06 * hashAt(x, z, 4) : kind === "huai" ? 0.05 : 0.015;   // (a tree on the axis stands straight: its trunk is cleared against the views as an upright post)
   for (const [k, v] of Object.entries({ seed: seedAt(x, z, 1), direction: [Math.sin(yaw) * lean, 1, Math.cos(yaw) * lean], ...P })) if (k !== "top") gen["set" + k[0].toUpperCase() + k.slice(1)](v);
   const m = gen.build(), tubes = m.userData.tubes, geo = m.geometry;
@@ -110,6 +111,8 @@ export function growTree(t, far = false) {
   let [trunk, wood] = splitTrunk(geo, tubes[0]); trunk = ready(trunk); wood = ready(wood);
   // A pagoda tree's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
   if (kind === "huai") { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
+  // a column (the way's arborvitae) keeps its boughs inside its needles' radius
+  if (t.crownR) { const A = wood.attributes.position, R0 = t.crownR * 0.9; for (let i = 0; i < A.count; i++) { const dx = A.getX(i) - x, dz = A.getZ(i) - z, d = Math.hypot(dx, dz); if (d > R0) { A.setX(i, x + (dx * R0) / d); A.setZ(i, z + (dz * R0) / d); } } }
   const centre = new THREE.Vector3(x, y + (env ? env.base + env.ry : kind === "pine" ? h * 0.72 : kind === "cypress" ? h * 0.52 : h * 0.6), z);
   if (env) {   // what reaches out of the ellipsoid is drawn back into it, and nothing of the boughs comes below its underside
     const c = new THREE.Vector3(x, y + env.base + env.ry, z), p = new THREE.Vector3(), A = wood.attributes.position;
@@ -137,7 +140,7 @@ export function growTree(t, far = false) {
     // Lumps of needles packed into a flame (the old placeholder's outline, surround.js: fullest a little under the middle, tapering to a tip),
     // each taller than it is wide, as the arborvitae's sprays stand on edge; deep ones darker. On the axis, packed into its ellipsoid instead,
     // in three or four clumps, as an old temple cypress's crown breaks up.
-    const R = h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3)), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
+    const R = Math.min(t.crownR ?? Infinity, h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3))), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
     const radiusAt = (f) => { for (let i = 1; i < prof.length; i++) if (f <= prof[i][1]) { const [a, fa] = prof[i - 1], [b, fb] = prof[i]; return R * (a + ((b - a) * (f - fa)) / (fb - fa)); } return 0; };
     const count = far ? 16 : 34;
     if (env) {
@@ -154,7 +157,7 @@ export function growTree(t, far = false) {
         lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
       }
     } else {
-      const base = y + h * 0.06, span = h * 0.94;
+      const base = y + (t.crownFrom ?? h * 0.06), span = h - (base - y);   // (the way's columns start their needles at `crownFrom`)
       for (let i = 0; i < count; i++) {
         const f = Math.pow((i + 0.5) / count, 0.8), a = i * 2.39996 + rnd() * 0.7, rad = radiusAt(f), w = Math.max(0.35, rad * (0.55 + 0.25 * rnd())), d = Math.max(0, rad - w * 0.75) * (0.55 + 0.45 * rnd());
         const p = new THREE.Vector3(x + Math.cos(a) * d, base + f * span - w * 0.2, z + Math.sin(a) * d);

@@ -100,9 +100,19 @@ const grow = () => {
 };
 export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });
 /** What each of the axis's trees is grown as: a cypress along the way between the gates; on the terrace a pine or a cypress, by turns down each side (ours). */
-export const treeKind = (t) => (t.y > 0 ? (TRUNKS.list.filter((q) => q.y > 0 && Math.sign(q.x) === Math.sign(t.x) && q.z < t.z).length % 2 ? "cypress" : "pine") : "cypress");
-/** The axis's trees as ./flora.js grows them: each crown in its ellipsoid over a clean bole. */
-export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze({ kind: treeKind(t), x: t.x, z: t.z, y: t.y, h: TRUNKS.canopyBase + 2 * t.ry, r: t.r, env: Object.freeze({ base: TRUNKS.canopyBase, rx: t.rx, ry: t.ry }) })));
+export const treeKind = (t) => {
+  if (t.y === 0) return "cypress";
+  // on the terrace, down each side from the archway: a pine, a pagoda tree, a cypress (the art director, 2026-11-25: one old pagoda tree with the pines and cypresses, its crown kept in its ellipsoid)
+  const n = TRUNKS.list.filter((q) => q.y > 0 && Math.sign(q.x) === Math.sign(t.x) && q.z < t.z).length;
+  return ["pine", "huai", "cypress"][n % 3];
+};
+/** The way's arborvitae (the art director, 2026-11-25): narrow columns branched from low, the needles from `crownFrom` m up, `radius` round at most, `height` tall (6 to 10 m); the views along the axis are all north of them, so no crown base is asked of them. */
+export const WAY_CYPRESS = Object.freeze({ crownFrom: 2.6, radius: 1.2, height: [8.2, 9.8] });   // (`crownFrom` is where the lumps' middles start: their undersides come to about 2 m)
+/** The axis's trees as ./flora.js grows them: on the terrace each crown in its ellipsoid over a clean bole; along the way a low-branched column (WAY_CYPRESS). */
+const way01 = (t) => { const v = Math.sin(t.x * 12.9898 + t.z * 78.233 + 14 * 37.719) * 43758.5453; return v - Math.floor(v); };
+export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze(t.y === 0
+  ? { kind: "cypress", x: t.x, z: t.z, y: t.y, h: +(WAY_CYPRESS.height[0] + (WAY_CYPRESS.height[1] - WAY_CYPRESS.height[0]) * way01(t)).toFixed(2), r: Math.min(t.r, 0.3), crownFrom: WAY_CYPRESS.crownFrom, crownR: Math.min(WAY_CYPRESS.radius, Math.abs(t.x) - PATH.hw - 1 - 0.2) }   // (its crown's edge at least a metre from the paved path's: the lumps reach a little past the radius)
+  : { kind: treeKind(t), x: t.x, z: t.z, y: t.y, h: TRUNKS.canopyBase + 2 * t.ry, r: t.r, env: Object.freeze({ base: TRUNKS.canopyBase, rx: t.rx, ry: t.ry }) })));
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 

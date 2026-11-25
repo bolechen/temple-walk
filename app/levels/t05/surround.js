@@ -27,7 +27,8 @@ import { buildFlora, hashAt } from "./flora.js";
 export const LIMITS = Object.freeze({
   eave: HALL.eave,          // the great hall's eave line: kept in cam01's picture, and in cam07's within `axisBearing` of the axis
   axisBearing: 12,          // degrees: in cam07 the hall's roof stands within this either side of the axis; outside it the trees are free of the eave line (the art director, 2nd round)
-  treeMax: 13,              // and no tree is higher than this
+  treeMax: 13,              // and no tree is higher than this, but for a poplar:
+  poplarMax: 19,            // a poplar outside both eave views, not beside the hall nor on the pagoda's line, up to this (the art director lifted the 13 m for poplars, 2026-11-25)
   nearHall: 10,             // outside the east and west walls south of z = +15 ... the whole stretch beside the hall, the trees stand no higher than this
   nearHallZ: 15,
   ridgeMax: 6.3,            // a house's ridge (5 to 6.3 m; eaves at 3 m)
@@ -93,7 +94,7 @@ export const growKind = (t) => {
  * holds it down: outside both eave views (`eaveCap`), not beside the hall (z < +15 east and west of the court), not on the line to the pagoda; elsewhere its plan height.
  */
 const COMPOUND_ZN = -40;   // (site.js COMPOUND.zN; not imported, the site imports this module)
-export const POPLAR_H = Object.freeze([15, 19]);
+export const POPLAR_H = Object.freeze([15, LIMITS.poplarMax]);
 export const growHeight = (t, kind = growKind(t)) => {
   if (kind !== "poplar" || eaveCap(t.x, t.z) < 40 || onTowerLine(t.x, t.z, 4) || (t.z < LIMITS.nearHallZ + 1 && t.z > COMPOUND_ZN - 8)) return t.h;
   return +(POPLAR_H[0] + (POPLAR_H[1] - POPLAR_H[0]) * hashAt(t.x, t.z, 12)).toFixed(2);

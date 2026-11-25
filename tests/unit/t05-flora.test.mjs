@@ -7,7 +7,8 @@ import "./dom-stub.mjs"; import * as THREE from "three";
 const { createMaterials } = await import("../../app/src/materials.js");
 const { growTree, buildFlora, floraHash, KINDS } = await import("../../app/levels/t05/flora.js");
 const { buildSite, COURT_TREES, COMPOUND } = await import("../../app/levels/t05/site.js");
-const { AXIS_TREES, TRUNKS, treeBlocks, SIGHTS } = await import("../../app/levels/t05/axis.js");
+const { AXIS_TREES, TRUNKS, treeBlocks, SIGHTS, PATH } = await import("../../app/levels/t05/axis.js");
+const { RIDGE } = await import("../../app/levels/t05/hall.js");
 const { planSurround, eaveCap, growKind, growHeight, LIMITS, KIND_AT, ARRIVAL_POPLARS, POPLAR_H } = await import("../../app/levels/t05/surround.js");
 const { TRUNK_MAX } = await import("../../app/levels/t05/flora.js");
 
@@ -30,6 +31,7 @@ test("every tree of the plan is grown, each of its kind: the court's four, the a
   assert.equal(census.length, COURT_TREES.length + AXIS_TREES.length + plan.trees.length + ARRIVAL_POPLARS.length);
   const kinds = new Set(census.map((c) => c.kind)); for (const k of Object.keys(KINDS)) assert.ok(kinds.has(k), `${KINDS[k]} grows`);
   assert.ok(AXIS_TREES.filter((t) => t.y === 0).every((t) => t.kind === "cypress"), "the way between the gates is lined with cypresses");
+  for (const sx of [-1, 1]) assert.equal(AXIS_TREES.filter((t) => t.y > 0 && Math.sign(t.x) === sx && t.kind === "huai").length, 1, "one old pagoda tree on each side of the terrace, with pines and cypresses");
   const byHand = (t) => KIND_AT.some(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05);
   assert.equal(plan.trees.filter(byHand).length, KIND_AT.length, "every tree set by hand is one of the plan's");
   for (const t of plan.trees) if (!byHand(t)) assert.equal(growKind(t), t.kind === "bare" ? growKind(t) : t.kind, "a pine stays a pine, a cypress a cypress");
@@ -41,8 +43,8 @@ test("no tree stands over its height: the plan's (the eave line in cam01 and cam
   for (const t of COURT_TREES) assert.ok(Math.min(t.h, eaveCap(t.x, t.z)) <= LIMITS.treeMax, "the court's trees keep to the town's ceiling");
 });
 
-test("an axis tree's boughs and needles stay inside its ellipsoid, and its trunk inside the upright post the views are cleared against", () => {
-  for (const t of AXIS_TREES) {
+test("a terrace tree's boughs and needles stay inside its ellipsoid, and its trunk inside the upright post the views are cleared against", () => {
+  for (const t of AXIS_TREES.filter((q) => q.env)) {
     const g = growTree(t), c = new THREE.Vector3(t.x, t.y + t.env.base + t.env.ry, t.z), p = new THREE.Vector3();
     for (const geo of [g.wood, ...g.needles]) { const A = geo.attributes.position; for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); const e = Math.hypot((p.x - c.x) / t.env.rx, (p.y - c.y) / t.env.ry, (p.z - c.z) / t.env.rx); assert.ok(e <= 1.0001, `a point of the tree at (${t.x}, ${t.z}) is out of its ellipsoid (${e.toFixed(3)})`); } }
     const A = g.trunk.attributes.position; for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); if (p.y > t.y + 1.2 && p.y < t.y + TRUNKS.h) assert.ok(Math.hypot(p.x - t.x, p.z - t.z) <= t.r + 1e-6, `the trunk at (${t.x}, ${t.z}) leaves its post at ${p.y.toFixed(2)} m`); }
@@ -87,4 +89,28 @@ test("the art director's lines of 2026-11-25 that a number can hold", () => {
     for (const ring of rings) if (ring.pos.y - (c.y ?? 0) > 1.2) assert.ok(ring.radius * g.scale <= TRUNK_MAX * 1.12 + 1e-6, `the ${c.kind} at (${c.x}, ${c.z}) is ${(ring.radius * g.scale).toFixed(2)} m round its middle at ${ring.pos.y.toFixed(1)} m`);
     if (c.kind === "huai") { const W = g.wood.attributes.position; for (let i = 0; i < W.count; i++) if (Math.hypot(W.getX(i) - c.x, W.getZ(i) - c.z) > 1.6) assert.ok(W.getY(i) >= 2.45, `a limb of the pagoda tree at (${c.x}, ${c.z}) hangs at ${W.getY(i).toFixed(2)} m`); }
   }
+});
+
+test("the way's arborvitae are narrow columns branched from low, their crowns a metre or more from the paved path (the art director, 2026-11-25)", () => {
+  for (const t of AXIS_TREES.filter((q) => q.y === 0)) {
+    const g = growTree(t); let lo = Infinity, reach = 0;
+    for (const geo of [g.wood, ...g.needles]) { const A = geo.attributes.position; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - t.x, A.getZ(i) - t.z); if (d > 0.5) lo = Math.min(lo, A.getY(i) - t.y); reach = Math.max(reach, d); } }
+    assert.ok(Math.abs(t.x) - reach - PATH.hw >= 1, `the cypress at (${t.x}, ${t.z}) comes ${(Math.abs(t.x) - reach - PATH.hw).toFixed(2)} m from the path`);
+    assert.ok(lo >= 1.7 && lo <= 2.6, `its needles and boughs start ${lo.toFixed(2)} m up`);
+    assert.ok(reach <= 1.6 && t.h >= 6 && t.h <= 10, `a narrow column (${reach.toFixed(2)} m round, ${t.h} m)`);
+  }
+});
+
+test("no poplar's tip stands higher in the picture than the great hall's ridge, from any of the court's views (the art director, 2026-11-25)", () => {
+  const plan = planSurround(COMPOUND), poplars = [...plan.trees.filter((t) => growKind(t) === "poplar").map((t) => ({ ...t, h: growHeight(t) })), ...ARRIVAL_POPLARS];
+  const rows = [];
+  for (const name of ["cam01", "cam02", "a-tall", "gateway", "terrace"]) {
+    const [vx, vz, yaw] = site.views[name], eyeY = (name === "terrace" ? 3 : 0) + 1.6;
+    // (only what is in the picture: within 50° either side of the way the view looks, north being yaw 0)
+    const seen = poplars.filter((t) => { let a = Math.atan2(-(t.x - vx), -(t.z - vz)) - yaw; a = Math.atan2(Math.sin(a), Math.cos(a)); return Math.abs(a) < (50 * Math.PI) / 180; });
+    const ridge = Math.atan2(RIDGE.height - eyeY, Math.max(1, vz - RIDGE.zm)), worst = Math.max(-1, ...seen.map((t) => Math.atan2(t.h - eyeY, Math.hypot(t.x - vx, t.z - vz))));
+    rows.push(`${name}: ridge ${((ridge * 180) / Math.PI).toFixed(1)}°, highest poplar tip ${((worst * 180) / Math.PI).toFixed(1)}°`);
+    assert.ok(worst < ridge, rows.at(-1));
+  }
+  console.log("# " + rows.join("; "));
 });
