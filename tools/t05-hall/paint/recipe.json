@@ -496,69 +496,79 @@
    "metal": 0,
    "roughJitter": 0.1,
    "where": {
-    "and": [
+    "or": [
      {
       "and": [
        {
-        "box": {
-         "min": "@skinMin",
-         "max": "@skinMax"
-        }
-       },
-       {
-        "half": {
-         "through": [
-          "@neckFront",
-          "@neckBack"
-         ]
-        }
-       }
-      ]
-     },
-     {
-      "or": [
-       {
-        "half": {
-         "through": [
-          "@hairFront",
-          "@hairBack"
-         ]
-        }
-       },
-       {
         "and": [
          {
-          "half": {
-           "p": "@napeP",
-           "n": "@napeN"
+          "box": {
+           "min": "@skinMin",
+           "max": "@skinMax"
           }
          },
          {
           "half": {
-           "p": "@napeFloorP",
-           "n": "@napeFloorN"
+           "through": [
+            "@neckFront",
+            "@neckBack"
+           ]
           }
          }
         ]
+       },
+       {
+        "or": [
+         {
+          "half": {
+           "through": [
+            "@hairFront",
+            "@hairBack"
+           ]
+          }
+         },
+         {
+          "and": [
+           {
+            "half": {
+             "p": "@napeP",
+             "n": "@napeN"
+            }
+           },
+           {
+            "half": {
+             "p": "@napeFloorP",
+             "n": "@napeFloorN"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "not": {
+         "or": [
+          {
+           "ell": {
+            "c": "@earHL",
+            "r": "@earH_"
+           }
+          },
+          {
+           "ell": {
+            "c": "@earHR",
+            "r": "@earH_"
+           }
+          }
+         ]
+        }
        }
       ]
      },
      {
-      "not": {
-       "or": [
-        {
-         "ell": {
-          "c": "@earHL",
-          "r": "@earH_"
-         }
-        },
-        {
-         "ell": {
-          "c": "@earHR",
-          "r": "@earH_"
-         }
-        }
-       ]
+      "map": {
+       "m": "hair",
+       "ch": 0
       }
      }
     ]

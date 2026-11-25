@@ -126,7 +126,10 @@
    "tol": 0.06,
    "close": 0.1,
    "blur": 0.012,
-   "rowfill": true
+   "snap": {
+    "in": 0.05,
+    "out": 0.08
+   }
   },
   {
    "zone": "衣缘描金",

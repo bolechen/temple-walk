@@ -206,6 +206,17 @@
    0,
    1,
    0
-  ]
+  ],
+  "maskHair": {
+   "file": "krakucchanda-hair.png",
+   "rect": [
+    -1.6,
+    5.6,
+    1.6,
+    8.8
+   ],
+   "z": -0.6,
+   "depth": true
+  }
  }
 }

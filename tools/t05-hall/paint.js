@@ -21,6 +21,7 @@ uniform float uEdge;
 uniform sampler2D uMaskF;
 uniform sampler2D uMaskB;
 uniform sampler2D uMaskS;
+uniform sampler2D uMaskH;
 uniform vec3 uTint;
 uniform float uLotus;
 uniform vec3 uInner;
@@ -38,13 +39,13 @@ float pHalf(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; return smoothstep
 // folds and the collar instead of a box's straight sides; only the surface on its own side and facing that way takes it.
 float pMap(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.;
   // b.w: 1 front, 2 back, 3 the figure's right side (picture across = z); +10 when the alpha holds the depth seen
-  float code = mod(b.w, 10.); bool depth = b.w > 9.5;
-  vec3 q = code < 1.5 ? p : code < 2.5 ? vec3(-p.x, p.y, -p.z) : vec3(p.z, p.y, -p.x);   // q.z toward that picture's eye
-  float nz = code < 1.5 ? vFigN.z : code < 2.5 ? -vFigN.z : -vFigN.x;
-  vec2 uv = ((code < 2.5 ? p.xy : p.zy) - a.xy) / (b.xy - a.xy);
+  float code = mod(b.w, 10.); bool depth = b.w > 9.5; bool fr = code < 1.5 || code > 3.5;   // code 4: a second picture from the front, the curls' (issue #701)
+  vec3 q = fr ? p : code < 2.5 ? vec3(-p.x, p.y, -p.z) : vec3(p.z, p.y, -p.x);   // q.z toward that picture's eye
+  float nz = fr ? vFigN.z : code < 2.5 ? -vFigN.z : -vFigN.x;
+  vec2 uv = ((code < 2.5 || code > 3.5 ? p.xy : p.zy) - a.xy) / (b.xy - a.xy);
   if (uv.x < 0. || uv.y < 0. || uv.x > 1. || uv.y > 1.) return 0.;
   if (q.z < a.z || nz < -.1) return 0.;
-  vec4 t = code < 1.5 ? texture2D(uMaskF, uv) : code < 2.5 ? texture2D(uMaskB, vec2(1. - uv.x, uv.y)) : texture2D(uMaskS, uv);
+  vec4 t = code > 3.5 ? texture2D(uMaskH, uv) : code < 1.5 ? texture2D(uMaskF, uv) : code < 2.5 ? texture2D(uMaskB, vec2(1. - uv.x, uv.y)) : texture2D(uMaskS, uv);
   // the mask's alpha holds the depth of the surface its picture saw ((depth toward the eye + 3.5) / 7); a surface lying
   // behind that one (the robe behind a forearm) was not seen and takes none of it
   if (depth && q.z < t.a * 7. - 3.5 - .06 - .2 * (1. - nz)) return 0.;   // more room where the picture only grazed the surface
@@ -159,10 +160,10 @@ function leafUniforms(leaf, A) {
   }
   if (leaf.type === "band") { const y0 = val(s.y0, A), c = val(s.c ?? 0, A), h = val(s.h, A), w = val(s.w, A), z0 = val(s.z0 ?? -99, A);
     if ([y0, c, h, w, z0].some((x) => x === undefined)) return out; return [y0, c, h, 1, w, z0, 0, 0]; }
-  if (leaf.type === "map") { const key = { front: "maskFront", back: "maskBack", right: "maskRight" }[s.m]; const M = A[key]; if (!M || !M.rect) return out;
+  if (leaf.type === "map") { const key = { front: "maskFront", back: "maskBack", right: "maskRight", hair: "maskHair" }[s.m]; const M = A[key]; if (!M || !M.rect) return out;
     // rect: x0, y0, x1, y1 of the picture (across: x from the front and back, z from the side); z: how far toward that
     // picture's eye a surface must lie to take it (front: z, back: -z, right side: -x)
-    const [x0, y0, x1, y1] = M.rect, code = { front: 1, back: 2, right: 3 }[s.m];
+    const [x0, y0, x1, y1] = M.rect, code = { front: 1, back: 2, right: 3, hair: 4 }[s.m];
     return [x0, y0, M.z ?? -99, 1, x1, y1, s.ch ?? 0, code + (M.depth ? 10 : 0)]; }
   return out;
 }
@@ -200,7 +201,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) }, uLotus: { value: opts.lotusGain ?? 1 }, uInner: { value: new THREE.Vector3(...(opts.innerTint ?? [1, 1, 1])) },
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uMaskH: { value: opts.masks?.hair ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) }, uLotus: { value: opts.lotusGain ?? 1 }, uInner: { value: new THREE.Vector3(...(opts.innerTint ?? [1, 1, 1])) },
     uIdMode: { value: 0 }, uFig: { value: opts.fig ?? 0 } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {

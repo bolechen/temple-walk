@@ -72,6 +72,21 @@ for ci, z in enumerate(spec["channels"]):
   st = ndi.generate_binary_structure(2, 1)
   reg = ndi.binary_closing(reg, structure=st, iterations=k) & allow
   reg = ndi.binary_fill_holes(reg)
+  if z.get("snap"):
+    # the edge laid on the mesh's own crease: the region (however it was found) is held to within `in` metres inside and `out`
+    # metres outside its edge, and the two sides grow against each other over the strength of the normals' change and meet on
+    # its strongest line within that band: a collar's fold, not a box's side (ndimage.watershed_ift, as `stops` above)
+    si, so = z["snap"].get("in", 0.04), z["snap"].get("out", 0.07)
+    g2 = np.zeros((H, W), np.float32)
+    g2[:, 1:] += np.linalg.norm(n[:, 1:] - n[:, :-1], axis=2); g2[1:] += np.linalg.norm(n[1:] - n[:-1], axis=2)
+    g2 = ndi.gaussian_filter(g2, 1.0); gi2 = np.clip(g2 / max(g2.max(), 1e-6) * 65535, 0, 65535).astype(np.uint16)
+    mk = np.zeros((H, W), np.int16)
+    mk[~ndi.binary_dilation(reg, structure=st, iterations=max(1, int(round(so / mpp))))] = 2
+    mk[bg] = 2
+    inner = ndi.binary_erosion(reg, structure=st, iterations=max(1, int(round(si / mpp))))
+    mk[inner] = 1
+    reg = ndi.watershed_ift(gi2, mk) == 1
+    reg = ndi.binary_fill_holes(ndi.binary_opening(reg, structure=st, iterations=2))
   if z.get("rowfill"):
     # a block with straight sides (an inner garment's panel) is filled across each row between its leftmost and rightmost
     # pixel, inside the box: the small folds that the growth stopped at, along its top edge and sides, take the colour too

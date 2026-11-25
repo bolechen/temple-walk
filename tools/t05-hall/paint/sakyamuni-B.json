@@ -271,7 +271,18 @@
    0,
    1,
    0
-  ]
+  ],
+  "maskHair": {
+   "file": "sakyamuni-hair.png",
+   "rect": [
+    -1.6,
+    5.6,
+    1.6,
+    8.8
+   ],
+   "z": -0.6,
+   "depth": true
+  }
  },
  "note_514": "round 2: the forearm carried 0.26 m forward and the hand hanging along the knee (tools/t05-statue/sakyamuni/varada.json)",
  "note_514_hand": "round 2: the hand painted as a box cut by a plane just before the knee (bk1: everything of the box more than 2 cm in front of the knee's face, z > 1.46), so the thumb and fingertips are skin and the knee behind them robe; the capsule only for the wrist"

@@ -531,7 +531,7 @@ function paint(on = true) {
     if (o.hair) rec = { ...rec, debugKey: (rec.debugKey ?? "") + "hair" + o.hair, zones: rec.zones.map((z) => z.name === "螺发" ? { ...z, color: o.hair, metal: 0, rough: 1, wear: 0 } : z) };
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
-    const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
+    const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file], hair: MASKS[A.anchors.maskHair?.file] };
     // one material for each normal map the file carries (a head baked on a map of its own is its own primitive, #463)
     for (const mesh of f.meshes) {
       const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
