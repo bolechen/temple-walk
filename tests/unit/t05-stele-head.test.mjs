@@ -26,3 +26,15 @@ test("the monument's stele has a head: the Yingzao Fashi's proportions (chapter 
   // It stands clear under the ceiling plate, and nothing of it is a tortoise: the plinth stays the one plain block (the owner's lead: no turtle).
   assert.ok(floor + S.L + S.headH < M0.y + AX.MONUMENT_FORM.base + AX.MONUMENT_FORM.column + 0.3 + AX.MONUMENT_FORM.beam - 0.1, "the head clears the ceiling plate");
 });
+
+test("the stele, shaft and head, is one piece of stone with no courses: it takes the stele monolith's material, and the coursed stone stops at the plinth", () => {
+  const M0 = MONUMENT, S = AX.STELE, floor = M0.y + AX.MONUMENT_FORM.base + 0.45, mx = (M0.x0 + M0.x1) / 2;
+  site.root.updateMatrixWorld(true);
+  const meshes = []; site.root.traverse((o) => { if (o.isMesh) { o.geometry.computeBoundingBox(); meshes.push({ m: o.material, b: o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld) }); } });
+  const inPavilion = (b) => b.min.x >= M0.x0 - 0.01 && b.max.x <= M0.x1 + 0.01 && b.max.z <= M0.z1 + 0.01 && b.min.z >= M0.z0 - 0.01;
+  const stele = meshes.filter((q) => q.m === M.steleMono && inPavilion(q.b) && Math.abs((q.b.min.x + q.b.max.x) / 2 - mx) < 0.01);
+  assert.equal(stele.length, 1, "one stele-monolith mesh stands in the pavilion");
+  assert.ok(near(stele[0].b.max.x - stele[0].b.min.x, S.headW, 0.01) && near(stele[0].b.max.y, floor + S.L + S.headH, 0.01), "it is the shaft with its head, whole");
+  // The coursed stone round the stele (the base, the plinth) rises no higher than the plinth's top.
+  for (const q of meshes) if (q.m === M.stone && inPavilion(q.b)) assert.ok(q.b.max.y <= floor + 0.01, `the coursed stone in the pavilion stops at the plinth (${q.b.max.y.toFixed(2)})`);
+});
