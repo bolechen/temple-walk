@@ -29,6 +29,12 @@ const MEM = process.argv.find((a) => a.startsWith("--member="));
 let mpos = pos;
 if (MEM) { const rd = await io.read(MEM.slice(9)); await rd.transform(weld()); const rp = rd.getRoot().listMeshes()[0].listPrimitives()[0]; mpos = new Float32Array(rp.getAttribute("POSITION").getArray()); const ri = rp.getIndices().getArray();
   if (ri.length !== idx.length || ri.some((v, i) => v !== idx[i])) throw new Error("--member: the reference does not share this figure's faces"); }
+// --unbow=<deg>,<pivot height>,<pivot depth>,<z0>,<fade>,<rx>,<fx> (stage metres, a head's bow as repair.py's `tilt` gives it): the reference's head is turned back by that bow before the boxes are tested, so boxes drawn on an upright head fit a head that is bowed.
+const UB = process.argv.find((a) => a.startsWith("--unbow="));
+if (UB) { const [dg, cy, cz, z0, fd, rx, fx] = UB.slice(8).split(",").map(Number); mpos = Float32Array.from(mpos);
+  for (let v = 0; v < mpos.length; v += 3) { const x = mpos[v] * S, y = mpos[v + 1] * S, z = mpos[v + 2] * S;
+    const a = -(dg * Math.PI / 180) * Math.min(Math.max((y - (z0 - fd)) / fd, 0), 1) * Math.min(Math.max((rx - Math.abs(x)) / fx, 0), 1), dy = y - cy, dz = z - cz;
+    mpos[v + 1] = (cy + dy * Math.cos(a) - dz * Math.sin(a)) / S; mpos[v + 2] = (cz + dz * Math.cos(a) + dy * Math.sin(a)) / S; } }
 const parts = cfg.tiers.map(() => []); const restList = [];
 for (let t = 0; t < idx.length; t += 3) {
   const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
