@@ -54,7 +54,7 @@ test("the foot and the code never read the address that drew the picture", () =>
   assert.equal(MAIN.host, "temple.rushiwowen.co");
   for (const f of ["app/src/goshuin.js", "app/src/qr.js"]) assert.ok(!/\blocation\b/.test(fs.readFileSync(path.join(ROOT, f), "utf8")), `${f} reads location`);
   assert.ok(!/url:\s*location\.host/.test(fs.readFileSync(path.join(ROOT, "app/yard.js"), "utf8")), "the photo card's foot reads location.host");
-  assert.ok(/url:\s*MAIN\.host/.test(fs.readFileSync(path.join(ROOT, "app/yard.js"), "utf8")), "the photo card's foot is not the main host");
+  assert.ok(/url:\s*(?:link \? )?MAIN\.host/.test(fs.readFileSync(path.join(ROOT, "app/yard.js"), "utf8")), "the photo card's foot is not the main host (or nothing, where the level has no page there: Level.cardLink)");
   const game = fs.readFileSync(path.join(ROOT, "app/src/game.js"), "utf8"), call = game.slice(game.indexOf("drawGoshuin({"), game.indexOf("drawGoshuin({") + 400);
   assert.ok(!/url\s*:/.test(call.split("});")[0]), "game.js still hands drawGoshuin an address");
 });

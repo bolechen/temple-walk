@@ -46,7 +46,7 @@ import { composeCard } from "./src/card.js";
 import { createClip, markCanvas, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
-import { setTemple, paintTemple, templeOf, sealOf, stemOf, saidNow, T00_NAME } from "./src/temple.js";
+import { setTemple, paintTemple, templeOf, sealOf, stemOf, saidNow, verseOf, T00_NAME } from "./src/temple.js";
 import { levelSay } from "./src/levelsay.js";
 import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
@@ -1094,7 +1094,8 @@ async function capture(at = null) {
   drift.update(t, camera.position, H); ground.render(renderer, camera); post.render(t);
   const shot = document.createElement("canvas"); shot.width = W; shot.height = H; shot.getContext("2d").drawImage(canvas, 0, 0);
   camera.fov = keepFov; resize();
-  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: templeOf(L, lang), seal: sealOf(L), url: MAIN.host, qr: settings.get().qr ? photoUrl(lang) : null });
+  const link = L.cardLink !== false, verse = verseOf(L, state.season, state.time, mood.line);   // no address or code where the public page has no such temple
+  return composeCard(shot, { line: verse && tr(verse), label: moodWords(mood), temple: templeOf(L, lang), seal: sealOf(L), url: link ? MAIN.host : "", qr: link && settings.get().qr ? photoUrl(lang) : null });
 }
 let lastBlob = null;
 // The shutter. The view is drawn once more and copied onto a still that covers it, and the walk stops (the frame loop,
@@ -1131,7 +1132,7 @@ on("printBack", () => ui.close("print"));
 // Shared from wherever the page is open (src/share.js, #344): the system's sheet where it can take the picture, else a
 // sheet to press and hold it on; the address it carries names the observance he stands at, if he is at one.
 const sceneHere = () => { let best = 12, id = "photo"; for (const [k, p] of Object.entries(site.places)) { if (!FROM.includes(k) || p.room) continue; const d = Math.hypot(p.at[0] - pos.x, p.at[1] - pos.z); if (d < best && !inside) { best = d; id = k; } } return id; };
-on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: `${stemOf(L)}.jpg`, title: templeOf(L, lang), from: sceneHere(), content: "print" }));
+on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: `${stemOf(L)}.jpg`, title: templeOf(L, lang), from: sceneHere(), content: "print", link: L.cardLink !== false }));
 $("saveLink")?.addEventListener("click", () => countDownload("print", sceneHere()));
 
 // ---- A short film (#342, clip.js) ----------------------------------------------------
@@ -1151,7 +1152,7 @@ const clipEnded = () => {
 // frame (a drawImage from the WebGL canvas onto a 2D one cost 25 ms a frame on a T4). The canvas is shown at the frame's place, so what is seen is what is kept.
 async function startClip(secs, short = 0, layoutOnly = false) {
   if (!clipPick || clipRec || clipView || frozen || !photo.on) return false;
-  const info = settings.get().clipMark ? { temple: templeOf(L, lang), label: moodWords(mood), seal: sealOf(L), url: MAIN.host + "/?" + CLIP.utm } : null;
+  const info = settings.get().clipMark ? { temple: templeOf(L, lang), label: moodWords(mood), seal: sealOf(L), url: L.cardLink === false ? "" : MAIN.host + "/?" + CLIP.utm } : null;
   if (info) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, info.seal), document.fonts.load(`30px ${FACE.serif}`, info.temple + info.label)]); } catch {} }
   if (clipRec || clipView || !photo.on) return false;
   const cw = canvas.clientWidth, ch = canvas.clientHeight, f = frameRect(), [aw, ah] = photo.aspect === "screen" ? [cw, ch] : ASPECT[photo.aspect];
@@ -1198,7 +1199,7 @@ on("clipStop", stopClip);
 on("clipBack", () => ui.close("clip"));
 on("clipShare", async () => {
   if (!clipLast) return;
-  try { await navigator.share({ files: [clipLast.file], title: templeOf(L, lang), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
+  try { await navigator.share({ files: [clipLast.file], title: templeOf(L, lang), ...(verseOf(L, state.season, state.time, mood.line) ? { text: tr(verseOf(L, state.season, state.time, mood.line)) } : {}) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
 });
 settings.onChange((s) => $("clipMarkToggle")?.setAttribute("aria-pressed", String(s.clipMark)));
 $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark));

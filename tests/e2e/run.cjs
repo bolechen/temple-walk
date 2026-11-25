@@ -866,6 +866,10 @@ const scenarios = {
       const dl = await t.page.getAttribute("#saveLink", "download");
       expect(dl && dl.startsWith(want[level][lang]), `${level}/${lang}: saved as ${dl}`);
       if (level === "t05") expect(!/云径|yunjing/i.test(dl), `${level}/${lang}: the saved name carries the prologue's: ${dl}`);
+      // The card carries the public page's code only where the level lists there (cardLink): T05's has none, the prologue's reads the main site.
+      { const sharp = require("sharp"), jsQR = require("jsqr"), { photoUrl } = await import("../../app/src/goshuin.js");
+        const k = await t.page.evaluate(() => window.__capture()), { data, info } = await sharp(Buffer.from(k.url.split(",")[1], "base64")).ensureAlpha().raw().toBuffer({ resolveWithObject: true }), code = jsQR(new Uint8ClampedArray(data), info.width, info.height);
+        if (level === "t05") expect(code === null, `t05/${lang}: the card carries a code: ${code && code.data}`); else expect(code && code.data === photoUrl(lang), `t00/${lang}: the card's code reads ${code && code.data}`); }
       // The markup says the temple it walks (#703): the tab, the small seals, the title's second line, and the book of seals only where the level keeps one.
       const m = await t.page.evaluate(() => ({ title: document.title, og: document.querySelector('meta[property="og:title"]').content, seals: [...document.querySelectorAll(".seal-mark[aria-hidden]")].map((e) => e.textContent), sub: document.querySelector("#title .sub").textContent, nobook: document.body.classList.contains("nobook"), book: getComputedStyle(document.getElementById("bookBtn")).display, way: getComputedStyle(document.getElementById("way")).display, keyB: getComputedStyle(document.querySelector(".need-book")).display }));
       if (level === "t05") {

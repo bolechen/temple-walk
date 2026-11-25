@@ -17,11 +17,11 @@ export function createShare(theUI) {
   $("saveClose")?.addEventListener("click", () => ui.close("saveSheet"));
   window.__saveSheet = () => ({ open: ui.isOpen("saveSheet"), img: $("saveImg")?.tagName, src: !!$("saveImg")?.src, wechat: !$("saveWechat")?.hidden, download: !$("saveDownload")?.hidden, app: inAppOf(navigator.userAgent) });
 }
-/** Share a picture, or show it to be saved. @param {{ blob: Blob, url: string, name: string, title: string, from: string, content: string }} o */
-export async function shareOrSave({ blob, url, name, title, from, content }) {
+/** Share a picture, or show it to be saved. @param {{ blob: Blob, url: string, name: string, title: string, from: string, content: string, link?: boolean }} o (`link` false: the picture goes alone, with no address of the public page) */
+export async function shareOrSave({ blob, url, name, title, from, content, link = true }) {
   const file = new File([blob], name, { type: blob.type || "image/jpeg" }), app = inAppOf(navigator.userAgent);
   if (!app && canShareFile(file)) {
-    try { await navigator.share({ files: [file], title, url: shareURL(from, content) }); track("demo.share", { from: content, method: "share", scene: from }); } catch {}
+    try { await navigator.share(link ? { files: [file], title, url: shareURL(from, content) } : { files: [file], title }); track("demo.share", { from: content, method: "share", scene: from }); } catch {}
     return "share";
   }
   $("saveImg").src = url; $("saveImg").alt = title;

@@ -273,3 +273,10 @@ test("a wall's inner face is inside all the way to its corners, its outer face o
   assert.equal(h.shut(xi + 0.4, 6, -0.5, 0, 0, 1), 1, "the end of a wall seen from the court");
   for (const g of h.parts.mural) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(Math.max(-b.min.x, b.max.x) <= xi + 1e-6 && b.max.z <= zf + 1e-6 && b.min.z >= zb - 1e-6, "a mural's ground within the inner faces"); }
 });
+
+test("while the doors are shut each of the four windows has an unseen sheet that casts the sun's shadow, so that no striped patch of sun lies on the floor inside (the first review, winter day)", () => {
+  const h = buildHall(M), windows = FRONT.filter((k) => k === "window").length;
+  assert.equal(windows, 4);
+  assert.equal(h.parts.windowShade.length, SHUT ? windows : 0, SHUT ? "one sheet to each window" : "no sheet once the hall is open");
+  for (const g of h.parts.windowShade) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(b.max.x - b.min.x > 4 && b.max.y - b.min.y > 3.5 && b.max.z - b.min.z < 0.05, "a thin sheet over the window's opening"); }
+});
