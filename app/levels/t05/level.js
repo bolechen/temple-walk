@@ -13,13 +13,17 @@ import { XS, HALL } from "./hall.js";
 // the plan's frame (north is -z, east +x) is toward the south-south-east. Its light is cold white, the sky's shade blue, the air
 // clean (no layered mist, thin haze). The numbers other than the sun's position are the project's own, set against ART.md's words and
 // judged on the named views (docs/t05/DECISIONS.md, 2026-11-24). Only winter by day is changed; the engine's other hours stand.
+// On 2026-11-25 the sky and the air were set against a photograph of the real temple on a clear morning after snow (internal
+// reference, not shipped): a blue zenith over a horizon still pale, the far roofs clear, and the sun a little warmer and stronger on
+// the walls than the sky's light, so the shadows read. The zenith, the haze (0.5) and the fog are the art director's numbers (#740):
+// a dry early-winter clear day, between the T05 lead's research (a cold county, often a little haze) and the photograph's deep blue.
 const J01_ELEV = (17 * Math.PI) / 180, J01_AZ = (152 * Math.PI) / 180;
 const J01 = {
   sun: [Math.cos(J01_ELEV) * Math.sin(J01_AZ), Math.sin(J01_ELEV), -Math.cos(J01_ELEV) * Math.cos(J01_AZ)],
-  sunCol: [1, 0.985, 0.95], sunI: 2.95, cloud: 0.12, snow: 0, wet: 0,
-  hemiS: [0.74, 0.84, 1], hemiG: [0.3, 0.31, 0.3], hemiI: 1.1,
-  fog: [0.66, 0.73, 0.8], fogD: 0.0058, zen: [0.27, 0.43, 0.72], hor: [0.78, 0.85, 0.92], haze: 0.8,
-  exp: 1.1, bloom: 0.16, glow: 0.35, hal: 0.12, mist: 0.7, fogLayer: [0.15, -6, 20, 2],
+  sunCol: [1, 0.965, 0.9], sunI: 3.2, cloud: 0.12, snow: 0, wet: 0,
+  hemiS: [0.66, 0.79, 1], hemiG: [0.3, 0.31, 0.3], hemiI: 1.0,
+  fog: [0.62, 0.7, 0.8], fogD: 0.0036, zen: [0.14, 0.28, 0.62], hor: [0.78, 0.85, 0.92], haze: 0.5,
+  exp: 1.1, bloom: 0.16, glow: 0.35, hal: 0.12, mist: 0.35, fogLayer: [0.06, -6, 20, 2],
   sh: [0.93, 1, 1.035], hi: [1.01, 1, 0.97], sat: 1,
   lut: { lift: [0, 0.002, 0.006], gamma: [1, 1, 1.01], gain: [1, 1, 1], sat: 1.02, shadow: [0, 0, 0.005], light: [0.004, 0.002, -0.003] },
   leaf: [1.75, 0.95, 0.5],   // dry earth and olive evergreens: what app/levels/t05/dry.js multiplies by on a dry day without snow
