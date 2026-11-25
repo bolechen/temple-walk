@@ -120,7 +120,7 @@ export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, 
 // the left hand lies higher): each leaves its own palm at `thumb.root` above or below the palm's middle, leans `lean` of
 // the way forward to the meeting place before it turns in, and the tips' middles lie `gap` to either side of the
 // middle, just touching. The wrist's ball is pressed to `wrist` of its thickness, as flat as the hand is.
-export const LAP_HAND = { x: 0.002, z: 0.1625, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.014, fwd: 0.036, gap: 0.008, turn: 0.35, arch: 1.0, thick: 1.25, lean: 0.75, root: { left: -0.006, right: 0.012 } }, wrist: 0.75 };
+export const LAP_HAND = { x: 0.002, z: 0.1625, out: 0.05, tip: 0.04, stack: 0.019, big: 1.12, elbow: [1, -1, -0.6], thumb: { up: 0.022, fwd: 0.036, gap: 0.008, turn: 0.35, arch: 1.0, thick: 1.25, lean: 0.75, root: { left: -0.006, right: 0.012 } }, wrist: 0.75 };
 // A hand lying palm up, as rods along its fingers' way from the wrist's middle: how far along, how thick it is there
 // (the wrist's ball, the palm, the knuckles, the fingertips) and how far to either side it reaches.
 const HAND_ROD = [[0, 0.027 * LAP_HAND.wrist, 0], [0.03, 0.0118, 0.022], [0.052, 0.0105, 0.018], [0.082, 0.0105, 0.014]].map(([d, r, w], i) => (i ? [d * LAP_HAND.big, r * LAP_HAND.big, w * LAP_HAND.big] : [d, r, w]));
