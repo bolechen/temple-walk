@@ -46,6 +46,12 @@ export const templeNow = () => templeOf(current);
 export const sealNow = () => sealOf(current);
 export const stemNow = () => stemOf(current);
 /** The temple's name in Chinese, for what is drawn as calligraphy (the book's page): `glyphs` then writes it in the forms the language uses. */
+/**
+ * The verse a photograph prints: the hours' own for a level that says nothing, or only what the level itself gives this
+ * season and hour (none, when it gives none). @param {{ ownVerse?: boolean, moodFor?: (s: string, t: string, m: any) => any } | null | undefined} level
+ * @param {string} season @param {string} time @param {string} line the hours' own verse
+ */
+export const verseOf = (level, season, time, line) => (level?.ownVerse ? level.moodFor?.(season, time, {})?.line || "" : line);
 export const nameNow = () => current?.name || T00_NAME;
 
 /**
