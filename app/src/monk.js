@@ -102,10 +102,6 @@ const cushionTop = (r) => r <= 0.1 ? 0 : r <= 0.262 ? -0.012 * (r - 0.1) / 0.162
 /** The lap: how high the robe lies at a point before him or beside him, over his legs or on the cushion (the seat's frame). */
 const cushionAt = (x, z) => cushionTop(Math.hypot(x, z - SEAT_LEGS.back));
 export function lapTop(x, z) { return Math.max(cushionAt(x, z) + LAP.thick, legsTop(x, z)); }
-// Seated on a cushion, where the hat is laid (#664): in his own frame, to his right and a little behind his knees, turned
-// a little; `seat` is the height of a cushion (geo.js CUSHION), `deep` the furthest below the seat a floor is believed,
-// `arc` how high over the straight way it is carried.
-export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, arc: 0.1 };
 // Seated on a cushion, the hands in the lap (#664; refs/monk-poses-v6-2026-11-23-sitting.webp; the owner's photograph of
 // the meditation seal, 2026-11-25): palms up against his belly, the right below and the left lying on it (`stack` higher,
 // its fingers over the right's), each palm's middle `x` to its own side and `z` before his hips, the fingers running in
@@ -870,7 +866,7 @@ export function createMonk(opts = {}) {
     beadMesh = rigid(mergeGeometries(beads), beadM, B.chest);
   }
   // The bamboo hat (refs/monk-props-v6 & panel 4): 40 cm shallow cone (height/diam ~0.36) with radial ribs, rolled rim, apex cap and inner head-ring.
-  let hat; const hatOff = new THREE.Matrix4();
+  let hat;
   {
     const RH = 0.198, HH = 0.136;
     const prof = [[0, HH + 0.01], [0.012, HH + 0.008], [0.018, HH + 0.002], [0.021, HH - 0.004]];
@@ -887,8 +883,6 @@ export function createMonk(opts = {}) {
       paint(new THREE.TorusGeometry(0.078, 0.0055, 6, 28).rotateX(Math.PI / 2).translate(0, HH * 0.42, 0), new THREE.Color(0.88, 0.82, 0.72)),
     ];
     const g = mergeGeometries(parts.map((q) => { q.deleteAttribute("normal"); q.computeVertexNormals(); return q; })).rotateX(-(Math.PI / 2 - 0.1)).translate(0, -0.11, -0.016);
-    // (how the hat was turned and moved to hang on its bone, undone: `layHat` stands it on its rim with this)
-    hatOff.makeTranslation(0, -0.11, -0.016).multiply(new THREE.Matrix4().makeRotationX(-(Math.PI / 2 - 0.1))).invert();
     const tex = straw();
     hat = rigid(g, new THREE.MeshStandardMaterial({ map: tex, bumpMap: tex, bumpScale: 0.85, roughness: 0.82, vertexColors: true, side: THREE.DoubleSide, envMapIntensity: 0.32 }), B.hat);
   }
@@ -904,7 +898,7 @@ export function createMonk(opts = {}) {
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
   const blink = createBlink(), lid = { value: 0 }; let eyed = false, blinking = true;
-  let hatAt = 0, phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, hopW = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
+  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, hopW = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
   const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
   // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
@@ -932,24 +926,6 @@ export function createMonk(opts = {}) {
     else { _y.set(0, -Math.cos(0.22), -Math.sin(0.22)); _z.set(-s, 0, 0); }   // fingers up and a little forward, palm to palm
     _x.crossVectors(_y, _z).normalize(); _z.crossVectors(_x, _y);
     return out.setFromRotationMatrix(_m.makeBasis(_x, _y, _z));
-  }
-  // Seated on a cushion his hat is not on his back (#664: the design sheet's seated figure has none, and behind a seated
-  // back it stood out like a shield): as he comes down it is taken off and laid on its rim on the floor at his right,
-  // HAT_OFF from his middle (at his left if the page says his right is taken: `grounding.hat` 1, hatside.js), and as he
-  // gets up it goes back. `k` is how far it has gone over (0 on his back, 1 laid down); between, it goes over on a low arc. The floor is what the cushion lies on: `surfaceAt` there, or, where that
-  // says nothing sensible (no floor given, or a drop beside the seat), a cushion's height under the seat.
-  const hatP0 = V3(), hatP1 = V3(), hatS = V3(), hatQ0 = new THREE.Quaternion(), hatQ1 = new THREE.Quaternion(), hatM = new THREE.Matrix4();
-  function layHat(k, surfaceAt, side) {
-    const x = -side * HAT_OFF.x;   // (HAT_OFF is written for his right)
-    group.updateMatrixWorld(true);
-    B.hat.matrixWorld.decompose(hatP0, hatQ0, hatS);
-    group.localToWorld(hatP1.set(x, 0, HAT_OFF.z));
-    const groupY = group.matrixWorld.elements[13]; let floor = surfaceAt ? surfaceAt(hatP1.x, hatP1.z) - groupY : NaN;
-    if (!(floor <= 0.001 && floor > -HAT_OFF.deep)) floor = -HAT_OFF.seat;
-    hatM.makeRotationY(-side * HAT_OFF.turn).setPosition(x, floor + 0.006, HAT_OFF.z).multiply(hatOff).premultiply(group.matrixWorld).decompose(hatP1, hatQ1, hatS);
-    hatP0.lerp(hatP1, k); hatP0.y += HAT_OFF.arc * Math.sin(Math.PI * k); hatQ0.slerp(hatQ1, k);
-    hatM.compose(hatP0, hatQ0, hatS.set(1, 1, 1)).premultiply(_inv.copy(B.hat.parent.matrixWorld).invert()).decompose(B.hat.position, B.hat.quaternion, hatS);
-    B.hat.updateMatrixWorld(true);
   }
   // The skirt is lifted off any step it would pass into: its bones are shortened, never more than the cloth needs.
   const SK = SKIRT.map((n) => IDX[n]), hem = [];
@@ -1152,7 +1128,6 @@ export function createMonk(opts = {}) {
     // `grounding.act` is what an observance asks of him over the pose (rites.js): `bow` and `twist` of the trunk and
     // `nod` of the head in radians, `look` the head turned aside (radians, + to his left), `breath` from -1 (out) to 1 (in), and for either hand a place in the world to
     // reach (`hands.left.at`), which way its fingers and palm turn there, and how far it has gone over (`w`, 0 to 1).
-    // `grounding.hat` says which side of a cushion his hat is laid on (-1 or nothing his right, 1 his left).
     // `grounding.rise` (0 as he leaves the seat, 1 stood up) and `grounding.crouch` (how far his knees give as he lands,
     // in metres) are the getting-up-from-a-seat pose's.
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
@@ -1425,10 +1400,7 @@ export function createMonk(opts = {}) {
       B.sashTail.position.z -= dressed ? 0 : 0.01 * seat;
       B.sashTail.rotation.set((dressed ? B.robeFront.rotation.x * (1 - 0.6 * sitW) : B.robeFront.rotation.x * (1 - 0.6 * perch) - 0.12 * seat) - 2.2 * pushF + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
       B.hat.rotation.set(0.15 + Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)) + 0.08 * seat + 0.12 * perch, 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
-      // On a cushion the hat comes off his back and its straps with it (they are not drawn while it is off).
-      const hatDown = smooth(0.15, 0.9, seat);
-      straps.visible = hatDown < 0.2;
-      if (hatDown <= 0) hatAt = 0; else { hatAt ||= grounding.hat === 1 ? 1 : -1; layHat(hatDown, surfaceAt, hatAt); }   // (the side is chosen as it leaves his back and kept until it is back)
+      // (Seated on a cushion too the hat stays on his back: the owner, 2026-11-25, 「改回去」.)
       if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) liftHem(surfaceAt, dt);
 
       // The shadow keeps to the ground and to the sun, whichever way he turns.

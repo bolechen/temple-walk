@@ -21,7 +21,7 @@ import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
 import { recordTap, strike, flutter, cueState, shutterSound, stampSound, photoSounds, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
-import { zoneOf } from "./src/score.js";
+import { zoneOf, layerOf } from "./src/score.js";
 import { createSettings, browserSettingsStore, DEFAULTS as SETTING_DEFAULTS } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
 import { createTrees, geometryHash } from "./src/trees.js";
@@ -34,7 +34,6 @@ import { followEye, createFollow, damp, FOLLOW, FRAMES, frameArm, aimAt } from "
 import { createEyeSpace, eyeRadius } from "./src/eyespace.js";
 import { planRecenter, recenterYaw, createFollowTurn, yawBehind } from "./src/camturn.js";
 import { keyAxes, createKeyTurn } from "./src/keyturn.js";
-import { hatSide } from "./src/hatside.js";
 import { gatherEye, eyeBoxes } from "./src/eyegather.js";
 import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
@@ -454,7 +453,7 @@ const ZB = L.zones;
 // heard are the ones the leaves and the smoke are seen to follow. (Under ?shot or reduced motion the picture holds its
 // clock at 0; the sound goes on along the timeline.)
 let joyaOn = false;   // the year-end bell's night is open (joya-ui.js says so): the bell's court plays only the drone (score.js)
-const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), joya: joyaOn, season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
+const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), layer: layerOf(pos.x, pos.z, inside, ZB), joya: joyaOn, season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
 const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
@@ -859,7 +858,6 @@ function frame(now) {
     monk.update(dt, stage && stage.speed != null ? stage.speed : still || (aloft && !stepping) || climb ? 0 : speedNow,
       (aloft && !stepping) || (climb && !climb.down && climb.t < climb.plan.duration * 0.5) ? "hop" : down ? "rise" : stage ? stage.pose : photo.on && photo.pray,
       t, walker.heightAt, { heightAt: walker.eyeAt, stairs: walker.onStairs(pos.x, pos.z), act: stage ? stage.act : null,
-        hat: stage && stage.pose === "sit" ? (stage.hat ||= hatSide(walker, stage.seat ? stage.seat[0] : pos.x, stage.seat ? stage.seat[1] : pos.z, stage.face ?? heading, inside && hallIn ? hallIn.room.cx : 0)) : 0,   // on a cushion, the side his hat is laid on (#664)
         rise: down ? Math.min(1, down.t / down.plan.duration) : null,
         crouch: down && down.t > down.plan.duration ? 0.045 * Math.sin(Math.PI * Math.min(1, (down.t - down.plan.duration) / 0.34)) : 0 });
   }
