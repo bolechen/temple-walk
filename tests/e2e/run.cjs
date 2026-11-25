@@ -26,9 +26,19 @@ async function pushRun(b, base, body) {
   await t.page.evaluate(() => {
     window.__pushSeen = []; const go = () => { const y = window.__yard(), e = window.__frame().eye, m = y.monkWorld, n = m.near;
       const d = Math.hypot(Math.max(m.min[0] - e[0], 0, e[0] - m.max[0]), Math.max(m.min[1] - e[1], 0, e[1] - m.max[1]), Math.max(m.min[2] - e[2], 0, e[2] - m.max[2]));
-      window.__pushSeen.push({ d: +d.toFixed(3), n, op: y.monkShown ? y.opacity : 0 }); requestAnimationFrame(go); };
+      window.__pushSeen.push({ d: +d.toFixed(3), n, op: y.monkShown ? y.opacity : 0, tw: y.fadeTwins }); requestAnimationFrame(go); };
     requestAnimationFrame(go);
   });
+  // (#632) Part drawn, only the face of him that looks at the eye may show: while 0 < opacity < 1 each solid part is first drawn into the
+  // depth buffer alone (a twin, `fadeTwins`), so that its far side is not blended in over its near side; wholly drawn or wholly clear there are none,
+  // so an ordinary frame has no second draw. And the fade is a stretch the eye can see: at most 0.12 m of eye a frame (PUSH.move) over
+  // the 1.5 m of it is at least twelve frames, at any frame rate.
+  const faded = (what, seen) => {
+    const part = seen.filter((r) => r.op > 0.001 && r.op < 0.999), rest = seen.filter((r) => r.op <= 0.001 || r.op >= 0.999);
+    expect(part.length >= 12, `${what}${body}: he was part drawn on only ${part.length} frames (at least 12)`);
+    expect(part.every((r) => r.tw >= 6), `${what}${body}: a part drawn frame had no depth twins: ${JSON.stringify(part.find((r) => !(r.tw >= 6)))}`);
+    expect(rest.every((r) => r.tw === 0), `${what}${body}: a frame with him wholly drawn or clear still has depth twins`);
+  };
   const watch = async (what, notch, until) => {
     const seen = [];
     for (let i = 0; i < 40; i++) {
@@ -43,7 +53,8 @@ async function pushRun(b, base, body) {
     expect(P.fov <= 1.5 + 1e-3, `${what}: the angle of view changed ${P.fov}° in a frame`);
     expect(P.move <= 0.12 + 1e-3, `${what}: the eye moved ${P.move} m in a frame`);
     expect(P.back === 0, `${what}: he faded back the other way in ${P.back} frames`);
-    const inside = (await t.page.evaluate(() => { const r = window.__pushSeen; window.__pushSeen = []; return r; })).filter((r) => r.d <= r.n && r.op > 0.001);
+    const raw = await t.page.evaluate(() => { const r = window.__pushSeen; window.__pushSeen = []; return r; }), inside = raw.filter((r) => r.d <= r.n && r.op > 0.001);
+    faded(what, raw);
     expect(inside.length === 0, `${what}${body}: the eye was inside him or the near plane's reach in ${inside.length} frames with him still drawn, at most ${Math.max(...inside.map((r) => r.op))} (the nearest ${Math.min(...inside.map((r) => r.d))} m)`);
     return P;
   };

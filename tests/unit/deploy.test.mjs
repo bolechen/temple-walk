@@ -117,3 +117,14 @@ test("the default body in every build (#642) is the one built in code; ?body= as
   assert.equal(bodyChoice(null), "code", "no address at all");
   for (const b of ["code", "tripo", "sculpt"]) assert.equal(bodyChoice(q("body=" + b)), b, `?body=${b}`);
 });
+
+// #684: the debug panel's 「物件」 group (app/src/objects-debug.js) is for the workbench and the canary's ?debug=1; the public
+// page's build holds none of it (debug.js reaches it behind PRODUCTION, which the bundler folds), and the other two do.
+test("the debug panel's object group is in the canary and preview builds and nowhere in production's", () => {
+  const MARK = "objects-debug@684", has = (out) => walk(out).filter((f) => /\.js$/.test(f)).some((f) => fs.readFileSync(f, "utf8").includes(MARK));
+  const prod = build("production"), canary = build("canary");
+  try {
+    assert.ok(!has(prod), "production's build holds the object group's code");
+    assert.ok(has(canary), "the canary's build lacks the object group: the test looks for the wrong thing, or testers cannot use it");
+  } finally { for (const o of [prod, canary]) fs.rmSync(o, { recursive: true, force: true }); }
+});

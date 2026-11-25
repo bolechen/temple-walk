@@ -43,7 +43,7 @@ const PARAPET = Object.freeze({ h: 0.85, t: 0.25 });
  * stones' size (about 1.8 m a slab on the 9 m flight, none to be made smaller) and the cheek's run stay the prologue's until the
  * structure review has checked the Liao numbers.
  */
-export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false });
+export const STAIR_STYLE = Object.freeze({ leaves: false, moss: false, crest: 0.25 });   // crest: the worn, polished lip at each tread's nose. 1 is the prologue's; in J01's real low light it made a full-width white line down the flight (up and down), 0.25 reads as a thin worn edge (docs/t05/DECISIONS.md, 2026-11-25)
 
 /**
  * The lens a named view is seen through where it is not the fixed views' 52° from his eyes and 44° from behind him (app/yard.js `baseFov`: `?show=<name>` reads this table;
