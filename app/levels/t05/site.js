@@ -7,6 +7,7 @@
 // Heights are taken from the court's paving (y = 0; SITE.md §4.2), so the platform, the terrace and the hall's floor are
 // at +3.0. x runs east, z south; the great hall's front column line is z = 0.
 import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
@@ -141,25 +142,34 @@ export function buildSite(M) {
   const inside = HALL_DOORS.shut ? (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, nx = 0, ny = 1, nz = 0) => { const v = hall.shut(x, y, z, nx, ny, nz); return v < 0.999 ? v * 0.15 : v; } : hall.shut;
   const sh = { ao: inside };   // inside the walls the sky's light is mostly shut out (hall.js)
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
-  root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
-    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, { ...shBoard, cast: false }), mesh(merge(hp.ridge), ridgeMaterials(M).ridge));   // (the eave's underside casts nothing the tiles over it do not: #742)   // (T05's own ridge clay, ./ridge.js)
+  // What stands up in the eave's shade and over it is not drawn in the floor's mirror (#749): the bracket sets (the T05 lead's
+  // frame budget for #741's second PR) and the whole roof, tiles, ridges and their beasts, the boards under the eave, its rafters
+  // and end tiles, which together are more than half of what the mirror drew. The court's paving is dry in J01 and its puddles
+  // show the hall's walls and columns and the steps before them; only after rain, from the a station, would a visitor miss the
+  // eave over them (docs/t05/DECISIONS.md, §7). Each is a mesh of its own, kept apart from the merge, that draws nothing for a camera
+  // under the ground, which only the mirror's is; the sun's shadow map, drawn on a change of mood, always takes it whole.
+  const noMirror = (/** @type {any} */ m) => {
+    const g = m.geometry; m.userData.keep = true;
+    m.onBeforeRender = (/** @type {any} */ _r, /** @type {any} */ _s, /** @type {any} */ cam) => { if (cam.position.y < 0) g.setDrawRange(0, 0); else g.setDrawRange(0, Infinity); };
+    m.onBeforeShadow = () => g.setDrawRange(0, Infinity);
+    return m;
+  };
+  // The roof's parts of one material share a mesh, so that keeping them out of the merge adds as few draws as it can.
+  // (each part's sky is baked first, then they are joined as they are: `merge` would drop it)
+  const roofMesh = (/** @type {any[]} */ meshes) => { const one = meshes[0]; if (meshes.length > 1) one.geometry = mergeGeometries(meshes.map((m) => m.geometry)); return noMirror(one); };
+  root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh));
   // The bracket sets (./dougong.js), the column-head beams over them and the eave purlin, in the ring's shade as the wall's own
-  // timber is, each grain along its side. They stand in the eave's shadow over the wall, where the floor's mirror would show
-  // next to nothing of them, so the mirror pass is not asked to draw them (the T05 lead's frame budget for #741's second PR): a
-  // mesh of its own, kept apart from the merge, that draws nothing for a camera under the ground, which only the mirror's is.
-  for (const [list, mat] of [[hp.bracketsX, M.woodX], [hp.bracketsZ, M.woodZ]]) {
-    if (!list.length) continue;
-    const m = mesh(merge(list), mat, shRing), g = m.geometry; m.userData.keep = true;
-    m.onBeforeRender = (_r, _s, cam) => { if (cam.position.y < 0) g.setDrawRange(0, 0); else g.setDrawRange(0, Infinity); };
-    m.onBeforeShadow = () => g.setDrawRange(0, Infinity);   // (the sun's shadow map, drawn on a change of mood, always takes them whole)
-    root.add(m);
-  }
+  // timber is, each grain along its side.
+  for (const [list, mat] of [[hp.bracketsX, M.woodX], [hp.bracketsZ, M.woodZ]]) if (list.length) root.add(noMirror(mesh(merge(list), mat, shRing)));
   // The eave (./roof.js): the board along its edge and the small one at the flying rafters' end, the two layers of rafters and
   // the corner beams, in the shade the roof gives them; the round end tiles and the drip tiles along the edge, of the ridges' clay
   // and in the eave's shade as the rafters are (an end tile is the head of a tile, not a lamp: #742's art review).
-  const eaveAo = { ao: hall.roof.ao, cast: false };
-  root.add(mesh(merge([...hp.fascia, ...hp.step]), M.fascia, { ao: () => 0.8 }), mesh(merge([...hp.rafters, ...hp.flyers]), M.woodZ, eaveAo), mesh(merge(hp.beams), M.woodX, eaveAo),
-    mesh(merge([...hp.ends, ...hp.drips]), ridgeMaterials(M).ends, eaveAo));
+  // The tiles, the boards under the eave (which cast nothing the tiles over them do not: #742) and the ridges in T05's own clay (./ridge.js).
+  const eaveAo = { ao: hall.roof.ao, cast: false }, clay = ridgeMaterials(M);
+  root.add(roofMesh([mesh(merge(hp.tiles), M.tile)]), roofMesh([mesh(merge(hp.ridge), clay.ridge)]),
+    roofMesh([mesh(merge(hp.underside), M.woodX, { ...shBoard, cast: false }), mesh(merge(hp.beams), M.woodX, eaveAo)]),
+    roofMesh([mesh(merge([...hp.fascia, ...hp.step]), M.fascia, { ao: () => 0.8 })]), roofMesh([mesh(merge([...hp.rafters, ...hp.flyers]), M.woodZ, eaveAo)]),
+    roofMesh([mesh(merge([...hp.ends, ...hp.drips]), clay.ends, eaveAo)]));
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
