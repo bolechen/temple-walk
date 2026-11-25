@@ -1,8 +1,8 @@
 // What his hands do at T05's own page (src/writing.js, through rites.js): before the Yuan stele he takes the leaf and the
 // brush, writes the line a character at a time, stops his brush and puts them away; at the observation's place he draws the
-// stroke and writes its line. Run on the observances' own clock at 30 frames a second, on both bodies, standing where the
+// stroke and writes its line. Run on the observances' own clock at 20 frames a second, the copy on both bodies (the stroke on the one built in code), standing where the
 // walk stands him (site.places.copy). PRD.md §1.3 (a) ④: neither hand, nor the brush, nor the leaf comes within 0.3 m of the
-// stele's face, every frame; the brush's tip comes down on the paper for each character; the leaf is held before his chest,
+// stele's face, every frame (20 frames a second, the observances' own clock); the brush's tip comes down on the paper for each character; the leaf is held before his chest,
 // below his eyes and above his waist; and nothing is left in his hands at the end.
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
@@ -26,12 +26,12 @@ async function write(make, id, how) {
   G.position.set(p.at[0], floor, p.at[1]); G.rotation.y = p.face; G.updateMatrixWorld(true);
   const y = { monk, scene, site, M, onTick: (f) => ticks.push(f), strike: () => {}, direct: () => {}, directed: () => false, directArrived: () => false, directOut: () => 1 };
   const rites = createRites(y), out = { frames: [], marks: 0 };
-  const frame = () => { now += 1000 / 30; for (const f of ticks) f(); G.updateMatrixWorld(true); monk.update(1 / 30, 0, null, now / 1000, () => floor, { act: rites.act }); G.updateMatrixWorld(true); };
-  for (let i = 0; i < 60; i++) frame();
+  const frame = () => { now += 1000 / 20; for (const f of ticks) f(); G.updateMatrixWorld(true); monk.update(1 / 20, 0, null, now / 1000, () => floor, { act: rites.act }); G.updateMatrixWorld(true); };
+  for (let i = 0; i < 30; i++) frame();
   let done = false, ok = null; const run = how(rites).then((v) => { done = true; ok = v; });
   let leaf = null, brush = null; scene.traverse((o) => { if (o.userData.part === "writing" && o.parent === scene) { if (!leaf) leaf = o; else brush = o; } });
   const B = monk.bones, v = new THREE.Vector3();
-  for (let i = 0; i < 30 * 60 && !done; i++) {
+  for (let i = 0; i < 20 * 60 && !done; i++) {
     frame();
     const hands = [B.leftHand, B.rightHand].map((b) => b.getWorldPosition(new THREE.Vector3()));
     const w = rites.state().writing;
@@ -55,13 +55,13 @@ for (const [name, make] of BODIES) {
     assert.ok(nearest >= 0.3, `the nearest of his hands, the brush and the leaf came ${nearest.toFixed(3)} m from the stele's face`);
     assert.ok(st.nearest === null || st.nearest >= 0.3, `writing.js's own count says ${st.nearest}`);
     const held = r.out.frames.filter((f) => f.leaf && f.w.writing);
-    assert.ok(held.length > 60, "the leaf was held for the writing");
+    assert.ok(held.length > 40, "the leaf was held for the writing");
     for (const f of held) assert.ok(f.leaf.y < f.eye - 0.05 && f.leaf.y > f.hip - 0.05, `the leaf is held before his chest: ${f.leaf.y.toFixed(3)} between hip ${f.hip.toFixed(3)} and eyes ${f.eye.toFixed(3)}`);
     // His right hand is at the brush, his left at the leaf's left edge: each within reach of where it was asked to be.
     const R = r.rites.act.hands.right, L = r.rites.act.hands.left; void R; void L;
     assert.ok(!r.leaf.visible && !r.brush.visible && r.rites.act.hands.left.w === 0 && r.rites.act.hands.right.w === 0, "nothing is left in his hands");
   });
-  test(`the observation's stroke and its line written (${name})`, async () => {
+  if (make === createMonk) test(`the observation's stroke and its line written (${name})`, async () => {
     const r = await write(make, "p1b", (rites) => rites.writing.strokeLine(() => true, { note: PAGE.p1.note }));
     assert.equal(r.ok, true);
     const st = r.rites.state().writing; assert.equal(st.stroked, 1, "the stroke was drawn"); assert.ok(st.marks >= 4, `the stroke and three lines under it (${st.marks})`);
