@@ -14,6 +14,7 @@ import * as THREE from "three";
 import { box, merge, mesh, BODY } from "../../src/geo.js";
 import { buildShells } from "./gates.js";
 import { RIDGE } from "./hall.js";
+import { dryMaterials } from "./dry.js";
 
 /** Where each of the axis's buildings stands along it (z, x = 0). Proposals but for the Wuliang hall's z, which is OSM's (S26, an inference). */
 /**
@@ -202,7 +203,7 @@ export function buildAxis(M, { C, W }) {
 
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
-  group.add(sh.group, mesh(merge(earthSides), M.earth, { cast: false }), mesh(merge(trunk), M.bark), mesh(merge(crown), M.cedar, { cast: false }));
+  group.add(sh.group, mesh(merge(earthSides), dryMaterials(M).earth, { cast: false }), mesh(merge(trunk), M.bark), mesh(merge(crown), dryMaterials(M).cedar, { cast: false }));
   // The monument pavilion as it stands, open on all four sides (a Qing four-cornered pavilion with a pyramid roof: ARCHITECTURE.md §3.2,
   // SOURCES.md): a stone base, four columns, a tie-beam round their heads, a ceiling plate and fascia under the roof, and under it a
   // blank stele on its plinth. Nothing is walled: from the terrace the eye sees through between the columns under the eaves.

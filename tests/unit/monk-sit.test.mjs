@@ -6,11 +6,12 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
+const { TOP, V, baked } = await import("./monk-sit-lib.mjs");
 const { createMonk, SEAT_LEGS, HAT_OFF, LAP_HAND } = await import("../../app/src/monk.js");
 const { CUSHION, radiusAt } = await import("../../app/src/geo.js");
 const { VIEWS, refMask, seat, triangles, overlay } = await import("../../tools/novice-sit-lib.mjs");
 
-const TOP = 0.104, BACK = SEAT_LEGS.back, V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);   // (he sits BACK behind the cushion's middle, which is the origin)
+const BACK = SEAT_LEGS.back;   // (he sits BACK behind the cushion's middle, which is the origin)
 const world = (o) => o.getWorldPosition(V());
 // Seated on a cushion whose crown is the origin's height: the seat's frame is the world's.
 function seated(frames = 120) {
@@ -20,14 +21,6 @@ function seated(frames = 120) {
   return m;
 }
 const points = (mesh, keep = () => true) => { const out = [], v = V(); for (let i = 0; i < mesh.geometry.attributes.position.count; i++) if (keep(i)) out.push(mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld).clone()); return out; };
-/** A skinned mesh as it is drawn this frame, for rays: all of it, or the triangles whose three points `keep` takes. */
-function baked(mesh, keep = () => true) {
-  const p = mesh.geometry.attributes.position, pos = new Float32Array(p.count * 3), v = V(), ix = mesh.geometry.index.array, idx = [];
-  for (let i = 0; i < p.count; i++) { mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld); pos.set([v.x, v.y, v.z], i * 3); }
-  for (let k = 0; k < ix.length; k += 3) if (keep(ix[k]) && keep(ix[k + 1]) && keep(ix[k + 2])) idx.push(ix[k], ix[k + 1], ix[k + 2]);
-  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setIndex(idx); g.computeBoundingSphere(); g.computeBoundingBox();
-  const out = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); out.updateMatrixWorld(true); return out;
-}
 // Which points of a skinned mesh mostly hang from the bones named.
 const weighted = (m, mesh, names) => { const si = mesh.geometry.attributes.skinIndex, sw = mesh.geometry.attributes.skinWeight, bones = m.skeleton.bones.map((b) => b.name); return (i) => { let w = 0; for (let k = 0; k < 4; k++) if (names.test(bones[si.getComponent(i, k)])) w += sw.getComponent(i, k); return w > 0.5; }; };
 const SKIRT = /^(hips|robeFront|robeBack|robeLeft|robeRight)$/, TRUNK = /^(hips|spine|chest|robeFront|robeBack|robeLeft|robeRight)$/;
@@ -220,26 +213,4 @@ test("seated on a cushion his shadow lies on the floor under it, not through his
   // 「袍下段一圈台阶折痕」)
   const m = seated(); const y = m.shadow.getWorldPosition(V()).y, robe = points(m.parts.robe, (i) => i < m.robeBody), low = Math.min(...robe.map((v) => v.y));
   assert.ok(y < low - 0.01 && y > -TOP, `the shadow at ${y.toFixed(3)} m, the robe's lowest ${low.toFixed(3)} m, the floor ${-TOP} m`);
-});
-
-test("sitting down, his knees never come out through the robe: frame by frame, every point of his legs above the hem has cloth before it", () => {
-  // (the first art review of #680: for a few frames of sitting down the knees stood out of the front of the robe as
-  // high as his hands. The legs folded out to the sides before the cloth had spread; now the cloth leads the legs.
-  // With the old schedule this finds over three hundred points bare in the fifth frame.)
-  const ray = new THREE.Raycaster(), v = V(); ray.far = 1;
-  for (const dt of [1 / 30, 1 / 60, 1 / 20]) {
-    const m = createMonk();
-    for (let f = 1; f * dt <= 1.4; f++) {
-      m.update(dt, 0, "sit", f * dt, () => -TOP, {}); m.group.updateMatrixWorld(true); m.skeleton.update();
-      const cloth = baked(m.parts.robe), hem = cloth.geometry.boundingBox.min.y, legs = m.parts.legs; let bare = 0;
-      for (let i = 0; i < legs.geometry.attributes.position.count; i++) {
-        legs.getVertexPosition(i, v).applyMatrix4(legs.matrixWorld); if (v.y < hem + 0.03) continue;   // (below the hem his shins show, as they do standing)
-        const r = Math.hypot(v.x, v.z) || 1;
-        ray.set(v, V(v.x / r, 0.25, v.z / r).normalize()); if (ray.intersectObject(cloth).length) continue;   // cloth outside it
-        ray.set(v, V(0, 0, 1)); if (ray.intersectObject(cloth).length) continue;                               // or before it
-        bare++;
-      }
-      assert.equal(bare, 0, `at ${(f * dt).toFixed(2)} s (frames of ${(dt * 1000).toFixed(0)} ms) ${bare} points of his legs stand out of the robe`);
-    }
-  }
 });
