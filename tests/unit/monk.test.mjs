@@ -3,7 +3,7 @@
 import test from "node:test"; import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
-const { createMonk, THUMB } = await import("../../app/src/monk.js");
+const { createMonk } = await import("../../app/src/monk.js");
 const { STOOL, CUSHION, radiusAt } = await import("../../app/src/geo.js");
 const HUMANOID = ["hips", "spine", "chest", "neck", "head", ...["left", "right"].flatMap((s) => ["Shoulder", "UpperArm", "LowerArm", "Hand", "UpperLeg", "LowerLeg", "Foot"].map((b) => s + b))];
 const world = (o) => o.getWorldPosition(new THREE.Vector3());
@@ -134,89 +134,11 @@ test("on a stool he sits as on a chair: thighs level, knees bent, feet hanging t
   keepsOut(m, STOOL, 0.44, "stool");
 });
 
-test("on a cushion he sits cross-legged upon it: knees out and low, shins before him, hands in his lap, left over right", () => {
-  const m = seated("sit", 0.104), B = m.bones, ankles = [];
-  assert.ok(m.parts.legs.visible && m.parts.shoes.visible, "his legs are seen, folded");
-  for (const s of ["left", "right"]) {
-    const hip = world(B[s + "UpperLeg"]), knee = world(B[s + "LowerLeg"]), ankle = world(B[s + "Foot"]), shin = ankle.clone().sub(knee);
-    assert.ok(hip.y > 0.03 && hip.y < 0.11, `${s} hip ${hip.y.toFixed(3)} m above the cushion`);
-    assert.ok(knee.y <= hip.y && knee.y > -0.03, `${s} knee should rest low on the cushion (${knee.y.toFixed(3)})`);
-    assert.ok(Math.abs(knee.x) > 0.15 && knee.z > 0.05 && Math.hypot(knee.x, knee.z) < 0.3, `${s} knee should be out to the side and forward, on the cushion (${knee.toArray().map((v) => v.toFixed(2))})`);
-    assert.ok(Math.abs(shin.y) < 0.06 && ankle.z > 0.02 && Math.abs(ankle.x) < 0.12, `${s} shin should lie folded before him (${ankle.toArray().map((v) => v.toFixed(2))})`);
-    ankles.push(ankle);
-  }
-  assert.ok(Math.abs(ankles[0].z - ankles[1].z) > 0.015, "one shin lies in front of the other");
-  const l = world(B.leftHand), r = world(B.rightHand), hips = world(B.hips);
-  // Left over right is said of the palms, not the wrists: the wrists lie out at the sides of the lap, as wide apart as
-  // the drawing has them, and each palm reaches in over the middle, the left one above the right (#664).
-  const palm = (s) => world(B[s + "Hand"]).add(new THREE.Vector3(0, -0.045, 0).applyQuaternion(B[s + "Hand"].getWorldQuaternion(new THREE.Quaternion())));
-  const pl = palm("left"), pr = palm("right");
-  assert.ok(Math.hypot(pl.x - pr.x, pl.z - pr.z) < 0.04 && pl.y > pr.y + 0.01, `the left palm lies on the right (${Math.hypot(pl.x - pr.x, pl.z - pr.z).toFixed(3)} m apart across, ${(pl.y - pr.y).toFixed(3)} m above)`);
-  assert.ok(l.x - r.x > 0.06 && l.x - r.x < 0.14, `the wrists lie apart at the sides of the lap (${(l.x - r.x).toFixed(3)} m)`);
-  assert.ok(l.y > hips.y - 0.02 && l.y < hips.y + 0.15 && l.z > hips.z + 0.06, "in his lap, below the navel");
+// (How he sits on a cushion, his legs, the robe over them, his hands, sleeves and hat: monk-sit.test.mjs, #664.)
+test("on a cushion he sits cross-legged upon it, his legs folded under the robe, and nothing of him is in the cushion or under the floor", () => {
+  const m = seated("sit", 0.104);
+  assert.ok(m.parts.legs.visible && m.parts.shoes.visible, "his legs are there, folded");
   keepsOut(m, CUSHION, 0.104, "cushion");
-  // Seated drape (#664): hands rest above the lap cloth, front and back hems settle onto the cushion, no trouser knees poke through.
-  const robeMesh = m.parts.robe, rc = robeMesh.geometry.attributes.position.count;
-  let lapMaxY = -Infinity, frontHemMinY = Infinity, backHemMinY = Infinity;
-  for (let i = 0; i < rc; i++) {
-    const v = skinnedWorld(robeMesh, i);
-    if (Math.abs(v.x) < 0.05 && v.z > 0.155 && v.z < 0.22 && v.y < hips.y + 0.1) lapMaxY = Math.max(lapMaxY, v.y);
-    if (v.z > 0.18) frontHemMinY = Math.min(frontHemMinY, v.y);
-    if (v.z < -0.14) backHemMinY = Math.min(backHemMinY, v.y);
-  }
-  assert.ok(lapMaxY < r.y + 0.005, `lap cloth (${lapMaxY.toFixed(3)}) must stay beneath his hands (${r.y.toFixed(3)})`);
-  assert.ok(frontHemMinY < 0.03, `front hem (${frontHemMinY.toFixed(3)}) must drape down to the cushion`);
-  assert.ok(backHemMinY < 0.03, `back hem (${backHemMinY.toFixed(3)}) must rest on the cushion`);
-});
-
-test("on a cushion the robe is laid as the drawing has it, and the hands rest on it in the meditation seal", () => {
-  // refs/monk-poses-v6-2026-11-23-sitting.webp (#664): from the front a wide, low shape, widest at the knees, the cloth
-  // running down to them from under the arms without bulging out first (a bell is what it was); the hands lie on the lap
-  // forward of his belly, nothing of hands or forearms under the cloth; the thumbs meet over the fingers in an open oval.
-  const m = seated("sit", 0.104), B = m.bones, robe = m.parts.robe, skin = m.parts.skin, torso = [], names = m.skeleton.bones.map((b) => b.name);
-  // The skirt of the robe, not its sleeves (which hang over the forearms, as they should) nor the sash and its knot above them.
-  const si = robe.geometry.attributes.skinIndex, sw = robe.geometry.attributes.skinWeight, BODY = new Set(["hips", "robeFront", "robeBack", "robeLeft", "robeRight"]);
-  const ofBody = (i) => { let w = 0; for (let k = 0; k < 4; k++) if (BODY.has(names[si.getComponent(i, k)])) w += sw.getComponent(i, k); return w > 0.5; };
-  for (let i = 0; i < robe.geometry.attributes.position.count; i++) { if (!ofBody(i)) continue; const v = skinnedWorld(robe, i); if (v.y < 0.34) torso.push(v); }
-  const half = (y0, y1) => Math.max(...torso.filter((v) => v.y >= y0 && v.y < y1).map((v) => Math.abs(v.x)));
-  const widths = []; for (let y = 0.02; y < 0.16; y += 0.02) widths.push(half(y, y + 0.02));
-  assert.ok(half(-0.04, 0.06) > 0.3, `widest at the knees, out to the cushion's rim (${half(-0.04, 0.06).toFixed(3)} m)`);
-  widths.forEach((w, i) => i && assert.ok(w <= widths[i - 1] + 0.004, `narrower going up from the knees, no bulge (${widths.map((x) => x.toFixed(3)).join(" ")})`));
-  // Not one smooth bun (the art review, 2026-11-25): each knee lifts the cloth into a swelling of its own, higher than the
-  // cloth between the knees and at his sides, and the hem rolls out onto the cushion below a crease at its rim.
-  const turn = (v) => Math.abs(Math.atan2(v.x, v.z)), out = (v) => Math.hypot(v.x, v.z);
-  const top = (a0, a1) => Math.max(...torso.filter((v) => turn(v) >= a0 && turn(v) < a1 && out(v) > 0.2).map((v) => v.y));
-  const kneeTop = top(0.85, 1.05);
-  assert.ok(kneeTop > top(0.45, 0.6) + 0.012 && kneeTop > top(1.45, 1.7) + 0.012, `a swelling over each knee (${kneeTop.toFixed(3)} m, between the knees ${top(0.45, 0.6).toFixed(3)}, at his side ${top(1.45, 1.7).toFixed(3)})`);
-  for (const [a0, a1, name] of [[0, 0.15, "before him"], [0.85, 1.05, "at the knees"]]) {
-    const reach = (y0, y1) => Math.max(...torso.filter((v) => turn(v) >= a0 && turn(v) < a1 && v.y >= y0 && v.y < y1).map(out));
-    assert.ok(reach(-0.05, 0) > reach(0.02, 0.04) + 0.015, `${name} the hem rolls out onto the cushion below the crease (${reach(-0.05, 0).toFixed(3)} against ${reach(0.02, 0.04).toFixed(3)} m)`);
-  }
-  const hips = world(B.hips), belly = Math.max(...torso.filter((v) => Math.abs(v.x) < 0.04 && v.y > hips.y + 0.08 && v.y < hips.y + 0.12).map((v) => v.z));
-  for (const s of ["left", "right"]) assert.ok(world(B[s + "Hand"]).z > belly + 0.03, `${s} wrist forward of his belly (${world(B[s + "Hand"]).z.toFixed(3)} against ${belly.toFixed(3)})`);
-  // Hands and forearms in front of him stay above the cloth under them, and rest on it within a few centimetres.
-  const cloth = torso.filter((v) => v.z > 0.05);
-  let under = 0, worst = 0; const lowest = { left: Infinity, right: Infinity };
-  for (let i = 0; i < skin.geometry.attributes.position.count; i++) {
-    const v = skinnedWorld(skin, i); if (v.z < 0.12 || v.y > 0.25) continue;
-    let top = -Infinity; for (const c of cloth) if (Math.abs(c.x - v.x) < 0.008 && Math.abs(c.z - v.z) < 0.008 && c.y < v.y + 0.06) top = Math.max(top, c.y);
-    if (!Number.isFinite(top)) continue;
-    if (top > v.y + 0.002) { under++; worst = Math.max(worst, top - v.y); }
-    if (v.z > 0.17 && Math.abs(v.x) < 0.11) { const s = v.x > 0 ? "left" : "right"; lowest[s] = Math.min(lowest[s], v.y - top); }
-  }
-  assert.equal(under, 0, `${under} points of his hands and forearms under the lap cloth (by up to ${worst.toFixed(3)} m)`);
-  // The right hand, below, lies on the lap; the left lies on the right (the palms' test above), not on the cloth.
-  assert.ok(lowest.right < 0.015, `the right hand rests on the lap, not above it (its lowest point ${lowest.right.toFixed(3)} m over the cloth)`);
-  // The folded legs stay under it: nothing of the trousers or shoes out in the lap shows through the skirt.
-  let bare = 0; const legsAt = [];
-  for (const part of ["legs", "shoes"]) for (let i = 0; i < m.parts[part].geometry.attributes.position.count; i++) { const v = skinnedWorld(m.parts[part], i); if (Math.hypot(v.x, v.z) > 0.14 && v.y > -0.03) legsAt.push(v); }
-  for (const v of legsAt) { let top = -Infinity; for (const c of torso) if (Math.hypot(c.x - v.x, c.z - v.z) < 0.02) top = Math.max(top, c.y); if (top < v.y) bare++; }
-  assert.equal(bare, 0, `${bare} points of his folded legs show through the skirt`);
-  const tip = (s) => B[s + "Hand"].localToWorld(new THREE.Vector3(...THUMB[s].tip).multiply(new THREE.Vector3(s === "left" ? 1 : -1, 1, 1)));
-  const palmAt = (s) => world(B[s + "Hand"]).add(new THREE.Vector3(0, -0.045, 0).applyQuaternion(B[s + "Hand"].getWorldQuaternion(new THREE.Quaternion())));
-  const tl = tip("left"), tr = tip("right"), palms = (palmAt("left").y + palmAt("right").y) / 2;
-  assert.ok(tl.distanceTo(tr) < 0.013, `the thumb tips touch (${tl.distanceTo(tr).toFixed(4)} m between their middles)`);
-  assert.ok(Math.abs(tl.y - tr.y) < 0.006 && (tl.y + tr.y) / 2 > palms + 0.018, `level with each other and raised over the palms, an open oval (${tl.y.toFixed(3)}, ${tr.y.toFixed(3)}; palms ${palms.toFixed(3)})`);
 });
 
 test("what hangs off him swings: the skirt trails his walk and flares as he turns", () => {
