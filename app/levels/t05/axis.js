@@ -100,6 +100,13 @@ export const nearArchway = (t) => Math.abs(t.z - AXIS.paifangZ) < ARCHWAY_CLEAR.
  * lit over 55% of it (`t05-axis`), its left half in the sun and its right in the trees' shade, light that comes from somewhere. The west rows stand whole.
  */
 export const SUNWARD_GAP = Object.freeze(["inner1", "inner2", "inner3", "outer2"]);
+/** J01's sun (level.js: 152°, 17° up), and the archway's middle bay its rays must reach: its front, 2 m either side of the axis, 1.5 to 8.5 m up. */
+export const SUN = (() => { const el = (17 * Math.PI) / 180, az = (152 * Math.PI) / 180; return Object.freeze([Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)]); })();
+const BAY = (() => { const pts = []; for (let x = -2; x <= 2.001; x += 0.5) for (let y = 1.5; y <= 8.5; y += 0.5) pts.push([x, y, AXIS.paifangZ + 0.6]); return pts; })();
+/** Whether a tree's crown stops none of the sun's rays to the archway's middle bay. */
+export const sunClear = (t) => BAY.every((P) => !treeBlocks(P, P.map((v, i) => v + SUN[i] * 120), t));
+/** How far out an east tree may step: its trunk a metre and a half inside the terrace's east wall. */
+const SUN_WALL = SECOND.hw - SECOND.wallT / 2 - 1.5;
 const grow = () => {
   const rnd = seeded(482), out = [], rr = () => +(0.25 + rnd() * 0.25).toFixed(2), crown = () => ({ rx: +(2.7 + rnd() * 0.9).toFixed(2), ry: +(2.1 + rnd() * 0.7).toFixed(2) });
   const add = (tree, push) => { for (let k = 0; k <= 7; k++) { const t = { ...tree, x: +(tree.x + Math.sign(tree.x) * push * k).toFixed(2) }; if (clear(t) && !nearArchway(t)) { out.push(Object.freeze(t)); return; } } };   // moved out until it stands clear (of the lines of sight and of the archway's neighbourhood), else left out
@@ -118,7 +125,9 @@ const grow = () => {
     const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2);
     const x = row === "inner" ? PATH.hw + 2.2 + rnd() * 0.6 : k === 3 ? 11.9 : PATH.hw + 5.3 + rnd() * 0.6, z = +(z0 + (sx < 0 ? 0.35 : -0.2) + 0.3 * (rnd() - 0.5)).toFixed(2);
     if (sx > 0 && SUNWARD_GAP.includes(`${row}${k}`)) continue;   // (drawn after its numbers, so that every other tree keeps its own)
-    for (let j = 0; j <= 16; j++) { const t = { x: +(sx * (x + 0.3 * j)).toFixed(2), z, y: SECOND.y, r, rx, ry, base, h, old: true, kind: "cypress", back: row === "outer" }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
+    // an east tree kept steps out until its crown stops none of the sun's rays to the archway's middle bay, its crown narrowing by the wall if it must
+    const sunward = sx > 0;
+    for (let j = 0; j <= 40; j++) { const xj = Math.min(x + 0.3 * j, SUN_WALL), narrow = sunward ? Math.max(1.4, rx - Math.max(0, x + 0.3 * j - SUN_WALL) * 0.5) : rx; const t = { x: +(sx * xj).toFixed(2), z, y: SECOND.y, r, rx: +narrow.toFixed(2), ry, base, h, old: true, kind: "cypress", back: row === "outer" }; if (keptClear(t) && (!sunward || sunClear(t) || narrow <= 1.4)) { out.push(Object.freeze(t)); break; } }
   }
   // North of the archway to the Wuliang hall (the same comment, from the owner's photograph 11): not rows of cypress but broad pines, scattered, their crowns
   // round, wide and layer on layer, of uneven heights, standing where no row would put them. Six, three a side, pushed out of the kept lines as the cypresses are.
