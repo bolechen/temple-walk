@@ -549,7 +549,8 @@ export function createGame(y) {
 
   // ---- The book ----
   // Once the book has been filled, the line at the foot of the view says once, ever, that the seasons are open.
-  const announce = () => { if (entered && journey.opened() && !journey.told() && y.hints?.say.seasons?.()) journey.tell(); };
+  // The same once turns the hour to the visitor's own (#726), and the line says both in one sentence; a level with no clock to follow says the old one.
+  const announce = () => { if (entered && journey.opened() && !journey.told()) { y.hints?.release?.();   /* (the far view's line about opening the book has done its work: the book was just shut) */ const clock = !!y.followHour?.(); if (y.hints?.say.seasons?.(clock)) journey.tell(); } };
   let page = null;
   async function openBook() {
     // The page opens at once, as bare paper, and is written on when drawn: on a slow phone the drawing takes a moment,
@@ -712,7 +713,8 @@ export function createGame(y) {
     const showWay = () => {
       if (arrival) { arrive(); return; }   // a lamp lit for him: that is where he is taken first
       let waited = 0;
-      const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(announce, 14000 * fast); };
+      const filledAtEntry = journey.opened();   // (a book filled on this walk is told of when it is shut, with the hour, not by this timer, #726)
+      const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(() => filledAtEntry && announce(), 14000 * fast); };
       const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
     };
     // A friend's shared link names a scene (?from=, src/sharelink.js, #344): a first visit is shown the mountain as ever,

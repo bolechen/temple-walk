@@ -71,7 +71,8 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     stamped() { said.add("stamp"); },
     seal() { said.add("stamp"); tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
     // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
-    seasons() { return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
+    // (#726: when the hour has just turned to the visitor's own, the same line says so: one sentence, not two)
+    seasons(clock) { if (clock) return tip("seasons", coarse ? t("山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换") : t("山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　{t}时节", { t: K("T") }), 9); return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
     // A newer build has been put up since the page was opened (src/version.js): said once; nothing reloads by itself.
     update() { return tip("update", t("新的版本已就绪，刷新即可"), 9); },
     photo() { drop(); },
