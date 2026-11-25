@@ -24,6 +24,10 @@ const GROUND = {
   stone: { top: "#8a8880", foot: "#7a7871", ink: "#1d1a17", rim: "#5f5d57", fillet: "#6c6a63" },   // a stele of grey stone, the characters cut and inked
 };
 let plankMat = null;   // a board made with no material to hand (a test) shares this one
+// The lettered face lies a millimetre in front of the plank it is the face of. That gap cannot be told apart by the depth buffer: on a
+// 16-bit one (near 0.1 m) the smallest step is z² · 9.99875 / 65535, 34 mm at 15 m, so the two fight from about 2.6 m out. Pushing the
+// face a depth step or two nearer, in the depth buffer only, leaves the geometry, the lettering and the board's edge as they were.
+const DECAL = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 };
 const PLANK = () => (plankMat ||= new THREE.MeshStandardMaterial({ color: 0x2a150d, roughness: 0.85 }));
 const doc = typeof document !== "undefined" ? document : null;
 
@@ -115,7 +119,7 @@ export function makePlaque(text, { vertical = false, gold = false, style = gold 
   if (doc.fonts && doc.fonts.load) Promise.all([doc.fonts.load(`200px "Yunjing Bang"`, chars.join("") + (notes || []).join("")), doc.fonts.load(`40px "Yunjing Seal"`, "佛鑑正法雲徑禪寺")]).then(draw, () => {});
   if (hand && HANDS[hand] && typeof Image !== "undefined") { const im = new Image(); im.onload = () => { glyphs = im; draw(); }; im.src = asset(HANDS[hand]); }
 
-  const cut = band || bare, mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: style === "gold" ? 0.25 : 0.08, envMapIntensity: 0.3, alphaTest: cut ? 0.5 : 0, transparent: false });
+  const cut = band || bare, mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, metalness: style === "gold" ? 0.25 : 0.08, envMapIntensity: 0.3, alphaTest: cut ? 0.5 : 0, transparent: false, ...DECAL });
   // Where each character lies on the face, as fractions of its width (u, from the left) and height (v, from the top), and half its
   // size: for the tests, which look at every character from everywhere it may be seen (plaques.test.mjs).
   const boxes = chars.map((_, i) => { const [cx, cy] = where(i); return { u: cx / W, v: cy / H, du: (cell * 0.36) / W, dv: (cell * 0.36) / H }; });
@@ -168,7 +172,7 @@ export function makeWallPanel(text, w, h, back = null) {
   if (doc.fonts && doc.fonts.load) doc.fonts.load(`200px "Yunjing Bang"`, chars.join("")).then(draw, () => {});
   // The picture is a sheet on the face of a slab of the wall's own stone, so that its back and its four edges are plain
   // stone and never a mirrored or squashed copy of the brick and the characters (#272, as the plain boards since #245).
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, 0, 0.04), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25 }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h).translate(0, 0, 0.04), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.82, metalness: 0.06, envMapIntensity: 0.25, ...DECAL }));
   m.castShadow = false; m.userData.height = h;
   // (It casts, as the wall does, so that it joins the wall's stone in one draw.)
   const slab = mesh(new THREE.BoxGeometry(w, h, 0.078), back || PLANK()); slab.name = "panel slab"; m.add(slab); return m;
