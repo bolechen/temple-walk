@@ -136,15 +136,15 @@ export function buildHall(M) {
           for (const f of [0.18, 0.5, 0.82]) ledges.push(box(lw - 0.1, 0.16, 0.06, cx, y1 + lh * f, zFace + 0.03));   // three ledges across the planks
           // The planks' joints: a shallow dark line every 0.36 m down each leaf (the art director's pass on the first picture: a leaf of plain brown board read as a wall), and the meeting stile, a dark seam that lets no light through.
           const n = Math.round(lw / 0.36);
-          for (let k = 1; k < n; k++) dark.push(box(0.014, lh, 0.01, x0 + s * (lw * k) / n, ly, zFace + 0.003));
-          dark.push(box(0.05, lh, 0.02, x0, ly, zFace + 0.005));
+          for (let k = 1; k < n; k++) dark.push(box(0.014, lh - 0.04, 0.01, x0 + s * (lw * k) / n, ly, zFace + 0.003));
+          dark.push(box(0.05, lh - 0.04, 0.02, x0, ly, zFace + 0.005));
           // A ring on a boss at a grown man's breast, either side of the meeting stile, and rows of studs on the leaf (three rows of five between the ledges).
           const rx = x0 + s * 0.34, ry = y1 + 1.35;
           iron.push(new THREE.CylinderGeometry(0.075, 0.075, 0.03, 12).rotateX(Math.PI / 2).translate(rx, ry, zFace + 0.07), new THREE.TorusGeometry(0.1, 0.014, 6, 16).translate(rx, ry - 0.07, zFace + 0.095));
           for (const f of [0.34, 0.66, 0.9]) for (let k = 0; k < 5; k++) iron.push(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 8).rotateX(Math.PI / 2).translate(x0 + s * (lw * (k + 0.5)) / 5 + s * 0.02, y1 + lh * f, zFace + 0.05));
         }
         // A dark fillet down each side where the leaf meets the jamb, so that no seam of the reveal's pale plaster shows between them from far off.
-        for (const s of [-1, 1]) dark.push(box(0.06, lh, 0.05, mid + s * (w / 2 - 0.02), ly, zFace + 0.0));
+        for (const s of [-1, 1]) dark.push(box(0.06, lh - 0.04, 0.05, mid + s * (w / 2 - 0.02), ly, zFace));   // (a little short at both ends: flush with the leaf's own top and foot it would be a pair of faces lying on one another, tools/flush-faces.mjs)
         solid(l, r, fz0, fz1);
         // The sill under a shut door is no step (nothing lies beyond it to step to), but the bake finds a foothold on its top and lets his shoes
         // come up to its face: a strip before each door, as far out as his shoes reach (0.32 m) and a little more, is kept clear, so that he stands
