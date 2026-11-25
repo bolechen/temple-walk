@@ -64,6 +64,23 @@ test("he, what his hands hold and the stele's face stay inside the safe area at 
   }
 });
 
+test("nothing built stands between the eye on a shot and what it keeps in the picture (a column, the stele's stone)", () => {
+  // The written plan's walls (solids without a floor on top): the pavilion's columns and the stele on its plinth. The last 0.6 m of
+  // each line is not asked (the stele's face lies inside its plinth's rectangle, and he stands within his own width of it).
+  const walls = site.walk.solids.filter((s) => s.top === undefined);
+  for (const id of IDS) {
+    const p = site.places[id], foot = at(p), s = p.shot, o = shotPose(p, s, foot, 0);
+    for (const k of s.keep) {
+      const w = placePoint(p, foot, k), n = Math.ceil(o.p.distanceTo(w) / 0.05);
+      for (let i = 1; i < n; i++) {
+        const q = o.p.clone().lerp(w, i / n); if (q.distanceTo(w) < 0.6) break;
+        const hit = walls.find((r) => q.x > r.x0 && q.x < r.x1 && q.z > r.z0 && q.z < r.z1 && q.y < (r.eyeTop ?? 3.5));
+        assert.ok(!hit, `${id}: the line from the eye to [${k}] passes through ${JSON.stringify(hit)} at ${q.toArray().map((v) => v.toFixed(2))}`);
+      }
+    }
+  }
+});
+
 test("resting on a shot, the eye turns of itself no more than a degree a second", () => {
   for (const id of IDS) {
     const p = site.places[id], foot = at(p), s = p.shot;

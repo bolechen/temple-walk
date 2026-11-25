@@ -27,14 +27,14 @@ const STROKE = [[0.5, "取纸"], [1.9, "抬头看檐"], [3.0, "落笔"], [3.9, "
   await frames(4);
   if (P1) await page.evaluate(() => window.__page({ meet: true }));
   const id = P1 ? "p1b" : "copy";
-  await page.evaluate((i) => window.__rite(i), id);
+  await page.evaluate((i) => { window.__rite(i); }, id);   // (not awaited: the copy runs while the clock is held)
   // Once his hands are on the leaf the clock is held and stepped: each moment is a frame of the page as it is drawn then.
-  await page.waitForFunction(() => window.__rites().writing.leaf, null, { timeout: 120000 });
+  await page.waitForFunction(() => window.__rites().writing.leaf, null, { timeout: 120000 }).catch(async (e) => { console.error(JSON.stringify(await page.evaluate(() => ({ page: window.__page(), yard: (({ x, z, staged, target, route, frames }) => ({ x, z, staged, target, route, frames }))(window.__yard()), ui: window.__ui() })))); throw e; });
   await page.evaluate(() => window.__riteClock(0));
   const list = P1 ? STROKE : COPY, shots = [];
   let held = 0;
   for (const [secs, name] of list) {
-    while (held < secs * 1000) { const step = Math.min(100, secs * 1000 - held); await page.evaluate((ms) => window.__riteClock(ms), step); held += step; await frames(1); }
+    while (held < secs * 1000) { const step = Math.min(250, secs * 1000 - held); await page.evaluate((ms) => window.__riteClock(ms), step); held += step; await frames(1); }
     await frames(2);
     const file = path.join(out, `${P1 ? "stroke" : "copy"}-${shots.length + 1}-${name}.png`);
     await page.screenshot({ path: file });

@@ -99,16 +99,17 @@ export function buildStele(M) {
   walk.ramps.push({ x0: mx - fl.w / 2 + pad, x1: mx + fl.w / 2 - pad, z0: M0.z1 - 0.4, z1: M0.z1 + fl.run + 0.3, base: M0.y, h: fl.rise, low: [mx, M0.z1 + fl.run], high: [mx, M0.z1], floor: "stone" });
   for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? mx + fl.w / 2 - BODY - 0.021 : mx - fl.w / 2 - CHEEK - BODY, x1: sx > 0 ? mx + fl.w / 2 + CHEEK + BODY : mx - fl.w / 2 + BODY + 0.021, z0: M0.z1 + 0.02, z1: M0.z1 + fl.run + BODY + 0.06, h: floor });
 
-  // Where he stands to copy: on the base, before the plinth, his robe clear of it, facing the stele (north). The shot: from
-  // his right and a little behind, at his own height, past him to the stele's face, so that his hands at the paper and the
-  // column he reads are in one picture (found by trying a grid of poses against director.test's safe area on four screens). In the place's own frame: x to his left, z the way he faces, y up from the floor.
+  // Where he stands to copy: on the base, before the plinth, his robe clear of it, facing the stele (north). The shot: over his
+  // right shoulder from behind, between the two south columns and a head above him, down past him to the leaf in his hands and
+  // on to the stele's face, so that what he writes and what he reads it from are in one picture (found by trying a grid of
+  // poses against the safe area on four screens, with no column or stone between the eye and any of them: t05-director.test). In the place's own frame: x to his left, z the way he faces, y up from the floor.
   const stand = plinth.z1 + BODY + 0.22;
   const toFace = stand - face;                    // how far the face is before him
   const copy = {
     at: [mx, stand], r: 1.1, face: Math.PI, act: "抄碑", rite: "copy",
     stele: { x: mx, face, y0: plinth.top + FACE.foot, y1: plinth.top + FACE.foot + fh, w: fw },
-    shot: { at: [-1.6, 1.1, -0.8], look: [0.05, 1.3, 0.9], fov: 48, in: 2.0, out: 1.0, drift: { push: 0.012, for: 14 },
-      keep: [[0, 0.7, 0], [0, 1.1, 0], [0, 0.8, 0.26], [0, 1.2, toFace], [0, 2.0, toFace]] },   // from his waist up, as the library's sutra shot is, and the face he reads from
+    shot: { at: [-0.3, 1.5, -1.2], look: [0.05, 1.3, 0.3], fov: 48, in: 2.0, out: 1.0, drift: { push: 0.012, for: 14 },
+      keep: [[0, 0.95, 0], [0, 1.15, 0], [0, 0.8, 0.26], [0, 1.3, toFace], [0, 1.9, toFace]] },   // his head and shoulders, the leaf in his hands, and the face he reads from
   };
   const views = { "shot-copy": [mx, stand + 2.4, 0, 0.12], stele: [mx, stand + 0.2, 0, 0.32] };
   return { group, walk, places: { copy }, views, frame: S };
