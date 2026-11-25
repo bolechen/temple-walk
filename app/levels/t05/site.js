@@ -243,6 +243,8 @@ export function buildSite(M) {
   if (!offTower) root.add(buildTower());
   // The middle town and the far layers beyond it (./distance.js, the art director's lines of 2026-11-25): the north hill line (`?off=farhills`), the town's middle band and the southern plain (`?off=farland`).
   root.add(buildDistance());
+  // `?off=trees` (the page only, for measuring a frame's cost on a graphics card): every tree grown here and outside the walls left out; the ground under them stays.
+  if (typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("trees")) { const cut = []; root.traverse((o) => { if (o.isMesh && /^(trees|surround-(near|far)-trees)-/.test(o.name)) cut.push(o); }); for (const o of cut) o.parent?.remove(o); }
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), dryMaterials(M).earth, { cast: false }); land.userData.walk = false; root.add(land);
 
