@@ -115,7 +115,8 @@ test("from A and B, east and west, four or more roof slopes show a degree or mor
     for (let az = BEARING[dir] - 30; az <= BEARING[dir] + 30 + 1e-9; az += 0.25) {
       const a = rad(az), d = [Math.sin(a), -Math.cos(a)], th = wallTop([x, z], y, d), el = th + rad(1);
       ray.set(new THREE.Vector3(x, y, z), new THREE.Vector3(d[0] * Math.cos(el), Math.sin(el), d[1] * Math.cos(el))); ray.far = 4000;
-      const h = ray.intersectObjects(meshes, false)[0], isRoof = !!h && roof(h.object), isHouse = !!h && house(h.object);
+      // (a winter tree's wood, trunks and bare twigs, is looked through: the grown trees' twigs are an open lace a house is seen through, which a ray that grazes one would count as solid; needles are not looked through)
+      const h = ray.intersectObjects(meshes, false).find((q) => !/-trees(-[a-z]+)?-(bark|pale)(-trunks)?$/.test(q.object.name)), isRoof = !!h && roof(h.object), isHouse = !!h && house(h.object);
       n++; if (isHouse) houseAt++;
       if (isRoof && !inRun) runs++; inRun = isRoof;
     }
@@ -164,7 +165,10 @@ test("it stands outside the walls, none of it walked on or in (left out of the b
     if (o.userData.surround === "near") { near++; assert.ok(o.castShadow, `${o.name} casts shadows`); } else { far++; if (!o.castShadow) shadowless++; }
   });
   assert.ok(brick >= 4 && brick <= 6 && near >= 3 && far >= 3 && shadowless === far, `the near meshes cast shadows (${near}), the far ones do not (${far}); ${brick} wall meshes`);
-  assert.ok(tris > 5000 && tris < 45000, `${tris} triangles outside the walls`);
+  // (the houses as before, a few thousand; the trees since they are grown, ./flora.js, under 220 000 more, merged by stretch so that only what is in view is drawn)
+  let trees = 0; site.root.traverse((o) => { if (o.userData.surround && /-trees(-|$)/.test(o.name)) trees += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; });
+  assert.ok(tris - trees > 2000 && tris - trees < 45000, `${tris - trees} triangles of houses outside the walls`);
+  assert.ok(trees > 50000 && trees < 220000, `${trees} triangles of trees outside the walls`);
   assert.ok(plan.houses.filter((h) => h.row === 0 && h.cast).length >= 30 && plan.trees.filter((t) => t.cast).length >= 5, "the first row of houses and the trees by the walls are the real, shadow-casting geometry");
 });
 

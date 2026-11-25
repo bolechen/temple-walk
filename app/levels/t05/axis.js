@@ -99,6 +99,10 @@ const grow = () => {
   return Object.freeze(out);
 };
 export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });
+/** What each of the axis's trees is grown as: a cypress along the way between the gates; on the terrace a pine or a cypress, by turns down each side (ours). */
+export const treeKind = (t) => (t.y > 0 ? (TRUNKS.list.filter((q) => q.y > 0 && Math.sign(q.x) === Math.sign(t.x) && q.z < t.z).length % 2 ? "cypress" : "pine") : "cypress");
+/** The axis's trees as ./flora.js grows them: each crown in its ellipsoid over a clean bole. */
+export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze({ kind: treeKind(t), x: t.x, z: t.z, y: t.y, h: TRUNKS.canopyBase + 2 * t.ry, r: t.r, env: Object.freeze({ base: TRUNKS.canopyBase, rx: t.rx, ry: t.ry }) })));
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 
@@ -187,12 +191,11 @@ export function buildAxis(M, { C, W }) {
     earthAt(PATH.hw, tx, FOOT.hall.z1, FOOT.inner.z0, top + 0.01);
     earthAt(FOOT.hall.x1, tx, SECOND.zN, FOOT.hall.z1, top + 0.01); earthAt(FOOT.inner.x1, tx, FOOT.inner.z0, AXIS.innerZ - wt / 2, top + 0.01);
   }
-  // Trunks stand in the earth either side of the path, for the trees to come: plain posts, in the way, with their written-plan rectangles, and an
-  // ellipsoid for each to say how big the tree will be (not in the way: its underside is over six metres up, well above the eye).
-  const trunk = [], crown = [];
+  // Trees stand in the earth either side of the path, grown (./flora.js): along the way between the gates cypresses (ce bai: the scope's "cypresses
+  // either side", invented, SCOPE-OPTIONS.md §二 B), on the terrace pines and cypresses by turns. Each is an old tree with a tall clean bole,
+  // its crown kept inside the ellipsoid the views along the axis are cleared against (`treeBlocks`: under its underside, over six metres up, only
+  // the upright trunk). The trunk is in his way (the baked floor and the eye meet it) and has its written-plan rectangle; the boughs and needles are over his head.
   for (const t of TRUNKS.list) {
-    trunk.push(new THREE.CylinderGeometry(t.r * 0.8, t.r, TRUNKS.h, 8).translate(t.x, t.y + TRUNKS.h / 2, t.z));
-    crown.push(new THREE.SphereGeometry(1, 14, 9).scale(t.rx, t.ry, t.rx).translate(t.x, t.y + TRUNKS.canopyBase + t.ry, t.z));
     walk.solids.push({ x0: t.x - t.r - BODY, x1: t.x + t.r + BODY, z0: t.z - t.r - BODY, z1: t.z + t.r + BODY, eyeTop: t.y + TRUNKS.h });
   }
 
@@ -203,7 +206,7 @@ export function buildAxis(M, { C, W }) {
 
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
-  group.add(sh.group, mesh(merge(earthSides), dryMaterials(M).earth, { cast: false }), mesh(merge(trunk), M.bark), mesh(merge(crown), dryMaterials(M).cedar, { cast: false }));
+  group.add(sh.group, mesh(merge(earthSides), dryMaterials(M).earth, { cast: false }));   // (the trees themselves are grown with the court's, in site.js: AXIS_TREES)
   // The monument pavilion as it stands, open on all four sides (a Qing four-cornered pavilion with a pyramid roof: ARCHITECTURE.md §3.2,
   // SOURCES.md): a stone base, four columns, a tie-beam round their heads, a ceiling plate and fascia under the roof, and under it a
   // blank stele on its plinth. Nothing is walled: from the terrace the eye sees through between the columns under the eaves.
