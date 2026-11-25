@@ -661,6 +661,12 @@ const scenarios = {
             expect(lv.id === "t05" && lv.known === true, "the canary should walk T05: " + JSON.stringify(lv));
             const w = await t.page.evaluate(() => window.__walker()); expect(w.mode !== "old" && w.bytes > 0, "T05's own floor on the canary: " + JSON.stringify(w));
             const s0 = await t.state(); expect(Math.hypot(s0.x, s0.z - 215) < 1, "on the canary he arrives at T05's gate, not where the prologue kept him: " + JSON.stringify(s0));
+            // T05's first look is early winter by day (Level.firstMood, #573 step 7), whatever the hour at home; an address that names a season still comes first.
+            const first = await t.page.evaluate(() => { const q = window.__probe(); return [q.season, q.time]; });
+            expect(first[0] === "winter" && first[1] === "day", "T05 should open in early winter by day: " + JSON.stringify(first));
+            const asked = await open(b, srv.base, "level=t05&season=autumn&q=low&fast=1" + BARE, { route }), got = await asked.page.evaluate(() => { const q = window.__probe(); return [q.season, q.time]; });
+            expect(got[0] === "autumn" && got[1] === "day", "?season=autumn should still be autumn: " + JSON.stringify(got));
+            expect(asked.errors.length === 0, "canary (autumn): " + asked.errors.join("\n")); await asked.close();
             await t.page.evaluate(() => window.__walk([[0, 200]]));
             await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 200) < 0.6; }, 120000, "he did not walk on the canary's T05");
             await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
@@ -775,9 +781,16 @@ const scenarios = {
       await a.page.click("#act"); await a.until(() => a.page.evaluate(() => window.__lamp().sheet), 30000, `${lang}: the sheet did not open`);
       expect((await a.page.locator("#blessList [data-wish]").count()) === WISHES.length, `${lang}: the list is not the preset lines`);
       expect((await a.page.locator("#blessList [data-wish]").nth(wish).textContent()) === say(lang, WISHES[wish]), `${lang}: the line is not the preset one in this language`);
+      // (#639) What the copy and share buttons hand on is caught here: the page has no clipboard or share sheet of its own to read from.
+      await a.page.evaluate(() => { window.__copied = null; window.__shared = null; Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (x) => { window.__copied = x; } } }); Object.defineProperty(navigator, "share", { configurable: true, value: async (d) => { window.__shared = d; } }); });
       await a.page.locator("#blessList [data-wish]").nth(wish).click();
       await a.until(() => a.page.isVisible("#blessLink"), 120000, `${lang}: no link after a line was chosen`);
-      const link = await a.page.textContent("#blessLink"), u = new URL(link);
+      const link = await a.page.getAttribute("#blessLink", "data-link"), shown = await a.page.innerText("#blessLink"), u = new URL(link);
+      expect(shown.length < 40 && !/utm_|#|\?/.test(shown) && !(await a.page.innerText("#bless")).includes("utm_source"), `${lang}: the sheet shows the long link: ${shown}`);
+      await a.page.click("#blessCopy"); await a.until(() => a.page.evaluate(() => window.__copied), 10000, `${lang}: copy handed nothing on`);
+      expect((await a.page.evaluate(() => window.__copied)) === link, `${lang}: copy handed on ${await a.page.evaluate(() => window.__copied)}, not the link`);
+      await a.page.click("#blessShare"); await a.until(() => a.page.evaluate(() => window.__shared), 10000, `${lang}: share handed nothing on`);
+      expect((await a.page.evaluate(() => window.__shared.url)) === link, `${lang}: share handed on a different address`);
       expect(u.origin === "https://temple.rushiwowen.co" && u.searchParams.get("utm_source") === "lamp" && u.searchParams.get("utm_content") === lang, `${lang}: the link is ${link}`);
       expect(decodeLamp(u.hash) && decodeLamp(u.hash).wish === wish && u.hash.length < 20, `${lang}: the fragment is ${u.hash}`);
       await a.page.waitForFunction(() => { const i = document.getElementById("blessImg"); return i.complete && i.naturalWidth === 1080; }, null, { timeout: 60000 });
