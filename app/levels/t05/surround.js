@@ -83,8 +83,8 @@ export const POPLAR_SHARE = Object.freeze({ front: 0.25, behind: 0.45 });
  * Trees the arrival looks south over, whose kind is set by hand (the art director, 2026-11-25: beyond the way's end at least six in ten bare, evergreens a quarter or
  * fewer; the bare tree beside the earth-grey house kept as it was, a pagoda tree, not a poplar): [x, z, kind].
  */
-/** @type {ReadonlyArray<[number, number, string]>} */
-export const KIND_AT = Object.freeze([[-13.02, 228.09, "huai"], [-37.67, 229.7, "huai"], [-3.37, 238.87, "huai"]]);
+/** @type {ReadonlyArray<[number, number, string, number?]>} */
+export const KIND_AT = Object.freeze([[-13.02, 228.09, "huai", 7.2], [-37.67, 229.7, "huai"], [-3.37, 238.87, "huai"]]);   // (the first kept low: its boughs reached over the arrival's picture, the art director)
 export const growKind = (t) => {
   const set = KIND_AT.find(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (set) return set[2];
   return t.kind !== "bare" ? t.kind : hashAt(t.x, t.z, 11) < (t.row === 0 || t.cast ? POPLAR_SHARE.front : POPLAR_SHARE.behind) ? "poplar" : "huai";
@@ -96,6 +96,7 @@ export const growKind = (t) => {
 const COMPOUND_ZN = -40;   // (site.js COMPOUND.zN; not imported, the site imports this module)
 export const POPLAR_H = Object.freeze([15, LIMITS.poplarMax]);
 export const growHeight = (t, kind = growKind(t)) => {
+  const at = KIND_AT.find(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (at && at[3]) return at[3];
   if (kind !== "poplar" || eaveCap(t.x, t.z) < 40 || onTowerLine(t.x, t.z, 4) || (t.z < LIMITS.nearHallZ + 1 && t.z > COMPOUND_ZN - 8)) return t.h;
   return +(POPLAR_H[0] + (POPLAR_H[1] - POPLAR_H[0]) * hashAt(t.x, t.z, 12)).toFixed(2);
 };

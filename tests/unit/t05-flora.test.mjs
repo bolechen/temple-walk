@@ -31,7 +31,7 @@ test("every tree of the plan is grown, each of its kind: the court's four, the a
   assert.equal(census.length, COURT_TREES.length + AXIS_TREES.length + plan.trees.length + ARRIVAL_POPLARS.length);
   const kinds = new Set(census.map((c) => c.kind)); for (const k of Object.keys(KINDS)) assert.ok(kinds.has(k), `${KINDS[k]} grows`);
   assert.ok(AXIS_TREES.filter((t) => t.y === 0).every((t) => t.kind === "cypress"), "the way between the gates is lined with cypresses");
-  for (const sx of [-1, 1]) assert.equal(AXIS_TREES.filter((t) => t.y > 0 && Math.sign(t.x) === sx && t.kind === "huai").length, 1, "one old pagoda tree on each side of the terrace, with pines and cypresses");
+  assert.ok(AXIS_TREES.filter((t) => t.y > 0).every((t) => t.kind === "cypress" && t.old), "the terrace is two rows of old arborvitae (the art director, 2026-11-25)");
   const byHand = (t) => KIND_AT.some(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05);
   assert.equal(plan.trees.filter(byHand).length, KIND_AT.length, "every tree set by hand is one of the plan's");
   for (const t of plan.trees) if (!byHand(t)) assert.equal(growKind(t), t.kind === "bare" ? growKind(t) : t.kind, "a pine stays a pine, a cypress a cypress");
@@ -43,14 +43,16 @@ test("no tree stands over its height: the plan's (the eave line in cam01 and cam
   for (const t of COURT_TREES) assert.ok(Math.min(t.h, eaveCap(t.x, t.z)) <= LIMITS.treeMax, "the court's trees keep to the town's ceiling");
 });
 
-test("a terrace tree's boughs and needles stay inside its ellipsoid, and its trunk inside the upright post the views are cleared against", () => {
+test("a terrace tree's boughs and needles stay inside its ellipsoid, and its trunk inside the upright post the views are cleared against", async () => {
   for (const t of AXIS_TREES.filter((q) => q.env)) {
     const g = growTree(t), c = new THREE.Vector3(t.x, t.y + t.env.base + t.env.ry, t.z), p = new THREE.Vector3();
     for (const geo of [g.wood, ...g.needles]) { const A = geo.attributes.position; for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); const e = Math.hypot((p.x - c.x) / t.env.rx, (p.y - c.y) / t.env.ry, (p.z - c.z) / t.env.rx); assert.ok(e <= 1.0001, `a point of the tree at (${t.x}, ${t.z}) is out of its ellipsoid (${e.toFixed(3)})`); } }
-    const A = g.trunk.attributes.position; for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); if (p.y > t.y + 1.2 && p.y < t.y + TRUNKS.h) assert.ok(Math.hypot(p.x - t.x, p.z - t.z) <= t.r + 1e-6, `the trunk at (${t.x}, ${t.z}) leaves its post at ${p.y.toFixed(2)} m`); }
+    // (an old tree's trunk twists and leans a little: it keeps within 0.35 m more than its radius, under its crown)
+    const A = g.trunk.attributes.position; for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); if (p.y > t.y + 1.2 && p.y < t.y + t.env.base) assert.ok(Math.hypot(p.x - t.x, p.z - t.z) <= t.r + (t.old ? 0.35 : 0) + 1e-6, `the trunk at (${t.x}, ${t.z}) leaves its post at ${p.y.toFixed(2)} m`); }
   }
-  // and so treeBlocks, which the cam07 tests ask, still bounds them
-  const blocked = []; for (const l of SIGHTS.lines) for (const t of TRUNKS.list) if (treeBlocks(SIGHTS.eye, l.to, t)) blocked.push(l.kind);
+  // and so treeBlocks, which the cam07 tests ask, still bounds them for the lines kept
+  const { KEPT_SIGHTS } = await import("../../app/levels/t05/axis.js");
+  const blocked = []; for (const l of KEPT_SIGHTS) for (const t of TRUNKS.list) if (treeBlocks(SIGHTS.eye, l.to, t)) blocked.push(l.kind);
   assert.deepEqual(blocked, []);
 });
 
@@ -65,11 +67,11 @@ test("what he meets of a tree is its trunk only: boughs and needles are out of t
   assert.ok(trunks >= 1);
 });
 
-test("a budget: under 300 000 triangles of trees in the whole place, in under 30 meshes, merged by stretch so that only what is in view is drawn", () => {
+test("a budget: under 340 000 triangles of trees in the whole place, in under 30 meshes, merged by stretch so that only what is in view is drawn", () => {
   let tris = 0, meshes = 0;
   site.root.traverse((o) => { if (o.isMesh && /(^|-)trees-/.test(o.name)) { meshes++; tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } });
   console.log(`# T05 trees: ${Math.round(tris)} triangles in ${meshes} meshes`);
-  assert.ok(tris < 300000, `${tris} triangles`); assert.ok(meshes < 30, `${meshes} meshes`);
+  assert.ok(tris < 340000, `${tris} triangles`); assert.ok(meshes < 30, `${meshes} meshes`);
   const one = buildFlora(M, [{ kind: "pine", x: 0, z: 0, h: 10 }]); assert.ok(one.group.children.length <= 2, "one tree's wood and needles in a draw each");
 });
 
@@ -80,7 +82,7 @@ test("the art director's lines of 2026-11-25 that a number can hold", () => {
   const ever = south.filter((k) => k === "pine" || k === "cypress").length / south.length;
   assert.ok(ever <= 0.25 && 1 - ever >= 0.6, `south of the arrival: ${(ever * 100).toFixed(0)}% evergreen of ${south.length}`);
   // the poplar is the one tall thing, 15 to 19 m, only where no picture's ceiling holds it down; every other tree keeps its plan's height
-  for (const t of plan.trees) { const h = growHeight(t); if (h !== t.h) assert.ok(growKind(t) === "poplar" && h >= POPLAR_H[0] && h <= POPLAR_H[1] && eaveCap(t.x, t.z) >= 40, `${t.x}, ${t.z}`); }
+  for (const t of plan.trees) { const h = growHeight(t), set = KIND_AT.find(([x, z, , hh]) => hh && Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (h !== t.h) assert.ok(set ? h === set[3] && h < t.h : growKind(t) === "poplar" && h >= POPLAR_H[0] && h <= POPLAR_H[1] && eaveCap(t.x, t.z) >= 40, `${t.x}, ${t.z}`); }
   assert.ok(plan.trees.some((t) => growHeight(t) > LIMITS.treeMax), "some poplars stand over the roofs");
   // a bare tree's trunk is never wider than a house's door; a pagoda tree's limbs keep over his head
   for (const c of [...COURT_TREES, ...ARRIVAL_POPLARS.map((t) => ({ ...t }))]) {

@@ -42,7 +42,8 @@ export const COURT_TREES = Object.freeze([
   Object.freeze({ kind: "huai", x: 27.5, z: 48.5, h: 10.4, r: 0.42 }),
   Object.freeze({ kind: "pine", x: 38.3, z: 58.3, h: 11.2, r: 0.4 }),   // (in the court's south-east corner, behind cam01: its shadow lies across the court before it; beside the platform it stood in cam01's picture or before the houses seen from B)
   Object.freeze({ kind: "pine", x: -29.5, z: 43.5, h: 10.2, r: 0.38 }),
-  Object.freeze({ kind: "huai", x: -34.8, z: 15.5, h: 9.6, r: 0.4 }),
+  Object.freeze({ kind: "huai", x: -21.6, z: 16.9, h: 9.6, r: 0.4 }),   // (the court's front corners by the terrace, one each side: in cam01 at its edges, framing the hall below its eave line, the art director, 2026-11-25)
+  Object.freeze({ kind: "huai", x: 21.6, z: 16.4, h: 9.8, r: 0.42 }),
 ]);
 /** A court tree's pit: edge stones `rim` wide standing `up` over the paving round a square of earth `side` across (two of the Yingzao Fashi's three-chi blocks, as the prologue's pits, three for a pine; by analogy, not a source). */
 export const COURT_PIT = Object.freeze({ side: 1.86, pine: 2.79, rim: 0.2, up: 0.065 });   // (a pine's pit three blocks across: its flared trunk is the thickest in the court)   // (edge stones 0.2 m wide: at 0.15 their top was exactly the baked floor's foothold and one side counted as a low thing his shoes were kept off)

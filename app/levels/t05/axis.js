@@ -73,17 +73,23 @@ export const SIGHTS = (() => {
 export function treeBlocks(eye, to, t) {
   const d = [to[0] - eye[0], to[1] - eye[1], to[2] - eye[2]];
   { // crown
-    const c = [t.x, t.y + 7.6 + t.ry, t.z], o = [eye[0] - c[0], eye[1] - c[1], eye[2] - c[2]], k = [t.rx, t.ry, t.rx];
+    const c = [t.x, t.y + (t.base ?? 7.6) + t.ry, t.z], o = [eye[0] - c[0], eye[1] - c[1], eye[2] - c[2]], k = [t.rx, t.ry, t.rx];   // (a crown's underside: its own `base`, or 7.6 m)
     const a = d.reduce((s, v, i) => s + (v / k[i]) ** 2, 0), b = 2 * d.reduce((s, v, i) => s + (v * o[i]) / k[i] ** 2, 0), cc = o.reduce((s, v, i) => s + (v / k[i]) ** 2, 0) - 1, disc = b * b - 4 * a * cc;
     if (disc >= 0) { const s0 = (-b - Math.sqrt(disc)) / (2 * a), s1 = (-b + Math.sqrt(disc)) / (2 * a); if (s1 > 0 && s0 < 1) return true; }
   }
   { // trunk: the circle of the trunk in plan, where the line is within the trunk's height (its radius at the foot, to be safe)
     const ox = eye[0] - t.x, oz = eye[2] - t.z, a = d[0] ** 2 + d[2] ** 2, b = 2 * (d[0] * ox + d[2] * oz), cc = ox * ox + oz * oz - t.r * t.r, disc = b * b - 4 * a * cc;
-    if (disc >= 0 && a > 0) for (const s of [(-b - Math.sqrt(disc)) / (2 * a), (-b + Math.sqrt(disc)) / (2 * a)]) { const y = eye[1] + d[1] * s; if (s > 0 && s < 1 && y > t.y && y < t.y + 11) return true; }
+    if (disc >= 0 && a > 0) for (const s of [(-b - Math.sqrt(disc)) / (2 * a), (-b + Math.sqrt(disc)) / (2 * a)]) { const y = eye[1] + d[1] * s; if (s > 0 && s < 1 && y > t.y && y < t.y + (t.base ?? 11)) return true; }
   }
   return false;
 }
 const clear = (t) => !SIGHTS.lines.some((l) => treeBlocks(SIGHTS.eye, l.to, t));
+/**
+ * The two lines kept for the terrace's rows of old arborvitae (the art director, 2026-11-25, when #482/#492's lines were set aside for this stretch):
+ * the archway's middle bay shows the hall (every `door` line), and the middle 60% of the hall's ridge is not stopped (the ornaments at its ends may be).
+ */
+export const KEPT_SIGHTS = Object.freeze(SIGHTS.lines.filter((l) => l.kind === "door" || (l.kind === "ridge" && Math.abs(l.to[0]) <= 0.6 * RIDGE.rx && l.to[1] < RIDGE.ornamentTop - 1)));
+const keptClear = (t) => !KEPT_SIGHTS.some((l) => treeBlocks(SIGHTS.eye, l.to, t));
 /** No tree within 17 m of the archway, north or south, whose trunk or crown comes within 8 m of the axis: such crowns stood behind its ridges seen from cam07 and from the hall, like a pair of ears (the T05 lead's review of #492; a trunk at 8 m with a crown 3 m wide still did). */
 export const ARCHWAY_CLEAR = Object.freeze({ z: 17, x: 8 });
 export const nearArchway = (t) => Math.abs(t.z - AXIS.paifangZ) < ARCHWAY_CLEAR.z && Math.abs(t.x) - t.rx < ARCHWAY_CLEAR.x;
@@ -93,26 +99,26 @@ const grow = () => {
   // the way between the gates: pairs about 9 m apart, each off its place a little, two places left empty
   const lane = []; for (let z = FOOT.inner.z1 + 7.8; z <= FOOT.outer.z0 - 8; z += 9) lane.push(z);
   lane.forEach((z, n) => { for (const sx of [-1, 1]) { const dz = (rnd() * 2 - 1) * 0.8, dx = (rnd() * 2 - 1) * 0.5, r = rr(), c = crown(); if ((sx === 1 && n === 2) || (sx === -1 && n === 4)) continue; add({ x: sx * (5.5 + dx), z: +(z + dz).toFixed(2), y: 0, r, ...c }, 0.4); } });
-  // the terrace between the hall and the archway (42 m): each side on its own, by hand and unevenly, 5.5 to 8.5 m off the axis, no pairs
-  const TERRACE_TREES = { [-1]: [81.6, 86.4, 95.2], [1]: [79.6, 90.3, 94.8] };
-  for (const sx of [-1, 1]) for (const z of TERRACE_TREES[sx]) { const r = rr(), c = crown(), x = 5.5 + rnd() * 3; add({ x: sx * x, z, y: SECOND.y, r, ...c }, 0.5); }
+  // The terrace (the art director, 2026-11-25, after the concept picture for cam07, refs/t05-concept-2026-11-20/03-axis-from-inner-gate.webp): two rows of old
+  // arborvitae close beside the path, six a side, the nearest pair 8 to 10 m in from the inner gate, the rest from the archway down to the Wuliang hall, their crowns
+  // nearly meeting overhead, two walls of trees; trunk 0.6 to 0.9 m through, 14 to 18 m tall, the crown from 3.5 to 4.5 m up and 5 to 6 m across, the trunk 2.2 to 3.8 m
+  // off the path's edge; spaced a little unevenly. #482/#492's lines are set aside for this stretch; the two kept (KEPT_SIGHTS) push a tree out if it stops one.
+  const ROWS = { [-1]: [127.2, 111.8, 103.4, 97.6, 89.8, 83.5], [1]: [126.5, 112.4, 105.6, 97.5, 91.9, 84.2] };
+  for (const sx of [-1, 1]) for (const z of ROWS[sx]) {
+    const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2), x = PATH.hw + 2.2 + rnd() * 1.6;
+    for (let k = 0; k <= 8; k++) { const t = { x: +(sx * (x + 0.3 * k)).toFixed(2), z, y: SECOND.y, r, rx, ry, base, h, old: true }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
+  }
   return Object.freeze(out);
 };
 export const TRUNKS = Object.freeze({ h: 11, canopyBase: 7.6, list: grow() });
 /** What each of the axis's trees is grown as: a cypress along the way between the gates; on the terrace a pine or a cypress, by turns down each side (ours). */
-export const treeKind = (t) => {
-  if (t.y === 0) return "cypress";
-  // on the terrace, down each side from the archway: a pine, a pagoda tree, a cypress (the art director, 2026-11-25: one old pagoda tree with the pines and cypresses, its crown kept in its ellipsoid)
-  const n = TRUNKS.list.filter((q) => q.y > 0 && Math.sign(q.x) === Math.sign(t.x) && q.z < t.z).length;
-  return ["pine", "huai", "cypress"][n % 3];
-};
 /** The way's arborvitae (the art director, 2026-11-25): narrow columns branched from low, the needles from `crownFrom` m up, `radius` round at most, `height` tall (6 to 10 m); the views along the axis are all north of them, so no crown base is asked of them. */
 export const WAY_CYPRESS = Object.freeze({ crownFrom: 2.6, radius: 1.2, height: [8.2, 9.8] });   // (`crownFrom` is where the lumps' middles start: their undersides come to about 2 m)
 /** The axis's trees as ./flora.js grows them: on the terrace each crown in its ellipsoid over a clean bole; along the way a low-branched column (WAY_CYPRESS). */
 const way01 = (t) => { const v = Math.sin(t.x * 12.9898 + t.z * 78.233 + 14 * 37.719) * 43758.5453; return v - Math.floor(v); };
 export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze(t.y === 0
   ? { kind: "cypress", x: t.x, z: t.z, y: t.y, h: +(WAY_CYPRESS.height[0] + (WAY_CYPRESS.height[1] - WAY_CYPRESS.height[0]) * way01(t)).toFixed(2), r: Math.min(t.r, 0.3), crownFrom: WAY_CYPRESS.crownFrom, crownR: Math.min(WAY_CYPRESS.radius, Math.abs(t.x) - PATH.hw - 1 - 0.2) }   // (its crown's edge at least a metre from the paved path's: the lumps reach a little past the radius)
-  : { kind: treeKind(t), x: t.x, z: t.z, y: t.y, h: TRUNKS.canopyBase + 2 * t.ry, r: t.r, env: Object.freeze({ base: TRUNKS.canopyBase, rx: t.rx, ry: t.ry }) })));
+  : { kind: "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 
@@ -223,7 +229,7 @@ export function buildAxis(M, { C, W }) {
 
   // ---- The two places held: the monument pavilion and the lamp table ----
   const group = new THREE.Group(), M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, mw = M0.x1 - M0.x0;
-  group.add(sh.group, mesh(merge(earthSides), dryMaterials(M).earth, { cast: false }));   // (the trees themselves are grown with the court's, in site.js: AXIS_TREES)
+  group.add(sh.group, mesh(merge(earthSides), dryMaterials(M).grass, { cast: false }));   // (the trees themselves are grown with the court's, in site.js: AXIS_TREES)
   // The monument pavilion as it stands, open on all four sides (a Qing four-cornered pavilion with a pyramid roof: ARCHITECTURE.md §3.2,
   // SOURCES.md): a stone base, four columns, a tie-beam round their heads, a ceiling plate and fascia under the roof, and under it a
   // blank stele on its plinth. Nothing is walled: from the terrace the eye sees through between the columns under the eaves.

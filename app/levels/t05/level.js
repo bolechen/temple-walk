@@ -19,7 +19,7 @@ const J01 = {
   sun: [Math.cos(J01_ELEV) * Math.sin(J01_AZ), Math.sin(J01_ELEV), -Math.cos(J01_ELEV) * Math.cos(J01_AZ)],
   sunCol: [1, 0.985, 0.95], sunI: 2.95, cloud: 0.12, snow: 0, wet: 0,
   hemiS: [0.74, 0.84, 1], hemiG: [0.3, 0.31, 0.3], hemiI: 1.1,
-  fog: [0.66, 0.73, 0.8], fogD: 0.0058, zen: [0.27, 0.43, 0.72], hor: [0.78, 0.85, 0.92], haze: 0.8,
+  fog: [0.63, 0.71, 0.8], fogD: 0.0035, zen: [0.19, 0.35, 0.7], hor: [0.78, 0.85, 0.92], haze: 0.5,   // (the air cleared and the zenith deepened, the art director's lines of 2026-11-25 on #573: the hall seen through the archway clear, the sky b* about -20)
   exp: 1.1, bloom: 0.16, glow: 0.35, hal: 0.12, mist: 0.7, fogLayer: [0.15, -6, 20, 2],
   sh: [0.93, 1, 1.035], hi: [1.01, 1, 0.97], sat: 1,
   lut: { lift: [0, 0.002, 0.006], gamma: [1, 1, 1.01], gain: [1, 1, 1], sat: 1.02, shadow: [0, 0, 0.005], light: [0.004, 0.002, -0.003] },
