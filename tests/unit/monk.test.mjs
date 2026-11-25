@@ -147,6 +147,18 @@ test("on a cushion he sits cross-legged upon it: knees out and low, shins before
   assert.ok(l.distanceTo(r) < 0.05 && l.y > r.y, `the left hand lies on the right (${l.distanceTo(r).toFixed(3)} m apart)`);
   assert.ok(l.y > hips.y - 0.02 && l.y < hips.y + 0.15 && l.z > hips.z + 0.06, "in his lap, below the navel");
   keepsOut(m, CUSHION, 0.104, "cushion");
+  // Seated drape (#664): hands rest above the lap cloth, front and back hems settle onto the cushion, no trouser knees poke through.
+  const robeMesh = m.parts.robe, rc = robeMesh.geometry.attributes.position.count;
+  let lapMaxY = -Infinity, frontHemMinY = Infinity, backHemMinY = Infinity;
+  for (let i = 0; i < rc; i++) {
+    const v = skinnedWorld(robeMesh, i);
+    if (Math.abs(v.x) < 0.05 && v.z > 0.155 && v.z < 0.22 && v.y < hips.y + 0.1) lapMaxY = Math.max(lapMaxY, v.y);
+    if (v.z > 0.18) frontHemMinY = Math.min(frontHemMinY, v.y);
+    if (v.z < -0.14) backHemMinY = Math.min(backHemMinY, v.y);
+  }
+  assert.ok(lapMaxY < r.y + 0.005, `lap cloth (${lapMaxY.toFixed(3)}) must stay beneath his hands (${r.y.toFixed(3)})`);
+  assert.ok(frontHemMinY < 0.03, `front hem (${frontHemMinY.toFixed(3)}) must drape down to the cushion`);
+  assert.ok(backHemMinY < 0.03, `back hem (${backHemMinY.toFixed(3)}) must rest on the cushion`);
 });
 
 test("what hangs off him swings: the skirt trails his walk and flares as he turns", () => {

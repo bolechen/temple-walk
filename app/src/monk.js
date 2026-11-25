@@ -382,6 +382,46 @@ export function createMonk(opts = {}) {
     return [x, y, z, (j / NT) * 5, y * 7, colour];
   });
   weld(torso);
+  // Seated cushion drape morph target (Pose-Space Deformation for cross-legged sitting, #664):
+  // drapes the skirt from the waist smoothly under his folded hands, softly out over both knees, and down flush onto
+  // the cushion top all 360° around (front, sides and back), so the hands rest cleanly on top and no rigid shelf or bare
+  // trouser balls show beneath.
+  const torsoSit = grid(rows.length, NT + 1, (i, j) => {
+    const { y: y0, k, inner } = rows[i], a = -Math.PI + (TAU * j) / NT, s = Math.sin(a), c = Math.cos(a);
+    const vDip = Math.max(0, 1 - Math.abs(a) / 0.85) * 0.068 * smooth(0.75, 0.876, y0);
+    const y = y0 - vDip;
+    let m = 1 - 0.005 * smooth(0.295, 0.277, y0) * (inner ? 0 : 1);
+    let x = rxAt(y) * k * m * s, z = zOffAt(y) + rzAt(y, c) * k * m * c, yy = y;
+    const u = clamp((0.645 - y0) / (0.645 - 0.277), 0, 1);
+    if (u > 0) {
+      const blend = smooth(0, 0.22, u), front = Math.max(0, c), back = Math.max(0, -c), side = Math.abs(s);
+      // Target world height above cushion top (y = 0) mapped back to bind space (y_bind = y_world + SIT_DROP).
+      // Waist (u=0) sits at y_world = 0.235; hem (u=1) rests flush on the cushion at y_world = 0.008.
+      // Front-centre drops below the folded hands (y_world ~ 0.14 at u=0.35) then curves down over the shins;
+      // sides arch softly over the folded knees; back falls smoothly straight onto the cushion.
+      const hemW = inner ? 0.013 : 0.008;
+      const yLap = 0.235 * Math.pow(1 - u, 1.38) + hemW * (1 - Math.pow(1 - u, 1.38));
+      const kneeArch = 0.036 * Math.sin(Math.PI * smooth(0.18, 0.96, u)) * (0.35 * front + 0.85 * side * smooth(-0.3, 0.5, c));
+      const lapDip = -0.022 * Math.sin(Math.PI * smooth(0.05, 0.72, u)) * Math.pow(front, 2.2) * (1 - 0.65 * side);
+      const yTarget = SIT_DROP + Math.max(hemW, yLap + kneeArch + lapDip);
+      yy = y + (yTarget - y) * blend;
+      // Target radial fullness: flares smoothly over both folded knees (including the ±45° knee lobes) and forward to the
+      // front edge of the cushion (z ~ 0.255 m), while the back settles cleanly onto the cushion behind him (z ~ -0.20 m).
+      const spread = smooth(0, 0.84, u);
+      const kneeLobe = Math.sin(Math.PI * smooth(0.2, 0.98, u)) * Math.pow(side * front, 0.75);
+      const kneeBulge = 0.036 * Math.sin(Math.PI * smooth(0.24, 0.98, u)) * side * smooth(-0.15, 0.55, c) + 0.045 * kneeLobe;
+      const softFold = (inner ? 0 : 0.006) * Math.sin(Math.PI * smooth(0.7, 1.0, u)) * (0.6 + 0.4 * Math.cos(4 * a));
+      const rxTarget = (rxAt(0.645) + (0.282 - rxAt(0.645)) * Math.pow(spread, 0.72) + kneeBulge + softFold) * (inner ? 0.93 : 1);
+      const rzFront = (rzAt(0.645, 1) + (0.254 - rzAt(0.645, 1)) * Math.pow(spread, 0.72) + 0.032 * kneeLobe + softFold) * (inner ? 0.93 : 1);
+      const rzBack = (rzAt(0.645, -1) + (0.198 - rzAt(0.645, -1)) * Math.pow(spread, 0.82) + softFold * 0.6) * (inner ? 0.93 : 1);
+      const rzTarget = front * rzFront + back * rzBack + (1 - front - back) * (0.5 * rzFront + 0.5 * rzBack);
+      const xTarget = rxTarget * s, zTarget = zOffAt(0.645) + rzTarget * c + 0.012 * spread * front;
+      x = x + (xTarget - x) * blend;
+      z = z + (zTarget - z) * blend;
+    }
+    return [x, yy, z, (j / NT) * 5, y * 7];
+  });
+  weld(torsoSit);
   robeParts.push(finish(torso, null, robeW, true));
   const torsoCount = torso.attributes.position.count;
   // Wide conical sleeves to the elbow with crisp rolled cuff and dark interior lining
@@ -535,6 +575,15 @@ export function createMonk(opts = {}) {
   const beadM = new THREE.MeshStandardMaterial({ color: 0x9e4e26, roughness: 0.34, metalness: 0.02, envMapIntensity: 0.85 });
   const skinned = (parts, mat) => { const m = new THREE.SkinnedMesh(mergeGeometries(parts), mat); m.frustumCulled = false; m.receiveShadow = true; group.add(m); return m; };
   const skin = skinned(skinParts, skinM), robe = skinned(robeParts, clothM), legs = skinned(legParts, clothM), shoes = skinned(shoeParts, shoeM);
+  {
+    const basePos = robe.geometry.attributes.position.array, baseNorm = robe.geometry.attributes.normal.array;
+    const sitPos = new Float32Array(basePos), sitNorm = new Float32Array(baseNorm);
+    sitPos.set(torsoSit.attributes.position.array, 0);
+    sitNorm.set(torsoSit.attributes.normal.array, 0);
+    robe.geometry.morphAttributes.position = [new THREE.BufferAttribute(sitPos, 3)];
+    robe.geometry.morphAttributes.normal = [new THREE.BufferAttribute(sitNorm, 3)];
+    robe.updateMorphTargets();
+  }
   const straps = skinned(strapParts, clothM); straps.visible = true;   // shown whenever the hat is on his back (panel 4)
   const skeleton = new THREE.Skeleton(bones);
   for (const m of [skin, robe, legs, shoes, straps]) m.bind(skeleton);
@@ -980,8 +1029,8 @@ export function createMonk(opts = {}) {
             kneeL.copy(hipL).addScaledVector(tv.set(s * 0.12, -0.05, 1).normalize(), THIGH);
             ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.08, -1, 0.14).normalize(), SHIN);
           } else {
-            const front = s > 0 ? 0.04 : 0;
-            kneeL.copy(hipL).addScaledVector(tv.set(s * 0.235, 0.075, 0.13 + front).sub(hipL).normalize(), THIGH);
+            const front = s > 0 ? 0.028 : 0;
+            kneeL.copy(hipL).addScaledVector(tv.set(s * 0.19, 0.075, 0.105 + front).sub(hipL).normalize(), THIGH);
             ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.959, 0, -0.283), SHIN); ankL.z += front * 0.5;
           }
           group.localToWorld(kneeW.copy(kneeL)); group.localToWorld(ankW.copy(ankL)); group.localToWorld(hipW.copy(hipL));
@@ -998,6 +1047,8 @@ export function createMonk(opts = {}) {
           }
           ft.quaternion.setFromAxisAngle(XV, onStool ? 0.45 : 1.0);   // the feet hang, toes a little down; folded, they lie along the shin
           qc.copy(ft.quaternion); ft.quaternion.slerpQuaternions(q2, qc, w);
+          // Cross-legged under the draped robe, the loose balloon trousers compress radially inside the cloth (joints stay put).
+          if (!onStool && !dressed) { const tuck = 1 - 0.36 * w; up.scale.set(tuck, 1, tuck); lo.scale.set(tuck, 1, tuck); }
         });
       }
 
@@ -1015,7 +1066,7 @@ export function createMonk(opts = {}) {
         const mode = palms >= Math.max(seat, perch) ? "pray" : perch > seat ? "thigh" : "lap", anchor = mode === "pray" ? B.chest : B.hips;
         group.updateMatrixWorld(true);
         if (mode === "pray") anchor.localToWorld(tv.set(s * 0.0125, 0.02, 0.165));
-        else if (mode === "lap") anchor.localToWorld(tv.set(s * 0.012, 0.055 + (s > 0 ? 0.012 : 0), 0.13));
+        else if (mode === "lap") anchor.localToWorld(tv.set(s * 0.012, 0.06 + (s > 0 ? 0.013 : 0), 0.15));
         else anchor.localToWorld(tv.set(s * 0.085, 0.062, 0.14));
         reach(ua, la, UPPER, FORE, tv, tv2.set(s, mode === "pray" ? -1.3 : mode === "lap" ? -0.2 : -0.8, mode === "pray" ? -0.35 : mode === "lap" ? -0.6 : -0.5).applyQuaternion(gq), -1);
         ua.updateMatrixWorld(true);
@@ -1058,15 +1109,20 @@ export function createMonk(opts = {}) {
       B.robeFront.position.z += pushF; B.robeFront.position.y -= 0.25 * pushF;
       B.robeLeft.position.z += 0.65 * pushL; B.robeLeft.position.x += 0.14 * pushL;
       B.robeRight.position.z += 0.65 * pushR; B.robeRight.position.x -= 0.14 * pushR;
-      B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * seat - 0.78 * perch, 0, sd);
-      B.robeBack.rotation.set(back + 0.32 * seat + 0.22 * perch, 0, sd);
+      const sitDrape = !dressed && robe.morphTargetInfluences?.length ? smooth(0, 1, seat) : 0;
+      if (robe.morphTargetInfluences?.length) robe.morphTargetInfluences[0] = sitDrape;
+      const boneSeat = dressed ? seat : 0;
+      B.robeFront.rotation.set(tr - 0.9 * fwd - 1.04 * boneSeat - 0.78 * perch, 0, sd);
+      B.robeBack.rotation.set(back + 0.32 * boneSeat + 0.22 * perch, 0, sd);
       // each side of the skirt goes with the knee on that side, forward as far as the front does, and a little out
-      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.66 * seat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.64 * seat + 0.22 * perch);
-      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.66 * seat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.64 * seat - 0.22 * perch);
-      B.robeFront.scale.y = 1 - 0.04 * seat - 0.18 * perch; B.robeBack.scale.y = 1 - 0.3 * seat - 0.62 * perch;   // on a stool the back of the skirt is gathered on the seat
-      B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * seat - 0.14 * perch;
-      // Seated, the sash's ends fall into his lap rather than ride out on the skirt.
-      B.sashTail.rotation.set(B.robeFront.rotation.x * (1 - 0.6 * sitW) - 2.2 * pushF + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
+      B.robeLeft.rotation.set(tr - 0.9 * lf + 0.6 * Math.max(0, -thigh[0]) - 0.66 * boneSeat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING + 0.015 + 0.2 * lf + 0.64 * boneSeat + 0.22 * perch);
+      B.robeRight.rotation.set(tr - 0.9 * rt + 0.6 * Math.max(0, -thigh[1]) - 0.66 * boneSeat - 0.66 * perch, 0, sd * SKIRT_SIDE_SWING - 0.015 - 0.2 * rt - 0.64 * boneSeat - 0.22 * perch);
+      B.robeFront.scale.y = 1 - 0.04 * boneSeat - 0.18 * perch; B.robeBack.scale.y = 1 - 0.3 * boneSeat - 0.62 * perch;   // on a stool the back of the skirt is gathered on the seat
+      B.robeLeft.scale.y = B.robeRight.scale.y = 1 - 0.14 * boneSeat - 0.14 * perch;
+      // Seated, the sash's end tucks neatly at the waist under his wrists rather than poking over his hands.
+      B.sashTail.scale.y = 1 - (dressed ? 0 : 0.78 * seat);
+      B.sashTail.position.z -= dressed ? 0 : 0.01 * seat;
+      B.sashTail.rotation.set((dressed ? B.robeFront.rotation.x * (1 - 0.6 * sitW) : B.robeFront.rotation.x * (1 - 0.6 * perch) - 0.12 * seat) - 2.2 * pushF + springs.tailX.step(0.07 * speed + 0.05 * Math.abs(Math.sin(phase)) * gait, dt), 0, springs.tailZ.step(0.09 * Math.sin(phase) * gait + sd, dt));
       B.hat.rotation.set(0.15 + Math.max(-0.02, springs.hatX.step(0.04 * gait * Math.abs(Math.cos(phase)) + 0.02 * gait - 0.01 * accel, dt)) + 0.08 * seat + 0.12 * perch, 0, springs.hatZ.step(0.05 * Math.sin(phase) * gait - 0.05 * turn, dt));
       if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) liftHem(surfaceAt, dt);
 
