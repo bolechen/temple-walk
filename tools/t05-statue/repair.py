@@ -84,6 +84,26 @@ for op in spec["ops"]:
         dd = np.linalg.norm(co - e, axis=1); gd = np.exp(-3 * (dd / op["dimples"]["r"]) ** 2); co[:, 1] += op["dimples"]["d"] * gd
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "groove", "note": op.get("note", ""), "points": int((mv > 1e-6).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
+  if op["op"] == "lowerback":
+    # {"d", "z0", "z1", "fz", "x0", "x1", "front", "ffront", "smooth": {"iter", "lam"}}: the lower face (lower lip, chin and jaw as one mass)
+    # pressed back by up to d (+y: away from the viewer), whole between z1 and z0 (z0 the slit's side), easing to nothing over fz below z1
+    # and over the top 0.04 above z0 is not touched (nothing above z0); across it is whole within x0 of the middle and eases out by x1
+    # (the ears stand beyond x1); only what lies in front of `front` (the neck's axis), eased over ffront. Then the points it moved are
+    # relaxed toward the mean of their neighbours (`iter` passes of `lam`, weighted by the same field) so that no ridge is left where the
+    # field ends (#701: the g4 trial's facex pinched the ear lobe and the neck; this field has no x scaling, only a smooth push)
+    z = co[:, 2]; sm = lambda t: t * t * (3 - 2 * t)
+    wz = sm(np.clip((op["z0"] - z) / op.get("fz0", 0.02), 0, 1)) * sm(np.clip((z - (op["z1"] - op["fz"])) / op["fz"], 0, 1))
+    wx = 1 - sm(np.clip((np.abs(co[:, 0]) - op["x0"]) / (op["x1"] - op["x0"]), 0, 1))
+    wf = sm(np.clip((op["front"] - co[:, 1]) / op["ffront"], 0, 1)); w = wz * wx * wf
+    before = co.copy(); co[:, 1] += op["d"] * w
+    sp = op.get("smooth")
+    if sp:
+      cnt = np.bincount(ed.ravel(), minlength=len(co)).astype(float)
+      for _ in range(sp["iter"]):
+        acc = np.zeros_like(co); np.add.at(acc, ed[:, 0], co[ed[:, 1]]); np.add.at(acc, ed[:, 1], co[ed[:, 0]])
+        mean = acc / np.maximum(cnt, 1)[:, None]; co += sp["lam"] * w[:, None] * (mean - co)
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "lowerback", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
   if op["op"] == "facex":
     before = co.copy(); z = co[:, 2]; f = op["fade"]
     t = np.clip((op["y0"] - z) / f, 0, 1) * (np.abs(co[:, 0]) < op["rx"]) * (co[:, 1] < op["front"])
