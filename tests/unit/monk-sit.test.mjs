@@ -166,12 +166,15 @@ test("asked to, he lays the hat at his left; and beside every cushion of the lev
   for (const s of [...site.seats, ...rooms.seats]) {
     if (s.kind !== "cushion") continue; cushions++;
     walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
-    const side = hatSide(walker, s.at[0], s.at[1], s.face), lx = -side * HAT_OFF.x; if (side > 0) lefts++;
+    const axis = s.room ? rooms.rooms[s.room].room.cx : 0, side = hatSide(walker, s.at[0], s.at[1], s.face, axis), lx = -side * HAT_OFF.x; if (side > 0) lefts++;
     const x = s.at[0] + lx * Math.cos(s.face) + HAT_OFF.z * Math.sin(s.face), z = s.at[1] - lx * Math.sin(s.face) + HAT_OFF.z * Math.cos(s.face), floor = s.top - TOP;
     // the hat's own space over the floor: a hand's breadth inside its rim, from just over the floor to its crown
     const space = new THREE.Box3(V(x - 0.17, floor + 0.03, z - 0.17), V(x + 0.17, floor + 0.15, z + 0.17)); let hits = 0;
     for (const [o, box] of meshes) { if (!box.intersectsBox(space)) continue; const p = o.geometry.attributes.position, ix = o.geometry.index?.array, n = ix ? ix.length : p.count;
       for (let k = 0; k < n; k += 3) { a.fromBufferAttribute(p, ix ? ix[k] : k).applyMatrix4(o.matrixWorld); b.fromBufferAttribute(p, ix ? ix[k + 1] : k + 1).applyMatrix4(o.matrixWorld); c.fromBufferAttribute(p, ix ? ix[k + 2] : k + 2).applyMatrix4(o.matrixWorld); if (tri.makeEmpty().expandByPoint(a).expandByPoint(b).expandByPoint(c).intersectsBox(space)) hits++; } }
+    // before the great hall's altar the two cushions lie either side of the way to it: the west one's hat goes on its outer
+    // side, out of the way (beside the east one stands the offering box, so its hat is laid on the inner side)
+    if (s.room === "main" && s.at[0] < axis) assert.ok(x < s.at[0], `in the great hall the west cushion's hat lies on the side away from the way to the altar (cushion at ${s.at[0].toFixed(2)}, hat at ${x.toFixed(2)}, the middle ${axis})`);
     assert.equal(hits, 0, `beside the cushion at (${s.at.map((q) => q.toFixed(2))}) in ${s.room || "the open"}, something drawn stands where the hat is laid (at his ${side > 0 ? "left" : "right"})`);
   }
   walker.setRoom(null);
