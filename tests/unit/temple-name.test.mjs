@@ -31,7 +31,7 @@ test("no line T05 says of its temple holds the prologue's name, in any language"
   }
   assert.equal(templeOf(t05, "en"), "Fengming Temple"); assert.equal(said(t05, "云径禅寺-点灯.jpg", undefined, "en"), "fengming-temple-lamp.jpg");
   assert.equal(templeOf(t05, "zh"), "奉明寺"); assert.equal(said(t05, "云径禅寺-{mood}.jpg", vars, "zh"), "奉明寺-x.jpg");
-  assert.equal(templeOf(t05, "ja"), "奉明寺"); assert.equal(templeOf(t05, "ko"), "奉明寺");
+  assert.equal(templeOf(t05, "ja"), "奉明寺"); assert.equal(templeOf(t05, "ko"), "봉명사");
 });
 
 test("the prologue's lines are exactly the tables' own", async () => {

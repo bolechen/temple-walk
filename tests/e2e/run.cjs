@@ -2792,6 +2792,63 @@ const scenarios = {
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
   } },
+  // #726: the first time the book is shut after the close, the hour turns to the visitor's own and one line says so with the
+  // seasons being open; shutting it again, and watching the close again from the summit mat, do neither.
+  "hour-after-book": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "q=low&fast=1&seed=4" + BARE, { init: () => {
+      // a summer night at home (22:30), and six seals kept with the close not yet seen
+      const Real = Date, off = new Real(2026, 6, 15, 22, 30).getTime() - Real.now();
+      window.Date = class extends Real { constructor(...a) { if (a.length) super(...a); else super(Real.now() + off); } static now() { return Real.now() + off; } };
+      if (!localStorage.getItem("test.seeded")) { localStorage.setItem("test.seeded", "1"); localStorage.setItem("yunjing.journey.v1", JSON.stringify({ v: 1, born: 1, seals: Object.fromEntries(["bell", "incense", "tea", "sutra", "well", "lamp"].map((id, i) => [id, 10 + i])), strikes: 3, verse: null, done: null, opened: null, told: false, closed: null, closedSeason: null, stamped: null })); }
+    } });
+    const P = () => t.page.evaluate(() => { const p = window.__probe(); return { time: p.time, follow: p.follow, lamp: p.lamp }; });
+    const hud = () => t.page.evaluate(() => window.__hud());
+    const shown = (sel) => t.page.isVisible(sel);
+    let p = await P(); expect(p.time === "day" && p.follow === false && p.lamp < 0.05, "the prologue is walked by day, not following the clock: " + JSON.stringify(p));
+    const pos = await t.page.evaluate(() => { const q = window.__places.sit; window.__poseNear(q.at[0] + 0.3, q.at[1] + 0.3, 0, 0); });
+    await t.until(async () => (await t.page.isVisible("#act")) && (await t.page.getAttribute("#act", "data-word")) === "静坐", 30000, "sitting was not offered on the summit"); await t.page.click("#act");
+    await t.until(async () => (await t.journey()).seals.sit > 0, 120000, "no seal for sitting");
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 180000, "the close never ended");
+    p = await P(); expect(p.time === "day" && p.follow === false, "the hour must not turn before the book is shut: " + JSON.stringify(p));
+    await t.page.keyboard.press("b"); await t.until(() => shown("#book"), 90000, "the book never opened after the close");
+    p = await P(); expect(p.time === "day" && p.follow === false, "the hour must not turn while the book is open: " + JSON.stringify(p));
+    // Every frame from here is read: from the first one the book is gone the hour is the visitor's own and the ink is shut over it, never a frame of the old hour.
+    await t.page.evaluate(() => { const tag = () => document.getElementById("moodTag").textContent, leaf = () => document.querySelector("#curtain i").style.transform;
+      window.__frames = []; window.__dayWords = tag(); const f = () => { window.__frames.push({ open: document.getElementById("book").open, words: tag(), ink: leaf(), veiled: document.body.classList.contains("veiled"), rail: getComputedStyle(document.querySelector(".rail")).opacity, stick: getComputedStyle(document.getElementById("stick")).opacity, hint: getComputedStyle(document.getElementById("hint")).opacity }); requestAnimationFrame(f); }; requestAnimationFrame(f); });
+    await t.page.click("#bookClose");
+    await t.until(async () => (await P()).time === "night", 30000, "the hour never turned to the visitor's own when the book was shut");
+    await t.until(async () => t.page.evaluate(() => window.__frames.length > 0 && window.__frames.at(-1).ink === ""), 60000, "the ink never opened again");
+    { const fr = await t.page.evaluate(() => ({ f: window.__frames, day: window.__dayWords })), after = fr.f.filter((x) => !x.open);
+      expect(after.length > 1 && after.every((x) => x.words !== fr.day), "a frame after the book showed the old hour: " + JSON.stringify(after.slice(0, 4)));
+      // what floats over the picture steps aside while the ink is on it, and comes back when it has opened (#726)
+      const inked = after.filter((x) => x.ink !== "");
+      expect(inked.length > 0 && inked.every((x) => x.veiled && x.rail === "0" && x.stick === "0"), "the slips and the stick were on the ink: " + JSON.stringify(inked.find((x) => !(x.veiled && x.rail === "0" && x.stick === "0"))));
+      expect(after.at(-1).ink === "" && !after.at(-1).veiled, "the veil's class stayed after the ink opened: " + JSON.stringify(after.at(-1)));
+      expect(/scaleY\(1(\.0+)?\)/.test(after[0].ink), "the ink was not shut over the first frame after the book: " + JSON.stringify(after[0])); }
+    p = await P(); expect(p.follow === true && p.lamp > 0, "after the book the hour should follow the clock, lamps lit: " + JSON.stringify(p));
+    await t.until(async () => (await hud()).tip === "seasons", 30000, "the line was not said: " + JSON.stringify(await hud()));
+    const line = await t.page.evaluate(() => document.getElementById("hint").textContent);
+    expect(/山中时辰已随你此刻/.test(line) && !/时节已开/.test(line), "one sentence, the hour and the seasons together: " + line);
+    { const r = await t.page.evaluate(() => { const e = document.getElementById("hint").getBoundingClientRect(); return { l: e.left, r: e.right, b: e.bottom, w: innerWidth, h: innerHeight }; });
+      expect(r.l >= 0 && r.r <= r.w && r.b <= r.h, "the line runs off a phone's screen: " + JSON.stringify(r)); }
+    expect((await t.journey()).told === true, "it was not kept as said");
+    // shut it again: nothing turns, nothing is said (a hand has chosen dawn meanwhile)
+    await t.page.evaluate(() => window.__mood("summer", "dawn")); await t.frames(2);
+    await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book did not open again"); await t.page.click("#bookClose"); await t.frames(5);
+    p = await P(); expect(p.time === "dawn" && p.follow === false, "the second shutting of the book changed the hour: " + JSON.stringify(p));
+    // 山顶再坐一回 (from the book's small paper, as a visitor does) and then the book once more
+    const R = () => t.page.evaluate(() => window.__rites().closing);
+    await t.page.keyboard.press("Escape"); await t.until(async () => (await R()) === false, 60000, "the eye did not come home from the far view");
+    // with the eye home the slips are on the picture: the veil's class hides them and nothing else does, and they come back when it goes (#726)
+    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
+      expect(o.on === "0" && o.after !== "0" && o.before !== "0", "the veil's class should hide the slips and give them back: " + JSON.stringify(o)); }
+    await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookMoreBtn"); await t.until(() => shown("#bookMore"), 10000, "更多"); await t.page.click("#bookReplay");
+    await t.until(async () => (await R()) === true, 120000, "the close did not play again");
+    await t.page.mouse.move(120, 120); await t.page.mouse.down(); await t.until(async () => (await R()) === false, 30000, "the close did not end"); await t.page.mouse.up();
+    await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookClose"); await t.frames(5);
+    p = await P(); expect(p.time === "dawn" && p.follow === false, "watching the close again turned the hour: " + JSON.stringify(p));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // The opening after 入山 (src/opening.js, issue #110): a first visitor sees the summit and is brought down the mountain
   // to him before the walk is theirs; nothing lies over the picture meanwhile; the bell sounds at the click and the music
   // waits; the first line about walking comes only after; at the gate the prologue's title rises and leaves, once. A

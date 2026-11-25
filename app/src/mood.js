@@ -96,6 +96,13 @@ export function startMood({ query, now, prologueDay, firstMood, keepsPlace }) {
     follow: !askedTime && !fixed && !prologueDay && !first,   // (the hour follows the clock only after the prologue, and not on a level's own first look)
   };
 }
+// The first time the book is shut after the close (#726): the hour turns to the visitor's own and follows the clock from there.
+// Returns the hour to go to, or null where it must stay: an address that names an hour or a fixed view, or a hand's choice (the
+// hand keeps what it chose). Already following: the hour it should now be, as `hourFollow` would say.
+export function takeClock(state, query, d = new Date()) {
+  if (state.hand || TIMES.includes(query.get("time")) || query.has("shot") || query.has("show") || query.has("cam")) return null;
+  state.follow = true; return moodNow(d).time;
+}
 // The season and hour it is now, where the visitor is.
 export function moodNow(d = new Date()) {
   const mo = d.getMonth(), h = d.getHours() + d.getMinutes() / 60;
