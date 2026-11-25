@@ -30,7 +30,7 @@ const OFF = "gtao,halation,lut,dof,layers,bloom,leafshadow";
   const b = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--host-resolver-rules=MAP pr-0-temple-walk-preview.test 127.0.0.1"] });
   const p = await b.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1, locale: "zh-CN" });
   const errs = []; p.on("pageerror", (e) => errs.push(String(e.stack || e).slice(0, 400)));
-  p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300)));
+  p.on("console", (m) => m.type() === "error" && !/GPU stall/.test(m.text()) && errs.push(m.text().slice(0, 300) + (m.location().url ? " " + m.location().url.replace(/^https?:\/\/[^/]+/, "") : "")));
   const [kind, rest] = what.includes(":") ? what.split(":") : ["view", what];
   const base = `http://pr-0-temple-walk-preview.test:${srv.address().port}/`;
   const qs = `shot=1&review=1&q=${q}&view=third&debug=0&season=${season}&time=${time}&off=${OFF}` + (kind === "view" ? `&show=${rest}` : kind === "sit" ? `&enter&in=${rest}` : `&show=${rest}`);
