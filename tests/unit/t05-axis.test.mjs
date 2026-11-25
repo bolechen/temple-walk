@@ -210,3 +210,21 @@ test("the monument pavilion is open on all four sides: between its columns, at t
   ray.set(new THREE.Vector3(mx, y, M0.z0 - 1), new THREE.Vector3(0, 0, 1));
   assert.ok(ray.intersectObject(site.root, true).some((h) => inside(h.point)), "the stele stands in the middle");
 });
+
+test("the monument's stele has a head: the Yingzao Fashi's proportions (chapter 3, 造赑屃鳌坐碑之制) for the shaft and the head, a head wider and thicker than the shaft, a cloud plate under it, and no tortoise", () => {
+  const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, S = AX.STELE, floor = M0.y + AX.MONUMENT_FORM.base + 0.45;
+  // The shaft: 0.4 wide and 0.15 thick to every unit of its length (原文), the head 0.44 square-wide and 0.18 thick (原文), its cloud plate 0.15 of the shaft's width high (原文).
+  assert.ok(near(S.w / S.L, 0.4, 1e-6) && near(S.t / S.L, 0.15, 1e-6), "the shaft is 4/10 wide and 1.5/10 thick of its length");
+  assert.ok(near(S.headW / S.L, 0.44, 1e-6) && near(S.headT / S.L, 0.18, 1e-6) && near(S.cloud, 0.15 * S.w, 1e-6), "the head 0.44 and 0.18 of the shaft's length; the cloud plate 0.15 of its width");
+  assert.ok(S.headW > S.w && S.headT > S.t, "the head is wider and thicker than the shaft");
+  // Drawn so: a line at the head's height across its middle meets the head's full width; at the shaft's height, only the shaft's.
+  site.root.updateMatrixWorld(true);
+  const ray = new THREE.Raycaster(), widthAt = (y) => {
+    const along = (dx) => { ray.set(new THREE.Vector3(mx + dx * 3, y, mz), new THREE.Vector3(-dx, 0, 0)); const h = ray.intersectObject(site.root, true).find((q) => Math.abs(q.point.z - mz) < 1e-6 && Math.abs(q.point.x - mx) < 1.2); return h ? Math.abs(h.point.x - mx) : 0; };
+    return along(1) + along(-1);
+  };
+  assert.ok(near(widthAt(floor + S.L / 2), S.w, 0.01), `the shaft's width ${widthAt(floor + S.L / 2)}`);
+  assert.ok(near(widthAt(floor + S.L + S.cloud + 0.1), S.headW, 0.02), `the head's width ${widthAt(floor + S.L + S.cloud + 0.1)}`);
+  // It stands clear under the ceiling plate, and nothing of it is a tortoise: the plinth stays the one plain block (the owner's lead: no turtle).
+  assert.ok(floor + S.L + S.headH < M0.y + AX.MONUMENT_FORM.base + AX.MONUMENT_FORM.column + 0.3 + AX.MONUMENT_FORM.beam - 0.1, "the head clears the ceiling plate");
+});

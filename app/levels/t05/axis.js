@@ -104,6 +104,13 @@ export const HALL_HALF = FOOT.hall.x1;
 
 /** The monument pavilion's form (white box, own sizes: SOURCES.md): base height, column height and radius, their span centre to centre, the tie-beam's depth, how far the roof's edge reaches from the middle, and the pyramid's height. */
 export const MONUMENT_FORM = Object.freeze({ base: 0.45, column: 3.0, colR: 0.17, span: 3.1, beam: 0.3, eave: 2.5, roofH: 2.0 });
+/**
+ * The monument's stele (docs/t05/SOURCES.md): the shaft and the head in the Yingzao Fashi's proportions for a 赑屃鳌坐碑 (chapter 3: the shaft 4/10 wide and 1.5/10 thick
+ * to every unit of its length, the head 0.44 square-wide and 0.18 thick, under it a cloud plate 0.15 of the shaft's width high: read), with no tortoise. The shaft's
+ * length is kept at the 2.3 m the white box had; the head's crown (a plain block under a low arch, in place of the six
+ * entwined dragons and the seal-script panel) and its height are the white box's own.
+ */
+export const STELE = (() => { const L = 2.3, w = 0.4 * L, cloud = 0.15 * w, block = 0.22, arch = 0.12; return Object.freeze({ L, w, t: 0.15 * L, headW: 0.44 * L, headT: 0.18 * L, cloud, block, arch, headH: cloud + block + arch }); })();
 /** The monument pavilion's place (月台西; ARCHITECTURE.md §3.2: 4–5 m square, off the 20 m middle way), against the terrace's west parapet. Held, not built. */
 export const MONUMENT = Object.freeze({ x0: -18.25, x1: -13.75, z0: 5.65, z1: 10.15, y: 3.0 });
 /** The lamp table's place inside the great hall's door (SCOPE-OPTIONS.md (b)): a low table on the floor against the front wall, in the bay east of the three doors. Held, not built. */
@@ -217,7 +224,9 @@ export function buildAxis(M, { C, W }) {
     box(2 * PAV.eave, 0.1, 2 * PAV.eave, mx, ceil + 0.05, mz),   // the ceiling plate, seen from below
     ...[-1, 1].flatMap((sg) => [box(2 * PAV.eave, 0.25, 0.12, mx, ceil + 0.12, mz + sg * PAV.eave), box(0.12, 0.25, 2 * PAV.eave, mx + sg * PAV.eave, ceil + 0.12, mz)]),   // the fascia
   ];
-  const pstone = [box(mw, PAV.base, mw, mx, M0.y + PAV.base / 2, mz), box(1.6, 0.45, 0.95, mx, by + 0.225, mz), box(1.0, 2.3, 0.3, mx, by + 0.45 + 1.15, mz)];   // the base, the stele's plinth and the stele
+  const pstone = [box(mw, PAV.base, mw, mx, M0.y + PAV.base / 2, mz), box(1.6, 0.45, 0.95, mx, by + 0.225, mz), box(STELE.w, STELE.L, STELE.t, mx, by + 0.45 + STELE.L / 2, mz),   // the base, the stele's plinth and the shaft
+    box(STELE.headW, STELE.cloud, STELE.headT, mx, by + 0.45 + STELE.L + STELE.cloud / 2, mz), box(STELE.headW, STELE.block, STELE.headT, mx, by + 0.45 + STELE.L + STELE.cloud + STELE.block / 2, mz),   // the head: its cloud plate and its block
+    new THREE.CylinderGeometry(STELE.headW / 2, STELE.headW / 2, STELE.headT, 24, 1, false, Math.PI / 2, Math.PI).rotateX(Math.PI / 2).scale(1, STELE.arch / (STELE.headW / 2), 1).translate(mx, by + 0.45 + STELE.L + STELE.cloud + STELE.block, mz)];   // and the low arch over it
   group.add(
     mesh(merge(pstone), M.stone),
     mesh(merge(pwood), M.woodX),
