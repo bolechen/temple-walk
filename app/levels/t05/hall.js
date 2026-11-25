@@ -143,6 +143,8 @@ export function buildHall(M) {
           iron.push(new THREE.CylinderGeometry(0.075, 0.075, 0.03, 12).rotateX(Math.PI / 2).translate(rx, ry, zFace + 0.07), new THREE.TorusGeometry(0.1, 0.014, 6, 16).translate(rx, ry - 0.07, zFace + 0.095));
           for (const f of [0.34, 0.66, 0.9]) for (let k = 0; k < 5; k++) iron.push(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 8).rotateX(Math.PI / 2).translate(x0 + s * (lw * (k + 0.5)) / 5 + s * 0.02, y1 + lh * f, zFace + 0.05));
         }
+        // A dark fillet down each side where the leaf meets the jamb, so that no seam of the reveal's pale plaster shows between them from far off.
+        for (const s of [-1, 1]) dark.push(box(0.06, lh, 0.05, mid + s * (w / 2 - 0.02), ly, zFace + 0.0));
         solid(l, r, fz0, fz1);
         // The sill under a shut door is no step (nothing lies beyond it to step to), but the bake finds a foothold on its top and lets his shoes
         // come up to its face: a strip before each door, as far out as his shoes reach (0.32 m) and a little more, is kept clear, so that he stands
