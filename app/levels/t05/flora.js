@@ -148,24 +148,24 @@ export function growTree(t, far = false) {
       // An old cypress with its lower boughs long gone: the head broken into four or five masses held out on the boughs, the widest low and
       // spread to the ellipsoid's rim, one over the leader, with sky between them (not a ball on a pole).
       // (an old tree's tall crown: the masses stacked from its underside to its top, one or two to each storey of it, so that it is full from 3.5-4.5 m up, not a head on a pole)
-      const clumps = t.old ? Math.max(5, Math.round(env.ry * (t.back && !t.near ? 1.3 : 2))) : 4 + (hashAt(x, z, 5) < 0.5 ? 1 : 0), cs = [];
+      const clumps = t.old ? Math.max(5, Math.round(env.ry * (t.back && !t.near ? 1.3 : 4))) : 4 + (hashAt(x, z, 5) < 0.5 ? 1 : 0), cs = [];
       for (let k = 0; k < clumps; k++) {
         const top = k === clumps - 1, a = yaw + k * 2.39996 + rnd() * 0.5;
         const d = top ? 0.1 : t.old ? 0.35 + 0.3 * rnd() : 0.55 + 0.2 * rnd(), lift = top ? 0.6 : t.old ? -0.8 + (1.4 * k) / (clumps - 1) + 0.1 * (rnd() - 0.5) : -0.35 + 0.5 * (k / clumps) + 0.15 * rnd();
         const w = Math.sqrt(Math.max(0.15, 1 - lift * lift));   // (narrower toward the crown's ends, as the ellipsoid is)
-        cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? (t.back && !t.near ? 0.5 : 0.34) : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
+        cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? (t.back && !t.near ? 0.5 : 0.26) : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
       }
       if (fine) {
         // A near old crown is drawn as its masses, not as tufts (the art director's final review of #722: tufts read as torn black paper against the light):
         // each mass a finely divided round body overlapping its neighbours, so that the crown is one dark mass; on each a smaller one where it faces out,
         // so that the outline goes in bays. The material frays the rim into small round scallops and opens small windows of sky (RAGGED, WINDOWS).
         for (const [k, c0] of cs.entries()) {
-          const R = c0.r * 1.45, p = c0.at.clone(), e = inEllipsoid(p, centre, env.rx - R * 0.55, env.ry - R * 0.5); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
-          lump(needles, p, R, R * 1.18, R, rnd() * 6.283, centre, env.rx, 2, k, 0.25, 0.5);
+          const R = c0.r * 1.25, p = c0.at.clone(), e = inEllipsoid(p, centre, env.rx - R * 0.55, env.ry - R * 0.5); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
+          lump(needles, p, R, R * 1.15, R, rnd() * 6.283, centre, env.rx, 1, k, 0.25, 0.55);
           for (let m = 0; m < 2; m++) {
             const out = p.clone().sub(centre); out.y *= 0.4; out.applyAxisAngle(new THREE.Vector3(0, 1, 0), (m ? 1 : -1) * (0.5 + 0.4 * rnd())); const ol = out.length() || 1; out.multiplyScalar(1 / ol);
             const q = p.clone().addScaledVector(out, R * (0.6 + 0.25 * rnd())).add(new THREE.Vector3(0, (rnd() - 0.4) * R * 0.7, 0)), r2 = R * (0.38 + 0.14 * rnd()), e2 = inEllipsoid(q, centre, env.rx - r2 * 0.5, env.ry - r2 * 0.5); if (e2 > 1) q.sub(centre).multiplyScalar(1 / e2).add(centre);
-            lump(needles, q, r2, r2 * 1.1, r2, rnd() * 6.283, centre, env.rx, 1, k * 2 + m + 50, 0.25, 0.5);
+            lump(needles, q, r2, r2 * 1.1, r2, rnd() * 6.283, centre, env.rx, 0, k * 2 + m + 50, 0.25, 0.55);
           }
         }
       } else for (let i = 0; i < count; i++) {
@@ -238,7 +238,7 @@ function needleMat(M) {
     was.call(base, sh, rr); sh.uniforms.uWindN = U.uWind; sh.uniforms.uTN = U.uT;
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform vec2 uWindN; uniform float uTN;").replace("#include <begin_vertex>", `#include <begin_vertex>
       { float a_=.025+.02*min(length(uWindN),3.); transformed.x+=sin(uTN*1.1+position.x*.7+position.y*.5)*a_+uWindN.x*.012; transformed.z+=cos(uTN*.83+position.z*.6+position.y*.4)*a_+uWindN.y*.012; }`);
-    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74)*(.45+.6*fbm3(vWP*vec3(9.,2.6,9.))+.45*fbm3(vWP*vec3(22.,6.,22.))),step(.5,vUv2.y));\n#include <normal_fragment_begin>\n" + RAGGED).replace("#include <lights_fragment_end>", "#include <lights_fragment_end>\nreflectedLight.indirectDiffuse*=1.7;");   // (a crown's side away from the sun takes more of the sky than a solid would: its sprays let the light in; the shaded side of a backlit crown no darker than L* 8, the art director)   // (an arborvitae's lump: yellower-brown)
+    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74)*(.45+.6*fbm3(vWP*vec3(9.,2.6,9.))+.25*fbm3(vWP*vec3(22.,6.,22.))),step(.5,vUv2.y));\n#include <normal_fragment_begin>\n" + RAGGED).replace("#include <lights_fragment_end>", "#include <lights_fragment_end>\nreflectedLight.indirectDiffuse*=1.7;");   // (a crown's side away from the sun takes more of the sky than a solid would: its sprays let the light in; the shaded side of a backlit crown no darker than L* 8, the art director)   // (an arborvitae's lump: yellower-brown)
   };
   m.customProgramCacheKey = () => "dryNeedles"; m.name = "dryNeedles"; return m;
 }
