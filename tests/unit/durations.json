@@ -180,6 +180,7 @@
   "well.test.mjs": 3.5,
   "windows.test.mjs": 6.2,
   "wishes.test.mjs": 0.1,
-  "works.test.mjs": 3.6
+  "works.test.mjs": 3.6,
+  "t05-sound.test.mjs": 0.4
  }
 }
