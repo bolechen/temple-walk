@@ -294,7 +294,7 @@ const fade = (a) => {
       if (m.transparent !== t) { m.transparent = t; m.needsUpdate = true; }
     }
     const twin = o.children.find((c) => c.userData.fadeTwin), want = a > 0 && a < 1 && solid && o !== monk.shadow;
-    if (want && !twin) { const tw = o.clone(false); tw.userData.fadeTwin = true; tw.material = depthOnly[[THREE.FrontSide, THREE.BackSide, THREE.DoubleSide].indexOf([o.material].flat()[0].side)]; tw.castShadow = false; tw.receiveShadow = false; tw.position.set(0, 0, 0); tw.quaternion.identity(); tw.scale.set(1, 1, 1); o.add(tw); }
+    if (want && !twin) { const tw = o.clone(false); tw.userData.fadeTwin = true; tw.material = depthOnly[[THREE.FrontSide, THREE.BackSide, THREE.DoubleSide].indexOf([o.material].flat()[0].side)]; tw.castShadow = false; tw.receiveShadow = false; tw.renderOrder = 1; tw.morphTargetInfluences = o.morphTargetInfluences; /* after every opaque thing behind him, before the blended pass: drawn first, it would put his outline's depth in front of the wall and the sky, and what he is blended over would be the clear colour; the draped robe's morph (#666) is the body's own array, not a copy */ o.add(tw); }
     else if (!want && twin) o.remove(twin);
   }
 };
