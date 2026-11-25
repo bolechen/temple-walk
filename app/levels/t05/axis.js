@@ -104,7 +104,9 @@ export const SUNWARD_GAP = Object.freeze(["inner1", "inner2", "inner3", "outer2"
 export const SUN = (() => { const el = (17 * Math.PI) / 180, az = (152 * Math.PI) / 180; return Object.freeze([Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)]); })();
 const BAY = (() => { const pts = []; for (let x = -2; x <= 2.001; x += 0.5) for (let y = 1.5; y <= 8.5; y += 0.5) pts.push([x, y, AXIS.paifangZ + 0.6]); return pts; })();
 /** Whether a tree's crown stops none of the sun's rays to the archway's middle bay. */
-export const sunClear = (t) => BAY.every((P) => !treeBlocks(P, P.map((v, i) => v + SUN[i] * 120), t));
+export const sunClear = (t) => { const w = { ...t, rx: t.rx + SUN_MARGIN, ry: t.ry + SUN_MARGIN }; return BAY.every((P) => !treeBlocks(P, P.map((v, i) => v + SUN[i] * 120), w)); };
+/** How far past its crown a tree's shadow still darkens (the soft shadow's half-shade, as the T4 shows it): the crown is cleared by this much more. */
+const SUN_MARGIN = 0.8;
 /** How far out an east tree may step: its trunk a metre and a half inside the terrace's east wall. */
 const SUN_WALL = SECOND.hw - SECOND.wallT / 2 - 1.5;
 const grow = () => {
