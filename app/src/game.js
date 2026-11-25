@@ -223,10 +223,14 @@ export function createGame(y) {
   // as cut, or the observation's line, and under it where it is from. Put away by its button, Esc or E.
   function showPage(whole = false) {
     if (!lp) return; const v = lp.view(), last = whole ? (v.copy ? "stele" : "p1") : lp.state().last;
-    const text = last === "stele" ? v.copy : v.note, from = last === "stele" ? (v.note ? `${v.from}　·　${v.note}` : v.from) : "";
+    // The line copied from the stone is written as cut, in the regular hand (the running hand has no traditional forms);
+    // his own note is laid a phrase to a column, so that no word is split between two, beside the copy as on its own.
+    const phrases = (/** @type {string} */ s) => s.replace(/([，。、；！？])(?=\S)/g, "$1\n");
+    const cut = last === "stele", text = cut ? v.copy : v.note, from = cut ? (v.note ? `${v.from}\n${phrases(v.note)}` : v.from) : "";
     if (!text) return;
-    $("slip")?.classList.add("own-page");
-    holdOut(text, from, t("收下"), () => $("slip")?.classList.remove("own-page"));
+    const lines = cut ? text : phrases(text);
+    $("slip")?.classList.add("own-page"); $("slip")?.classList.toggle("cut", cut);
+    holdOut(lines, from, t("收下"), () => $("slip")?.classList.remove("own-page", "cut"));
     pageRow();
   }
   // The pause menu's 这一页 (only in a temple with a page of its own, once something is on it): the page shown again.

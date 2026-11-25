@@ -718,6 +718,9 @@ const scenarios = {
     await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown on a slip after the copy");
     expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬，儼居七佛", "the slip should carry the line copied");
     expect(!(await t.page.isVisible("#slip .seal-mark")), "T05's page carries no vermilion seal (CHECKPOINTS.md §4.2)");
+    // The line copied from the stone is written as cut, in the regular hand that holds its traditional forms, not the running hand of a note (which has none).
+    const cutFace = await t.page.evaluate(() => getComputedStyle(document.getElementById("slipText")).fontFamily);
+    expect(/^"?Yunjing Kai"?(,|$)/.test(cutFace), "the copied line on the slip is set in Yunjing Kai alone: " + cutFace);
     const d = await D(); expect((d.cuts || 0) === cuts0, "the eye went to the stele and back without a cut: " + JSON.stringify(d));
     const heard = await t.page.evaluate(() => window.__shots?.() || null);
     expect(!heard || heard.brush > 0, "the brush on the paper should have been heard: " + JSON.stringify(heard));
@@ -740,6 +743,9 @@ const scenarios = {
     await t.until(async () => (await P()).page.p1, 300000, "the stroke was never put on the page");
     pg = await P(); expect(pg.view.stroke === 1 && pg.view.note === "九间，单檐庑殿，青灰瓦。台基比人高。" && pg.view.copy, "the page holds the stroke, its line and the copy: " + JSON.stringify(pg.view));
     await t.until(() => t.page.isVisible("#slip"), 60000, "the page was not shown after the stroke");
+    // The note is laid in its phrases, one to a column (九间， / 单檐庑殿， / 青灰瓦。 / 台基比人高。), never a word split across two.
+    const noteCols = await t.page.evaluate(() => document.getElementById("slipText").innerText.split("\n").filter(Boolean));
+    expect(JSON.stringify(noteCols) === JSON.stringify(["九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "the note's phrases each have a column: " + JSON.stringify(noteCols));
     const stored = await t.page.evaluate(() => JSON.parse(localStorage.getItem("yunjing.levels.v1")).page.t05);
     expect(stored.p1 && stored.stele && stored.stele.line === "qifo", "both marks are kept under yunjing.levels.v1: " + JSON.stringify(stored));
     expect(JSON.stringify(await mine()) === JSON.stringify(PROLOGUE), "the prologue's keys changed: " + JSON.stringify(await mine()));
@@ -750,6 +756,8 @@ const scenarios = {
     expect(await t.page.isVisible("#menuPage"), "这一页 should be in the menu once the page has something on it");
     await t.page.click("#menuPage"); await t.until(() => t.page.isVisible("#slip"), 10000, "这一页 did not show the page");
     expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬，儼居七佛", "the page shown again leads with the copied line");
+    const fromCols = await t.page.evaluate(() => document.getElementById("slipFrom").innerText.split("\n").filter(Boolean));
+    expect(JSON.stringify(fromCols) === JSON.stringify(["元大德七年碑", "九间，", "单檐庑殿，", "青灰瓦。", "台基比人高。"]), "beside the copy, where it is from and the note a phrase to a column: " + JSON.stringify(fromCols));
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A named view's own lens (`site.lens`, app/yard.js `baseFov`; T05's cam06 is 65° from his eyes, 50° from behind him): `?show=<name>` takes it, a view with no

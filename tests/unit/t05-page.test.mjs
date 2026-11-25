@@ -52,3 +52,9 @@ test("the lines to copy are the transcription's, in full forms, and the page's w
     assert.ok(!/Seven Past Buddhas/.test(JSON.stringify(tr)), "not 'Seven Past Buddhas' (CHECKPOINTS.md §6)");
   }
 });
+test("from his own eyes C02 is CHECKPOINTS.md's own look: the view raised 25° and more, wherever the eave falls", () => {
+  const out = () => ({ x: 640, y: -400, w: 1280, h: 720, behind: false });   // the eave above the top of the picture, as it is when he looks up from under it
+  assert.equal(hold(createWatch(PAGE.p1.looks), 2.5, inC02, 0, (26 * Math.PI) / 180, out)?.id, "c02", "raised 26°, the eaves are looked at");
+  assert.equal(hold(createWatch(PAGE.p1.looks), 2.5, inC02, 0, (20 * Math.PI) / 180, out), null, "raised 20° with the eave out of the picture, they are not");
+  assert.equal(hold(createWatch(PAGE.p1.looks), 2.5, inC02, Math.PI, (30 * Math.PI) / 180, out), null, "nor looking up the other way");
+});

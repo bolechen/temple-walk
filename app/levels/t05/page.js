@@ -23,8 +23,9 @@ export const PAGE = Object.freeze({
       // CHECKPOINTS.md asks for the view raised 25°. From behind him the eye is aimed at him (yard.js, aimAt), so the picture itself is never
       // tilted that far whatever the visitor does; what is asked instead, in either view, is what 25° was for: the front eave's edge over the
       // middle bay in the upper part of the picture (`see`, `band`: from 3% to 55% of its height down, and within its width), with the
-      // view raised at all (7°). (SOURCES.md §17 says so.)
-      Object.freeze({ id: "c02", box: Object.freeze({ x0: -14, x1: 14, z0: 1, z1: STATION.B[1] + 3 }), yaw: 0, off: (40 * Math.PI) / 180, pitch: (7 * Math.PI) / 180, see: EAVE, band: Object.freeze([0.03, 0.55]), hold: 2, place: "p1b" }),
+      // view raised at all (7°). From his own eyes the view can be raised 25°, and that alone counts too (`raised`), as CHECKPOINTS.md has it.
+      // (SOURCES.md §17 says so.)
+      Object.freeze({ id: "c02", box: Object.freeze({ x0: -14, x1: 14, z0: 1, z1: STATION.B[1] + 3 }), yaw: 0, off: (40 * Math.PI) / 180, pitch: (7 * Math.PI) / 180, raised: (25 * Math.PI) / 180, see: EAVE, band: Object.freeze([0.03, 0.55]), hold: 2, place: "p1b" }),
     ]),
     // The line under the stroke: CHECKPOINTS.md §2.2's, word for word (our own sentence, written by the research pack; its facts: nine bays and a single-eaved hip
     // roof, SOURCES.md S03/S04; grey-blue tiles, ART.md; the platform 3 m against his 1.18 m).

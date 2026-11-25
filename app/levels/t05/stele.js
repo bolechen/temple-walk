@@ -114,7 +114,7 @@ export function buildStele(M) {
   const copy = {
     at: [mx, stand], r: 1.1, face: Math.PI, act: "抄碑", rite: "copy",
     stele: { x: mx, face, y0: plinth.top + FACE.foot, y1: plinth.top + FACE.foot + fh, w: fw },
-    shot: { at: [0.7, 1.25, -0.7], look: [0, 1.15, 0.4], fov: 48, in: 2.0, out: 1.0, drift: { push: 0.012, for: 14 },
+    shot: { at: [0.7, 1.25, -0.7], look: [0, 1.15, 0.4], fov: 48, in: 2.0, out: 1.0, drift: { tilt: 0.35, for: 12 },
       keep: [[0, 1.12, 0], [0, 0.8, 0.26], [0, 1.7, toFace]] },   // his head, the leaf in his hands, and the foot of the columns he reads
   };
   const views = { "shot-copy": [mx, stand, Math.PI - copy.face, 0.05], stele: [mx, stand + 1.6, 0, 0.3] };   // (shot-<id> stands him at the place, as the prologue's do; `stele` looks at its face from the top of the steps)

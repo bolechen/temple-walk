@@ -28,12 +28,13 @@ export const within = (look, x, z) => (look.box ? x > look.box.x0 && x < look.bo
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 /**
  * Whether the view looks as a look asks: `yaw` within `off` of its own, raised by at least `pitch`, and where the look names a
- * point to be seen (`see`), that point in the picture, between `band[0]` and `band[1]` of its height down and within its width.
+ * point to be seen (`see`), that point in the picture, between `band[0]` and `band[1]` of its height down and within its width,
+ * unless the view is raised by `raised` or more.
  * `seen(p)` gives where a point falls ({ x, y, w, h, behind }).
  */
 export const looking = (look, yaw, pitch, seen = null) => {
   if (!(Math.abs(wrap(yaw - look.yaw)) <= look.off && pitch >= look.pitch)) return false;
-  if (!look.see) return true;
+  if (!look.see || (look.raised != null && pitch >= look.raised)) return true;   // raised that far, the view is looking up at it wherever it falls (from his own eyes)
   const s = seen?.(look.see); if (!s || s.behind) return false;
   return s.x > 0 && s.x < s.w && s.y >= look.band[0] * s.h && s.y <= look.band[1] * s.h;
 };
