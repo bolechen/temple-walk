@@ -39,11 +39,17 @@ const mulberry = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ 
  * one straight leader to the top and short boughs climbing steeply along it, a narrow oval. Ours, by common knowledge of the four (no record).
  */
 const GROW = {
-  pine: (h, r, far) => ({ levels: far ? 2 : 3, trunkLength: h * 0.9, trunkRadius: r * 1.15, trunkClear: 0.42, children: far ? [6] : [8, 3], childRadius: far ? [0.32] : [0.32, 0.45], branchAngle: [80, 42], angleVariance: 12, lengthRatio: [0.46, 0.42], branchLengthFalloff: 0.55, taper: [0.82, 0.6], taperCurve: 0.8, rootFlare: 0.45, flareFrac: 0.06, droop: 0.05, upPull: 0.06, gnarl: [0.05, 0.14, 0.2], radialSegments: far ? [6, 3] : [8, 4, 3], sectionLength: 1.0, childStart: 0.3, minRadius: 0.012, minLength: 0.4, collar: 0.18, radiusExponent: 2.4 }),
-  cypress: (h, r, far) => ({ levels: 2, trunkLength: h * 0.82, trunkRadius: r * 1.1, trunkClear: 0.14, children: [far ? 7 : 12], childRadius: [0.34], branchAngle: [34], angleVariance: 10, lengthRatio: [0.3], branchLengthFalloff: 0.55, taper: [0.85, 0.6], taperCurve: 0.85, rootFlare: 0.4, flareFrac: 0.06, droop: 0.01, upPull: 0.45, gnarl: [0.05, 0.12], radialSegments: far ? [6, 3] : [9, 4], sectionLength: 1.0, minRadius: 0.012, minLength: 0.4, collar: 0.15, radiusExponent: 2.4 }),
-  huai: (h, r, far) => ({ levels: far ? 3 : 4, trunkLength: h * 0.66, trunkRadius: r * 1.3, trunkClear: 0.55, children: far ? [5, 5] : [6, 6, 5], childRadius: far ? [0.5, 0.42] : [0.5, 0.42, 0.42], branchAngle: [40, 42, 46], angleVariance: 14, lengthRatio: [0.72, 0.52, 0.46], branchLengthFalloff: 0.3, taper: [0.55, 0.65, 0.75], taperCurve: 0.75, rootFlare: 0.5, flareFrac: 0.08, droop: 0.06, upPull: 0.22, gnarl: [0.07, 0.18, 0.26, 0.3], radialSegments: far ? [7, 4, 3] : [10, 5, 4, 3], sectionLength: 0.9, childStart: 0.25, minRadius: 0.008, minLength: 0.3, collar: 0.15, radiusExponent: 2.4 }),
-  poplar: (h, r, far) => ({ levels: 3, trunkLength: h, trunkRadius: r * 1.05, trunkClear: 0.4, children: far ? [12, 3] : [20, 5], childRadius: [0.3, 0.45], branchAngle: [28, 30], angleVariance: 8, lengthRatio: [0.36, 0.5], branchLengthFalloff: 0.62, taper: [0.9, 0.7], taperCurve: 0.85, rootFlare: 0.35, flareFrac: 0.05, droop: 0.01, upPull: 0.42, gnarl: [0.02, 0.1, 0.18], radialSegments: far ? [7, 3] : [10, 4, 3], sectionLength: 1.0, childStart: 0.25, minRadius: 0.008, minLength: 0.35, collar: 0.12, radiusExponent: 2.4 }),
+  pine: (h, r, far) => ({ levels: far ? 2 : 3, trunkLength: h * 0.9, trunkRadius: r * 1.15, trunkClear: 0.56, children: far ? [6] : [8, 3], childRadius: far ? [0.32] : [0.32, 0.45], branchAngle: [82, 40], angleVariance: 10, lengthRatio: [0.62, 0.4], branchLengthFalloff: 0.5, taper: [0.82, 0.6], taperCurve: 0.8, rootFlare: 0.45, flareFrac: 0.06, droop: 0.05, upPull: 0.06, gnarl: [0.05, 0.14, 0.2], radialSegments: far ? [6, 3] : [8, 4, 3], sectionLength: 1.0, childStart: 0.3, minRadius: 0.012, minLength: 0.4, collar: 0.18, radiusExponent: 2.4 }),
+  cypress: (h, r, far) => ({ levels: 2, trunkLength: h * 0.82, trunkRadius: r * 1.1, trunkClear: 0.06, children: [far ? 7 : 12], childRadius: [0.34], branchAngle: [34], angleVariance: 10, lengthRatio: [0.3], branchLengthFalloff: 0.55, taper: [0.85, 0.6], taperCurve: 0.85, rootFlare: 0.4, flareFrac: 0.06, droop: 0.01, upPull: 0.45, gnarl: [0.05, 0.12], radialSegments: far ? [6, 3] : [9, 4], sectionLength: 1.0, minRadius: 0.012, minLength: 0.4, collar: 0.15, radiusExponent: 2.4 }),
+  // (the pagoda tree's trunk is short and divides at 3 to 4 m into four or five thick limbs that spread and crook; its crown wider than it is tall)
+  huai: (h, r, far) => ({ levels: far ? 3 : 4, trunkLength: 4.2, trunkRadius: Math.min(r * 1.2, TRUNK_MAX), trunkClear: 0.78, children: far ? [4, 5] : [5, 5, 4], childRadius: far ? [0.62, 0.42] : [0.62, 0.42, 0.42], branchAngle: [46, 40, 44], angleVariance: 14, lengthRatio: [1.25, 0.5, 0.5], branchLengthFalloff: 0, taper: [0.45, 0.65, 0.75], taperCurve: 0.75, rootFlare: 0.45, flareFrac: 0.12, droop: 0.015, upPull: 0.24, gnarl: [0.04, 0.26, 0.3, 0.32], radialSegments: far ? [7, 4, 3] : [10, 5, 4, 3], sectionLength: 0.9, childStart: 0.25, minRadius: 0.008, minLength: 0.3, collar: 0.15, radiusExponent: 2.4 }),
+  poplar: (h, r, far) => ({ levels: 3, trunkLength: h, trunkRadius: Math.min(r * 1.05, TRUNK_MAX), trunkClear: 0.3, children: far ? [12, 3] : [20, 5], childRadius: [0.3, 0.45], branchAngle: [38, 30], angleVariance: 8, lengthRatio: [0.36, 0.5], branchLengthFalloff: 0.62, taper: [0.9, 0.7], taperCurve: 0.85, rootFlare: 0.35, flareFrac: 0.05, droop: 0.01, upPull: 0.42, gnarl: [0.02, 0.1, 0.18], radialSegments: far ? [7, 3] : [10, 4, 3], sectionLength: 1.0, childStart: 0.25, minRadius: 0.008, minLength: 0.35, collar: 0.12, radiusExponent: 2.4 }),
 };
+
+/** The thickest a pagoda tree's or a poplar's trunk may be (radius, m): on the three judged pictures no trunk of a bare tree is wider than a house's door (the art director, 2026-11-25). */
+export const TRUNK_MAX = 0.32;
+/** How grey each kind's bark is (0: the shared red-brown, the pine's scaly bark; 1: the pagoda tree's grey-brown), carried to the bark in the wood's second texture coordinate. */
+const GREY = { pine: 0, cypress: 0.55, huai: 1, poplar: 0 };
 
 /** A tube's point at `u` (0 at its foot, 1 at its tip). */
 const along = (tube, u) => { const R = tube.rings, f = Math.min(0.999, Math.max(0, u)) * (R.length - 1), i = Math.floor(f); return R[i].pos.clone().lerp(R[i + 1].pos, f - i); };
@@ -51,8 +57,8 @@ const along = (tube, u) => { const R = tube.rings, f = Math.min(0.999, Math.max(
 /** The trunk's own tube (the first `tubes[0]` rings) cut out of the generator's one geometry, and the rest: the trunk can then be what the baked floor and the eye meet while the boughs are not. */
 function splitTrunk(geo, tube0) {
   const nv = tube0.rings.length * tube0.radial + 1, ni = (tube0.rings.length - 1) * tube0.radial * 6 + tube0.radial * 3, idx = geo.index.array, pos = geo.attributes.position.array, nor = geo.attributes.normal.array;
-  const trunk = new THREE.BufferGeometry(); trunk.setAttribute("position", new THREE.BufferAttribute(pos.slice(0, nv * 3), 3)); trunk.setAttribute("normal", new THREE.BufferAttribute(nor.slice(0, nv * 3), 3)); trunk.setIndex(new THREE.BufferAttribute(new Uint32Array(idx.slice(0, ni)), 1));
-  const rest = new THREE.BufferGeometry(); rest.setAttribute("position", new THREE.BufferAttribute(pos.slice(nv * 3), 3)); rest.setAttribute("normal", new THREE.BufferAttribute(nor.slice(nv * 3), 3)); rest.setIndex(new THREE.BufferAttribute(Uint32Array.from(idx.slice(ni), (v) => v - nv), 1));
+  const uv = geo.attributes.uv.array, trunk = new THREE.BufferGeometry(); trunk.setAttribute("position", new THREE.BufferAttribute(pos.slice(0, nv * 3), 3)); trunk.setAttribute("normal", new THREE.BufferAttribute(nor.slice(0, nv * 3), 3)); trunk.setAttribute("uv", new THREE.BufferAttribute(uv.slice(0, nv * 2), 2)); trunk.setIndex(new THREE.BufferAttribute(new Uint32Array(idx.slice(0, ni)), 1));
+  const rest = new THREE.BufferGeometry(); rest.setAttribute("position", new THREE.BufferAttribute(pos.slice(nv * 3), 3)); rest.setAttribute("normal", new THREE.BufferAttribute(nor.slice(nv * 3), 3)); rest.setAttribute("uv", new THREE.BufferAttribute(uv.slice(nv * 2), 2)); rest.setIndex(new THREE.BufferAttribute(Uint32Array.from(idx.slice(ni), (v) => v - nv), 1));
   return [trunk, rest];
 }
 
@@ -92,12 +98,18 @@ export function growTree(t, far = false) {
   const lean = env ? 0 : kind === "pine" ? 0.07 + 0.06 * hashAt(x, z, 4) : kind === "huai" ? 0.05 : 0.015;   // (a tree on the axis stands straight: its trunk is cleared against the views as an upright post)
   for (const [k, v] of Object.entries({ seed: seedAt(x, z, 1), direction: [Math.sin(yaw) * lean, 1, Math.cos(yaw) * lean], ...P })) if (k !== "top") gen["set" + k[0].toUpperCase() + k.slice(1)](v);
   const m = gen.build(), tubes = m.userData.tubes, geo = m.geometry;
+  // each tube's fineness (0 the trunk, 1 the finest twig) and the kind's greyness, for the bark (`treeBark`: twigs paler and warmer than limbs)
+  { const uv = new Float32Array(geo.attributes.position.count * 2), top = Math.max(1, P.levels - 1); let o = 0;
+    for (const tb of tubes) { const n = tb.rings.length * tb.radial + 1, f = tb.level / top; for (let i = 0; i < n; i++, o++) { uv[o * 2] = f; uv[o * 2 + 1] = GREY[kind]; } }
+    geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); }
   // Keep it to its height (and, on the axis, its crown to its ellipsoid): what it grew is scaled about its foot, all ways alike, so that no
   // tree stands over the ceiling its place was given (surround.js LIMITS, the eave line in cam01 and cam07).
   geo.computeBoundingBox(); const grown = geo.boundingBox.max.y, want = env ? env.base + 2 * env.ry : h, s = grown > 0 ? Math.min(env ? 1 : 1.12, want / grown) : 1;   // (an axis tree is never scaled up: its trunk would grow out of the post it is cleared as)
   const ready = (g) => { g.scale(s, s, s); g.translate(x, y - 0.2 * s, z); return g; };
   for (const tb of tubes) for (const ring of tb.rings) ring.pos.multiplyScalar(s).add(new THREE.Vector3(x, y - 0.2 * s, z));
   let [trunk, wood] = splitTrunk(geo, tubes[0]); trunk = ready(trunk); wood = ready(wood);
+  // A pagoda tree's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
+  if (kind === "huai") { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
   const centre = new THREE.Vector3(x, y + (env ? env.base + env.ry : kind === "pine" ? h * 0.72 : kind === "cypress" ? h * 0.52 : h * 0.6), z);
   if (env) {   // what reaches out of the ellipsoid is drawn back into it, and nothing of the boughs comes below its underside
     const c = new THREE.Vector3(x, y + env.base + env.ry, z), p = new THREE.Vector3(), A = wood.attributes.position;
@@ -108,24 +120,24 @@ export function growTree(t, far = false) {
   if (kind === "pine") {
     // Pads of needles along the outer part of each bough and on its twigs, flat and wide, lying a little above the wood; the topmost kept
     // under a flat top. An old pine's crown is a few broad layers with sky between, not a cone.
-    const crownR = env ? env.rx : h * 0.32, flat = y + (env ? env.base + 2 * env.ry : h) - 0.25;
+    const crownR = env ? env.rx : h * 0.42, flat = y + (env ? env.base + 2 * env.ry : h) - 0.25;
     for (const tb of tubes) {
       if (tb.level === 0) continue;
       const us = tb.level === 1 ? (far ? [0.62, 0.95] : [0.62, 0.85, 1]) : [1];
       for (const u of us) {
-        const p = along(tb, u), w = (env ? 0.62 : far ? 1.35 : tb.level === 1 ? 1.05 : 0.8) * (0.85 + 0.4 * rnd()) * Math.max(0.7, Math.min(1.25, h / 10)) * (0.75 + 0.25 * u), th = w * (0.3 + 0.12 * rnd());
+        const p = along(tb, u), w = (env ? 0.62 : far ? 1.35 : tb.level === 1 ? 1.05 : 0.8) * (0.85 + 0.4 * rnd()) * Math.max(0.7, Math.min(1.25, h / 10)) * (0.75 + 0.25 * u), th = w * (0.22 + 0.08 * rnd());
         p.y += th * 0.35; if (p.y + th > flat) p.y = flat - th;
         if (env) { const e = inEllipsoid(p, centre, env.rx - w, env.ry - th); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre); }
-        lump(needles, p, w * 1.15, th, w, rnd() * 6.283, centre, crownR, detail, tb.level + u);
+        lump(needles, p, w * 1.25, th, w * 1.05, rnd() * 6.283, centre, crownR, detail, tb.level + u);
       }
     }
     // the crown's top: a broad flat pad over the leader
-    const top = along(tubes[0], 1); top.y = Math.min(top.y, flat - 0.3); lump(needles, top, crownR * 0.42, 0.45, crownR * 0.36, yaw, centre, crownR, detail, 7);
+    const top = along(tubes[0], 1); top.y = Math.min(top.y, flat - 0.3); lump(needles, top, crownR * 0.42, 0.38, crownR * 0.36, yaw, centre, crownR, detail, 7);
   } else if (kind === "cypress") {
     // Lumps of needles packed into a flame (the old placeholder's outline, surround.js: fullest a little under the middle, tapering to a tip),
     // each taller than it is wide, as the arborvitae's sprays stand on edge; deep ones darker. On the axis, packed into its ellipsoid instead,
     // in three or four clumps, as an old temple cypress's crown breaks up.
-    const R = h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3)), prof = [[0.7, 0], [1, 0.22], [1.05, 0.4], [0.78, 0.66], [0.36, 0.86], [0.05, 1]];
+    const R = h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3)), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
     const radiusAt = (f) => { for (let i = 1; i < prof.length; i++) if (f <= prof[i][1]) { const [a, fa] = prof[i - 1], [b, fb] = prof[i]; return R * (a + ((b - a) * (f - fa)) / (fb - fa)); } return 0; };
     const count = far ? 16 : 34;
     if (env) {
@@ -142,20 +154,23 @@ export function growTree(t, far = false) {
         lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
       }
     } else {
-      const base = y + h * 0.12, span = h * 0.88;
+      const base = y + h * 0.06, span = h * 0.94;
       for (let i = 0; i < count; i++) {
         const f = Math.pow((i + 0.5) / count, 0.8), a = i * 2.39996 + rnd() * 0.7, rad = radiusAt(f), w = Math.max(0.35, rad * (0.55 + 0.25 * rnd())), d = Math.max(0, rad - w * 0.75) * (0.55 + 0.45 * rnd());
         const p = new THREE.Vector3(x + Math.cos(a) * d, base + f * span - w * 0.2, z + Math.sin(a) * d);
+        if (f > 0.86) { p.x += (rnd() - 0.5) * R * 0.5; p.z += (rnd() - 0.5) * R * 0.5; }   // the top's sprays stand apart
         lump(needles, p, w * 0.8, Math.min(w * 1.45, span * 0.2), w * 0.62, a, centre, R, detail, i);
       }
     }
   }
+  // an arborvitae's needles are browner in winter than a pine's (the art director): marked in the second texture coordinate, read by the needles' material
+  if (kind === "cypress") for (const g of needles) { const U2 = g.attributes.uv; for (let i = 0; i < U2.count; i++) U2.setY(i, 1); }
   // No lump stands over the tree's height, nor (on the axis) out of its ellipsoid: a corner pushed out by its unevenness is drawn back.
   { const c = env ? new THREE.Vector3(x, y + env.base + env.ry, z) : null, cap = y + want, p = new THREE.Vector3();
     for (const g of needles) { const A = g.attributes.position; for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); if (c) { const e = inEllipsoid(p, c, env.rx, env.ry); if (e > 0.97) p.sub(c).multiplyScalar(0.97 / e).add(c); } if (p.y > cap - 0.02) p.y = cap - 0.02; A.setXYZ(i, p.x, p.y, p.z); } } }
   const tris = (g) => (g.index ? g.index.count : g.attributes.position.count) / 3;
   let topY = 0; for (const g of [trunk, wood, ...needles]) { g.computeBoundingBox(); topY = Math.max(topY, g.boundingBox.max.y - y); }
-  return { trunk, wood, needles, tris: tris(trunk) + tris(wood) + needles.reduce((n, g) => n + tris(g), 0), top: topY, tubes };
+  return { trunk, wood, needles, tris: tris(trunk) + tris(wood) + needles.reduce((n, g) => n + tris(g), 0), top: topY, tubes, scale: s };
 }
 
 /** A short fingerprint of some geometry, every coordinate rounded to a tenth of a millimetre (as trees.js's own: the same plan grown in Node and in the browser gives the same one). */
@@ -172,6 +187,16 @@ function paleBark(M) {
   m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", "{ float l_=dot(col,vec3(.2126,.7152,.0722)); float m_=smoothstep(.62,.7,fbm3(vWP*vec3(2.2,.9,2.2))); col=mix(vec3(l_)*vec3(3.4,3.45,3.3),vec3(.05,.045,.04),m_*.8); } diffuseColor.rgb=col;"); };
   m.customProgramCacheKey = () => "paleBark"; m.name = "paleBark"; return m;
 }
+/**
+ * The bark of every tree but the poplar: the shared bark's grain; greyed by the kind (`uv.y`: the pine keeps the shared red-brown, the pagoda tree is
+ * grey-brown), and toward the twigs (`uv.x`, 0 at the trunk, 1 at the finest twig) paler and a warmer grey, so that a bare crown seen against the sky
+ * reads as a haze of fine twigs over darker limbs, not a black tangle (the art director: limbs a dark grey-brown, the tips lighter and warmer). Ours.
+ */
+function treeBark(M) {
+  const base = M.bark, m = base.clone(), was = base.onBeforeCompile;
+  m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", "{ float l_=dot(col,vec3(.2126,.7152,.0722)); col=mix(col,vec3(l_)*vec3(1.06,1.,.9),.65*vUv2.y); float f_=clamp(vUv2.x,0.,1.); col=mix(col,vec3(.17,.15,.13),f_*f_*.75); } diffuseColor.rgb=col;"); };
+  m.customProgramCacheKey = () => "treeBark"; m.name = "treeBark"; return m;
+}
 /** The needles: the level's dry evergreen (./dry.js), each lump stirred by the breeze, more as it blows (uWind, set each frame from wind.js). */
 function needleMat(M) {
   const base = dryMaterials(M).cedar, m = base.clone(), was = base.onBeforeCompile;
@@ -179,12 +204,13 @@ function needleMat(M) {
     was.call(base, sh, rr); sh.uniforms.uWindN = U.uWind; sh.uniforms.uTN = U.uT;
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform vec2 uWindN; uniform float uTN;").replace("#include <begin_vertex>", `#include <begin_vertex>
       { float a_=.025+.02*min(length(uWindN),3.); transformed.x+=sin(uTN*1.1+position.x*.7+position.y*.5)*a_+uWindN.x*.012; transformed.z+=cos(uTN*.83+position.z*.6+position.y*.4)*a_+uWindN.y*.012; }`);
+    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74),step(.5,vUv2.y));\n#include <normal_fragment_begin>");   // (an arborvitae's lump: yellower-brown)
   };
   m.customProgramCacheKey = () => "dryNeedles"; m.name = "dryNeedles"; return m;
 }
 /** The materials, made once for a set of materials. */
 export function floraMaterials(M) {
-  if (!made.has(M)) made.set(M, { bark: M.bark, pale: paleBark(M), needles: needleMat(M) });
+  if (!made.has(M)) made.set(M, { bark: treeBark(M), pale: paleBark(M), needles: needleMat(M) });
   return made.get(M);
 }
 
@@ -195,7 +221,7 @@ function mergeWood(list) {
 }
 function mergeNeedles(list) {
   const g = mergeGeometries(list), uv = g.attributes.uv, ao = new Float32Array(uv.count);
-  for (let i = 0; i < uv.count; i++) { ao[i] = uv.getX(i); uv.setXY(i, 0, 0); }
+  for (let i = 0; i < uv.count; i++) { ao[i] = uv.getX(i); uv.setX(i, 0); }   // (the second coordinate stays: an arborvitae's lump)
   g.setAttribute("ao", new THREE.BufferAttribute(ao, 1)); return g;
 }
 

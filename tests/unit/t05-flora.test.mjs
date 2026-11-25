@@ -8,7 +8,8 @@ const { createMaterials } = await import("../../app/src/materials.js");
 const { growTree, buildFlora, floraHash, KINDS } = await import("../../app/levels/t05/flora.js");
 const { buildSite, COURT_TREES, COMPOUND } = await import("../../app/levels/t05/site.js");
 const { AXIS_TREES, TRUNKS, treeBlocks, SIGHTS } = await import("../../app/levels/t05/axis.js");
-const { planSurround, eaveCap, growKind, LIMITS } = await import("../../app/levels/t05/surround.js");
+const { planSurround, eaveCap, growKind, growHeight, LIMITS, KIND_AT, ARRIVAL_POPLARS, POPLAR_H } = await import("../../app/levels/t05/surround.js");
+const { TRUNK_MAX } = await import("../../app/levels/t05/flora.js");
 
 const M = createMaterials(), site = buildSite(M);
 
@@ -24,12 +25,14 @@ test("the same tree twice is the same tree, to a tenth of a millimetre; a tree e
   assert.equal(typeof globalThis.__flora, "function", "the page can be asked what it grew"); assert.equal(globalThis.__flora().inner.hash, again.flora.inner.hash);
 });
 
-test("every tree of the plan is grown, each of its kind: the court's four, the axis's fourteen, the town's 151", () => {
+test("every tree of the plan is grown, each of its kind: the court's four, the axis's fourteen, the town's 151 and the arrival's group of poplars", () => {
   const plan = planSurround(COMPOUND), census = site.flora.census;
-  assert.equal(census.length, COURT_TREES.length + AXIS_TREES.length + plan.trees.length);
+  assert.equal(census.length, COURT_TREES.length + AXIS_TREES.length + plan.trees.length + ARRIVAL_POPLARS.length);
   const kinds = new Set(census.map((c) => c.kind)); for (const k of Object.keys(KINDS)) assert.ok(kinds.has(k), `${KINDS[k]} grows`);
   assert.ok(AXIS_TREES.filter((t) => t.y === 0).every((t) => t.kind === "cypress"), "the way between the gates is lined with cypresses");
-  for (const t of plan.trees) assert.equal(growKind(t), t.kind === "bare" ? growKind(t) : t.kind, "a pine stays a pine, a cypress a cypress");
+  const byHand = (t) => KIND_AT.some(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05);
+  assert.equal(plan.trees.filter(byHand).length, KIND_AT.length, "every tree set by hand is one of the plan's");
+  for (const t of plan.trees) if (!byHand(t)) assert.equal(growKind(t), t.kind === "bare" ? growKind(t) : t.kind, "a pine stays a pine, a cypress a cypress");
   assert.ok(plan.trees.filter((t) => t.kind === "bare").every((t) => ["huai", "poplar"].includes(growKind(t))), "a bare broadleaf is a pagoda tree or a poplar");
 });
 
@@ -66,4 +69,22 @@ test("a budget: under 300 000 triangles of trees in the whole place, in under 30
   console.log(`# T05 trees: ${Math.round(tris)} triangles in ${meshes} meshes`);
   assert.ok(tris < 300000, `${tris} triangles`); assert.ok(meshes < 30, `${meshes} meshes`);
   const one = buildFlora(M, [{ kind: "pine", x: 0, z: 0, h: 10 }]); assert.ok(one.group.children.length <= 2, "one tree's wood and needles in a draw each");
+});
+
+test("the art director's lines of 2026-11-25 that a number can hold", () => {
+  const plan = planSurround(COMPOUND);
+  // beyond the way's end, seen south from the arrival: six in ten bare or more, a quarter evergreen or fewer
+  const south = [...plan.trees.filter((t) => t.z > 214 && Math.abs(t.x) < 45).map((t) => growKind(t)), ...ARRIVAL_POPLARS.map((t) => t.kind)];
+  const ever = south.filter((k) => k === "pine" || k === "cypress").length / south.length;
+  assert.ok(ever <= 0.25 && 1 - ever >= 0.6, `south of the arrival: ${(ever * 100).toFixed(0)}% evergreen of ${south.length}`);
+  // the poplar is the one tall thing, 15 to 19 m, only where no picture's ceiling holds it down; every other tree keeps its plan's height
+  for (const t of plan.trees) { const h = growHeight(t); if (h !== t.h) assert.ok(growKind(t) === "poplar" && h >= POPLAR_H[0] && h <= POPLAR_H[1] && eaveCap(t.x, t.z) >= 40, `${t.x}, ${t.z}`); }
+  assert.ok(plan.trees.some((t) => growHeight(t) > LIMITS.treeMax), "some poplars stand over the roofs");
+  // a bare tree's trunk is never wider than a house's door; a pagoda tree's limbs keep over his head
+  for (const c of [...COURT_TREES, ...ARRIVAL_POPLARS.map((t) => ({ ...t }))]) {
+    if (c.kind !== "huai" && c.kind !== "poplar") continue;
+    const g = growTree(c), rings = g.tubes[0].rings;
+    for (const ring of rings) if (ring.pos.y - (c.y ?? 0) > 1.2) assert.ok(ring.radius * g.scale <= TRUNK_MAX * 1.12 + 1e-6, `the ${c.kind} at (${c.x}, ${c.z}) is ${(ring.radius * g.scale).toFixed(2)} m round its middle at ${ring.pos.y.toFixed(1)} m`);
+    if (c.kind === "huai") { const W = g.wood.attributes.position; for (let i = 0; i < W.count; i++) if (Math.hypot(W.getX(i) - c.x, W.getZ(i) - c.z) > 1.6) assert.ok(W.getY(i) >= 2.45, `a limb of the pagoda tree at (${c.x}, ${c.z}) hangs at ${W.getY(i).toFixed(2)} m`); }
+  }
 });

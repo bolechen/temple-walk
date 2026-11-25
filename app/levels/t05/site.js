@@ -39,12 +39,12 @@ export const ARRIVE = [0, 215];
  */
 export const COURT_TREES = Object.freeze([
   Object.freeze({ kind: "huai", x: 27.5, z: 48.5, h: 10.4, r: 0.42 }),
-  Object.freeze({ kind: "pine", x: 35.0, z: -9.0, h: 11.2, r: 0.4 }),   // (beside the platform's east end: further south it stood before the houses over the east wall seen from B)
+  Object.freeze({ kind: "pine", x: 37.5, z: 4.0, h: 11.2, r: 0.4 }),   // (by the platform's east end, out of cam01's picture: further south it stood before the houses over the east wall seen from B)
   Object.freeze({ kind: "pine", x: -29.5, z: 43.5, h: 10.2, r: 0.38 }),
   Object.freeze({ kind: "huai", x: -34.8, z: 15.5, h: 9.6, r: 0.4 }),
 ]);
-/** A court tree's pit: edge stones `rim` wide standing `up` over the paving round a square of earth `side` across (two of the Yingzao Fashi's three-chi blocks, as the prologue's pits; by analogy, not a source). */
-export const COURT_PIT = Object.freeze({ side: 1.86, rim: 0.15, up: 0.065 });
+/** A court tree's pit: edge stones `rim` wide standing `up` over the paving round a square of earth `side` across (two of the Yingzao Fashi's three-chi blocks, as the prologue's pits, three for a pine; by analogy, not a source). */
+export const COURT_PIT = Object.freeze({ side: 1.86, pine: 2.79, rim: 0.2, up: 0.065 });   // (a pine's pit three blocks across: its flared trunk is the thickest in the court)   // (edge stones 0.2 m wide: at 0.15 their top was exactly the baked floor's foothold and one side counted as a low thing his shoes were kept off)
 // Where each station stands. A (cam01) is 44 m out, where the nine bays fill about four fifths of a wide picture with the
 // ridge whole, as the reference picture has them, and B (cam02) on the court's paving 12 m out from the flight's foot,
 // the platform over his head and the eave columns and doors still in sight over the terrace's parapet (the lead's calls
@@ -193,13 +193,13 @@ export function buildSite(M) {
   const pitStones = [], pitEarth = [];
   for (const t of COURT_TREES) {
     walk.solids.push({ x0: t.x - t.r - BODY, x1: t.x + t.r + BODY, z0: t.z - t.r - BODY, z1: t.z + t.r + BODY, eyeTop: t.h * 0.42 });
-    const { side, rim, up } = COURT_PIT, half = side / 2 + rim / 2, long = side + 2 * rim, h = up + 0.1, cy = up - h / 2;
+    const { rim, up } = COURT_PIT, side = t.kind === "pine" ? COURT_PIT.pine : COURT_PIT.side, half = side / 2 + rim / 2, long = side + 2 * rim, h = up + 0.1, cy = up - h / 2;
     pitStones.push(box(long, h, rim, t.x, cy, t.z - half), box(long, h, rim, t.x, cy, t.z + half), box(rim, h, side, t.x - half, cy, t.z), box(rim, h, side, t.x + half, cy, t.z));
     pitEarth.push(new THREE.PlaneGeometry(side, side).rotateX(-Math.PI / 2).translate(t.x, 0.025, t.z));
   }
   const inner = buildFlora(M, [...AXIS_TREES, ...COURT_TREES.map((t) => ({ ...t, h: Math.min(t.h, eaveCap(t.x, t.z)) }))], { name: "trees", cast: true, walk: true, chunk: (t) => (t.z < COMPOUND.zS + 8 ? "court" : "axis") });
-  root.add(inner.group, mesh(merge(pitStones), M.stone));
-  { const e = mesh(merge(pitEarth), dryMaterials(M).earth, { cast: false }); e.userData.walk = false; e.name = "court-pits-earth"; root.add(e); }
+  { const st = mesh(merge(pitStones), M.stone); st.userData.walk = "floor"; st.name = "court-pits-stones"; root.add(inner.group, st); }   // (a pit's edge stones are stood on, as a low curb is: the baked floor rises to their top within his shoes' reach)
+  { const e = mesh(merge(pitEarth), dryMaterials(M).earth, { cast: false }); e.name = "court-pits-earth"; root.add(e); }   // (the pit's earth is floor, as the prologue's pits are: the edge stones are then a step with a foothold behind them, not a low thing his shoes are kept off)
   const surround = buildSurround(M, C, { bench }); root.add(surround);
   // What was grown, for the tests and for the page (the `t05-treeseed` scenario compares the page's with Node's).
   const flora = { inner: { tris: inner.tris, hash: inner.hash, count: inner.census.length }, surround: { tris: surround.userData.flora.tris, hash: surround.userData.flora.hash, count: surround.userData.flora.census.length }, census: [...inner.census, ...surround.userData.flora.census] };

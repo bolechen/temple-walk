@@ -78,7 +78,28 @@ const hash01 = (x, z, salt) => { const v = Math.sin(x * 12.9898 + z * 78.233 + s
  * one in three and more in the rows behind, a white poplar (mao bai yang), by a hash of where it stands (not the seeded stream: nothing the art director passed moves). Ours.
  */
 export const POPLAR_SHARE = Object.freeze({ front: 0.25, behind: 0.45 });
-export const growKind = (t) => t.kind !== "bare" ? t.kind : hashAt(t.x, t.z, 11) < (t.row === 0 || t.cast ? POPLAR_SHARE.front : POPLAR_SHARE.behind) ? "poplar" : "huai";
+/**
+ * Trees the arrival looks south over, whose kind is set by hand (the art director, 2026-11-25: beyond the way's end at least six in ten bare, evergreens a quarter or
+ * fewer; the bare tree beside the earth-grey house kept as it was, a pagoda tree, not a poplar): [x, z, kind].
+ */
+/** @type {ReadonlyArray<[number, number, string]>} */
+export const KIND_AT = Object.freeze([[-13.02, 228.09, "huai"], [-37.67, 229.7, "huai"], [-3.37, 238.87, "huai"]]);
+export const growKind = (t) => {
+  const set = KIND_AT.find(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (set) return set[2];
+  return t.kind !== "bare" ? t.kind : hashAt(t.x, t.z, 11) < (t.row === 0 || t.cast ? POPLAR_SHARE.front : POPLAR_SHARE.behind) ? "poplar" : "huai";
+};
+/**
+ * How tall a tree is grown. A poplar is the one thing in the town that stands well over the roofs (the art director: 15 to 20 m), but only where no picture's ceiling
+ * holds it down: outside both eave views (`eaveCap`), not beside the hall (z < +15 east and west of the court), not on the line to the pagoda; elsewhere its plan height.
+ */
+const COMPOUND_ZN = -40;   // (site.js COMPOUND.zN; not imported, the site imports this module)
+export const POPLAR_H = Object.freeze([15, 19]);
+export const growHeight = (t, kind = growKind(t)) => {
+  if (kind !== "poplar" || eaveCap(t.x, t.z) < 40 || onTowerLine(t.x, t.z, 4) || (t.z < LIMITS.nearHallZ + 1 && t.z > COMPOUND_ZN - 8)) return t.h;
+  return +(POPLAR_H[0] + (POPLAR_H[1] - POPLAR_H[0]) * hashAt(t.x, t.z, 12)).toFixed(2);
+};
+/** A group of white poplars off to one side of the view south from the arrival, the vertical accent (the art director): about 25° east of the view's middle (so in the picture, not in its middle), in front of the houses. Ours. */
+export const ARRIVAL_POPLARS = Object.freeze([{ x: 11.6, z: 240.6 }, { x: 14.4, z: 243.4 }, { x: 9.4, z: 244.2 }].map((t, i) => Object.freeze({ kind: "poplar", x: t.x, z: t.z, h: +(16 + 2.2 * hashAt(t.x, t.z, 13) - i * 0.6).toFixed(2), r: 0.28, row: 1, cast: false, strip: "arrival-poplars" })));
 /** The roof's shape: the gable roof is the town's common one; a few of the middling houses are hipped (four slopes), a few of the narrow ones lean (one slope). Ours (SOURCES.md §15), not read from anywhere. */
 export const ROOF_SHARE = Object.freeze({ hip: 0.22, shed: 0.8 });   // by the hash: under `hip` and the house at least 6 m each way, hipped; a narrow house (7 m or less across, ridge 5.3 or lower) with the other hash over `shed`, one slope
 const roofOf = (x, z, w, d, ridge, where) => {
@@ -297,7 +318,8 @@ function tiles(M) {
 export function buildSurround(M, C, opts = {}) {
   const PLAN = planSurround(C), group = new THREE.Group(), tone = () => TILE_TONES.map(() => []), tone2 = () => WALL_TONES.map(() => []);
   const near = { trees: [], walls: tone2(), roofs: tone() }, far = { trees: [], walls: tone2(), roofs: tone() };
-  for (const t of PLAN.trees) (t.cast ? near : far).trees.push({ ...t, kind: growKind(t), y: ground });
+  for (const t of PLAN.trees) { const kind = growKind(t); (t.cast ? near : far).trees.push({ ...t, kind, h: growHeight(t, kind), y: ground }); }
+  for (const t of ARRIVAL_POPLARS) far.trees.push({ ...t, y: ground });
   const wall = bricks(M), tile = tiles(M), apart = [];
   PLAN.houses.forEach((h, i) => {
     if (opts.bench) { apart.push({ id: String(i), h, parts: [] }); return; }
