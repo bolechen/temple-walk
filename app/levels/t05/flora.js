@@ -156,9 +156,10 @@ export function growTree(t, far = false) {
         cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? 0.5 : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
       }
       for (let i = 0; i < count; i++) {
-        const c0 = cs[i % clumps], w = c0.r * (t.old ? 0.42 + 0.22 * rnd() : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * 0.6, (rnd() - 0.5) * c0.r * 1.4));
+        const c0 = cs[i % clumps], w = c0.r * (t.old ? 0.42 + 0.22 * rnd() : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * (t.old ? 1.6 : 0.6), (rnd() - 0.5) * c0.r * 1.4));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
         const e = inEllipsoid(p, centre, env.rx - w * 0.7, env.ry - w * 0.45); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
-        lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
+        if (t.old) lump(needles, p, w * 0.8, w * 1.15, w * 0.7, rnd() * 6.283, centre, env.rx, detail, i);   // (an arborvitae's sprays stand on edge: an old crown is a mass of upright tufts, not of pads)
+        else lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
       }
     } else {
       const base = y + (t.crownFrom ?? h * 0.06), span = h - (base - y);   // (the way's columns start their needles at `crownFrom`)
