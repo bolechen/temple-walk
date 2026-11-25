@@ -17,7 +17,13 @@
 - `crop-p1b-hand.png`：P1「记下」机位（`j01-shot-p1b-t4.png`），纸板在胸前偏左，手在纸上。
 - `crop-slip-stroke-390x844.png`：390×844 纸条上端的横墨（`slip-whole-390x844.png`；纸条是网页界面，软件渲染即实际画面）。
 
-**没有的一张**：他手里那张纸上的横墨，T4 原图里没有。两张 T4 都是静止摆姿（`?show=shot-copy`、`shot-p1b`），摆姿时纸上画的是抄碑那一列，不画横墨；要看就得另拍 P1「记下」进行中的帧（`tools/t05-copy-frames.cjs --p1`，T4 或软件）。纸条与手里那张纸用的是同一个 `drawStroke`。
+**手里那张纸上的横墨**（T4 原图里没有：两张 T4 都是静止摆姿，摆姿时纸上画的是抄碑那一列）。**软件渲染**（SwiftShader，medium 档，1280×720，冬昼）补拍了 P1「记下」进行中的帧，头 `f018bc4` 的工作树（画面代码与 `ad9a965` 相同）：`node tools/t05-copy-frames.cjs <dir> --p1 --q=medium --times=2.6,3.15,3.7,4.0`。
+
+- `p1-stroke-1-2.6s.png`（起笔）、`p1-stroke-2-3.1s.png`（中途）、`p1-stroke-3-3.7s.png`（收笔）、`p1-stroke-4-4.0s.png`（一笔画完，`stroked: 1`）；`p1-stroke-frames.json` 逐帧记：镜头已停在 P1 机位（`hold`，`w: 1`，`cuts: 0`），书写中。
+- **照实说：这个机位里纸板几乎是侧对镜头的**（他在右下，纸板朝他自己、朝殿），纸面上那一笔在这几帧里看不清。P1 镜头的单测查的是纸在安全区内，不查纸面朝不朝镜头。要在画面里看得见那一笔，得动 P1 的机位或纸板角度，这是镜头/构图的事，留给初审判。
+- `leaf-canvas-stroke.png`：为了看那一笔本身，把他手里那张纸的贴图（`pagework.js` 的 `drawPage`，只画横墨）单独画出来，在一笔的 25%、60%、100% 处：起笔最重、往后渐细、墨尽处飞白顺着笔走。这是贴图本身，不是场景画面；纸条上的那一道是同一个 `drawStroke`。
+
 
 图钉在 adbc73c：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/adbc73c71676b8a1f7a41c698b66e03c0144dc42/t05/744-stroke-hold
 特写四张钉在 2203e23：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/2203e239b54fda5c0fc5ba97414ae595a22a99a6/t05/744-stroke-hold
+补拍（软件渲染）钉在 f9aaede：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/f9aaedee0af7d6676874822b6bf0030b34fe1060/t05/744-stroke-hold
