@@ -141,6 +141,11 @@ export function buildSite(M) {
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
   root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
     mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shBoard), mesh(merge(hp.ridge), M.ridge));
+  // The eave (./roof.js): the board along its edge and the small one at the flying rafters' end, the two layers of rafters and
+  // the corner beams, in the shade the roof gives them; the round end tiles and the drip tiles along the edge.
+  const eaveAo = { ao: hall.roof.ao, cast: false };
+  root.add(mesh(merge([...hp.fascia, ...hp.step]), M.fascia, { ao: () => 0.8 }), mesh(merge([...hp.rafters, ...hp.flyers]), M.woodZ, eaveAo), mesh(merge(hp.beams), M.woodX, eaveAo),
+    mesh(merge([...hp.ends, ...hp.drips]), M.ridge, { ao: () => 0.75, cast: false }));
   shade[0].push(hall.box);
   // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
   // walls are painted (ART.md, phase two).
@@ -209,6 +214,7 @@ export function buildSite(M) {
     ...ax.views,
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
+    corner: [12, 30, 0.36, 0.3],                       // the hall's south-east corner from the court: the eave's lift, the fanned rafters, the hip ridge and the east ornament (roof.js)
     back: [0, 6, Math.PI, -0.08],
     // Shakyamuni at the west end, from the worship band 9.9 m before him and a little east of his middle, raised to his lap: his left hand
     // and his lotus seat are in view, which from the west aisle within 4.4 m of his middle his own right knee and arm hide (#370, #547).

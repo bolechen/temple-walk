@@ -137,7 +137,7 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   for (const [, z] of h.inner.filter(([x]) => Math.abs(x) < 15)) assert.equal(z, ZS[4], "in front of the altar the inner columns are left out");
   const xs = new Set(h.parts.frame.map((g) => (g.computeBoundingBox(), g.boundingBox.getCenter(new THREE.Vector3()).x.toFixed(2))));
   assert.deepEqual([...xs].sort((a, b) => a - b), XS.slice(1, -1).map((x) => x.toFixed(2)).sort((a, b) => a - b), "a frame on each of the eight inner column lines");
-  const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
+  const { EF, EB, EX } = h.roof, under = h.roof.underAt;   // (the folded roof's underside, roof.js)
   for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
   assert.ok(h.fill.length > 0, "a neutral fill under the roof");
   // The murals' ground stands off the wall's inner face, never on it: on it, the two faces fought for the same pixels and

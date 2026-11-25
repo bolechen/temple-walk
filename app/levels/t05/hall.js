@@ -10,6 +10,7 @@
 // line at z = 0 (docs/t05/SITE.md §1). Sizes and how far each is sourced: docs/t05/SOURCES.md §11.
 import * as THREE from "three";
 import { box, BODY, footAt } from "../../src/geo.js";
+import { buildRoof, ROOF } from "./roof.js";
 
 /** The nine bays across, west to east (ARCHITECTURE.md §2.1, S04, read): 4.98, 4.98, 5.26, the three middle ones 5.80, 5.26, 4.98, 4.98 m. */
 export const BAYS = Object.freeze([4.98, 4.98, 5.26, 5.8, 5.8, 5.8, 5.26, 4.98, 4.98]);
@@ -80,8 +81,8 @@ export const ZS = Object.freeze(Array.from({ length: HALL.rows + 1 }, (_, i) => 
 /** The hall's outer faces: the walls' outside, HALL.out beyond the column lines. */
 export const OUTER = Object.freeze({ x: XS[XS.length - 1] + HALL.out, zF: HALL.front, zB: -HALL.depth - HALL.out });
 
-/** Where the roof's ridge runs: half its length to the ornaments' centres, its z, and its height (the ornaments stand 2.3 m over it): what a view from the axis is judged by (#482). */
-export const RIDGE = (() => { const EX = XS[XS.length - 1] + HALL.overhang, EF = ZS[0] + HALL.overhang, EB = ZS[ZS.length - 1] - HALL.overhang; return Object.freeze({ rx: EX - (EF - EB) / 2, zm: (EF + EB) / 2, height: HALL.ridge, ornamentTop: HALL.ridge + 2.3 }); })();
+/** Where the roof's ridge runs: half its length to the ornaments' centres, its z, and its height (the ornaments stand on its ends, roof.js): what a view from the axis is judged by (#482). */
+export const RIDGE = (() => { const EX = XS[XS.length - 1] + HALL.overhang, EF = ZS[0] + HALL.overhang, EB = ZS[ZS.length - 1] - HALL.overhang; return Object.freeze({ rx: EX - (EF - EB) / 2, zm: (EF + EB) / 2, height: HALL.ridge, ornamentTop: HALL.ridge + ROOF.orn.top }); })();
 
 /** The hall's meshes (by material) and what the written plan's walker is told of it. */
 export function buildHall(M) {
@@ -168,30 +169,15 @@ export function buildHall(M) {
   for (const s of [-1, 1]) { across(zB - H.out, ZS[0] + H.front, s * xc, 0, H.column); solid(s * xc - H.wall / 2, s * xc + H.wall / 2, zB - H.out, ZS[0] + H.front); }
   for (const [x, z] of columns) walk.posts.push({ x0: x - H.colR - BODY, x1: x + H.colR + BODY, z0: z - H.colR - BODY, z1: z + H.colR + BODY });
 
-  // The roof: four slopes from the eave's edge to the ridge, the ends hipped at 45° (in a hipped hall of nine bays and ten rafters the hip rafters run straight on to the ridge purlin, not pushed out: Yingzao Fashi, chapter 5), with the dark of its underside
-  // below them (from inside the hall that is what the eye meets looking up: the open roof, not the sky) and a fascia
-  // round the edge. Between the column heads and that underside, all round, the band where the bracket sets stand.
+  // The roof (./roof.js): four folded slopes from the eave's edge to the ridge, the ends hipped at 45° (in a hipped hall of
+  // nine bays and ten rafters the hip rafters run straight on to the ridge purlin, not pushed out: Yingzao Fashi, chapter 5),
+  // tiled, its corners lifted, two layers of rafters under its eave and the ornaments on its ridge. Its underside is what
+  // the walls, the gongyan boards, the frames and the purlins below rise to (`underAt`).
   const EX = X + H.overhang, EF = ZS[0] + H.overhang, EB = zB - H.overhang, D = EF - EB, half = D / 2, zm = (EF + EB) / 2, rx = EX - half;
-  const slope = (H.ridge - H.eave) / half, under = (y) => y - H.roof;
-  const tri = (out, a, b, c) => out.push(...a, ...b, ...c);
-  const topTris = [], underTris = [], fascia = [];
-  const P = (x, z, y) => [x, y, z];
-  const A = P(-EX, EF, H.eave), B = P(EX, EF, H.eave), C = P(EX, EB, H.eave), Dd = P(-EX, EB, H.eave), R1 = P(-rx, zm, H.ridge), R2 = P(rx, zm, H.ridge);
-  tri(topTris, A, B, R2); tri(topTris, A, R2, R1);      // the front slope
-  tri(topTris, C, Dd, R1); tri(topTris, C, R1, R2);     // the back slope
-  tri(topTris, B, C, R2); tri(topTris, Dd, A, R1);      // the two hipped ends
-  const low = (p) => [p[0], under(p[1]), p[2]];
-  for (let i = 0; i < topTris.length; i += 9) {          // the underside: the same slopes lowered, turned to face down
-    const a = low(topTris.slice(i, i + 3)), b = low(topTris.slice(i + 3, i + 6)), c = low(topTris.slice(i + 6, i + 9));
-    tri(underTris, a, c, b);
-  }
-  const edge = [A, B, C, Dd, A];
-  for (let i = 0; i < 4; i++) { const p = edge[i], q = edge[i + 1]; tri(fascia, p, low(p), low(q)); tri(fascia, p, low(q), q); }
-  const geoOf = (arr) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(arr, 3)); g.computeVertexNormals(); return g; };
-  // The main ridge as a narrow, tall course, with the masses of its two end ornaments standing up at its ends.
-  const ridgeParts = [box(2 * rx, 1.0, 0.45, 0, H.ridge + 0.4, zm), ...[-1, 1].map((s) => box(0.7, 2.4, 1.3, s * rx, H.ridge + 1.1, zm))];
-  // The underside's height above a point (x, z) under the roof: the lowest of its four slopes there.
-  const underAt = (x, z) => under(Math.min(H.ridge, H.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))));
+  const slope = (H.ridge - H.eave) / half;
+  const roofOf = buildRoof({ EX, EF, EB, eave: H.eave, ridge: H.ridge, columns: { X, zF: ZS[0], zB }, inner: H.overhang + 0.35 });
+  // The underside's height above a point (x, z) under the roof.
+  const underAt = roofOf.underAt;
 
   // Over the walls, all round: the tie-beams between the column heads and the cap board on them; above, up to the
   // underside, the wall between the bracket sets; and the bracket sets themselves, one on each column and one in the
@@ -306,7 +292,7 @@ export function buildHall(M) {
   return {
     // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
     // not a box's own 0 to 1, which laid the damp line slanting across every wall (the diagonal band the art review saw).
-    parts: { leaves, ledges, iron, windowShade, plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], tiles: [geoOf(topTris)], underside: [geoOf(underTris), geoOf(fascia)], ridge: ridgeParts },
+    parts: { leaves, ledges, iron, windowShade, plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], ...roofOf.parts },
     walk,
     closed,
     columns,
@@ -348,7 +334,7 @@ export function buildHall(M) {
       const t = Math.min(1, Math.max(0, (zF + FILL.out - z) / (FILL.out + FILL.depth)));
       return t * t * (3 - 2 * t);
     },
-    roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge },
+    roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge, heightAt: roofOf.heightAt, underAt, ao: roofOf.ao, top: roofOf.ridge.top, ornamentTop: roofOf.ridge.ornamentTop },
     box: { x0: -OUTER.x, x1: OUTER.x, z0: OUTER.zB, z1: OUTER.zF },
   };
 }
