@@ -18,7 +18,7 @@ const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--la
 const ONLY = (ARGS.find((a) => a.startsWith("--only=")) || "").slice(7).split(",").filter(Boolean).length ? (ARGS.find((a) => a.startsWith("--only="))).slice(7).split(",") : null;
 const SHAPE_ARG = (ARGS.find((a) => a.startsWith("--shapes=")) || "").slice(9).split(",").filter(Boolean), DRAWN = ARGS.includes("--drawn");
 const LEVEL = (ARGS.find((a) => a.startsWith("--level=")) || "").slice(8) || null;
-const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", ["mobile", LEVEL, LANG === "zh" ? null : LANG].filter(Boolean).join("-"));
+const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", (LANG === "zh" ? "mobile" : `mobile-${LANG}`).replace(/^mobile/, LEVEL ? `mobile-${LEVEL}` : "mobile"));   // (another temple's into mobile-<id>[-<lang>])
 const { serve } = require("./site.cjs");
 let srv;
 // The place built but not drawn (tests/e2e/run.cjs, BARE): `?off=` hides parts and unbuilds none, so everything the interface asks of the walk is there.
