@@ -89,6 +89,31 @@ for _k, op in enumerate(spec["ops"]):
         dd = np.linalg.norm(co - e, axis=1); gd = np.exp(-3 * (dd / op["dimples"]["r"]) ** 2); co[:, 1] += op["dimples"]["d"] * gd
     mv = np.linalg.norm(co - before, axis=1)
     log.append({"op": "groove", "note": op.get("note", ""), "points": int((mv > 1e-6).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
+  if op["op"] == "flatblocks":
+    # {"s", "front", "k", "iter", "blocks": [{"kind": "capsule"|"ellipse", ...}]} (issue #701, the art director: the eyes read as screwed shut, from three places): take down the
+    # detail in blocks of the face and nowhere else: v' = v_s + k'(v - v_s), v_s the surface smoothed `iter` passes inside the blocks (the Smooth modifier, weighted by the blocks'
+    # own field), k' = 1 - w (1 - k), w the block's weight, 1 inside and easing to 0 over `soft`. Only toward the smooth surface, never away. Blocks are in the stage's metres
+    # (x across, y up) on the face's front (in front of `front`, file units), laid on the points through `s` (stage metres per file unit):
+    #   capsule  {"p0": [x, y], "p1": [x, y], "r", "soft"}: the points within r of the segment (both sides of the face are given as two blocks)
+    #   ellipse  {"c": [x, y], "ax", "ay", "soft"}
+    sm_ = lambda u: u * u * (3 - 2 * u); sc_ = op["s"]; X_ = co[:, 0] * sc_; Y_ = co[:, 2] * sc_; w = np.zeros(len(co))
+    for b_ in op["blocks"]:
+      if b_["kind"] == "capsule":
+        p0 = np.array(b_["p0"]); p1 = np.array(b_["p1"]); d_ = p1 - p0; L_ = (d_ ** 2).sum(); P_ = np.c_[X_, Y_] - p0
+        t_ = np.clip((P_ * d_).sum(1) / max(L_, 1e-12), 0, 1); dist = np.linalg.norm(P_ - t_[:, None] * d_, axis=1) - b_["r"]
+      else:
+        dist = (np.hypot((X_ - b_["c"][0]) / b_["ax"], (Y_ - b_["c"][1]) / b_["ay"]) - 1) * min(b_["ax"], b_["ay"])
+      w = np.maximum(w, 1 - sm_(np.clip(dist / b_["soft"], 0, 1)))
+    w = w * sm_(np.clip((op["front"] - co[:, 1]) / 0.012, 0, 1)); before = co.copy()
+    me.vertices.foreach_set("co", co.ravel()); me.update()
+    vg = ob.vertex_groups.new(name="fixb"); idx_ = np.nonzero(w > 1e-4)[0]
+    for i_ in idx_: vg.add([int(i_)], float(w[i_]), "REPLACE")
+    md = ob.modifiers.new("fixb", "SMOOTH"); md.vertex_group = "fixb"; md.factor = 1.0; md.iterations = op.get("iter", 400)
+    dg = bpy.context.evaluated_depsgraph_get(); ev = ob.evaluated_get(dg).data; cs = np.empty(len(ev.vertices) * 3); ev.vertices.foreach_get("co", cs); cs = cs.reshape(-1, 3)
+    ob.modifiers.remove(md); ob.vertex_groups.remove(vg)
+    kk = 1 - w * (1 - op["k"]); co[:] = cs + kk[:, None] * (co - cs)
+    mv = np.linalg.norm(co - before, axis=1)
+    log.append({"op": "flatblocks", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "moved_max_stage_mm": round(float(mv.max()) * sc_ * 1000, 2), "weighted_points": int(len(idx_))}); print(json.dumps(log[-1])); continue
   if op["op"] == "snapshot":   # {"name"}: the points as they are now, for a later `hold`
     globals().setdefault("_snaps", {})[op["name"]] = co.copy(); log.append({"op": "snapshot", "note": op.get("note", ""), "name": op["name"]}); continue
   if op["op"] == "hold":

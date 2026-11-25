@@ -1,0 +1,143 @@
+{
+ "turn": -90,
+ "source": "krakucchanda.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.9,
+   "band": 0.03
+  },
+  {
+   "op": "headscale",
+   "note": "a face of its own among the seven (3D review risk 1): head width, depth and height scaled about its centre",
+   "c": [
+    0,
+    0.063,
+    0.8925
+   ],
+   "s": [
+    0.95,
+    1.0,
+    1.03
+   ],
+   "z0": 0.7875,
+   "fade": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.47,
+   "k": 0.93,
+   "band": 0.05
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.4531,
+   "front": 0.0633,
+   "iter": 150,
+   "k": 0.55,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      0.085,
+      7.235
+     ],
+     "p1": [
+      0.09,
+      7.300000000000001
+     ],
+     "r": 0.01,
+     "soft": 0.015
+    },
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.085,
+      7.235
+     ],
+     "p1": [
+      -0.09,
+      7.300000000000001
+     ],
+     "r": 0.01,
+     "soft": 0.015
+    }
+   ],
+   "note": "the brows' grooves above the eyes' inner corners: detail kept to 0.55 (#701, 自拟; r3c's eyes at 7.19 m in the file's frame)"
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.4531,
+   "front": 0.0633,
+   "iter": 150,
+   "k": 0.3,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      0.105,
+      7.130000000000001
+     ],
+     "p1": [
+      0.115,
+      7.050000000000001
+     ],
+     "r": 0.012,
+     "soft": 0.015
+    },
+    {
+     "kind": "ellipse",
+     "c": [
+      0.2,
+      7.098000000000001
+     ],
+     "ax": 0.1,
+     "ay": 0.01,
+     "soft": 0.012
+    },
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.105,
+      7.130000000000001
+     ],
+     "p1": [
+      -0.115,
+      7.050000000000001
+     ],
+     "r": 0.012,
+     "soft": 0.015
+    },
+    {
+     "kind": "ellipse",
+     "c": [
+      -0.2,
+      7.098000000000001
+     ],
+     "ax": 0.1,
+     "ay": 0.01,
+     "soft": 0.012
+    }
+   ],
+   "note": "the grooves down the nose's sides under the lower lids and the line under each lower lid: detail kept to 0.3 (#701, 自拟); the lids (they run to |x| 0.43 m), their pads and the outer corners are not touched"
+  }
+ ]
+}
