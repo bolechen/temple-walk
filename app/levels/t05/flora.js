@@ -219,7 +219,7 @@ function treeBark(M) {
 // Near the eye a lump's outline is frayed: where its surface turns away from the eye, holes are cut by the world-space grain, more of them the nearer the
 // rim, so that a crown seen within some forty metres ends in sprays with sky between them rather than in a smooth arc (#722 first art review: the nearest
 // cypresses read as mossy stones). Farther off the lumps are small enough on the screen that their outline is the crown's.
-const RAGGED = "{ float nd_=abs(dot(normal,normalize(vViewPosition))), near_=1.-smoothstep(28.,45.,length(vViewPosition)); if(near_>0.){ float f_=fbm3(vWP*vec3(4.5,5.5,4.5)); if(f_*near_>.4+1.3*nd_) discard; } }";
+const RAGGED = "{ float nd_=abs(dot(normal,normalize(vViewPosition))), near_=1.-smoothstep(28.,45.,length(vViewPosition)); if(near_>0.){ float f_=fbm3(vWP*vec3(4.5,5.5,4.5)); if(!(f_*near_<=.4+1.3*nd_)) discard; } }";
 function needleMat(M) {
   const base = dryMaterials(M).cedar, m = base.clone(), was = base.onBeforeCompile;
   m.onBeforeCompile = (sh, rr) => {
