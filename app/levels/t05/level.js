@@ -42,6 +42,9 @@ export default {
   ownVerse: true,    // the card prints J01's own line in early winter by day, and no verse at any other hour (the art review, 2026-11-25)
   build: buildSite,
   createWalker,
+  // The paving's mirror only where the stone is wet: on J01's dry stone it shows nothing (cam07 0.07/255, cam01 0.36/255 between drawn and not, SwiftShader)
+  // and its pass costs 1.0 to 1.2 ms on a T4 (#722's breakdown; the T05 lead's rule of 2026-11-25: any view over 12 ms and it goes with #722)
+  mirror: (m) => (m.wet || 0) > 0,
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
   keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4)
