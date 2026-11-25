@@ -66,7 +66,7 @@ const M = {
   wallIn: mat(0xb9b2a2, 0.95), wallFront: mat(0x8a3b2a, 0.9), wallOut: mat(0x8a3b2a, 0.9, true), timber: mat(0x3a2c23, 0.8), red: mat(0x7a3426, 0.75),
   roof: mat(0x2f251e, 0.85, false, { side: THREE.DoubleSide }), tile: mat(0x5a5f5c, 0.8, true),
   altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x6f5a34, 0.62, false, { metalness: 0.35 }),   // dark gold, not bright (ART.md §3.1, the lead 2026-11-21)
-  halo: mat(0x6a5440, 0.72, false, { metalness: 0.08, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
+  halo: mat(0x6c5641, 0.72, false, { metalness: 0.08, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
 };
 const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; scene.add(o); return o; };
 const hall = new THREE.Group(); scene.add(hall);
@@ -243,7 +243,10 @@ function mandorla(x, topY, headY, v = {}) {
   const g = new THREE.Group();
   const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 4.2, z = ALTAR.z - 2.25;
   const h = topY - AT - BASE_H, b = AT + BASE_H, ys = Math.max(0.5, Math.min(h * 0.85, (v.shoulderY ?? headY - 1.6) - b));
-  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(haloShape(wB, h, ys), { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), M.halo); body.position.set(x, b, z); g.add(body);
+  // a figure's own gain on the body's colour (`halo.gain` in the spec): the end figures stand where the hall's light is weaker,
+  // and the body is to read at about half the face's brightness on screen on each (issue #463, the art director 2026-11-21)
+  let bodyMat = M.halo; if (v.gain) { bodyMat = M.halo.clone(); bodyMat.color.multiplyScalar(v.gain); }
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(haloShape(wB, h, ys), { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), bodyMat); body.position.set(x, b, z); g.add(body);
   for (let r = 0; r < rings; r++) {   // concentric bands in relief: the outline drawn smaller, less its own inset
     const k = 0.9 - r * 0.14, outer = haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k);
     outer.holes.push(new THREE.Path(haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k, 0.18).getPoints(48)));
@@ -258,6 +261,7 @@ function mandorla(x, topY, headY, v = {}) {
     cone.position.set(x + px, b + py * 0.92 + 0.2, z + 0.1); cone.rotation.z = a - Math.PI / 2; g.add(cone);
   }
   g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.userData.halo = true; } });
+  body.userData.haloBody = true;   // zoneIds counts the body panel apart from the head disc and the rings
   scene.add(g); return g;
 }
 
@@ -573,8 +577,8 @@ function zoneIds() {
   if (dif) { for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { kept0.push([l, l.visible]); l.visible = false; } hemi.intensity = lastShot.hemi ?? 2.2; hemi.visible = true; }
   render(); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, shown);
   const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), kept = new Map(), mats = [];
-  const haloMat = (i) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(15. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
-  const own = new Set(); figures.forEach((f, i) => { const hm = haloMat(i); mats.push(hm); f.group.traverse((o) => { if (o.isMesh && o.userData.halo) { kept.set(o, o.material); o.material = hm; own.add(o); } }); for (const m of f.meshes) { own.add(m); if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 1; } });
+  const haloMat = (i, c = 15) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(${c}. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
+  const own = new Set(); figures.forEach((f, i) => { const hm = haloMat(i), hd = haloMat(i, 16); mats.push(hm, hd); f.group.traverse((o) => { if (o.isMesh && o.userData.halo) { kept.set(o, o.material); o.material = o.userData.haloBody ? hm : hd; own.add(o); } }); for (const m of f.meshes) { own.add(m); if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 1; } });
   scene.traverse((o) => { if ((o.isMesh || o.isLine || o.isPoints) && !own.has(o)) { kept.set(o, o.material); o.material = black; } });
   const tm = renderer.toneMapping, bg = scene.background, sv = sky.visible; renderer.toneMapping = THREE.NoToneMapping; scene.background = new THREE.Color(0); sky.visible = false;
   renderer.setRenderTarget(null); renderer.render(scene, camera); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, id);
@@ -589,7 +593,7 @@ function zoneIds() {
     if (code(k + 4) !== c || code(k - 4) !== c || code(k + Wd * 4) !== c || code(k - Wd * 4) !== c) continue;
     const a = (acc[c] ??= [0, 0, 0, 0]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2];
   }
-  const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光";
+  const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光"; names[15] = "头光与光环";
   const out = figures.map(() => ({}));
   for (const [c, [n, r, g, b]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)) }; }
   return out;

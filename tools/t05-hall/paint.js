@@ -22,6 +22,7 @@ uniform sampler2D uMaskF;
 uniform sampler2D uMaskB;
 uniform sampler2D uMaskS;
 uniform vec3 uTint;
+uniform float uLotus;
 varying vec3 vFig;
 varying vec3 vFigN;
 float pEll(vec3 p, vec4 a, vec4 b) { if (a.w < .5) return 0.; vec3 q = (p - a.xyz) / b.xyz; float k = min(b.x, min(b.y, b.z));
@@ -188,7 +189,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) },
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) }, uLotus: { value: anchors.lotusGain ?? 1 },
     uIdMode: { value: 0 }, uFig: { value: opts.fig ?? 0 } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
@@ -196,7 +197,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
     let col = v3(c);
     if (z.pattern === "flowers") { const c2 = lin(z.pattern2 ?? "#9A7A3E"); col = `mix(${v3(c)}, ${v3(c2)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))`; }
     const metal = z.pattern === "flowers" ? `mix(${(z.metal ?? 0).toFixed(3)}, ${(z.metal2 ?? 0.6).toFixed(3)}, flowers(p.xy, ${(z.cell ?? 0.16).toFixed(3)}))` : (z.metal ?? 0).toFixed(3);
-    const wear = (z.wear ? ` * (1. - ${z.wear.toFixed(3)} * vnoise(p.xy * 9.) )` : "") + (z.tint ? " * uTint" : "");
+    const wear = (z.wear ? ` * (1. - ${z.wear.toFixed(3)} * vnoise(p.xy * 9.) )` : "") + (z.tint ? " * uTint" : "") + (z.gain === "lotus" ? " * uLotus" : "");
     // a zone may tint what stands out of it (the tips and rims of a lotus's petals, issue #463): toward `edgeTint.color`
     // by its amount where the surface is convex (cvEdge, below)
     if (z.edgeTint) col = `mix(${col}, ${v3(lin(z.edgeTint.color))}, ${(z.edgeTint.amount ?? 0.5).toFixed(3)} * cvEdge)`;
