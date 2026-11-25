@@ -14,10 +14,10 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
   // One line at the foot of the view. `id` is said only once in a visit; a later line replaces an earlier one.
   // A line is a few phrases between middle dots; each is kept whole, so that on a narrow screen the line breaks between
   // them and not in the middle of one (a dot with no space round it, as in a Korean pair of words, belongs to its phrase).
-  // The dot between two phrases is its own span, and a line break waits beside it (`brk`, hidden): where the line breaks there the dot is put
+  // The dot between two phrases, with the spaces on both sides of it, is its own span, and a line break waits beside it (`brk`, hidden): where the line breaks there the dot is put
   // away and the break made real (`unhang`), so that the two phrases do not run together on one line if the line later has room: left at
   // the end of the first line the dot reads as one dot too many, and with it gone and no break a line has two phrases and nothing between them.
-  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? part.replace("·", '<span class="dot">·</span><br class="brk" hidden>') : `<span class="phrase">${part}</span>`)).join("");
+  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? `<span class="dot">${part}</span><br class="brk" hidden>` : `<span class="phrase">${part}</span>`)).join("");
   const unhang = () => {
     if (!line || line.getClientRects().length === 0) return;   // not on the page just now (before 入山, the photograph): measured when it shows, nothing is measured at zero
     const ps = [...line.querySelectorAll(".phrase")], dots = /** @type {HTMLElement[]} */ ([...line.querySelectorAll(".dot")]), brs = /** @type {HTMLElement[]} */ ([...line.querySelectorAll(".brk")]);

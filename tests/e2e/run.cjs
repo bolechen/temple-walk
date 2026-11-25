@@ -215,6 +215,10 @@ function hintBreak(langs, widths) {
         for (let i = 0; i + 1 < ps.length; i++) { const a = ps[i].getBoundingClientRect(), c = ps[i + 1].getBoundingClientRect(), same = c.top < a.bottom - 1;
           if (same && !(shown(dots[i]) && !shown(brs[i]))) bad.push({ i, why: "two phrases on a line with no dot between them", dot: shown(dots[i]), br: shown(brs[i]), a: [a.left, a.top, a.width], c: [c.left, c.top, c.width] });
           if (!same && !(!shown(dots[i]) && shown(brs[i]))) bad.push({ i, why: "a break with the dot not put away, or no break", dot: shown(dots[i]), br: shown(brs[i]), a: [a.left, a.top, a.width], c: [c.left, c.top, c.width] }); }
+        // every line sits on the middle of the hint (a break must not leave a space at the head or the tail of a line, which pushes it aside), and no line is empty
+        const box = line.getBoundingClientRect(), mid = (box.left + box.right) / 2, rects = [...ps, ...dots.filter(shown)].map((e) => e.getBoundingClientRect()).sort((x, y) => x.top - y.top), rows = [];
+        for (const r of rects) { const mid_y = r.top + r.height / 2, row = rows.find((q) => Math.abs(q.mid - mid_y) < 6); if (row) { row.left = Math.min(row.left, r.left); row.right = Math.max(row.right, r.right); row.h = Math.max(row.h, r.height); } else rows.push({ top: r.top, mid: mid_y, left: r.left, right: r.right, h: r.height }); }   // (a row is by the middle of its boxes: a dot's box is a little shorter than a phrase's)
+        rows.forEach((q, k) => { const off = (q.left + q.right) / 2 - mid; if (Math.abs(off) > 1) bad.push({ why: "a line is off the middle of the hint", row: k, off: +off.toFixed(1) }); if (k > 0 && q.top - rows[k - 1].top > 1.5 * Math.max(q.h, rows[k - 1].h)) bad.push({ why: "an empty line between two", row: k, gap: +(q.top - rows[k - 1].top).toFixed(1) }); });
         return { bad, sig: dots.map((d) => (shown(d) ? 1 : 0)).join(""), text: line.textContent }; };
       for (const lang of langs) {
         const t = await open(b, base, `q=low&lang=${lang}&view=third`, { viewport: { width: 390, height: 640 }, hasTouch: true, isMobile: true });
@@ -2809,8 +2813,8 @@ const scenarios = {
     const ev = JSON.stringify(await events()); expect(!/demo\.complete/.test(ev.split("demo.ending.replay").slice(1).join("")), "watching again sent demo.complete");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
-  // (the line, in the languages that wrap most and at three widths: a part of smoke; the whole sweep is a scenario of its own, in the full run and the night's)
-  "hint-break": { tier: 2, run: hintBreak(["ko", "en"], [300, 320, 340]) },
+  // (the line, in a language with full-width spaces (ja) and one with a close fit (ko), at four widths: a part of smoke; the whole sweep is a scenario of its own, in the full run and the night's)
+  "hint-break": { tier: 2, run: hintBreak(["ja", "ko"], [300, 320, 340, 360]) },
   "hint-break-sweep": { tier: 3, run: hintBreak(["zh", "ja", "en", "ko"], Array.from({ length: 26 }, (_, i) => 260 + i * 4)) },
   // #726: the first time the book is shut after the close, the hour turns to the visitor's own and one line says so with the
   // seasons being open; shutting it again, and watching the close again from the summit mat, do neither.
