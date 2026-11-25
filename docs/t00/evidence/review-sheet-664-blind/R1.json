@@ -1,0 +1,187 @@
+{
+ "readings": {
+  "kneeHeight": 0.0684,
+  "shoulderHeight": 0.3938,
+  "headHeight": 0.4957,
+  "hemFrontHeight": 0.0229,
+  "hemAboveKnee": -0.0455,
+  "hatWidth": 0.411,
+  "shoulderWidth": 0.152,
+  "hatOverShoulder": 2.704
+ },
+ "measure": {
+  "origin": [
+   0,
+   21.004,
+   -123
+  ],
+  "facing": [
+   0,
+   0,
+   1
+  ],
+  "bones": {
+   "leftUpperLeg": [
+    0.086,
+    21.094,
+    -123
+   ],
+   "rightUpperLeg": [
+    -0.086,
+    21.094,
+    -123
+   ],
+   "leftLowerLeg": [
+    0.2263,
+    21.0739,
+    -122.8317
+   ],
+   "rightLowerLeg": [
+    -0.2384,
+    21.0709,
+    -122.843
+   ],
+   "leftUpperArm": [
+    0.076,
+    21.3978,
+    -122.9922
+   ],
+   "rightUpperArm": [
+    -0.076,
+    21.3978,
+    -122.9922
+   ],
+   "leftLowerArm": [
+    0.1379,
+    21.215,
+    -122.9398
+   ],
+   "rightLowerArm": [
+    -0.1347,
+    21.2137,
+    -122.9408
+   ],
+   "leftHand": [
+    0.0235,
+    21.19,
+    -122.846
+   ],
+   "rightHand": [
+    -0.0235,
+    21.18,
+    -122.846
+   ],
+   "head": [
+    0,
+    21.4997,
+    -122.9862
+   ],
+   "hips": [
+    0,
+    21.124,
+    -123
+   ]
+  },
+  "hemFront": {
+   "y": 21.0269,
+   "z": 0.2841,
+   "n": 54
+  },
+  "hatWidth": 0.411
+ },
+ "views": [
+  {
+   "id": "asked",
+   "parts": {
+    "skin": 15819,
+    "hand": 2289,
+    "robe": 38087,
+    "legs": 0,
+    "shoes": 0,
+    "other": 7767
+   },
+   "handAlone": 4350,
+   "handVisible": 2289,
+   "handHidden": 2061,
+   "handHiddenFraction": 0.474,
+   "lapBox": [
+    336,
+    357,
+    668,
+    631
+   ],
+   "lapHand": 2289,
+   "lapRobe": 33356,
+   "camera": {
+    "position": [
+     -0.7977,
+     21.546,
+     -121.8832
+    ],
+    "fov": 44
+   }
+  },
+  {
+   "id": "side",
+   "parts": {
+    "skin": 12530,
+    "hand": 1332,
+    "robe": 33441,
+    "legs": 102,
+    "shoes": 0,
+    "other": 8233
+   },
+   "handAlone": 2782,
+   "handVisible": 1332,
+   "handHidden": 1450,
+   "handHiddenFraction": 0.521,
+   "lapBox": [
+    326,
+    312,
+    581,
+    546
+   ],
+   "lapHand": 1332,
+   "lapRobe": 30033,
+   "camera": {
+    "position": [
+     1.234,
+     21.554,
+     -122.1186
+    ],
+    "fov": 44
+   }
+  },
+  {
+   "id": "top",
+   "parts": {
+    "skin": 14857,
+    "hand": 752,
+    "robe": 22450,
+    "legs": 7,
+    "shoes": 0,
+    "other": 3034
+   },
+   "handAlone": 2668,
+   "handVisible": 752,
+   "handHidden": 1916,
+   "handHiddenFraction": 0.718,
+   "lapBox": [
+    366,
+    229,
+    636,
+    485
+   ],
+   "lapHand": 752,
+   "lapRobe": 22450,
+   "camera": {
+    "position": [
+     -0.4407,
+     22.7672,
+     -122.383
+    ],
+    "fov": 44
+   }
+  }
+ ]
+}
