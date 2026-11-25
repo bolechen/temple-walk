@@ -1,0 +1,132 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "base-cam01-winter-day.png",
+   "bytes": 1163913,
+   "sha256": "0f15f0e1289c995f18627949128cba8639d82e7544beaf10989e3ce5fddd35ce",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-cam02-winter-day.png",
+   "bytes": 1240215,
+   "sha256": "3249a62f1b707fd62559289764fd2ef59bf212de6f7edef86611350008d4d53c",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-cam03-winter-day.png",
+   "bytes": 1171057,
+   "sha256": "4f36b13fc2152a9e8436e22a41a6119011f39ff644d73f5bb0058377048b4b9a",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-cam04-winter-day.png",
+   "bytes": 1225454,
+   "sha256": "71d63c5ca6f6f161428e2327b1e8232e5c3f43940ec62fa32c3c193fe78222bf",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-cam05-winter-day.png",
+   "bytes": 1177199,
+   "sha256": "c4328ba7f1d0b316ce98d69a8c91b9f3387899abdaeb39d788aed28635fcb13b",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-cam06-winter-day.png",
+   "bytes": 1215491,
+   "sha256": "fe5e4b75a422a1c36727ea0e17287836af14054c2a1a3386e607ef8e296ab77d",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-cam07-winter-day.png",
+   "bytes": 1164870,
+   "sha256": "e3c8e63c01cd7c97182846f2fc281a091b078052a7e5c551c71cecc78b1b7caa",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-south-autumn-day.png",
+   "bytes": 1110627,
+   "sha256": "317e85e625ff7954d2d0efd5f172ef051ca0acbabb421485a4ed73da3f41f0cb",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-south-summer-day.png",
+   "bytes": 1053603,
+   "sha256": "7088905edf3b5c675e6b47423aff2ffe2a64fc5af4607e0a606c8e2f0910888e",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "base-south-winter-day.png",
+   "bytes": 1081600,
+   "sha256": "44ec3e7b98f0d4f371e422095150fcbcea35fbd8cc6c8d4142e4e8b8890789bb",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 221712,
+   "sha256": "952a83d086b54eb3053ed2c208c4af39a62b0c9000b0dad698aba6b6ef09abdc",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-cam01-winter-day.png",
+   "bytes": 1163770,
+   "sha256": "2a0fad926c0eacbd8a2d3fdf0521c4085025da02bea51427a3fe0706ec3bb131",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-cam02-winter-day.png",
+   "bytes": 1240578,
+   "sha256": "fcc66f677736b7f3a0b3570bff009f4a6ed9b32ad2420d1d599e7f3bf36e645d",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-cam03-winter-day.png",
+   "bytes": 1171055,
+   "sha256": "9dd6c9969290a0afb3b543e43063a9e4f3efb0f402b137a908fd58958ada01d0",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-cam04-winter-day.png",
+   "bytes": 1225667,
+   "sha256": "b3932c64fc6a076adf8e8e2369bce97f080f4987260ae3e95b412f5f3bffa4e4",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-cam05-winter-day.png",
+   "bytes": 1177220,
+   "sha256": "2ee12ff524bda3c6cc7d6b78634c58f8aceeb106abef7204594f6c7c341d97d0",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-cam06-winter-day.png",
+   "bytes": 1215814,
+   "sha256": "d7c0b12cdbd33629de08412a56d7609836149268d4b2677493b243556383931b",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-cam07-winter-day.png",
+   "bytes": 1167969,
+   "sha256": "5c80ecb66f823e6a7aabc96d6f9d1790e71e842bcaa5792409e57c12b86f2f31",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-south-autumn-day.png",
+   "bytes": 1110867,
+   "sha256": "5df2abb5efee5dff9373dfa391c5cc3c9358c879202ccbdde2dcc8258d6fae9f",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-south-summer-day.png",
+   "bytes": 1053400,
+   "sha256": "3ff6d8f0cdf43552170fc48b852bbb080e14ac8f4e7665a616c8d3a5bb75201d",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  },
+  {
+   "path": "new-south-winter-day.png",
+   "bytes": 1083755,
+   "sha256": "7103473fafcb96f3824f46a17d034a75a6e0556c5b1861000f58eb3944278444",
+   "rev": "d791a356bc5ab9ab115008d7f6604c666db309c5"
+  }
+ ]
+}
