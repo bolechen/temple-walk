@@ -50,6 +50,7 @@ function createEarth(scene, M, terrain) {
 /** `far`: a heightmap to draw the far land from instead of the hill rings (#183's spike, ?terrain=dem|made); null keeps the rings. */
 export function createBackdrop(scene, M, bounds, levels, terrain, far = null) {
   createEarth(scene, M, terrain);
+  const STAGGER = 0.3;   // m: how far out every other run of the side grove stands (a depth buffer tells 0.3 m apart past 200 m)
   const mats = [], hills = [], H = 17, FOOT = 10,   // the grove stands on the slope, so its foot goes ten metres under the lowest ground it meets
      X = bounds.x, zS = bounds.apron;
   const band = (x0, z0, x1, z1, seed, tone, base = 0, ends = [0, 0]) => {
@@ -67,7 +68,9 @@ export function createBackdrop(scene, M, bounds, levels, terrain, far = null) {
     steps.forEach(([za, zb, base], k) => {
       // The picture-cards are flat, and flat things do not bear looking at close: the wall hides them from the court, but from a hall's platform the
       // eye is over the wall and a card 2 to 5 m beyond it shows its torn edge (#288). So the side bands stand 9 m out all along the courts.
-      const x = (k >= 1 ? X + 9 : X) + o + (k === 0 ? 16 : 0);
+      // Every other run stands a hand further out, so that where two runs overlap their cards are not in one plane: two
+      // cards on one plane fight for the same pixels and flicker as the eye moves (#688; tests/unit/flush-faces.test.mjs).
+      const x = (k >= 1 ? X + 9 : X) + o + (k === 0 ? 16 : 0) + (k % 2) * STAGGER;
       // Neighbouring runs of the grove overlap by a stride and each thins out over it, so no run ends in a cut and the two make one stand.
       const north = k < steps.length - 1 ? 11 : 0, south = k > 0 ? 11 : 0;
       band(x, zb - north, x, za + south, i + k * 3 + 1, tone, base + o * 0.09, [1, k === 0 ? 0 : 1]); band(-x, za + south, -x, zb - north, i + k * 3 + 20, tone, base + o * 0.09, [k === 0 ? 0 : 1, 1]);   // the south corner is closed by the band across it

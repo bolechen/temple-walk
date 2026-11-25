@@ -67,6 +67,11 @@ const here = __dirname, root = path.join(here, "..");
         return { name: f.name, facePx: +Math.hypot(a[0] - b[0], a[1] - b[1]).toFixed(1), eyeToMouthPx: +Math.hypot(e[0] - m[0], e[1] - m[1]).toFixed(1),
           at: b.map((v) => Math.round(v)), seen: Object.fromEntries(Object.entries(occ).map(([k, o]) => [k, o.seen ? "yes" : o.onScreen ? "hidden by " + o.by : "off screen"])) };
       }), [faceList, sw, sh]);
+      // with `probe: { pts: { name: [x, y, z] }, i }` (a point in figure i's own frame), where each point falls in the picture, in pixels
+      // (tools/t05-hall/paint-measure.py reads a patch of the PNG there: the cheek's colour against the lips', issue #463)
+      if (s.probe) r.probe = await p.evaluate(([pr, w, h]) => Object.fromEntries(Object.entries(pr.pts).map(([k, v]) => { const q = window.hall.figurePoint(pr.i, v).project(window.hall.camera); return [k, [(q.x + 1) / 2 * w, (1 - q.y) / 2 * h]]; })), [s.probe, sw, sh]);
+      // with `pixels: { i, pts: [[x, y], …] }`, where each pixel falls on figure i's surface, in its own frame (stage.js pixelPoint)
+      if (s.pixels) r.pixels = await p.evaluate(([px]) => px.pts.map(([x, y]) => window.hall.pixelPoint(px.i, x, y)), [s.pixels]);
       // with `zones: true`, the mean colour on screen of each zone of each figure, its halo and its lips (stage.js zoneIds,
       // issue #463), and each one's brightness against its face's (Rec. 709 luma of the mean colour)
       if (s.zones) r.zones = await p.evaluate(() => window.hall.zoneIds().map((z) => {

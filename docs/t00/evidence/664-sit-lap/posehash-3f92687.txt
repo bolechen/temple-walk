@@ -1,0 +1,9 @@
+stand       hat:f41102fd beads:c20c8e78 skin:520c5ad6 robe:aa5d6d2b legs:03002e78 shoes:0f99d524 straps:543057f9
+pray        hat:71d9af14 beads:9560b577 skin:b0071930 robe:c4c65c4f legs:dbe52327 shoes:0f99d524 straps:55996564
+walk        hat:964253d1 beads:84470830 skin:58d2b32d robe:07936cb2 legs:be96a8e3 shoes:a0436983 straps:3f90509d
+hurry       hat:fb3aa432 beads:c50de159 skin:1e668b16 robe:b8a581c9 legs:06ba86b2 shoes:668a1b8d straps:8c69df8d
+stairsUp    hat:630901a4 beads:1ce1a23b skin:c9c3e9a0 robe:ebc1775a legs:6fc26eaa shoes:636393e1 straps:6b7c2817
+stairsDown  hat:36707951 beads:de41f310 skin:7ee8543a robe:fd1288c2 legs:e64f5778 shoes:da12ceb4 straps:571c21fe
+chair       hat:92609281 beads:76d599cf skin:1d945594 robe:5a52d25b legs:860386d8 shoes:667657d9 straps:746a67a8
+hop         hat:a0144537 beads:a0b74a6c skin:4ce3362d robe:16bc7aea legs:4f59733e shoes:a1afb145 straps:e83dfac4
+bind        hat:eee52a04 beads:cf15ae4b skin:fa3e62f3 robe:094e1009 legs:3d6c1579 shoes:ecc56996 straps:5e389218
