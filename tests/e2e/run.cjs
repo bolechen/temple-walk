@@ -7,6 +7,8 @@
 // Each scenario is independent and fails on any error the page reports. A report is written to tools/out/e2e-report.json.
 const fs = require("fs"), path = require("path");
 const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
+/** Whether T05's great hall has its doors shut (app/levels/t05/hall.js, `HALL_DOORS.shut`; DECISIONS.md, 先行版关殿门): read from the source, one constant to turn. */
+const hallDoorsShut = () => /HALL_DOORS\s*=\s*Object\.freeze\(\{\s*shut:\s*true/.test(fs.readFileSync(path.join(__dirname, "../../app/levels/t05/hall.js"), "utf8"));
 
 // Software rendering draws the whole temple about once a second and takes twenty seconds to bring it up. A scenario
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
@@ -540,6 +542,7 @@ const scenarios = {
   // outer gate's place, walks the way into the court, past stations A and B and up the flight onto the terrace, 3 m
   // up, and on through the hall's middle door to station E under its roof, and nothing complains. Built, not drawn.
   t05: { tier: 2, async run(b, base) {
+    const SHUT = hallDoorsShut();   // the great hall's doors are shut in the first release (docs/t05/DECISIONS.md, 先行版关殿门): he walks up to them and no further
     const t = await open(b, base, "level=t05&q=low&fast=1" + BARE), lv = await t.page.evaluate(() => window.__level());
     expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
     const w = await t.page.evaluate(() => window.__walker());
@@ -556,8 +559,15 @@ const scenarios = {
     // same floor as the court's, no veil, no room under the court.
     await t.page.evaluate(() => window.__walk([[0, 2], [0, -2], [0, -12]]));
     let veil = false;
+    if (SHUT) {
+      // The way in is shut: the leg across the doors is searched round and ends at the nearest he can reach, before them, 3 m up, never over the sill.
+      let still = 0, last = null;
+      await t.until(async () => { s = await t.state(); veil ||= !!s.inside || s.room !== null; still = last && Math.hypot(s.x - last[0], s.z - last[1]) < 0.01 ? still + 1 : 0; last = [s.x, s.z]; return still > 30; }, 300000, "he never came to rest before the shut doors");
+      expect(!veil && Math.abs(s.h - 3) < 0.1 && s.z > 0.2 && s.z < 3, `he stops before the shut doors, outside, on the platform's floor: ${JSON.stringify({ veil, h: s.h, z: s.z })}`);
+    } else {
     await t.until(async () => { s = await t.state(); veil ||= !!s.inside || s.room !== null; return Math.hypot(s.x, s.z + 12) < 0.6; }, 300000, "he never reached station E inside the hall");
     expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
+    }
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // T05's sound field, first version (docs/t05/SOUND.md §1; score.js `layerOf`): the court's reverb out of doors, the great hall's
@@ -620,6 +630,7 @@ const scenarios = {
   // the hall's floor carries him on in. The prologue's book and kept place lie in the browser all the while, untouched.
   "t05-walk": { tier: 3, async run(b, base) {
     const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, name: "大殿前" }) };
+    const SHUT = hallDoorsShut();
     const t = await open(b, base, "level=t05&q=low" + BARE, { init: `(() => { const p = ${JSON.stringify(PROLOGUE)}; for (const k in p) if (localStorage.getItem(k) === null) localStorage.setItem(k, p[k]); })()` });
     const lv = await t.page.evaluate(() => window.__level());
     expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05 straight in: " + JSON.stringify(lv));
@@ -647,11 +658,18 @@ const scenarios = {
     await hold("s", async () => { await track(); return s.h < 0.05 && s.z > 21.2; }, "S did not take him back down the flight");
     await hold("w", async () => { await track(); return s.h > 2.95 && s.z < 6; }, "W did not take him up the flight a second time");
     // Over the hall's middle door sill (0.24 m, the door's line at z -0.05) and in, on W alone: the doorway that only a hurried test once crossed.
+    if (SHUT) {
+      // The doors are shut (HALL_DOORS, hall.js): W takes him up to them and holds him there, a body's width before the leaves, on the platform, outside.
+      await t.page.keyboard.down("w"); await t.frames(240); await t.page.keyboard.up("w");
+      s = await t.state();
+      expect(s.z > 0.2 && s.z < 1.2 && Math.abs(s.h - 3) < 0.1 && !s.inside && s.room == null, `W stops him before the shut doors: ${JSON.stringify({ z: s.z, h: s.h, inside: s.inside, room: s.room })}`);
+    } else {
     await hold("w", async () => { s = await t.state(); return s.z < -1.2; }, "W did not take him over the sill into the hall");
     expect(Math.abs(s.h - 3) < 0.1 && !s.inside && s.room == null, `over the sill and onto the hall's floor, with no veil: ${JSON.stringify({ h: s.h, inside: s.inside, room: s.room })}`);
     // A tap on the hall's floor ahead of him (pickFloor) walks him on in. Where the floor lies on the screen depends on the eye, so the
     // tap is tried a little lower each time until one lands on the floor ahead (higher up the picture are the altar and the figures, no floor).
     const box = await t.page.$("canvas").then((c) => c.boundingBox()), z0 = s.z;
+    if (!SHUT) {
     let tapped = null;
     for (const fy of [0.55, 0.6, 0.65, 0.7, 0.75]) {
       await t.page.mouse.click(box.x + box.width / 2, box.y + box.height * fy); await t.frames(3);
@@ -663,6 +681,8 @@ const scenarios = {
     await t.page.evaluate(() => window.__walk([[0, -2]]));
     await t.until(near(0, -2), 300000, "he never reached station F");
     expect(Math.abs(s.h - 3) < 0.1, "station F is on the hall's floor: " + s.h);
+    }
+    }
     await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
     const kept = await t.page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(PROLOGUE));
     for (const k in PROLOGUE) expect(kept[k] === PROLOGUE[k], `T05 should leave the prologue's ${k} byte for byte: ${kept[k]}`);

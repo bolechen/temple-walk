@@ -21,6 +21,7 @@ const cameras = Object.entries(what).map(([key, [cid, label, composition, how]])
   return { id: cid, label, composition, view: key, url: `?${id === "t00" ? "" : `level=${id}&`}show=${key}&season=summer&time=day&view=${third ? "third" : "first"}&q=high`, position: [r(ex), r(ey), r(ez)],
     target: [r(ex + Math.sin(yaw) * Math.cos(ep) * d), r(ey + Math.sin(ep) * d), r(ez - Math.cos(yaw) * Math.cos(ep) * d)], yaw_rad: r(yaw), pitch_rad: r(pitch),
     ...(third ? { stands_at: [r(x), r(y - EYE), r(z)], eye_pitch_rad: r(ep) } : {}),
+    ...(site.closedViews?.includes(key) ? { closed: "先行版暂不适用：大殿门关着，机位在殿内，走不到；开殿时随 HALL_DOORS 恢复（docs/t05/DECISIONS.md「先行版关殿门」）" } : {}),
     fov_degrees: site.lens?.[key]?.[third ? "third" : "first"] ?? (third ? 44 : 52), fov_axis: "vertical", eye_height_m: EYE, resolution: [1920, 1080], locked: true };
 });
 const first = Object.keys(what)[0], last = Object.keys(what).at(-1);
