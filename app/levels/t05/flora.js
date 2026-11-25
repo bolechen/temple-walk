@@ -72,14 +72,14 @@ const inEllipsoid = (p, c, rx, ry) => Math.hypot((p.x - c.x) / rx, (p.y - c.y) /
  * `centre`, as the prologue's cards borrow theirs), and its first texture coordinate carries how deep in the crown it lies (`shade`, read into the
  * occlusion when the crown is merged).
  */
-function lump(out, at, sx, sy, sz, yaw, centre, crownR, detail, salt) {
+function lump(out, at, sx, sy, sz, yaw, centre, crownR, detail, salt, rough = 0.3, own = 0.4) {
   const g = new THREE.IcosahedronGeometry(1, detail), P = g.attributes.position, N = g.attributes.normal, uv = new Float32Array(P.count * 2), c = Math.cos(yaw), s = Math.sin(yaw), v = new THREE.Vector3(), n = new THREE.Vector3();
   for (let i = 0; i < P.count; i++) {
-    v.set(P.getX(i), P.getY(i), P.getZ(i)); const k = 1 + 0.3 * (hashAt(v.x * 3.1 + salt, v.y * 2.7 + v.z * 1.9, salt) - 0.5);
+    v.set(P.getX(i), P.getY(i), P.getZ(i)); const k = 1 + rough * (hashAt(v.x * 3.1 + salt, v.y * 2.7 + v.z * 1.9, salt) - 0.5) + (rough > 0.3 ? 0.5 * rough * (hashAt(v.x * 7.3 - salt, v.z * 6.1 + v.y * 5.3, salt + 1) - 0.5) : 0);   // (an old arborvitae's tuft: ragged, two scales of unevenness, not a pebble)
     const lx = v.x * sx * k, ly = v.y * sy * k, lz = v.z * sz * k, wx = at.x + lx * c - lz * s, wy = at.y + ly, wz = at.z + lx * s + lz * c;
     P.setXYZ(i, wx, wy, wz);
     const dx = wx - centre.x, dy = (wy - centre.y) * 1.3 + 0.25 * crownR, dz = wz - centre.z, dl = Math.hypot(dx, dy, dz) || 1;
-    n.set(v.x * c - v.z * s, v.y, v.x * s + v.z * c).normalize().multiplyScalar(0.4).add(v.set(dx / dl, dy / dl, dz / dl).multiplyScalar(0.6)).normalize(); N.setXYZ(i, n.x, n.y, n.z);
+    n.set(v.x * c - v.z * s, v.y, v.x * s + v.z * c).normalize().multiplyScalar(own).add(v.set(dx / dl, dy / dl, dz / dl).multiplyScalar(1 - own)).normalize(); N.setXYZ(i, n.x, n.y, n.z);
     const deep = Math.min(1, Math.hypot(wx - centre.x, (wy - centre.y) * 1.2, wz - centre.z) / Math.max(0.5, crownR));
     uv[i * 2] = 0.5 + 0.5 * deep * (0.75 + 0.25 * Math.max(0, n.y));
   }
@@ -111,13 +111,17 @@ export function growTree(t, far = false) {
   const ready = (g) => { g.scale(s, s, s); g.translate(x, y - 0.2 * s, z); return g; };
   for (const tb of tubes) for (const ring of tb.rings) ring.pos.multiplyScalar(s).add(new THREE.Vector3(x, y - 0.2 * s, z));
   let [trunk, wood] = splitTrunk(geo, tubes[0]); trunk = ready(trunk); wood = ready(wood);
+  // An old tree leaning out of the row toward the open light (`lean`, m: where its crown's middle stands off its foot, across the axis): the whole tree is
+  // sheared over from its foot, the trunk tilting into the crown, so that nothing floats beside its trunk.
+  const leanX = env && t.lean ? t.lean / (env.base + env.ry) : 0;
+  if (leanX) { for (const g of [trunk, wood]) { const A = g.attributes.position; for (let i = 0; i < A.count; i++) A.setX(i, A.getX(i) + leanX * Math.max(0, A.getY(i) - y)); } for (const tb of tubes) for (const ring of tb.rings) ring.pos.x += leanX * Math.max(0, ring.pos.y - y); }
   // A bare broadleaf's limbs spread and crook, and a tip can sag low: none comes below 2.5 m out beyond his reach of the trunk (he walks under the court's two)
   if (kind === "broad" && h > 6) { const A = wood.attributes.position, floor = y + 2.5; for (let i = 0; i < A.count; i++) { const d = Math.hypot(A.getX(i) - x, A.getZ(i) - z), yy = A.getY(i); if (d > 0.9 && yy < floor) A.setY(i, floor - (floor - yy) * 0.08 * Math.max(0, 1.6 - d)); } }
   // a column (the way's arborvitae) keeps its boughs inside its needles' radius
   if (t.crownR) { const A = wood.attributes.position, R0 = t.crownR * 0.9; for (let i = 0; i < A.count; i++) { const dx = A.getX(i) - x, dz = A.getZ(i) - z, d = Math.hypot(dx, dz); if (d > R0) { A.setX(i, x + (dx * R0) / d); A.setZ(i, z + (dz * R0) / d); } } }
   const centre = new THREE.Vector3(x, y + (env ? env.base + env.ry : kind === "pine" ? h * 0.72 : kind === "cypress" ? h * 0.52 : h * 0.6), z);
   if (env) {   // what reaches out of the ellipsoid is drawn back into it, and nothing of the boughs comes below its underside
-    const c = new THREE.Vector3(x, y + env.base + env.ry, z), p = new THREE.Vector3(), A = wood.attributes.position;
+    const c = new THREE.Vector3(x + (t.lean || 0), y + env.base + env.ry, z), p = new THREE.Vector3(), A = wood.attributes.position;
     for (let i = 0; i < A.count; i++) { p.fromBufferAttribute(A, i); const e = inEllipsoid(p, c, env.rx, env.ry); if (e > 0.97) { p.sub(c).multiplyScalar(0.97 / e).add(c); A.setXYZ(i, p.x, p.y, p.z); } }
     centre.copy(c);
   }
@@ -144,22 +148,31 @@ export function growTree(t, far = false) {
     // in three or four clumps, as an old temple cypress's crown breaks up.
     const R = Math.min(t.crownR ?? Infinity, h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3))), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
     const radiusAt = (f) => { for (let i = 1; i < prof.length; i++) if (f <= prof[i][1]) { const [a, fa] = prof[i - 1], [b, fb] = prof[i]; return R * (a + ((b - a) * (f - fa)) / (fb - fa)); } return 0; };
-    const count = far ? 16 : env ? Math.round(t.old ? (t.back ? 0.7 * (28 + 3.6 * env.ry) : 34 + 4.4 * env.ry) : 26 + 3.2 * env.ry) : 30;   // (an old tree's tall crown takes more, smaller tufts; one of the outer row, behind the inner from the path, fewer and a little larger)   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
+    const count = far ? 16 : env ? Math.round(t.old ? (t.back ? 0.7 * (28 + 3.6 * env.ry) : 4 * (34 + 4.4 * env.ry)) : 26 + 3.2 * env.ry) : 30, fine = !far && env && t.old && !t.back;   // (a near old crown: four times the tufts at half the size and a fifth of the faces each, the grain of sprays rather than of stones)   // (an old tree's tall crown takes more, smaller tufts; one of the outer row, behind the inner from the path, fewer and a little larger)   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
     if (env) {
       // An old cypress with its lower boughs long gone: the head broken into four or five masses held out on the boughs, the widest low and
       // spread to the ellipsoid's rim, one over the leader, with sky between them (not a ball on a pole).
       // (an old tree's tall crown: the masses stacked from its underside to its top, one or two to each storey of it, so that it is full from 3.5-4.5 m up, not a head on a pole)
-      const clumps = t.old ? Math.max(5, Math.round(env.ry * 1.3)) : 4 + (hashAt(x, z, 5) < 0.5 ? 1 : 0), cs = [];
+      const clumps = t.old ? Math.max(5, Math.round(env.ry * (t.back ? 1.3 : 1.8))) : 4 + (hashAt(x, z, 5) < 0.5 ? 1 : 0), cs = [];
       for (let k = 0; k < clumps; k++) {
         const top = k === clumps - 1, a = yaw + k * 2.39996 + rnd() * 0.5;
         const d = top ? 0.1 : t.old ? 0.35 + 0.3 * rnd() : 0.55 + 0.2 * rnd(), lift = top ? 0.6 : t.old ? -0.8 + (1.4 * k) / (clumps - 1) + 0.1 * (rnd() - 0.5) : -0.35 + 0.5 * (k / clumps) + 0.15 * rnd();
         const w = Math.sqrt(Math.max(0.15, 1 - lift * lift));   // (narrower toward the crown's ends, as the ellipsoid is)
-        cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? 0.5 : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
+        cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? (t.back ? 0.5 : 0.4) : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
       }
       for (let i = 0; i < count; i++) {
-        const c0 = cs[i % clumps], w = c0.r * (t.old ? (t.back ? 0.46 + 0.24 * rnd() : 0.42 + 0.22 * rnd()) : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * (t.old ? 1.6 : 0.6), (rnd() - 0.5) * c0.r * 1.4));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
+        const c0 = cs[i % clumps], w = c0.r * (t.old ? (t.back ? 0.46 + 0.24 * rnd() : 0.24 + 0.14 * rnd()) : 0.55 + 0.25 * rnd()), sp = t.old && !t.back ? 1.05 : 1.4, p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * sp, (rnd() - 0.5) * c0.r * (t.old ? (t.back ? 1.6 : 1.2) : 0.6), (rnd() - 0.5) * c0.r * sp));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
         const e = inEllipsoid(p, centre, env.rx - w * 0.7, env.ry - w * 0.45); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
-        if (t.old) lump(needles, p, w * 0.8, w * 1.15, w * 0.7, rnd() * 6.283, centre, env.rx, detail, i);   // (an arborvitae's sprays stand on edge: an old crown is a mass of upright tufts, not of pads)
+        if (t.old && !t.back) {
+          // the near old crowns (#722 first art review: they read as mossy stones, smooth and round): every third tuft goes out to its clump's rim as a spray
+          // reaching outward and up past the mass, ragged, so that the outline breaks into sprays with sky between them
+          if (i % 3 === 0) {
+            const out = p.clone().sub(c0.at); out.y *= 0.5; const ol = out.length() || 1; out.multiplyScalar(1 / ol);
+            p.copy(c0.at).addScaledVector(out, c0.r * (0.85 + 0.35 * rnd())); p.y += c0.r * 0.25 * rnd();
+            const e2 = inEllipsoid(p, centre, env.rx - w * 0.3, env.ry - w * 0.3); if (e2 > 1) p.sub(centre).multiplyScalar(1 / e2).add(centre);
+            lump(needles, p, w * 0.5, w * 1.4, w * 0.45, Math.atan2(out.x, out.z) + (rnd() - 0.5) * 0.6, centre, env.rx, 0, i, 0.6, 0.55);
+          } else lump(needles, p, w * 0.78, w * 1.15, w * 0.68, rnd() * 6.283, centre, env.rx, 0, i, 0.5, 0.5);
+        } else if (t.old) lump(needles, p, w * 0.8, w * 1.15, w * 0.7, rnd() * 6.283, centre, env.rx, detail, i);   // (an arborvitae's sprays stand on edge: an old crown is a mass of upright tufts, not of pads)
         else lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
       }
     } else {
@@ -207,13 +220,17 @@ function treeBark(M) {
   m.customProgramCacheKey = () => "treeBark"; m.name = "treeBark"; return m;
 }
 /** The needles: the level's dry evergreen (./dry.js), each lump stirred by the breeze, more as it blows (uWind, set each frame from wind.js). */
+// Near the eye a lump's outline is frayed: where its surface turns away from the eye, holes are cut by the world-space grain, more of them the nearer the
+// rim, so that a crown seen within some forty metres ends in sprays with sky between them rather than in a smooth arc (#722 first art review: the nearest
+// cypresses read as mossy stones). Farther off the lumps are small enough on the screen that their outline is the crown's.
+const RAGGED = "{ float nd_=abs(dot(normal,normalize(vViewPosition))), near_=1.-smoothstep(28.,45.,length(vViewPosition)); if(near_>0.){ float f_=fbm3(vWP*vec3(4.5,5.5,4.5)); if(f_*near_>.4+1.3*nd_) discard; } }";
 function needleMat(M) {
   const base = dryMaterials(M).cedar, m = base.clone(), was = base.onBeforeCompile;
   m.onBeforeCompile = (sh, rr) => {
     was.call(base, sh, rr); sh.uniforms.uWindN = U.uWind; sh.uniforms.uTN = U.uT;
     sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform vec2 uWindN; uniform float uTN;").replace("#include <begin_vertex>", `#include <begin_vertex>
       { float a_=.025+.02*min(length(uWindN),3.); transformed.x+=sin(uTN*1.1+position.x*.7+position.y*.5)*a_+uWindN.x*.012; transformed.z+=cos(uTN*.83+position.z*.6+position.y*.4)*a_+uWindN.y*.012; }`);
-    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74),step(.5,vUv2.y));\n#include <normal_fragment_begin>");   // (an arborvitae's lump: yellower-brown)
+    sh.fragmentShader = sh.fragmentShader.replace("#include <normal_fragment_begin>", "diffuseColor.rgb*=mix(vec3(1.),vec3(1.1,1.,.74)*(.72+.56*fbm3(vWP*vec3(9.,2.6,9.))),step(.5,vUv2.y));\n#include <normal_fragment_begin>\n" + RAGGED);   // (an arborvitae's lump: yellower-brown)
   };
   m.customProgramCacheKey = () => "dryNeedles"; m.name = "dryNeedles"; return m;
 }
