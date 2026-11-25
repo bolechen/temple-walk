@@ -112,6 +112,10 @@ export const LAP_HAND = { x: 0.03, z: 0.166, out: 0.2, tip: 0.04, stack: 0.016, 
 const HAND_ROD = [[0, 0.027, 0], [0.03, 0.013, 0.022], [0.052, 0.0105, 0.018], [0.082, 0.0105, 0.014]];
 const HAND_SHIFT = [-0.0045, -0.002, 0];   // how the palm and its fingers are set against the wrist's bone (buildHand)
 const SKULL = V3(0, 1.049, 0.006), R = 0.131;
+// The light under his chin (#664): the skull's normals that look more than `from` downward keep only `keep` of the rest
+// of their tilt, and the neck's own colour goes from `low` at the collar to `top` under the jaw, darkening from `from`
+// of the way up it.
+const JAW = { from: 0.3, keep: 0.35 }, NECK_SHADE = { low: 0.96, top: 0.7, from: 0.3 };
 const FOOT_X = 0.09, FOOT_Z = 0.012, TOE_OUT = 0.08;
 /** @type {[string, number][]} */
 const SIDES = [["left", 1], ["right", -1]];   // he faces +z, so his left hand is on +x
@@ -479,6 +483,11 @@ export function createMonk(opts = {}) {
       const q = deform(n.multiplyScalar(R)).add(SKULL); p.setXYZ(i, q.x, q.y, q.z);
     }
     g.setAttribute("color", new THREE.BufferAttribute(clr, 3)); weld(g);
+    // Under the chin (#664). He casts no shadow on himself, so the underside of his jaw, which faces the ground and takes
+    // only the ground's light, came out darker than the neck right below it, which faces the sky's side light and has
+    // nothing over it: a dark band between two lighter ones, read as a beard. The jaw's underside is turned a little
+    // toward the horizon for the light (its normals only, JAW), and the neck is shaded where the head stands over it (NECK_SHADE).
+    { const nr = g.attributes.normal; for (let i = 0; i < nr.count; i++) { const y = nr.getY(i); if (y >= -JAW.from) continue; const y2 = -JAW.from + (y + JAW.from) * JAW.keep, k = Math.sqrt((1 - y2 * y2) / Math.max(1e-9, 1 - y * y)); nr.setXYZ(i, nr.getX(i) * k, y2, nr.getZ(i) * k); } }
     pushSkin(finish(g, null, IDX.head));
     // Face strokes (refs/monk-poses-v6-2026-11-23-gassho-head.webp):
     // short flat rounded-cap brows, gentle downward U-arc closed eyes (no eyelashes), small button nose, tiny shallow smile.
@@ -521,7 +530,7 @@ export function createMonk(opts = {}) {
         const flare = 1 + 0.07 * sq(Math.max(0, u - 0.6) / 0.4);
         const rx = 0.049 * flare, rz = 0.046 * flare;
         const frontChest = 0.026 * smooth(0.55, 0, u) * Math.max(0, Math.cos(a));
-        return [rx * Math.sin(a), y, rz * Math.cos(a) - 0.001 + frontChest, 0, 0, PAL.skin.clone().multiplyScalar(0.95 + 0.05 * smooth(0.85, 0.35, u))];
+        return [rx * Math.sin(a), y, rz * Math.cos(a) - 0.001 + frontChest, 0, 0, PAL.skin.clone().multiplyScalar(NECK_SHADE.low - (NECK_SHADE.low - NECK_SHADE.top) * smooth(NECK_SHADE.from, 0.95, u))];
       });
       weld(nk);
       pushSkin(finish(nk, null, (x, y) => {
