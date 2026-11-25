@@ -329,17 +329,22 @@ export function buildRoof(o) {
   // the back, from the foot on the outer side up over the top: teeth from a third of the way up to just under the curl,
   // each leaning up the back, as scales or a fin's rays do
   const back = curve([[-0.42, 0], [-0.45, 0.2], [-0.42, 0.42], [-0.35, 0.62], [-0.24, 0.8], [-0.08, 0.94], [0.08, 0.99]], 60);
-  // (the teeth not alike, as a fin's rays are not: small near the foot, growing up the back and smaller again under the beak, set a
-  // little unevenly, each leaning up the back by its own amount; evenly cut, the row read as a saw blade: #742's art review)
-  const TEETH = [15, 18, 22, 25, 29, 32, 36, 39, 43, 46, 50];
-  const toothed = []; back.forEach((P, i) => {
-    toothed.push(P);
-    const n = TEETH.indexOf(i);
-    if (n >= 0) {
-      const T = back[i + 1].clone().sub(back[i - 1]).normalize(), Nn = new THREE.Vector2(T.y, -T.x), f = Math.sin((Math.PI * (n + 0.6)) / (TEETH.length + 0.4));
-      toothed.push(P.clone().addScaledVector(Nn, -(0.018 + 0.026 * f) * (1 + 0.12 * Math.sin(n * 2.3))).addScaledVector(T, 0.014 + 0.012 * f + 0.004 * Math.cos(n * 1.7)));
-    }
-  });
+  // Down the back, six fins, large and not alike, smaller each one up the back, each swept up toward the beak (the art director's
+  // final review of #742: a row of small even teeth read against the sky as a circular saw; 「5–7 道大而不等的鳍，从下往上渐小」).
+  // Each is [where it starts and ends on the back, as samples of the curve; how far it stands out; how far its tip leans up the back],
+  // in the ornament's height.
+  const FINS = [[13, 19, 0.098, 0.058], [23, 27, 0.07, 0.04], [30, 35, 0.075, 0.05], [39, 42, 0.05, 0.03], [45, 48, 0.046, 0.034], [51, 53, 0.03, 0.018]];   // (smooth back between them, so that they read as fins on a back, not a saw's edge)
+  const toothed = [];
+  for (let i = 0; i < back.length; i++) {
+    const fin = FINS.find(([a]) => a === i);
+    toothed.push(back[i]);
+    if (!fin) continue;
+    const [a, b, out, lean] = fin, m = Math.round((a + b) / 2), T = back[b].clone().sub(back[a]).normalize(), N = new THREE.Vector2(-T.y, T.x);   // (out from the back)
+    const tip = back[m].clone().addScaledVector(N, out).addScaledVector(T, lean);
+    // the leading edge straight out to the tip, the trailing edge falling back to the body in a shallow curve
+    toothed.push(tip, tip.clone().lerp(back[b], 0.62).addScaledVector(N, -out * 0.12));
+    i = b - 1;
+  }
   const outline = [
     ...toothed,
     // the beak: the top carried on in over the ridge and hooked down into a point, like a bird's (the art director on photograph 18,
@@ -359,6 +364,8 @@ export function buildRoof(o) {
     const shape = new THREE.Shape(outline.map((P) => new THREE.Vector2(P.x * k * H, P.y * k * H)));
     const body = new THREE.ExtrudeGeometry(shape, { depth: OR.t - 2 * BEV.t, bevelEnabled: true, bevelThickness: BEV.t, bevelSize: BEV.s, bevelSegments: 4, curveSegments: 4 });
     body.translate(0, 0, -(OR.t - 2 * BEV.t) / 2);
+    // (a bevel round a sharp point reaches further than its size: held under the height cam07 allows, whatever the outline does)
+    body.computeBoundingBox(); const over = body.boundingBox.max.y / H; if (over > 1) body.scale(1 / over, 1 / over, 1 / over);
     // turned so that "in" points to the ridge's middle: on the east end in is -x
     if (s > 0) body.rotateY(Math.PI);
     ridgeParts.push(plain(body.translate(x0, y0, zm)));
