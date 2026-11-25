@@ -189,7 +189,8 @@ test("he walks into the hall across the threshold, to stations C, D, E and F, al
 test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil", () => {
   assert.equal(site.censer, null); assert.deepEqual(site.trees, []); assert.deepEqual(site.halls, []); assert.deepEqual(site.strikers, []);
   assert.deepEqual(site.places, {}); assert.deepEqual(site.seats, []);
-  assert.equal(level.backdrop, null); assert.equal(level.grove, null); assert.equal(level.zones, null);
+  assert.equal(level.backdrop, null); assert.equal(level.grove, null);
+  assert.deepEqual(Object.keys(level.zones), ["layers"], "sound layers only, no music zones: it has no melody yet (t05-sound.test.mjs)");
 });
 
 test("the hall's fill is out while the eye is in the court and comes up as he walks in, over seconds, never at a jump (#481)", async () => {

@@ -16,7 +16,7 @@ import * as THREE from "three";
 const GLSL = /* glsl */ `
 uniform mat4 uToFig;
 uniform vec4 uL[LEAVES];
-uniform vec4 uFace[8];
+uniform vec4 uFace[9];
 uniform float uEdge;
 uniform sampler2D uMaskF;
 uniform sampler2D uMaskB;
@@ -68,8 +68,9 @@ float arcDist(vec2 q, vec2 c, float w, float sag) { float x = clamp((q.x - c.x) 
 // the face's ink: x the brows, y the upper lids (and the eye beneath, when its radius is above zero), drawn in two colours
 // (#370 round 7: a brow is a soft shadow under the brow ridge, not a hard line; a lid is one soft line along the eye's slit)
 float eyeW = 0., eyeP = 0.;   // the half-open eye's white and pupil, set by faceInk
+float seamW = 0.;             // how much of the lip seam's lift lies here, set by faceInk (uFace[8]: half-height, strength)
 vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
-  vec2 ink = vec2(0); lip = 0.; urna = 0.; eyeW = 0.; eyeP = 0.;
+  vec2 ink = vec2(0); lip = 0.; urna = 0.; eyeW = 0.; eyeP = 0.; seamW = 0.;
   if (uFace[4].w < .5 || p.z < uFace[4].z || n.z < .15) return ink;
   vec2 q = p.xy; float aa = max(fwidth(q.x), fwidth(q.y)) * 1.2 + .002, soft = uFace[5].y;
   for (int s = 0; s < 2; s++) {
@@ -104,6 +105,12 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
   vec2 m = (q - uFace[1].xy) / vec2(uFace[3].w, uFace[4].x);
   float le = aa * 2. + .002 / max(uFace[4].x, .01);   // the lip's edge soft over about 2 mm (#463, the 3D review's third round)
   lip = 1. - smoothstep(1. - le, 1. + le, length(m));
+  // the lip colour only on the surface of the lips that faces the eye: not on the underside of the upper lip nor on the walls of the
+  // seam, whose darkness is the shading's own (issue #701, the art director's second round: the mouth was read as an open dark spot)
+  lip *= smoothstep(.3, .6, n.z) * smoothstep(-.3, .0, n.y);
+  // a pale layer along the seam between the lips, where their shading makes one dark line (issue #701): a thin band on the mouth's line,
+  // across three quarters of the lips' width, only on what faces the eye; the fragment lifts the colour by uFace[8].y there
+  seamW = uFace[8].y > 0. ? (1. - smoothstep(uFace[8].x * .5, uFace[8].x, abs(q.y - uFace[1].y))) * (1. - smoothstep(uFace[3].w * .7, uFace[3].w * .9, abs(q.x - uFace[1].x))) * smoothstep(.3, .6, n.z) : 0.;
   urna = 1. - smoothstep(uFace[4].y - aa, uFace[4].y + aa, length(q - uFace[1].zw));
   return ink;
 }
@@ -160,8 +167,8 @@ function leafUniforms(leaf, A) {
 }
 
 function faceUniforms(face, A) {
-  const out = new Array(32).fill(0);
-  const L = A.eyeL, R = A.eyeR, M = A.mouth, U = A.urna; if (!face || !L || !R || !M) return out;
+  const out = new Array(36).fill(0);
+  const L = A.eyeL, R = A.eyeR, M = A.lipAt ?? A.mouth, U = A.urna;   // `lipAt`: where the lips lie, when the mouth anchor was set on the chin pad below them (issue #701) if (!face || !L || !R || !M) return out;
   const e = Math.abs(L[0] - R[0]) / 2, k = (x) => x * e;
   out.splice(0, 4, L[0], L[1], R[0], R[1]);
   out.splice(4, 4, M[0], M[1], U ? U[0] : 0, U ? U[1] : -99);
@@ -171,6 +178,7 @@ function faceUniforms(face, A) {
   out.splice(20, 4, k(face.lidLift ?? 0), face.soft ?? 0, A.eyeOpen ? A.eyeOpen[0] : 0, A.eyeOpen ? A.eyeOpen[1] : 0);   // eyeOpen: a half-open eye drawn under the lid line (white's height, pupil's radius, metres; #480 the art director's trial)
   // the lids laid on the carved eye's slit where it was measured (lidL/lidR: x, y and the rise per metre outward,
   // tools/t05-statue/face-ratios.py; #463), else on the eye anchors as before
+  out.splice(32, 4, A.seamH ?? 0, A.seamLift ?? 0, 0, 0);   // seamH: the half-height of a pale band on the lips' seam, seamLift: how much brighter it is (1 = twice); both only where a figure names them
   if (A.lidL && A.lidR) { out.splice(24, 4, A.lidL[0], A.lidL[1], A.lidR[0], A.lidR[1]); out.splice(28, 4, A.lidL[2] ?? 0, A.lidR[2] ?? 0, 1, 0); }
   return out;
 }
@@ -185,7 +193,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const N = Math.max(1, leaves.length);
   const L = new Float32Array(N * 8); leaves.forEach((lf, i) => L.set(leafUniforms(lf, anchors), i * 8));
   const uL = []; for (let i = 0; i < N * 2; i++) uL.push(new THREE.Vector4().fromArray(L, i * 4));
-  const F = faceUniforms(recipe.face, anchors), uFace = []; for (let i = 0; i < 8; i++) uFace.push(new THREE.Vector4().fromArray(F, i * 4));
+  const F = faceUniforms(recipe.face, anchors), uFace = []; for (let i = 0; i < 9; i++) uFace.push(new THREE.Vector4().fromArray(F, i * 4));
   const base = recipe.base;
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
@@ -227,6 +235,7 @@ ${zoneCode}
   // the folds: their hollows darker, their ridges rubbed toward the dust's colour; not on the face, whose lines are drawn
   pCol *= 1. - ${fh} * cvHollow * foldW * (1. - onFace); pCol = mix(pCol, ${v3(lin(recipe.folds?.edgeColor ?? "#8A7A66"))}, ${fe} * cvEdge * foldW * (1. - onFace));
   pCol = mix(pCol, ${v3(lipC)}, lip_ * onFace);
+  pCol *= 1. + uFace[8].y * seamW * onFace;   // the seam's pale layer
   pCol = mix(pCol, ${v3(lin(fc.eyeWhite ?? "#C9C0B0"))}, eyeW * onFace); pCol = mix(pCol, ${v3(lin(fc.pupil ?? "#2A221C"))}, eyeP * onFace); pRough = mix(pRough, ${fc.lipRough.toFixed(3)}, lip_ * onFace); pMetal = mix(pMetal, 0., lip_ * onFace);
   // the brow: the skin darkened, at most half covered; the lid: one line of the deep beam colour
   pCol = mix(pCol, ${v3(browC)}, ink2.x * onFace * ${(fc.browAlpha ?? 1).toFixed(3)}); pCol = mix(pCol, ${v3(ink)}, ink2.y * onFace);

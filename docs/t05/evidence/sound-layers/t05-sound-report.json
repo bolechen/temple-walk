@@ -1,0 +1,69 @@
+{
+ "walk": [
+  {
+   "layer": "court",
+   "seconds": 25,
+   "walking_seconds": 20
+  },
+  {
+   "layer": "hall",
+   "seconds": 50,
+   "walking_seconds": 14
+  },
+  {
+   "layer": "court",
+   "seconds": 25,
+   "walking_seconds": 20
+  }
+ ],
+ "note": "peak before the +14 dB of the mp3; the walk is one court, the hall (walking, then standing), the court",
+ "reverbs": [
+  {
+   "name": "court",
+   "seconds": 3.2,
+   "power": 2.6,
+   "dark": 0,
+   "rt60_to_minus60_s": 2.85,
+   "rt60_t20_s": 4.17
+  },
+  {
+   "name": "timber",
+   "seconds": 2,
+   "power": 3.2,
+   "dark": 0.9,
+   "rt60_to_minus60_s": 1.58,
+   "rt60_t20_s": 1.7
+  },
+  {
+   "name": "hall",
+   "seconds": 7,
+   "power": 3.86,
+   "dark": 0.9,
+   "rt60_to_minus60_s": 5.1,
+   "rt60_t20_s": 5.02
+  }
+ ],
+ "peak_db": -26.1,
+ "seconds": 108,
+ "stretches": [
+  {
+   "layer": "court",
+   "from": 0,
+   "to": 25,
+   "mean_db": -43.2
+  },
+  {
+   "layer": "hall",
+   "from": 25,
+   "to": 75,
+   "mean_db": -55.7
+  },
+  {
+   "layer": "court",
+   "from": 75,
+   "to": 100,
+   "mean_db": -41.1
+  }
+ ],
+ "silences": []
+}

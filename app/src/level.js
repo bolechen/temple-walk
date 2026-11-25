@@ -30,8 +30,11 @@ import t00 from "../levels/t00/level.js";
  * @property {boolean} [keepsPlace] keeps where he was under yunjing.place.v1 (the prologue only, until each level keeps its own; #385)
  * @property {boolean} [opening] plays the opening after 入山 (opening.js, which knows only the prologue's way)
  * @property {boolean} [title] raises the prologue's title at its gate
+ * @property {string} [intro] one line, in Chinese, said once in the foot line as the walk begins (a level whose first edition has no seals or book says so; src/levelsay.js)
+ * @property {Record<string, Record<string, string>>} [tr] the level's own words in `ja`, `en`, `ko`, each a table from the Chinese line to that language, kept with the level and not in app/locales/ (a build that holds no such level holds none of its words)
  * @property {{ place: string, line: string }} [how] the line at the foot of the title page: "region · road" (a region's name, never a real city's) and one sentence of this temple's own (#445); none, none shown
  * @property {(season: string, time: string, mood: Record<string, any>) => (Record<string, any> | null | undefined)} [moodFor] fields of mood.js's table this level replaces for a season and hour (given the table so far), or nothing: the hours' own numbers stand for a level that gives none (#488)
+ * @property {boolean} [keepsOwnPlace] keeps where he was under its own record in yunjing.levels.v1 (src/levelsave.js, S4), never the prologue's yunjing.place.v1, and stands him there on opening; no book, no seal, no title with it
  * @property {{ season: string, time: string }} [firstMood] the season and hour a page opens in the first time, when the address names none (T05: early winter by day, J01; docs/t05/DECISIONS.md, 2026-11-25). Nothing, and the prologue goes on as it was: the visitor's own season, by day until the book is filled once; a level that keeps no book of its own (`keepsPlace` false) is always on its first look
  * @property {[number, number]} [skyAt] where the sky's dome stands (x, z), so that its far side stays within the eye's 800 m from everywhere walked (#409; the origin by default)
  *
