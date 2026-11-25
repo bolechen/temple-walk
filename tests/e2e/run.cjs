@@ -2651,6 +2651,8 @@ const scenarios = {
     await t.until(async () => (await hud()).tip === "seasons", 30000, "the line was not said: " + JSON.stringify(await hud()));
     const line = await t.page.evaluate(() => document.getElementById("hint").textContent);
     expect(/山中时辰已随你此刻/.test(line) && !/时节已开/.test(line), "one sentence, the hour and the seasons together: " + line);
+    { const r = await t.page.evaluate(() => { const e = document.getElementById("hint").getBoundingClientRect(); return { l: e.left, r: e.right, b: e.bottom, w: innerWidth, h: innerHeight }; });
+      expect(r.l >= 0 && r.r <= r.w && r.b <= r.h, "the line runs off a phone's screen: " + JSON.stringify(r)); }
     expect((await t.journey()).told === true, "it was not kept as said");
     // shut it again: nothing turns, nothing is said (a hand has chosen dawn meanwhile)
     await t.page.evaluate(() => window.__mood("summer", "dawn")); await t.frames(2);
