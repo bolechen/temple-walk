@@ -12,8 +12,8 @@ const { site, serve } = require("./site.cjs");
 const args = process.argv.slice(2), flag = (k, d) => (args.find((a) => a.startsWith(`--${k}=`)) || "").split("=")[1] || d;
 const out = path.resolve(args.find((a) => !a.startsWith("--")) || "tools/out/t05-copy");
 const P1 = args.includes("--p1"), [W, H] = flag("size", "1280x720").split("x").map(Number), Q = flag("q", "high");
-const COPY = [[0.5, "取纸"], [1.0, "举板"], [1.9, "抬头读"], [3.0, "落笔"], [8.0, "写"], [10.0, "再抬头"], [12.6, "停笔"], [13.7, "收起"]];
-const STROKE = [[0.5, "取纸"], [1.9, "抬头看檐"], [3.0, "落笔"], [3.9, "横墨"], [6.0, "写下那句"], [8.6, "停笔"], [9.6, "收起"]];
+const COPY = [[0.5, "取纸", "take"], [1.0, "举板", "raise"], [1.9, "抬头读", "read"], [3.0, "落笔", "down"], [8.0, "写", "write"], [10.0, "再抬头", "read-again"], [12.6, "停笔", "stop"], [13.7, "收起", "away"]];
+const STROKE = [[0.5, "取纸", "take"], [1.9, "抬头看檐", "look-eave"], [3.0, "落笔", "down"], [3.9, "横墨", "stroke"], [6.0, "写下那句", "line"], [8.6, "停笔", "stop"], [9.6, "收起", "away"]];   // (file names in ASCII: the evidence store's mirror keys are addresses)
 
 (async () => {
   fs.mkdirSync(out, { recursive: true });
@@ -35,12 +35,12 @@ const STROKE = [[0.5, "取纸"], [1.9, "抬头看檐"], [3.0, "落笔"], [3.9, "
   await page.waitForFunction(() => window.__rites().writing.held !== undefined, null, { timeout: 120000 }).catch(async (e) => { console.error(JSON.stringify(await page.evaluate(() => ({ page: window.__page(), yard: (({ x, z, staged, target, route, frames }) => ({ x, z, staged, target, route, frames }))(window.__yard()), ui: window.__ui() })))); throw e; });
   // --times=0.6,0.8,…: those moments instead of the named ones (a strip of the swing there, for the art review), named by their seconds.
   const TIMES = (flag("times", "") || "").split(",").filter(Boolean).map(Number);
-  const list = TIMES.length ? TIMES.map((t) => [t, `${t.toFixed(1)}s`]) : P1 ? STROKE : COPY, shots = [];
+  const list = TIMES.length ? TIMES.map((t) => [t, `${t.toFixed(1)}s`, `${t.toFixed(1)}s`]) : P1 ? STROKE : COPY, shots = [];
   let held = 0;
-  for (const [secs, name] of list) {
+  for (const [secs, name, slug] of list) {
     while (held < secs * 1000) { const step = Math.min(250, secs * 1000 - held); await page.evaluate((ms) => window.__riteClock(ms), step); held += step; await frames(1); }
     await frames(2);
-    const file = path.join(out, `${TIMES.length ? "strip" : P1 ? "stroke" : "copy"}-${shots.length + 1}-${name}.png`);
+    const file = path.join(out, `${TIMES.length ? "strip" : P1 ? "stroke" : "copy"}-${shots.length + 1}-${slug}.png`);
     await page.screenshot({ path: file });
     shots.push({ file, secs, name, writing: await page.evaluate(() => window.__rites().writing), director: await page.evaluate(() => { const d = window.__director(); return { phase: d.phase, id: d.id, w: d.w, cuts: d.cuts }; }) });
   }
