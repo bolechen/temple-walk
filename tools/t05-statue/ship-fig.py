@@ -16,7 +16,7 @@ base = f"{O}/{nn}-{name}.base_model.glb"; full = f"{O}/{name}-{ver}.glb"; r3c = 
 if "from" in opt:   # a figure that is already made up (the grafted Sakyamuni): the file itself is the before, as repair.py reads it (welded, points in its order: the gate and the zones compare point for point)
   base = opt["from"]; r3c = f"{O}/{name}-{ver}.before.glb"; json.dump({"turn": 0, "ops": []}, open(f"/tmp/noops-{name}.json", "w"))
   sh("python3", f"{here}/repair.py", base, f"/tmp/noops-{name}.json", r3c)
-sh("python3", f"{here}/face-ship.py", name, ver, f"--tilt={tilt}", f"--lean={lean}", f"--prebow={prebow}", "--chin-shift=0.015", "--no-furrows", "--no-lift", *fs_opts)
+sh("python3", f"{here}/face-ship.py", name, ver, f"--tilt={tilt}", f"--lean={lean}", f"--prebow={prebow}", "--chin-shift=0.015", "--no-furrows", *([] if any(a.startswith("--lift") for a in fs_opts) else ["--no-lift"]), *fs_opts)
 sh("python3", f"{here}/repair.py", base, f"{here}/{name}/repair-{ver}.json", full); print(json.dumps({"step": "repair", "out": full}))
 # the gate: the bow-only baseline (ops up to the snapshot) and the mouth height from the chinshape
 d = json.load(open(f"{here}/{name}/repair-{ver}.json")); ops = d["ops"]; i = [(o["op"], o.get("name")) for o in ops].index(("snapshot", "bow")); ch = [o for o in ops if o["op"] == "chinshape"][0]
