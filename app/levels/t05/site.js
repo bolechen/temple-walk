@@ -142,7 +142,7 @@ export function buildSite(M) {
   const sh = { ao: inside };   // inside the walls the sky's light is mostly shut out (hall.js)
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
   root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
-    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, shBoard), mesh(merge(hp.ridge), ridgeMaterial(M)));   // (T05's own ridge clay, ./ridge.js)
+    mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, { ...shBoard, cast: false }), mesh(merge(hp.ridge), ridgeMaterial(M)));   // (the eave's underside casts nothing the tiles over it do not: #742)   // (T05's own ridge clay, ./ridge.js)
   // The eave (./roof.js): the board along its edge and the small one at the flying rafters' end, the two layers of rafters and
   // the corner beams, in the shade the roof gives them; the round end tiles and the drip tiles along the edge, of the ridges' clay
   // and in the eave's shade as the rafters are (an end tile is the head of a tile, not a lamp: #742's art review).

@@ -39,6 +39,14 @@ export const ROOF = Object.freeze({
 // The tile shader lays its cover tiles 0.25 apart and its courses 0.33 long in its own units (materials.js, `tile`): the
 // great hall's are larger, so its texture coordinates are scaled to them.
 const UVK = 0.25 / ROOF.tile, UVC = 0.33 / ROOF.course;
+// The beasts' outlines, in metres, forward (down the hip, or out along the corner beam) and up, from their foot. The large beast
+// on the hip (the chuishou): a crest swept back into a horn, a heavy brow, the snout hooked forward and down over a open jaw, about 0.9 m
+// from its foot (a quarter of it sunk in the hip). The small one on the corner beam's head (the taoshou), drawn a unit long and scaled to the
+// beam's head: a block with a hooked snout. A seated figure, turned: a plinth, folded knees, a body, a head, 0.45 m. All three are
+// the art director's description of photograph 21 (#573, point 9) put into shapes of our own; no photograph is traced.
+const CHUISHOU = [[-0.36, 0], [-0.4, 0.38], [-0.33, 0.62], [-0.46, 0.9], [-0.22, 0.78], [-0.04, 0.8], [0.12, 0.7], [0.3, 0.6], [0.44, 0.46], [0.47, 0.32], [0.38, 0.36], [0.28, 0.4], [0.2, 0.36], [0.3, 0.26], [0.26, 0.18], [0.14, 0.14], [0.1, 0]];
+const TAOSHOU = [[-0.31, -0.18], [-0.31, 0.18], [-0.05, 0.21], [0.16, 0.16], [0.31, 0.04], [0.29, -0.05], [0.18, -0.02], [0.2, -0.12], [0.08, -0.18]];
+const FIGURE = [[0, 0], [0.13, 0], [0.13, 0.05], [0.115, 0.08], [0.12, 0.17], [0.085, 0.24], [0.07, 0.3], [0.045, 0.32], [0.055, 0.35], [0.06, 0.4], [0.04, 0.44], [0, 0.45]];
 // How far short of the corner the row of end tiles along each edge stops: the last one sits under the hip ridge's foot.
 const END_IN = 0.12;
 // The corner fans' rafters lie this much closer along the eave than the straight runs' do.
@@ -90,7 +98,7 @@ export function buildRoof(o) {
   };
   const rows = rowsAt();
   // Columns, as a share of the row's own width: finely within the corners' lift, coarsely along the straight middle.
-  const colsFor = (E, fineStep = 0.45) => { const out = [], fine = R.liftLen + 0.6; let t = -E; while (t < E - 1e-6) { out.push(t); t += Math.abs(t) > E - fine - 1e-6 || Math.abs(t + 1.5) > E - fine ? fineStep : 1.5; } out.push(E); return out.map((t) => t / E); };
+  const colsFor = (E, fineStep = 0.45, coarse = 1.5) => { const out = [], fine = R.liftLen + 0.6; let t = -E; while (t < E - 1e-6) { out.push(t); t += Math.abs(t) > E - fine - 1e-6 || Math.abs(t + coarse) > E - fine ? fineStep : coarse; } out.push(E); return out.map((t) => t / E); };
   const tiles = [], under = [];
   // side: [along-eave length at the edge, a point on the slope by (s in -1..1, v in from the edge), its texture's along]
   const sides = [
@@ -112,8 +120,11 @@ export function buildRoof(o) {
     }
     // the boards under them, the row at the flying rafters' end taken twice, once on each side of the step (more coarsely across: seen only from under the eave)
     {
-      const cols = colsFor(sd.E, 0.9), pos = [], idx = [], nc = cols.length, ur = [];
-      for (const v of rows) { if (v === R.flyer.reach) ur.push([v, 0], [v, R.flyer.h]); else ur.push([v, v > R.flyer.reach ? R.flyer.h : 0]); }
+      // (half as many rows as the tiles where the slope runs straight, and long panels along the straight middle: seen only from
+      // under the eave, in shade, where it bends at the folds and the corners, and there it keeps every row)
+      const cols = colsFor(sd.E, 0.9, 4.5), pos = [], idx = [], nc = cols.length, ur = [];
+      const urows = rows.filter((v, i) => v <= R.liftIn + 0.6 || breaks.some((b) => Math.abs(b - v) < 1e-3) || v === R.flyer.reach || v === half || i % 2 === 0);
+      for (const v of urows) { if (v === R.flyer.reach) ur.push([v, 0], [v, R.flyer.h]); else ur.push([v, v > R.flyer.reach ? R.flyer.h : 0]); }
       for (const [v, drop] of ur) for (const s of cols) { const [x, z] = sd.at(s, v); pos.push(x, heightAt(x, z) - R.deck - drop, z); }
       for (let j = 0; j < ur.length - 1; j++) { if (ur[j][0] === ur[j + 1][0]) continue;   // (the step itself is the small eave board, `step` below)
         for (let i = 0; i < nc - 1; i++) { const a = j * nc + i, b = a + nc; idx.push(a, a + 1, b, b, a + 1, b + 1); } }
@@ -138,6 +149,13 @@ export function buildRoof(o) {
     ring2.forEach(([x, z], i) => { const y = heightAt(x, z) - R.deck; p.push(x, y + 0.01, z, x, y - R.flyer.h - 0.01, z); if (i) { const a = (i - 1) * 2; ix.push(a, a + 1, a + 2, a + 2, a + 1, a + 3); } });
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3)); g.setIndex(ix); g.computeVertexNormals(); return g;
   })();
+
+  // ---- The fired-clay beasts: on each hip a large beast's head where the hip proper ends, two small seated figures further down
+  // toward the corner, set well apart, and a small beast on the corner beam's head. Not the row of small running beasts a Qing
+  // roof has, and nothing from photograph 19, which is a later small building (the art director, #573 points 9 and 10). ----
+  const beasts = [];
+  /** A side outline (forward, up), scaled by k, thickened to `t` across with a rounded bevel `bev`, centred across. @param {number[][]} pts */
+  const profiled = (pts, k, t, bev) => { const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x * k, y * k))), { depth: Math.max(0.01, t - 2 * bev), bevelEnabled: true, bevelThickness: bev, bevelSize: bev * 0.7, bevelSegments: 2, curveSegments: 3 }); return g.translate(0, 0, -Math.max(0.01, t - 2 * bev) / 2); };
 
   // ---- Rafters: round ones from the bracket sets out under the boards, square flying rafters over their ends. ----
   // Along each side they run straight out; past the corner column they fan, each aimed back at the corner column and
@@ -192,15 +210,18 @@ export function buildRoof(o) {
     const a = [cx, 0, cz], b = [ex + sx * 0.12, 0, ez + sz * 0.12];
     a[1] = heightAt(cx, cz) - R.deck - R.flyer.h - 0.35; b[1] = heightAt(ex, ez) - R.deck + 0.1;
     stick(beams, a, b, (L) => new THREE.BoxGeometry(0.3, 0.42, L));
-    const tip = [b[0] + sx * 0.16, b[1] + 0.22, b[2] + sz * 0.16];   // (short: from the court a longer one read as a spike past the eave)
-    stick(beams, [b[0] - sx * 0.2, b[1] + 0.05, b[2] - sz * 0.2], tip, (L) => new THREE.BoxGeometry(0.24, 0.3, L));
+    // its head sheathed in a small fired-clay beast (the taoshou), snout out along the diagonal, as the art director read off photograph 21
+    // (#573, point 9: the corner's tip is a small beast); short, since from the court a longer head read as a spike past the eave
+    const tip = [b[0] + sx * 0.15, b[1] + 0.17, b[2] + sz * 0.15];
+    stick(beasts, [b[0] - sx * 0.12, b[1] + 0.05, b[2] - sz * 0.12], tip, (L) => profiled(TAOSHOU, L / 0.62, 0.3, 0.035).rotateY(-Math.PI / 2));
   }
 
   // ---- Round end tiles along the edge at every cover row, drip tiles between them. ----
   // An end tile is the head of the last cover tile: a short round tube lying up the slope with its face closed, so that from the
   // court it reads as a tile ending, not as a disc stuck on the board (its back runs in under the tiles, never seen).
   const ends = [], drips = [], ER = 0.115, EL = 0.16;
-  const tube = new THREE.CylinderGeometry(ER, ER, EL, 8, 1, true).rotateX(Math.PI / 2).translate(0, 0, -EL / 2), face = new THREE.CircleGeometry(ER, 8);
+  // (its lowest quarter, sunk in the tiles under it, is left out: six sides round the top three quarters of an eight-sided tube)
+  const tube = new THREE.CylinderGeometry(ER, ER, EL, 6, 1, true, Math.PI / 4, Math.PI * 1.5).rotateX(Math.PI / 2).translate(0, 0, -EL / 2), face = new THREE.CircleGeometry(ER, 8);
   const drip = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.13, 0.02, 0), new THREE.Vector3(0.13, 0.02, 0), new THREE.Vector3(0, -0.13, 0)]);
   // Along each edge to just short of the corner, where the hip ridge's foot comes down over the last of them.
   const edgeRow = (len, place) => { for (let k = Math.ceil(-len / R.tile - 0.5); (k + 0.5) * R.tile < len - END_IN; k++) { const u = (k + 0.5) * R.tile; if (Math.abs(u) > len - END_IN) continue; place(u, true); if (Math.abs(u + R.tile / 2) < len - END_IN - 0.05) place(u + R.tile / 2, false); } };
@@ -250,22 +271,36 @@ export function buildRoof(o) {
   // (no hip stops short of the corner as a flat cut: the art review of #742).
   const HP = R.hip, hipSec = (/** @type {number} */ w, /** @type {number} */ h, bury = HP.bury) => /** @type {[number, number][]} */ ([[-w / 2, -bury], [w / 2, -bury], [w / 2, h - 0.1], [w / 2 + 0.04, h - 0.1], [w / 2 + 0.04, h], [-w / 2 - 0.04, h], [-w / 2 - 0.04, h - 0.1], [-w / 2, h - 0.1]]);
   const HEAD = 0.75;   // how long the head is along the hip, in plan, back from the corner
+  // Where on the hip (in plan, in from the corner) the large beast stands and the two figures sit. Below the beast the hip runs on
+  // lower and narrower (the stretch before the beast, as a hip of this kind has it) to the head at the corner.
+  const BEAST = 2.6, FIGS = [0.42, 1.5], LOW = { w: 0.36, h: 0.38 };
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     // d: how far in from the corner, on the hip's line in plan (45°, so both ways by the same)
     const at = (/** @type {number} */ d, lift = 0) => new THREE.Vector3(sx * (EX - d), heightAt(sx * (EX - Math.max(d, 0)), zm + sz * (half - Math.max(d, 0))) + lift, zm + sz * (half - d));
-    // one sweep from the main ridge down to the corner; over the last HEAD metres the section swells by a course each way and its
+    // one sweep from the main ridge down to the corner: the hip's full section to just past the beast, the lower one from just
+    // before it (the step between lies under the beast); over the last HEAD metres the section swells by a course each way and its
     // top rises into the nose (the head grows out of the hip, no shoulder where one meets the other)
-    const path = [];
-    for (let i = 0; i < 36; i++) path.push(at(half + (HEAD - half) * (i / 36)));
+    const path = [], secs = /** @type {[number, number][][]} */ ([]);
+    for (let i = 0; i <= 30; i++) { path.push(at(half + (BEAST + 0.2 - half) * (i / 30))); secs.push(hipSec(HP.w, HP.h)); }
+    for (let i = 0; i < 4; i++) { path.push(at(BEAST - 0.2 + (HEAD - BEAST + 0.2) * (i / 4))); secs.push(hipSec(LOW.w, LOW.h)); }
     const nose = (/** @type {number} */ k) => 0.1 * smooth(0.35, 1, k / 10) ** 2;   // (the nose's rise; the foot stays where it was)
     // the head ends a little in from the corner's point, so that its square end hangs no more than a hand past the two eaves; its
-    // foot comes up toward the end, as far as the tiles falling away either side of the hip allow (buried deep it showed past the eave as a slab a metre tall), and its last
-    // course is bevelled back, the nose narrower and lower than the head
+    // foot comes up toward the end, as far as the tiles falling away either side of the hip allow (buried deep it showed past the
+    // eave as a slab a metre tall), and its last course is bevelled back, the nose narrower and lower than the head
     const END = 0.08;
-    for (let k = 0; k <= 10; k++) path.push(at(HEAD - (HEAD - END) * (k / 10), nose(k)));
-    const headSec = (/** @type {number} */ k) => { const g = smooth(0, 0.45, k / 10), bev = k === 10 ? 1 : k === 9 ? 0.25 : 0;
-      return hipSec((HP.w + 0.08 * g) * (1 - 0.2 * bev), HP.h + 0.1 * g - 0.08 * bev, HP.bury + (0.25 - HP.bury) * smooth(0.3, 1, k / 10) + nose(k)); };
-    ridgeParts.push(sweep(path, hipSec(HP.w, HP.h), (i) => (i < 36 ? hipSec(HP.w, HP.h) : headSec(i - 36))));
+    for (let k = 0; k <= 10; k++) {
+      path.push(at(HEAD - (HEAD - END) * (k / 10), nose(k)));
+      const g = smooth(0, 0.45, k / 10), bev = k === 10 ? 1 : k === 9 ? 0.25 : 0;
+      secs.push(hipSec((LOW.w + 0.08 * g) * (1 - 0.2 * bev), LOW.h + 0.1 * g - 0.08 * bev, HP.bury + (0.25 - HP.bury) * smooth(0.3, 1, k / 10) + nose(k)));
+    }
+    ridgeParts.push(sweep(path, secs[0], (i) => secs[i]));
+    // the beast, facing down the hip, its snout hooked forward; and the two figures, sitting on the hip's top facing the corner
+    const down = Math.atan2(-sz, sx);   // turns an outline's forward (+x) to point down the hip toward the corner
+    const P = at(BEAST), top = P.y + (HP.h + LOW.h) / 2;
+    beasts.push(profiled(CHUISHOU, 1, 0.4, 0.05).rotateY(down).translate(P.x, top - 0.28, P.z));
+    // (the hip's top where each sits: on the head, its swollen top, or on the lower stretch)
+    const topAt = (/** @type {number} */ d) => { if (d >= HEAD) return LOW.h; const k = (10 * (HEAD - d)) / (HEAD - END); return LOW.h + 0.1 * smooth(0, 0.45, k / 10) + nose(k); };
+    for (const d of FIGS) { const F = at(d); beasts.push(new THREE.LatheGeometry(FIGURE.map(([r, y]) => new THREE.Vector2(r, y)), 8).rotateY(down).translate(F.x, F.y + topAt(d) - 0.04, F.z)); }
   }
   // The end ornaments (鸱尾), as the Liao halls carry them: one solid piece, broad where it stands on the ridge's end (about
   // eight tenths of its height across) and narrowing as it rises, its back a smooth curve set with a row of teeth like a fin,
@@ -284,11 +319,12 @@ export function buildRoof(o) {
   });
   const outline = [
     ...toothed,
-    // the curl: over the top and down into a short point turned in and down, over a small notch
-    ...curve([[0.08, 0.99], [0.21, 0.97], [0.3, 0.9], [0.31, 0.8]], 8).slice(1),
-    ...curve([[0.31, 0.8], [0.26, 0.83], [0.21, 0.79], [0.19, 0.72]], 6).slice(1),
+    // the beak: the top carried on in over the ridge and hooked down into a point, like a bird's (the art director on photograph 18,
+    // #573 point 8: its upper end like a bird's beak, larger and plainer than a short curl), with the throat under it
+    ...curve([[0.08, 0.99], [0.24, 0.98], [0.38, 0.92], [0.46, 0.82], [0.47, 0.7]], 10).slice(1),
+    ...curve([[0.47, 0.7], [0.41, 0.75], [0.33, 0.78], [0.25, 0.76], [0.2, 0.7]], 7).slice(1),
     // the inner edge, all but straight, widening down to the upper jaw
-    ...curve([[0.19, 0.72], [0.21, 0.64], [0.27, 0.57]], 5).slice(1),
+    ...curve([[0.2, 0.7], [0.21, 0.63], [0.27, 0.57]], 5).slice(1),
     // the upper jaw out over the ridge's cap and resting on it, its lip turned down; the mouth's corner deep in under it, where
     // the ridge goes in; the lower jaw out at the tiles
     ...[[0.36, 0.55], [0.4, 0.5], [0.4, 0.43], [0.34, 0.405], [0.16, 0.405], [0.12, 0.3], [0.14, 0.16], [0.3, 0.12], [0.4, 0.09], [0.4, 0]].map(([u, y]) => new THREE.Vector2(u, y)),
@@ -307,7 +343,7 @@ export function buildRoof(o) {
 
   return {
     heightAt, underAt, profile, ao,
-    parts: { tiles, underside: under, fascia: [fascia], step: [step], rafters: raf, flyers: fly, beams, ends, drips, ridge: ridgeParts },
+    parts: { tiles, underside: under, fascia: [fascia], step: [step], rafters: raf, flyers: fly, beams, ends, drips, ridge: [...ridgeParts, ...beasts.map((g) => plain(g))] },
     ridge: { rx, zm, top: ridgeTop(0) + RG.h, endTop: ridgeTop(rx) + RG.h, ornamentTop: o.ridge + OR.top },
     fold: { n, seg, rise, s0, breaks },
   };
