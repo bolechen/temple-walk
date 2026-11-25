@@ -23,6 +23,8 @@ export const PING = Object.freeze({ sets: 0.62, reach: 0.6, board: 0.42, floor: 
 // and "thick" are the text, the rail's height is worked from it, the posts' 0.15 section is ours. `back` is how far the seated body
 // is drawn off the rail, `seatWidth` the most one seat takes of a bay.
 export const BENCH = Object.freeze({ top: 0.58, depth: 0.4, thick: 0.09, gap: 0.03, seatWidth: 1.2, back: 0.05, rail: 0.52, post: 0.15, legs: 0.07, sill: 0.1 });
+// A hair, in metres: where two timbers would otherwise end on one plane, one stops this far short (#688).
+const SHY = 0.003;
 const DEFAULTS = {
   xs: [-6.7, -2.5, 2.5, 6.7],   // column lines across the front
   zs: [5.4, 1.8, -1.8, -5.4],   // column lines front to back (front first)
@@ -129,8 +131,9 @@ export function buildHall(M, opts) {
       const t = 0.19, o = 0.07, y = p.platH - t / 2 + 0.004, half = p.steps ? p.steps / 2 : 0, cap = [box(0.6, t, zF - zB + o * 2, -PX - o + 0.3, y, (zF + zB) / 2), box(0.6, t, zF - zB + o * 2, PX + o - 0.3, y, (zF + zB) / 2)];
       // Along the back, broken wherever a stair comes up, the middle one too: the slab used to run on over its head and stand
       // 7 cm out over the top step (#288), as the front course has always stopped at the flight.
-      for (const [a, b] of besideBack(-PX - o, PX + o, 0)) cap.push(box(b - a, t, 0.6, (a + b) / 2, y, zB + 0.3 - o));
-      for (const sx of [-1, 1]) cap.push(box(PX + o - half, t, 0.6, sx * (PX + o + half) / 2, y, zF - 0.3 + o));
+      // (It stops a hair outside the treads' edge, inside the cheek, whose face toward the treads its end shared, #688.)
+      for (const [a, b] of besideBack(-PX - o, PX + o, SHY)) cap.push(box(b - a, t, 0.6, (a + b) / 2, y, zB + 0.3 - o));
+      for (const sx of [-1, 1]) { const h0 = half ? half + SHY : 0; cap.push(box(PX + o - h0, t, 0.6, sx * (PX + o + h0) / 2, y, zF - 0.3 + o)); }
       add(merge(cap), M.monolith, { ao: null });
       // A tall platform is a sumeru base: a foot and a head that stand proud, a waist drawn in between them, and
       // small posts dividing the waist into panels.
@@ -271,7 +274,7 @@ export function buildHall(M, opts) {
             const cx = (x0 + x1) / 2, w = x1 - x0; boards.push(box(0.05, head - p.platH - 0.3, 0.16, cx, (head + p.platH) / 2, z));
             for (let r = 0; r < 5; r++) for (let c = 0; c < 8; c++) { const sx = cx + (c - 3.5) * (w - 0.5) / 8 + (c < 4 ? -0.06 : 0.06); studs.push(box(0.07, 0.07, 0.05, sx, p.platH + 0.55 + r * (head - p.platH - 1.0) / 4, z + 0.075)); }
           } if (hasTransom) leaf(x0, x1, head + 0.14, topY, 1, zz, flip); else boards.push(box(x1 - x0, topY - head, 0.07, (x0 + x1) / 2, (topY + head) / 2, z)); bx.push(box(x1 - x0, 0.14, 0.18, (x0 + x1) / 2, head + 0.07, z)); }
-        else { walls.push(box(x1 - x0, topY - p.platH, 0.14, (x0 + x1) / 2, (topY + p.platH) / 2, z)); bx.push(box(x1 - x0, 0.16, 0.2, (x0 + x1) / 2, p.platH + 1.5, z)); }
+        else { walls.push(box(x1 - x0, topY - p.platH, 0.14, (x0 + x1) / 2, (topY + p.platH) / 2, z)); bx.push(box(x1 - x0 - 2 * SHY, 0.16, 0.2, (x0 + x1) / 2, p.platH + 1.5, z)); }   // (the rail stops a hair short of the wall's ends, whose plane its own ends shared, #688)
       }
     }
     if (mode === "lattice") bx.push(box(X * 2, 0.16, 0.2, 0, p.platH + 0.08, z), box(X * 2, 0.14, 0.18, 0, head + 0.07, z));
@@ -280,7 +283,7 @@ export function buildHall(M, opts) {
   if (p.sides === "wall") for (const x of [xs[0], X]) for (let i = 0; i < zs.length - 1; i++) {
     if (p.timber) { planked(0, topY - p.platH, zs[i] - zs[i + 1] - 0.5, x, (topY + p.platH) / 2, (zs[i] + zs[i + 1]) / 2, true); continue; }
     walls.push(box(0.14, topY - p.platH, zs[i] - zs[i + 1] - 0.5, x, (topY + p.platH) / 2, (zs[i] + zs[i + 1]) / 2));
-    bz.push(box(0.2, 0.16, zs[i] - zs[i + 1] - 0.5, x, p.platH + 1.5, (zs[i] + zs[i + 1]) / 2));
+    bz.push(box(0.2, 0.16, zs[i] - zs[i + 1] - 0.5 - 2 * SHY, x, p.platH + 1.5, (zs[i] + zs[i + 1]) / 2));
   }
   const underside = (d) => EAVE_Y + profile(d) - 0.17;
   // A gate's way through has a ceiling (#288): without one the eye, looking up from the passage, meets the roof boards from

@@ -22,6 +22,7 @@ import { readLevelPlace, writeLevelPlace, clearLevelPlace } from "./levelsave.js
 import { track } from "./analytics.js";
 import { titleHow } from "./titlehow.js";
 import { t, lang, glyphs, FONT } from "./i18n.js";
+import { saidNow, stemNow } from "./temple.js";
 import { moodOf } from "./mood.js";
 import { WEB } from "./channel.js";
 import { WISHES, decodeLamp, lampLink } from "./wishes.js";
@@ -171,7 +172,7 @@ export function createGame(y) {
     if (!completed) { completed = true; track("demo.complete", { count: journey.count(), seconds: Math.round(visit.seconds) }); }
     const el = $("toast"); if (completing || !el) { openBook(); return; }
     completing = true;
-    $("toastSeal").src = sealStamp(glyphs("七印圆满"), 220, { seed: 29 }).toDataURL(); $("toastName").textContent = t("云径禅寺 · 七印圆满");
+    $("toastSeal").src = sealStamp(glyphs("七印圆满"), 220, { seed: 29 }).toDataURL(); $("toastName").textContent = saidNow("云径禅寺 · 七印圆满");
     $("toastLine").textContent = t("钟、香、茶、句、井、灯、坐，帐上七处都盖了印。");
     el.hidden = false; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on");
     setTimeout(() => { el.classList.remove("on"); setTimeout(() => { el.hidden = true; completing = false; openBook(); }, 900); }, 6400 * Math.max(fast, 0.3));
@@ -503,7 +504,7 @@ export function createGame(y) {
     const blob = /** @type {Blob} */ (await new Promise((r) => card.toBlob(r, "image/jpeg", 0.92))); if (!ui.isOpen("bless")) return;
     if (blessed) URL.revokeObjectURL(blessed.pic);
     const pic = URL.createObjectURL(blob), file = new File([blob], "yunjing-lamp.jpg", { type: "image/jpeg" }); blessed = { url, pic, file };
-    $("blessImg").src = pic; $("blessImg").alt = t(WISHES[i]); showLink(url); $("blessSave").href = pic; $("blessSave").download = t("云径禅寺-点灯.jpg");
+    $("blessImg").src = pic; $("blessImg").alt = t(WISHES[i]); showLink(url); $("blessSave").href = pic; $("blessSave").download = saidNow("云径禅寺-点灯.jpg");
     for (const id of ["blessCard", "blessLink", "blessActs", "blessSave"]) $(id).hidden = false;
     $("blessShare").hidden = !navigator.share; $("blessCopy").textContent = t("复制链接");
     $("blessCard").scrollIntoView?.({ block: "nearest", behavior: "smooth" });   // the card and its buttons are below the list: bring them into the paper
@@ -511,7 +512,7 @@ export function createGame(y) {
   });
   $("blessCopy")?.addEventListener("click", async () => { if (!blessed) return; try { await navigator.clipboard.writeText(blessed.url); $("blessCopy").textContent = t("已复制"); } catch { showLink(blessed.url, true); const r = document.createRange(); r.selectNodeContents($("blessLink")); const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r); } });
   $("blessShare")?.addEventListener("click", async () => {
-    if (!blessed) return; const data = /** @type {ShareData} */ ({ title: t("云径禅寺 · 点灯"), text: t("有人在此为你点了一盏灯。"), url: blessed.url });
+    if (!blessed) return; const data = /** @type {ShareData} */ ({ title: saidNow("云径禅寺 · 点灯"), text: t("有人在此为你点了一盏灯。"), url: blessed.url });
     if (navigator.canShare && navigator.canShare({ files: [blessed.file] })) data.files = [blessed.file];
     try { await navigator.share(data); } catch {}
   });
@@ -565,9 +566,9 @@ export function createGame(y) {
     page = await drawGoshuin({ seals: journey.list(), verse: journey.verse, when: journey.finished || Date.now(), label: m.label.split(" · ").map(glyphs).join(" · ") });
     const blob = await new Promise((r) => page.toBlob(r, "image/jpeg", 0.92)), url = URL.createObjectURL(blob);
     { const im = new Image(); im.src = url; await im.decode().catch(() => {}); }
-    $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = t("云径禅寺-朱印.jpg");
+    $("bookImg").src = url; $("bookSave").href = url; $("bookSave").download = saidNow("云径禅寺-朱印.jpg");
     // Shared from wherever the page is open (src/share.js, #344): the system's sheet, or a sheet to press and hold the page on.
-    $("bookShare").onclick = () => shareOrSave({ blob, url, name: "yunjing-seals.jpg", title: t("云径禅寺 · 朱印"), from: "goshuin", content: "book" });
+    $("bookShare").onclick = () => shareOrSave({ blob, url, name: `${stemNow()}-seals.jpg`, title: saidNow("云径禅寺 · 朱印"), from: "goshuin", content: "book" });
     $("bookSave").onclick = () => countDownload("book", "goshuin");
     // A seal that has been earned is also the way back to where it was earned: a button lies over each on the page.
     const leaf = $("bookPage"), boxes = sealBoxes(SEALS.length);
