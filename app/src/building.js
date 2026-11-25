@@ -191,13 +191,24 @@ export function buildHall(M, opts) {
   // ---- Beams ----
   const bh = 0.36 * K, by = COL_TOP - bh / 2, topY = COL_TOP - bh;
   const bx = [], bz = [], ex = [], ez = [];   // the beams on the column heads and the plate over them stand under the eave with the sets, and are lit as they are
+  // Where a beam along x meets one along z over a corner column, the two are laid side by side and not one through the other: a
+  // crossing gives two faces on one plane (their tops, their undersides) that cannot be told apart at a distance (#655). The side
+  // beam stops at the face of the front one, and the corner it no longer covers is filled by a small block of its own, so that the
+  // timber is the same as it was and nothing is drawn twice. The plate over the heads does the same, its tail past the front plate
+  // being a block of its own.
   for (const z of [Z, ZB]) {
     for (let i = 0; i < nx; i++) ex.push(box(xs[i + 1] - xs[i], bh, 0.2, (xs[i] + xs[i + 1]) / 2, by, z));
     ex.push(box(X * 2 + 0.7, 0.12, 0.5, 0, COL_TOP + 0.06, z));
   }
   for (const x of [xs[0], X]) {
-    for (let i = 0; i < zs.length - 1; i++) ez.push(box(0.2, bh, zs[i] - zs[i + 1], x, by, (zs[i] + zs[i + 1]) / 2));
-    ez.push(box(0.5, 0.12, Z - ZB + 0.7, x, COL_TOP + 0.06, (Z + ZB) / 2));
+    for (let i = 0; i < zs.length - 1; i++) {
+      const last = i === zs.length - 2, a = zs[i] - (i === 0 ? 0.1 : 0), b = zs[i + 1] + (last ? 0.1 : 0);   // (the end at a corner column stops at the front beam's face)
+      ez.push(box(0.2, bh, a - b, x, by, (a + b) / 2));
+    }
+    const sx = x < 0 ? -1 : 1;
+    for (const [z, sz] of [[Z, 1], [ZB, -1]]) ez.push(box(0.1, bh, 0.1, x + sx * 0.05 + (sx > 0 ? 0 : 0), by, z - sz * 0.05));   // the corner the shortened beam left (the half of its width on the outer side of the column's centre line)
+    ez.push(box(0.5, 0.12, Z - ZB - 0.5, x, COL_TOP + 0.06, (Z + ZB) / 2));
+    for (const [z, sz] of [[Z, 1], [ZB, -1]]) ez.push(box(0.5, 0.12, 0.1, x, COL_TOP + 0.06, z + sz * 0.3));
   }
   add(merge(ex), M.woodX, { ao: bracketAO }); add(merge(ez), M.woodZ, { ao: bracketAO });
 
@@ -383,8 +394,9 @@ export function buildHall(M, opts) {
       add(merge(spots.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX, { ao: bracketAO });
       add(merge([box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, Z), box(X * 2 + 0.4, 0.12, 0.34, 0, y0 - 0.06, ZB),
         box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
-      add(merge([box(0.34, 0.12, Z - ZB + 0.4, xs[0], y0 - 0.06, (Z + ZB) / 2), box(0.34, 0.12, Z - ZB + 0.4, X, y0 - 0.06, (Z + ZB) / 2),
-        box(0.06, bd, zF - zB + 0.12, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB + 0.12, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
+      // (As over the ring below: the plate along z stops at the face of the one along x, #655.)
+      add(merge([...[xs[0], X].flatMap((x) => [box(0.34, 0.12, Z - ZB - 0.34, x, y0 - 0.06, (Z + ZB) / 2)]),
+        box(0.06, bd, zF - zB, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
       // Behind the sets the wall is limed, as it is between the sets under the eaves, so that they read against it.
       add(merge([box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, Z - 0.04), box(X * 2, PH + 0.3, 0.1, 0, y0 + PH / 2 - 0.15, ZB + 0.04), box(0.1, PH + 0.3, Z - ZB, xs[0] + 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2), box(0.1, PH + 0.3, Z - ZB, X - 0.04, y0 + PH / 2 - 0.15, (Z + ZB) / 2)]), M.plaster());
       ping = { sets: spots.length, reach: PING.reach * K, board: bd, edge: PX, rail: PX - 0.16, bottom: y0 - 0.12 };
@@ -403,8 +415,10 @@ export function buildHall(M, opts) {
       add(merge(at.map((s) => low.clone().rotateY(s.a).translate(s.x, y0, s.z))), M.woodX, { ao: bracketAO });
       add(merge([box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, RX), box(RX * 2 + 0.4, plate, 0.34, 0, y0 - plate / 2, -RX),
         box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zF + 0.03), box(PX * 2 + 0.12, bd, 0.06, 0, p.platH - bd / 2, zB - 0.03)]), M.woodX);
-      add(merge([box(0.34, plate, RX * 2 + 0.4, -RX, y0 - plate / 2, 0), box(0.34, plate, RX * 2 + 0.4, RX, y0 - plate / 2, 0),
-        box(0.06, bd, zF - zB + 0.12, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB + 0.12, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
+      // (The plate along z stops at the face of the plate along x instead of crossing it, which gave faces on one plane, #655; the 3 cm
+      // it ran on past it are left off.)
+      add(merge([...[-RX, RX].flatMap((x) => [box(0.34, plate, RX * 2 - 0.34, x, y0 - plate / 2, 0)]),
+        box(0.06, bd, zF - zB, -PX - 0.03, p.platH - bd / 2, (zF + zB) / 2), box(0.06, bd, zF - zB, PX + 0.03, p.platH - bd / 2, (zF + zB) / 2)]), M.woodZ);
       // Behind the sets, between the column heads, the wall of the storey below is limed, so that the sets read against it.
       const wy = y0 + PH / 2 - 0.15, wh = PH + 0.3;
       add(merge([box(RX * 2, wh, 0.1, 0, wy, RX - 0.04), box(RX * 2, wh, 0.1, 0, wy, -RX + 0.04), box(0.1, wh, RX * 2, -RX + 0.04, wy, 0), box(0.1, wh, RX * 2, RX - 0.04, wy, 0)]), M.plaster());
@@ -412,7 +426,9 @@ export function buildHall(M, opts) {
     }
     const o = PUR, py = PLATE_TOP + 1.0 * K;   // the eave purlin the outer arms carry: the outermost timber of the sets, lit as they are
     add(merge([box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, Z + o), box(X * 2 + o * 2 + 0.6, 0.2, 0.17, 0, py, ZB - o)]), M.woodX, { ao: bracketAO });
-    add(merge([box(0.17, 0.2, Z - ZB + o * 2 + 0.6, xs[0] - o, py, (Z + ZB) / 2), box(0.17, 0.2, Z - ZB + o * 2 + 0.6, X + o, py, (Z + ZB) / 2)]), M.woodZ, { ao: bracketAO });
+    // (The purlin along z stops at the face of the one along x, its tails past it being blocks of their own, so that they do not cross, #655.)
+    const zl = Z - ZB + o * 2 - 0.17, zt = 0.3 - 0.085;
+    add(merge([xs[0] - o, X + o].flatMap((x) => [box(0.17, 0.2, zl, x, py, (Z + ZB) / 2), box(0.17, 0.2, zt, x, py, Z + o + 0.085 + zt / 2), box(0.17, 0.2, zt, x, py, ZB - o - 0.085 - zt / 2)])), M.woodZ, { ao: bracketAO });
   }
 
   // ---- Roof ----
