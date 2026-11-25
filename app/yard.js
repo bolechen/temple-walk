@@ -47,7 +47,7 @@ import { composeCard } from "./src/card.js";
 import { createClip, markCanvas, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
-import { cardNames, templeOf } from "./src/levelname.js";
+import { cardNames, templeOf, nameIn } from "./src/levelname.js";
 import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
 import { logSwing, riteNow, pauseRites } from "./src/rites.js";
@@ -1198,7 +1198,7 @@ on("clipStop", stopClip);
 on("clipBack", () => ui.close("clip"));
 on("clipShare", async () => {
   if (!clipLast) return;
-  try { await navigator.share({ files: [clipLast.file], title: tr(templeOf(L).temple), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
+  try { await navigator.share({ files: [clipLast.file], title: nameIn(L, templeOf(L).temple), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
 });
 settings.onChange((s) => $("clipMarkToggle")?.setAttribute("aria-pressed", String(s.clipMark)));
 $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark));

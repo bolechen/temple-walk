@@ -68,7 +68,7 @@ export async function dataKeys() {
   for (const m of read("src/level.js").matchAll(/region: "([^"]+)"/g)) keys.add(m[1]);
   // Each level's own line at the foot of the title page (Level.how, #445).
   const { LEVELS: levels } = await import("../../app/src/level.js");
-  for (const load of Object.values(levels)) { const lv = await load(), how = lv.how; if (how) { keys.add(how.place); keys.add(how.line); } if (lv.name) for (const [f, k] of Object.entries(lv.name)) if (f !== "seal") keys.add(k); }   // and the temple's name in words (Level.name, src/levelname.js; its seal is calligraphy, drawn by glyphs())
+  for (const load of Object.values(levels)) { const lv = await load(), how = lv.how; if (how) { keys.add(how.place); keys.add(how.line); } }   // (a level's name in words, Level.name, carries its own languages: src/levelname.js, level-name.test.mjs)
   keys.add("山路上"); keys.add("凌霄阁上");   // where he was left, on the ground or up on the summit pavilion's balcony
   // Words each table needs for the action button and the calligraphy (game.js translates these as they are shown).
   for (const k of ["撞钟", "起身", "观看", "坐下", "登楼", "下楼", "圆", "奉拜", "云径", "云径禅寺", "年代", "质地", "尺寸", "收藏", "等级"]) keys.add(k);

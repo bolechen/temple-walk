@@ -3,6 +3,9 @@
 // county is flat (docs/t05/SITE.md §4.1): no far hills, no bamboo, no censer. It keeps no place, plays no opening and
 // raises no title of its own yet, and the prologue's music is not played here (score.js zoneOf with no zones).
 import { buildSite, createWalker, COMPOUND, WAY } from "./site.js";
+import ja from "./locales/ja.js";
+import en from "./locales/en.js";
+import ko from "./locales/ko.js";
 
 // J01, the first look of T05: an early-winter morning, clear and cold, no snow (docs/t05/ART.md §4.2, PRD.md §4). The sun is
 // where #280's white box worked it out for 9:45 on a day in early December at 41.5° N: 17° up, 152° from north (a calculation, not a record), which in
@@ -26,10 +29,14 @@ export default {
   id: "t05",
   build: buildSite,
   createWalker,
+  // The name the page wears here (docs/t05/DECISIONS.md, 2026-11-20: 奉明寺; its other languages are in ./locales). A rename after the name search is these four values and those entries.
+  name: {
+    temple: "奉明寺", seal: "奉明", sub: "奉明寺", page: "山门之外 · 奉明寺",
+    // Its other languages are kept with the level (./locales), not in app/locales/, which every build carries whole while the public page carries nothing of T05 (#449).
+    tr: { ja, en, ko },
+  },
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
-  // The name the page wears here (docs/t05/DECISIONS.md, 2026-11-20: 奉明寺; its other languages are in app/locales/, one entry each). A rename after the name search is these four values and those entries.
-  name: { temple: "奉明寺", seal: "奉明", sub: "奉明寺", page: "山门之外 · 奉明寺" },
   writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level
   backdrop: null,

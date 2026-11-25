@@ -273,8 +273,6 @@ export default {
 
   // ---- On the way (game.js, hints.js) ----
   "云径禅寺": "Yunjing Temple",
-  "奉明寺": "Fengming Temple",
-  "山门之外 · 奉明寺": "One City, One Temple · Fengming Temple",
   "奉拜": "奉拜",
   "扫码入山": "Scan to walk in",
   "一灯为你，愿你平安。": "A lamp for you. May you be safe.",

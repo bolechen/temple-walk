@@ -1,7 +1,6 @@
 // How a level names its temple in words (src/levelname.js): the prologue as it was, T05 in all four languages.
-import test from "node:test"; import assert from "node:assert/strict";
-import { templeOf, cardNames, applyLevelName, PROLOGUE_NAME } from "../../app/src/levelname.js";
-import { t } from "../../app/src/i18n.js";
+import fs from "node:fs"; import test from "node:test"; import assert from "node:assert/strict";
+import { templeOf, cardNames, applyLevelName, nameIn, PROLOGUE_NAME } from "../../app/src/levelname.js";
 import t00 from "../../app/levels/t00/level.js";
 import t05 from "../../app/levels/t05/level.js";
 
@@ -13,10 +12,14 @@ test("a level that names nothing is the prologue, and its page is not touched", 
 });
 test("T05 is called 奉明寺 and never wears the prologue's name, in every language", () => {
   const n = t05.name; assert.equal(n.temple, "奉明寺");
-  assert.deepEqual(cardNames(t05, (k) => k, (k) => k), { temple: "奉明寺", seal: "奉明" });
+  assert.deepEqual(cardNames(t05, "zh"), { temple: "奉明寺", seal: "奉明" });
   for (const [lang, temple] of [["zh", "奉明寺"], ["ja", "奉明寺"], ["en", "Fengming Temple"], ["ko", "봉명사"]]) {
-    for (const k of [n.temple, n.sub, n.page]) { const s = t(k, undefined, lang); assert.ok(!/云径|雲径|Yunjing|운경/.test(s), `${lang}: ${s}`); assert.ok(s.includes(temple), `${lang}: ${s} should hold ${temple}`); }
+    for (const k of [n.temple, n.sub, n.page]) { const s = nameIn(t05, k, lang); assert.ok(!/云径|雲径|Yunjing|운경/.test(s), `${lang}: ${s}`); assert.ok(s.includes(temple), `${lang}: ${s} should hold ${temple}`); }
   }
+});
+test("every line of T05's name has its Japanese, English and Korean, and the shared tables hold none of it (production carries nothing of T05)", () => {
+  for (const k of [t05.name.temple, t05.name.sub, t05.name.page]) for (const l of ["ja", "en", "ko"]) assert.ok(t05.name.tr[l][k], `${l}: ${k}`);
+  for (const l of ["ja", "en", "ko"]) assert.ok(!fs.readFileSync(new URL(`../../app/locales/${l}.js`, import.meta.url), "utf8").includes("奉明寺"), `${l} table`);
 });
 test("applied, it sets the title page's second line, the tab and the small seals", () => {
   const sub = { textContent: "序章 · 云径禅寺" }, seals = [{ textContent: "云径" }, { textContent: "云径" }], doc = { title: "", querySelector: () => sub, querySelectorAll: () => seals };
