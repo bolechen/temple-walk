@@ -1,0 +1,44 @@
+{
+ "aisle-nearest": {
+  "rays": 1681,
+  "hit": 1172,
+  "back_geom": 58,
+  "back_vertex": 58,
+  "disagree": 0
+ },
+ "aisle42": {
+  "rays": 1681,
+  "hit": 1185,
+  "back_geom": 20,
+  "back_vertex": 20,
+  "disagree": 0
+ },
+ "sakya": {
+  "rays": 1681,
+  "hit": 1652,
+  "back_geom": 2,
+  "back_vertex": 2,
+  "disagree": 0
+ },
+ "hand10": {
+  "rays": 1681,
+  "hit": 1675,
+  "back_geom": 19,
+  "back_vertex": 19,
+  "disagree": 0
+ },
+ "hand34": {
+  "rays": 1681,
+  "hit": 1420,
+  "back_geom": 1,
+  "back_vertex": 2,
+  "disagree": 1
+ },
+ "hand-level": {
+  "rays": 1681,
+  "hit": 1681,
+  "back_geom": 1,
+  "back_vertex": 1,
+  "disagree": 0
+ }
+}
