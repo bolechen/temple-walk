@@ -28,15 +28,9 @@ export function drawPage(g, W, H, p) {
   const edge = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
   edge.addColorStop(0, "rgba(0,0,0,0)"); edge.addColorStop(1, "rgba(90,70,40,0.18)"); g.fillStyle = edge; g.fillRect(0, 0, W, H);
   const ink = "rgba(24,20,17,0.9)";
-  // The stroke of ink across the top: pressed down at its start, drawn out thinner and drier to its end.
+  // The stroke of ink across the top (drawStroke).
   const sk = Math.max(0, Math.min(1, p.stroke ?? 0));
-  if (sk > 0) {
-    const x0 = W * 0.14, x1 = W * 0.86, y = H * 0.13, th = H * 0.03, n = 140;
-    for (let i = 0; i < n * sk; i++) {
-      const u = i / n, x = x0 + (x1 - x0) * u, w = th * (1.25 - 0.6 * u) * (0.85 + 0.3 * Math.sin(u * 17)), dry = u > 0.55 ? (u - 0.55) * 1.6 : 0;
-      for (let j = 0; j < 6; j++) { if (rnd() < dry) continue; g.fillStyle = `rgba(24,20,17,${(0.55 + 0.4 * rnd()).toFixed(2)})`; g.fillRect(x, y - w / 2 + (j / 6) * w + Math.sin(u * 5) * th * 0.3, W / n + 1, w / 6 + 0.6); }
-    }
-  }
+  if (sk > 0) drawStroke(g, W * 0.14, W * 0.86, H * 0.13, H * 0.03, sk, rnd);
   // The copied line, down the right of the page as the stone has it, from top to bottom; where it is from, small, beside it.
   const copy = [...(p.copy || "")].filter((c) => c !== "，" && c !== "、"), ck = Math.max(0, Math.min(1, p.copyK ?? 1));
   if (copy.length) {
@@ -62,3 +56,29 @@ export function drawPage(g, W, H, p) {
     if (line) g.fillText(line, left, y);
   }
 }
+
+/**
+ * One stroke of ink from x0 to x1 along y, `th` thick at its start: pressed down where the brush lands, drawn out thinner, and
+ * breaking into dry streaks over its last part as the ink runs out. `k` how much of it is drawn (0..1); `rnd` the
+ * page's own seeded numbers, so that the same page draws the same stroke. The leaf in his hands and the slip shown after
+ * both draw it with this.
+ * @param {CanvasRenderingContext2D} g @param {number} x0 @param {number} x1 @param {number} y @param {number} th @param {number} k
+ * @param {() => number} rnd
+ */
+export function drawStroke(g, x0, x1, y, th, k, rnd) {
+  // The brush is a bundle of hairs (`B` bands across the stroke); where the ink runs short a hair leaves the paper bare for a
+  // stretch, so the bare paper runs along the stroke in streaks, each hair's own (a slow wave at its own pace and phase).
+  const n = 140, B = 10, hair = Array.from({ length: B }, (_, j) => ({ phase: rnd() * 6.283, pace: 6 + j * 2.3 + rnd() * 3 }));
+  for (let i = 0; i < n * k; i++) {
+    const u = i / n, x = x0 + (x1 - x0) * u, w = th * (1.25 - 0.6 * u) * (0.85 + 0.3 * Math.sin(u * 17)), dry = u > 0.55 ? (u - 0.55) * 1.6 : 0;
+    for (let j = 0; j < B; j++) {
+      const h = hair[j], bare = (0.5 + 0.5 * Math.sin(u * h.pace + h.phase)) * 0.85 + rnd() * 0.15;
+      if (bare < dry) continue;
+      g.fillStyle = `rgba(24,20,17,${(0.6 + 0.35 * rnd()).toFixed(2)})`;
+      g.fillRect(x, y - w / 2 + (j / B) * w + Math.sin(u * 5) * th * 0.3, (x1 - x0) / (0.72 * n) + 1, w / B + 0.5);
+    }
+  }
+}
+
+/** A seeded run of numbers for a page's drawing (the same Park–Miller run the leaf uses). @param {number} seed */
+export const seeded = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
