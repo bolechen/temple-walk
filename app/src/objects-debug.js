@@ -25,6 +25,7 @@ export const OBJECTS_DEBUG_MARK = "objects-debug@684";
  * @property {(string | number | { value: string | number, label?: string })[]} [options] choice: what it may be
  * @property {any} default what it is when a snippet leaves it out
  * @property {(v: any) => string} [fmt] how the value is written into a snippet, when the level's file writes it other than as a literal
+ * @property {(n: number) => number} [parse] number: the way back from `fmt`: what a snippet's value comes to once worked out (a number, or an expression of numbers, `*`, `/`, parentheses and Math.PI) is turned into the parameter's own unit; `fmt` and `parse` must undo each other (the test holds it)
  */
 
 const digitsOf = (step) => { const s = String(step ?? 0.01); const i = s.indexOf("."); return i < 0 ? 0 : s.length - i - 1; };
@@ -60,7 +61,7 @@ export function toSnippet(schema, params) {
 }
 
 // A snippet is read by a small scanner, not evaluated: nothing pasted into the panel runs.
-const TOKEN = /\s*(?:(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|([{}:,])|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)|([A-Za-z_$][\w$]*))/y;
+const TOKEN = /\s*(?:(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?)|([{}:,()*/.])|([A-Za-z_$][\w$]*))/y;
 function tokens(text) {
   const out = []; TOKEN.lastIndex = 0; let end = 0;
   for (;;) {
@@ -68,10 +69,26 @@ function tokens(text) {
     if (!m) break;
     end = TOKEN.lastIndex;
     if (m[1]) continue;
-    out.push(m[2] ? { t: m[2] } : m[3] ? { t: "str", v: m[3][0] === "'" ? JSON.parse('"' + m[3].slice(1, -1).replace(/\\'/g, "'").replace(/"/g, '\\"') + '"') : JSON.parse(m[3]) } : m[4] ? { t: "num", v: Number(m[4]) } : { t: "id", v: m[5] });
+    out.push(m[4] ? { t: m[4] } : m[2] ? { t: "str", v: m[2][0] === "'" ? JSON.parse('"' + m[2].slice(1, -1).replace(/\\'/g, "'").replace(/"/g, '\\"') + '"') : JSON.parse(m[2]) } : m[3] ? { t: "num", v: Number(m[3]) } : { t: "id", v: m[5] });
   }
   if (text.slice(end).trim()) throw new Error(`cannot read the snippet from "${text.slice(end).trim().slice(0, 20)}"`);
   return out;
+}
+
+/** A number or an arithmetic expression over numbers, `*`, `/`, parentheses and Math.PI (what `fmt` may write): worked out by hand, never run. */
+function number(key, tk) {
+  let i = 0;
+  const bad = () => { throw new Error(`${key}: "${tk.map((t) => t.v ?? t.t).join(" ")}" is not a number, text or true/false`); };
+  const atom = () => {
+    const t = tk[i++]; if (!t) return bad();
+    if (t.t === "num") return t.v;
+    if (t.t === "(") { const v = expr(); if (tk[i++]?.t !== ")") bad(); return v; }
+    if (t.t === "id" && t.v === "Math" && tk[i]?.t === "." && tk[i + 1]?.v === "PI") { i += 2; return Math.PI; }
+    return bad();
+  };
+  const expr = () => { let v = atom(); while (tk[i] && (tk[i].t === "*" || tk[i].t === "/")) { const op = tk[i++].t, r = atom(); v = op === "*" ? v * r : v / r; } return v; };
+  const v = expr(); if (i < tk.length) bad();
+  return v;
 }
 
 /**
@@ -85,16 +102,19 @@ export function parseSnippet(schema, text) {
   while (tk[i] && tk[i].t !== "}") {
     const k = tk[i++]; if (k.t !== "id" && k.t !== "str") throw new Error(`a key was expected, got "${k.v ?? k.t}"`);
     need(":");
-    const v = tk[i++]; if (!v) throw new Error("the snippet ends after a key");
-    if (v.t === "num" || v.t === "str") raw[k.v] = v.v;
-    else if (v.t === "id" && (v.v === "true" || v.v === "false")) raw[k.v] = v.v === "true";
-    else throw new Error(`${k.v}: "${v.v ?? v.t}" is not a number, text or true/false`);
+    let depth = 0; const from = i;   // the value runs to the next comma or closing brace outside parentheses
+    while (tk[i] && (depth > 0 || (tk[i].t !== "," && tk[i].t !== "}"))) { if (tk[i].t === "(") depth++; else if (tk[i].t === ")") depth--; i++; }
+    const v = tk.slice(from, i); if (!v.length) throw new Error(`${k.v}: no value`);
+    if (v.length === 1 && v[0].t === "str") raw[k.v] = v[0].v;
+    else if (v.length === 1 && v[0].t === "id" && (v[0].v === "true" || v[0].v === "false")) raw[k.v] = v[0].v === "true";
+    else raw[k.v] = number(k.v, v);
     if (tk[i]?.t === ",") i++; else break;
   }
   need("}");
   if (i < tk.length) throw new Error("something follows the snippet's closing brace");
   const known = new Set(schema.map((p) => p.key));
   for (const k of Object.keys(raw)) if (!known.has(k)) throw new Error(`${k}: not a parameter of this kind of thing (${[...known].join(", ")})`);
+  for (const p of schema) if (p.parse && typeof raw[p.key] === "number") raw[p.key] = p.parse(raw[p.key]);
   return normalizeAll(schema, raw);
 }
 

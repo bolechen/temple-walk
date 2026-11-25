@@ -297,7 +297,8 @@ export const OBJECT_KINDS = ({ W }) => [{
     { key: "roof", label: "屋顶", type: "choice", options: ["gable", "hip", "shed"], default: "gable" },
     { key: "tone", label: "瓦色档", type: "choice", options: [{ value: 0, label: "old" }, { value: 1, label: "grey" }, { value: 2, label: "pale" }], default: 1 },
     { key: "alongX", type: "bool", default: true },
-    // fmt?: (v) => string      数据在文件里不是字面量写法时，才写它
+    // fmt?: (v) => string, parse?: (n) => number   数据在文件里不是字面量写法时才写，要成对：fmt 写出，parse 把算出的数换回面板的单位
+    //   例：{ key: "yaw", type: "number", step: 0.5, fmt: (v) => `(${v} * Math.PI) / 180`, parse: (r) => r * 180 / Math.PI }  // 面板用度，文件用弧度
   ],
   items: () => [{ id: "7", label: "南排第 7 间" }],   // 可选的有哪些
   read: (id) => ({ x: …, w: …, … }),                 // 这一件现在的参数（只读它，不改它）
@@ -310,7 +311,7 @@ export const OBJECT_KINDS = ({ W }) => [{
 `schema` 的每一项是 `{ key, label?, type: "number" | "choice" | "bool", min?, max?, step?, options?, default, fmt? }`。写法的规则（`normalize`、`toSnippet`、`parseSnippet`，在 `app/src/objects-debug.js`）：
 
 - 数字夹在 `min`–`max` 里，按 `step` 的小数位取整；选项不在 `options` 里就拒绝；缺的键取 `default`；`schema` 里没有的键拒绝（贴错了种类）。
-- 片段是一个对象字面量，键按 `schema` 的顺序：`{ x: 12.34, z: -5.6, w: 8.2, roof: "hip", tone: 2, alongX: false }`。读回时**不执行**：只认数、字符串（单双引号）、`true`/`false`、注释和结尾逗号。
+- 片段是一个对象字面量，键按 `schema` 的顺序：`{ x: 12.34, z: -5.6, w: 8.2, roof: "hip", tone: 2, alongX: false }`。读回时**不执行**：只认数、字符串（单双引号）、`true`/`false`、注释和结尾逗号，数的位置还认由数、`*`、`/`、括号和 `Math.PI` 组成的算式（手写的小解析，其余一概拒绝；有 `parse` 的参数，算式的结果经 `parse` 换回面板的单位）。
 - 因此「参数 → 片段 → 再解析」结果相等（`tests/unit/objects-debug.test.mjs` 用一个假物件随机跑 300 组）。贴回关卡文件、把默认值改成它之后，画面应与面板里调出来的一样；**改默认外观要另开 PR、走审图**，面板只是帮你找数。
 
 **怎么量单件重建的耗时：** 面板「重建」一行是每次拖动时 `rebuild` 本身的毫秒数，「见到效果」是到下一帧画出为止；「量重建用时」按钮用当前参数连续重建 15 次，写出中位数和最大值（控制台里同样：`__objects.time(15)` 返回 `{ n, median, max, min }`）。开发服务器（`pnpm dev`）上量，验收线是中位数 < 200 ms；量过的数写进该物件所属 PR 的说明里，带上提交号。

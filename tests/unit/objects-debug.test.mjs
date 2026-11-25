@@ -67,3 +67,24 @@ test("the model rebuilds only the chosen thing, once for each change, and times 
 });
 
 test("the group's code carries a mark a build can be searched for", () => assert.match(OBJECTS_DEBUG_MARK, /^objects-debug@/));
+
+// A value the level's file writes as an expression (altar.js's `(-7 * Math.PI) / 180`): `fmt` writes it from the panel's unit
+// (degrees), `parse` turns what it works out to (radians) back, and nothing is run.
+const YAW = [{ key: "x", type: "number", min: -19, max: 19, step: 0.01, default: 0 },
+  { key: "yaw", type: "number", min: -20, max: 20, step: 0.5, default: 0, fmt: (v) => `(${v} * Math.PI) / 180`, parse: (r) => +((r * 180) / Math.PI).toFixed(6) }];
+
+test("an expression the file writes round-trips through fmt and parse, for every step of the turn", () => {
+  for (let d = -20; d <= 20; d += 0.5) {
+    const text = toSnippet(YAW, { x: -16.45, yaw: d }); assert.match(text, /yaw: \(.* \* Math\.PI\) \/ 180/);
+    assert.deepEqual(parseSnippet(YAW, text), { x: -16.45, yaw: d }, text);
+  }
+  assert.equal(toSnippet(YAW, { x: -16.45, yaw: -7 }), "{ x: -16.45, yaw: (-7 * Math.PI) / 180 }", "as altar.js writes the seventh's turn");
+  assert.deepEqual(parseSnippet(YAW, "{ x: 1, yaw: (-7 * Math.PI) / 180, }"), { x: 1, yaw: -7 });
+  assert.deepEqual(parseSnippet(YAW, "{ x: 2 * 3 / 4, yaw: Math.PI / 18 }"), { x: 1.5, yaw: 10 });
+});
+
+test("expressions are worked out by hand: only numbers, * / ( ) and Math.PI, never run", () => {
+  for (const bad of ["{ x: 1 + 2 }", "{ x: (1 }", "{ x: 1 ) }", "{ x: Math.pow(2, 3) }", "{ x: Math.E }", "{ x: globalThis }", "{ x: 1 2 }", "{ x: (1) (2) }", "{ x: * }"])
+    assert.throws(() => parseSnippet(YAW, bad), Error, bad);
+  assert.throws(() => parseSnippet(SCHEMA, "{ roof: 1 * 2 }"), Error, "a choice is not an expression");
+});
