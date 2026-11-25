@@ -26,8 +26,17 @@ export function viewPitch(screenOf, at, yaw) {
 /** Whether he stands where a look counts. */
 export const within = (look, x, z) => (look.box ? x > look.box.x0 && x < look.box.x1 && z > look.box.z0 && z < look.box.z1 : Math.hypot(x - look.at[0], z - look.at[1]) < look.r);
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-/** Whether the view looks as a look asks (`yaw` within `off` of its own, raised by at least `pitch`). */
-export const looking = (look, yaw, pitch) => Math.abs(wrap(yaw - look.yaw)) <= look.off && pitch >= look.pitch;
+/**
+ * Whether the view looks as a look asks: `yaw` within `off` of its own, raised by at least `pitch`, and where the look names a
+ * point to be seen (`see`), that point in the picture, between `band[0]` and `band[1]` of its height down and within its width.
+ * `seen(p)` gives where a point falls ({ x, y, w, h, behind }).
+ */
+export const looking = (look, yaw, pitch, seen = null) => {
+  if (!(Math.abs(wrap(yaw - look.yaw)) <= look.off && pitch >= look.pitch)) return false;
+  if (!look.see) return true;
+  const s = seen?.(look.see); if (!s || s.behind) return false;
+  return s.x > 0 && s.x < s.w && s.y >= look.band[0] * s.h && s.y <= look.band[1] * s.h;
+};
 
 /**
  * Keeps the time each look has been held, and says when all of them have been: the looks may be met in any order, each held
@@ -37,11 +46,11 @@ export function createWatch(looks) {
   const held = Object.fromEntries(looks.map((l) => [l.id, 0])), met = new Set();
   return {
     /** One step of `dt` seconds standing at (x, z) with the view at `yaw`, `pitch`. Returns the look just met, if one was. */
-    step(dt, x, z, yaw, pitch) {
+    step(dt, x, z, yaw, pitch, seen = null) {
       let now = null;
       for (const l of looks) {
         if (met.has(l.id)) continue;
-        if (within(l, x, z) && looking(l, yaw, pitch)) { held[l.id] += dt; if (held[l.id] >= l.hold) { met.add(l.id); now = l; } }
+        if (within(l, x, z) && looking(l, yaw, pitch, seen)) { held[l.id] += dt; if (held[l.id] >= l.hold) { met.add(l.id); now = l; } }
         else held[l.id] = 0;
       }
       return now;
@@ -69,8 +78,10 @@ export function createLevelPage(o) {
   const view = (m = marks()) => ({ stroke: m.p1 ? 1 : 0, note: m.p1 ? say(P.p1.note) : "", copy: m.stele ? lineOf(m.stele.line)?.text || "" : "", from: m.stele ? say(P.stele.from) : "" });
   // The line to copy: the one the stone was copied for last time comes round to the next, so that a second visit copies another.
   const nextLine = () => { const m = marks(), i = P.stele.lines.findIndex((l) => l.id === m.stele?.line); return P.stele.lines[(i + 1) % P.stele.lines.length]; };
-  if (marks().p1) for (const l of P.p1.looks) watch.step(l.hold + 1, ...(l.box ? [(l.box.x0 + l.box.x1) / 2, (l.box.z0 + l.box.z1) / 2] : l.at), l.yaw, Math.max(0, l.pitch));   // already on the page: met
-  const state = { writing: null, last: null, pitch: 0 };
+  // Every look taken as met (a page that already has the stroke, or a tool that cannot hold a view for seconds).
+  const meetAll = () => { for (const l of P.p1.looks) watch.step(l.hold + 1, ...(l.box ? [(l.box.x0 + l.box.x1) / 2, (l.box.z0 + l.box.z1) / 2] : l.at), l.yaw, Math.max(0, l.pitch), () => ({ x: 1, y: (l.band ? (l.band[0] + l.band[1]) / 2 : 0.5) * 2, w: 2, h: 2, behind: false })); };
+  if (marks().p1) meetAll();
+  const state = { writing: null, last: null, pitch: 0, eave: /** @type {number | null} */ (null) };
 
   /** The page's own observance at a place (`copy`), begun as game.js begins one. @returns {Promise<boolean>} whether the page was written */
   async function copy(on) {
@@ -113,11 +124,12 @@ export function createLevelPage(o) {
       if (read().p1 || watch.done()) return null;
       const foot = y.walker.heightAt(w.x, w.z), pitch = viewPitch(y.screenOf, { x: w.x, y: foot + 1.4, z: w.z }, yaw);
       state.pitch = pitch;
-      const now = watch.step(dt, w.x, w.z, yaw, pitch);
+      const c02 = P.p1.looks.find((l) => l.see); if (c02) { const e = y.screenOf(c02.see[0], c02.see[1], c02.see[2]); state.eave = e.behind ? null : +(e.y / e.h).toFixed(3); }   // where the eave falls, down the picture (for the tests)
+      const now = watch.step(dt, w.x, w.z, yaw, pitch, (p) => y.screenOf(p[0], p[1], p[2]));
       return now && watch.done() ? now.place : null;
     },
     state: () => ({ ...state, held: watch.held(), met: watch.met(), page: marks() }),
     /** For the tests: the looks taken as met (a tool that cannot hold a view for seconds). */
-    meet() { for (const l of P.p1.looks) watch.step(l.hold + 1, ...(l.box ? [(l.box.x0 + l.box.x1) / 2, (l.box.z0 + l.box.z1) / 2] : l.at), l.yaw, Math.max(0, l.pitch)); },
+    meet: () => meetAll(),
   };
 }

@@ -655,7 +655,8 @@ const scenarios = {
   // pace, and the observation's two looks held and its stroke written. Walked by __walk up the axis and the flight and onto the monument
   // pavilion's base by its new steps; E pressed at the stele: the eye swings to the place's shot (no cut), his hands take the leaf and the brush,
   // write the line a character at a time and stop, every hand and the brush 0.3 m and more off the stone's face; the line is kept under
-  // yunjing.levels.v1 and shown on a slip; then at C01 the view is held on the whole front 3 s and at C02 raised 25° and more for 2 s,
+  // yunjing.levels.v1 and shown on a slip; then at C01 the view is held on the whole front 3 s and at C02 raised till the front eave is in
+  // the upper part of the picture for 2 s,
   // 记下 is offered, pressed, and the stroke is on the page. The prologue's keys lie in the browser all the while, byte for byte.
   "t05-page": { tier: 2, async run(b, base) {
     const PROLOGUE = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, label: "大殿前", at: 5 }), "yunjing.settings.v1": JSON.stringify({ fov: 5 }) };
@@ -692,7 +693,8 @@ const scenarios = {
     expect((await P()).near !== "p1a", "with one look met nothing is offered");
     await t.page.evaluate(() => window.__walk([[0, 27]]));
     await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 27) < 0.8; }, 300000, "he never came to C02");
-    await t.page.evaluate(() => { const s = window.__yard(); window.__pose(s.x, s.z, 0, 0.5); });
+    // From behind him the view raised as far as it goes (0.45): the front eave comes into the upper part of the picture.
+    await t.page.evaluate(() => { const s = window.__yard(); window.__pose(s.x, s.z, 0, 0.45); });
     await t.until(async () => (await P()).met.includes("c02"), 120000, "raising the view to the eaves at C02 did not count: " + JSON.stringify(await P()));
     await t.until(async () => (await P()).near === "p1b", 30000, "记下 was not offered once both looks were met");
     expect((await t.page.textContent("#act span")) === "记下", "the button should say 记下");

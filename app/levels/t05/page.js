@@ -7,6 +7,10 @@
 // Nothing is counted, nothing is said to be missing, and walking past both leaves the page empty (CHECKPOINTS.md §0, §2.2).
 import { STATION, TERRACE } from "./site.js";
 import { STELE_TEXT } from "./stele.js";
+import { HALL, ZS } from "./hall.js";
+
+/** The edge of the front eave over the middle bay: what C02 asks to be seen. */
+const EAVE = Object.freeze([0, HALL.eave, ZS[0] + HALL.overhang]);
 
 export const PAGE = Object.freeze({
   // The observation's two looks. `at`/`r`: where he stands (within r of it, or within the box); `yaw`: which way the view
@@ -16,7 +20,11 @@ export const PAGE = Object.freeze({
     looks: Object.freeze([
       Object.freeze({ id: "c01", at: STATION.A, r: 6, yaw: 0, off: (25 * Math.PI) / 180, pitch: -Infinity, hold: 3, place: "p1a" }),
       // Under the eaves: the flight's foot up to the platform's front, where the eaves are over him (the court within 8 m of the flight's foot, the flight, the terrace).
-      Object.freeze({ id: "c02", box: Object.freeze({ x0: -14, x1: 14, z0: 1, z1: STATION.B[1] + 3 }), yaw: 0, off: (40 * Math.PI) / 180, pitch: (25 * Math.PI) / 180, hold: 2, place: "p1b" }),
+      // CHECKPOINTS.md asks for the view raised 25°. From behind him the eye is aimed at him (yard.js, aimAt), so the picture itself is never
+      // tilted that far whatever the visitor does; what is asked instead, in either view, is what 25° was for: the front eave's edge over the
+      // middle bay in the upper part of the picture (`see`, `band`: from 3% to 55% of its height down, and within its width), with the
+      // view raised at all (7°). (SOURCES.md §17 says so.)
+      Object.freeze({ id: "c02", box: Object.freeze({ x0: -14, x1: 14, z0: 1, z1: STATION.B[1] + 3 }), yaw: 0, off: (40 * Math.PI) / 180, pitch: (7 * Math.PI) / 180, see: EAVE, band: Object.freeze([0.03, 0.55]), hold: 2, place: "p1b" }),
     ]),
     // The line under the stroke: CHECKPOINTS.md §2.2's, word for word (our own sentence, written by the research pack; its facts: nine bays and a single-eaved hip
     // roof, SOURCES.md S03/S04; grey-blue tiles, ART.md; the platform 3 m against his 1.18 m).
