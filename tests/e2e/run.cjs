@@ -2745,6 +2745,25 @@ const scenarios = {
   // (hidden, or only a gap in the frames: some in-app browsers send no visibilitychange); the first watch is passed over only by
   // holding for a second and a half, and letting go half way carries on; once seen, a tap does it; 山顶再坐一回 plays it again
   // and writes nothing in the book.
+  // The close's eye, for every season and both pictures (#498): from the first frame to the far view, the sphere the near plane's
+  // corners make, set at every tenth of a second of the route, touches nothing drawn (a crown, a baluster, a rail); the trees are
+  // drawn (no BARE), since the eye's hierarchy holds only what is built. The route is asked of the page, the hierarchy of the page.
+  "ending-eye": { tier: 2, async run(b, base) {
+    const SHAPES = { upright: { width: 390, height: 844 }, wide: { width: 960, height: 540 } };
+    for (const season of ["spring", "summer", "autumn", "winter"]) for (const [shape, viewport] of Object.entries(SHAPES)) {
+      const t = await open(b, base, `q=low&fast=1&seed=4&view=third&season=${season}&time=day&off=reflect,bloom,drift`, { viewport });
+      await t.until(async () => (await t.page.evaluate(() => window.__eyeSpace().state)) === "ready", 180000, "the eye's hierarchy was not built");
+      await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, 0, 0); });
+      await t.frames(3);
+      await t.page.evaluate(() => { window.__riteClock(null); void window.__ending(); });
+      await t.until(async () => (await t.page.evaluate(() => window.__rites().closing)) === true, 60000, "the close never began");
+      await t.page.evaluate(() => window.__riteClock(0)); await t.frames(3);
+      const hits = await t.page.evaluate(() => { const r = window.__closeRoute(0.1); return r && r.map((p, i) => [i * 0.1, p, window.__eyeShutAt(p[0], p[1], p[2])]).filter((h) => h[2]).map((h) => [+h[0].toFixed(1), h[1].map((v) => +v.toFixed(2))]); });
+      expect(hits !== null, `${season} ${shape}: no route`);
+      expect(hits.length === 0, `${season} ${shape}: the eye is inside something at ${hits.length} of the route's 301 points, first at ` + JSON.stringify(hits.slice(0, 6)));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   "ending-skip": { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
       // six seals and the close not yet seen (once the page is opened again the book is left as it was)

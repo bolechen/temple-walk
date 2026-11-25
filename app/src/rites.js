@@ -346,14 +346,14 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // When the seventh seal is earned he is sitting on the summit. The eye leaves his shoulder: it comes round before
   // him, draws back down the steps and rises until the pavilion stands whole on its mountain, while he goes on
   // breathing and the closing words are said (game.js says them, on `cue`). `secs` is the whole of it.
-  const END = { secs: 30, on: false, u: 0, aim: 0 };
+  const END = { secs: 30, on: false, u: 0, aim: 0, route: /** @type {null | ((t: number) => number[])} */ (null) };
   /** @param {() => boolean} on @param {(seconds: number) => void} [cue] */
   async function close(on, cue = () => {}) {
     const eye = { p: V(), q: new THREE.Quaternion(), fov: 50 };   // where the eye stood on the last frame: the far view is made of it
     const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = dir(0, 0, 1).clone(), l = dir(1, 0, 0).clone();
     const P = (a, b, c) => o.clone().addScaledVector(l, a).addScaledVector(f, c).setY(o.y + b);
     let path = null, aim = null;
-    END.on = true; END.u = 0;
+    END.on = true; END.u = 0; END.route = null;
     y.cine((camera) => {
       if (!path) { y.undirect?.(); cam0.copy(camera.position);   // from wherever the eye was, the sitting's own shot included
         camera.getWorldDirection(look0).multiplyScalar(6).add(cam0);
@@ -363,6 +363,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
         const tops = [new THREE.Vector3((tall?.x0 + tall?.x1) / 2, tall?.top + 1.6, (tall?.z0 + tall?.z1) / 2), ...(tall?.crest || []).map(([x, cy, z]) => new THREE.Vector3(x, cy, z))];
         const last = tall ? aimToFrame(far, P(0, 5, -6), tops, camera.fov, camera.aspect) : P(0, 5, -6);
         aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2); }
+      END.route ||= (t) => path.getPoint(ease(Math.min(1, t / END.secs * 1.04)), V()).toArray();
       const k = ease(Math.min(1, END.u * 1.04)); path.getPoint(k, camera.position); aim.getPoint(k, look); camera.lookAt(look);
       eye.p.copy(camera.position); eye.q.copy(camera.quaternion); eye.fov = camera.fov;
     });
@@ -455,6 +456,8 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     // burning if less than `burn` seconds have passed, and are cold stubs after.
     // `has.incense`: `{ hall: when its sticks were set }` (incense.js); each hall's are as far burnt as its own time says.
     restore(has) { for (const [hall, at] of Object.entries(has.incense || {})) { const h = stands[hall]; if (!h || !at) continue; if (Date.now() - at < burn * 1000) h.plant(at); else h.burntOut(); } },
+    /** where the eye stands along the close, every `step` seconds (null before the close has begun): a test asks the eye's hierarchy of each */
+    closeRoute: (step = 0.1) => (END.route ? Array.from({ length: Math.round(END.secs / step) + 1 }, (_, i) => END.route(i * step)) : null),
     incenseLit: (hall = SEALED_HALL) => !!stands[hall]?.inc.planted,
     state: () => ({
       passages: jobs.length, bow: +act.bow.toFixed(3), nod: +act.nod.toFixed(3), breath: act.breath === null ? null : +act.breath.toFixed(3), hands: +Math.max(act.hands.left.w, act.hands.right.w).toFixed(3),
