@@ -38,7 +38,7 @@ import { gatherEye, eyeBoxes } from "./src/eyegather.js";
 import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
 import { clearOfCenser } from "./src/censer.js";
-import { moodOf, moodNow, hourFollow, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { moodOf, moodNow, hourFollow, startMood, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { eventFor } from "./src/joya.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
@@ -302,11 +302,10 @@ const nowMood = moodNow();
 // visitor's own. The workbench's ?seals= book counts as filled only when it is all seven.
 const keptBook = (() => { try { return localStorage.getItem(JOURNEY_KEY); } catch { return null; } })();
 const prologueDay = !(Q.has("seals") ? Q.get("seals") === "all" : filledBefore(keptBook));
-const state = { hand: false, follow: false, season: SEASONS.includes(Q.get("season")) ? Q.get("season") : Q.has("shot") || Q.has("show") || Q.has("cam") ? "summer" : nowMood.season,
-                time: TIMES.includes(Q.get("time")) ? Q.get("time") : Q.has("shot") || Q.has("show") || Q.has("cam") || prologueDay ? "day" : nowMood.time };
+const state = { hand: false, ...startMood({ query: Q, now: nowMood, prologueDay, firstMood: L.firstMood, keepsPlace: !!L.keepsPlace }) };
 // After the prologue the hour follows the visitor's clock unless ?time=, a fixed view or a hand has chosen one; a hand's
 // choice lasts this page only and is stored nowhere (#135). setMood itself does not decide it: the chips and __mood do.
-state.follow = !TIMES.includes(Q.get("time")) && !(Q.has("shot") || Q.has("show") || Q.has("cam")) && !prologueDay;
+// (A level may say how it looks the first time, Level.firstMood: T05 opens in early winter by day, J01; startMood in mood.js.)
 // The year-end bell (#341): on that night (or on the workbench with ?event=joya) the mountain is a winter night, unless the
 // address names a season, an hour or a fixed view. A hand that picks one later keeps it (`state.hand`).
 const joyaNight = () => eventFor({ query: Q, bench: import.meta.env.DEV || /-temple-walk-preview\./.test(location.hostname) }).open && !(SEASONS.includes(Q.get("season")) || TIMES.includes(Q.get("time")) || Q.has("shot") || Q.has("show") || Q.has("cam"));
