@@ -81,6 +81,30 @@
    "rev": "f9aaedee0af7d6676874822b6bf0030b34fe1060"
   },
   {
+   "path": "r2-leaf-canvas-stroke.png",
+   "bytes": 102640,
+   "sha256": "881800c95fd6b668dc27b2756c72f868ef1e6900c59ce6a14a8d0d7b1de2bf33",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
+   "path": "r2-slip-note-390x844.png",
+   "bytes": 2900869,
+   "sha256": "8922be67928b84cbf0a115c89d1c51ee73e68f28c4e337327109c377c3da8e84",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
+   "path": "r2-slip-whole-390x844.png",
+   "bytes": 3183627,
+   "sha256": "b1ae2a0cb6baaecc8fe6eb26a6fcfeada8959d2f461ea931c22719c2ba0f1def",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
+   "path": "r2-stroke-390x844-pixels.png",
+   "bytes": 80234,
+   "sha256": "ef743c51ce0204119e8cbd90563b830f92ea95c424c35c98e827864342b4f059",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
    "path": "slip-note-360x640.png",
    "bytes": 1040291,
    "sha256": "fe93fcf5565230f700a808960537bc8076f0dce2df15e4beab89436b959089b4",

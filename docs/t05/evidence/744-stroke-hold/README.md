@@ -27,3 +27,13 @@
 图钉在 adbc73c：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/adbc73c71676b8a1f7a41c698b66e03c0144dc42/t05/744-stroke-hold
 特写四张钉在 2203e23：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/2203e239b54fda5c0fc5ba97414ae595a22a99a6/t05/744-stroke-hold
 补拍（软件渲染）钉在 f9aaede：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/f9aaedee0af7d6676874822b6bf0030b34fe1060/t05/744-stroke-hold
+
+## 第二轮：横墨改成无缝（头 `f531ad6`，美术终审 @ f018bc4 的必须改）
+
+终审看出横墨的墨里有一排排浅格子纹（原来 `drawStroke` 一块块方格并排，块与块之间没盖严）。现在每根毫是一条连续、不透明、比自己那一份略宽的墨带，与邻毫相叠：墨浓处实心无缝；墨尽处每根毫各自离纸一段，只留顺笔的白丝；起笔圆头（藏锋，初审的建议一并做了）。手里那张纸与纸条共用这一个函数。
+
+- `r2-stroke-390x844-pixels.png`：390×844（devicePixelRatio 3）纸条上那一道横墨的**原像素**（元素截图，不缩放），软件渲染。
+- `r2-slip-whole-390x844.png`、`r2-slip-note-390x844.png`：整页与观察页。
+- `r2-leaf-canvas-stroke.png`：**贴图，不是场景画面**——他手里那张纸的贴图（`drawPage`，只画横墨）在一笔的 25%、60%、100% 处（起笔、中途、收笔）。场景里 P1 机位纸板几乎侧对镜头，那一笔看不清（见上）。
+
+第二轮图钉在 cceb677：https://huggingface.co/datasets/bolechen/temple-walk-evidence/tree/cceb6779d4ff6f4120ed00bd78e877c792cf4f0a/t05/744-stroke-hold
