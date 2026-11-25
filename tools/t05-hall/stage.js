@@ -66,7 +66,7 @@ const M = {
   wallIn: mat(0xb9b2a2, 0.95), wallFront: mat(0x8a3b2a, 0.9), wallOut: mat(0x8a3b2a, 0.9, true), timber: mat(0x3a2c23, 0.8), red: mat(0x7a3426, 0.75),
   roof: mat(0x2f251e, 0.85, false, { side: THREE.DoubleSide }), tile: mat(0x5a5f5c, 0.8, true),
   altar: mat(0x5d574e, 0.85), base: mat(0x6b5d4c, 0.7), gold: mat(0x6f5a34, 0.62, false, { metalness: 0.35 }),   // dark gold, not bright (ART.md §3.1, the lead 2026-11-21)
-  halo: mat(0x6a5440, 0.72, false, { metalness: 0.08, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
+  halo: mat(0x6c5641, 0.72, false, { metalness: 0.08, side: THREE.DoubleSide }), clay: mat(0xa88a62, 0.75),
 };
 const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; scene.add(o); return o; };
 const hall = new THREE.Group(); scene.add(hall);
@@ -243,7 +243,10 @@ function mandorla(x, topY, headY, v = {}) {
   const g = new THREE.Group();
   const rings = v.rings ?? 3, tips = v.tips ?? 0, wB = v.width ?? 4.2, z = ALTAR.z - 2.25;
   const h = topY - AT - BASE_H, b = AT + BASE_H, ys = Math.max(0.5, Math.min(h * 0.85, (v.shoulderY ?? headY - 1.6) - b));
-  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(haloShape(wB, h, ys), { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), M.halo); body.position.set(x, b, z); g.add(body);
+  // a figure's own gain on the body's colour (`halo.gain` in the spec): the end figures stand where the hall's light is weaker,
+  // and the body is to read at about half the face's brightness on screen on each (issue #463, the art director 2026-11-21)
+  let bodyMat = M.halo; if (v.gain) { bodyMat = M.halo.clone(); bodyMat.color.multiplyScalar(v.gain); }
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(haloShape(wB, h, ys), { depth: 0.18, bevelEnabled: false, curveSegments: 24 }), bodyMat); body.position.set(x, b, z); g.add(body);
   for (let r = 0; r < rings; r++) {   // concentric bands in relief: the outline drawn smaller, less its own inset
     const k = 0.9 - r * 0.14, outer = haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k);
     outer.holes.push(new THREE.Path(haloShape(wB * k, h * (0.55 + 0.45 * k), ys * k, 0.18).getPoints(48)));
@@ -258,6 +261,7 @@ function mandorla(x, topY, headY, v = {}) {
     cone.position.set(x + px, b + py * 0.92 + 0.2, z + 0.1); cone.rotation.z = a - Math.PI / 2; g.add(cone);
   }
   g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.userData.halo = true; } });
+  body.userData.haloBody = true;   // zoneIds counts the body panel apart from the head disc and the rings
   scene.add(g); return g;
 }
 
@@ -414,6 +418,12 @@ function pick(i, a, b, from = "front", top = 99) {
   ray.set(wo, wd); ray.far = 100; const h = ray.intersectObject(f.obj, true)[0];
   return h ? P.worldToLocal(h.point.clone()).toArray().map((v) => +v.toFixed(3)) : null;
 }
+// Where a pixel of the last picture falls on figure i's surface, in the figure's own frame (the frame the anchors are written
+// in): a ray from the camera through the pixel (x, y from the top left, in the canvas's pixels), the nearest hit on that figure.
+function pixelPoint(i, x, y) {
+  const f = figures[i]; f.pivot.updateMatrixWorld(true); ray.setFromCamera(new THREE.Vector2(x / W * 2 - 1, 1 - y / H * 2), camera); ray.far = 1e3;
+  const hit = ray.intersectObjects(f.meshes, false)[0]; return hit ? f.pivot.worldToLocal(hit.point.clone()).toArray().map((v) => +v.toFixed(3)) : null;
+}
 function occlusion(i, pts, near = 0.3) {
   const eye = camera.position.clone(), out = {};
   const targets = []; scene.traverse((o) => { if (o.isMesh && o.visible && o !== sky) targets.push(o); });
@@ -509,14 +519,19 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
     // masks cost a frame (#370 round 6)
-    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "");
+    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "");
+    let rec = o.folds === false ? { ...recipe, folds: { ...recipe.folds, hollow: 0, edge: 0 } } : recipe;
+    // { skin: "#00ff00" }: the zone of face and hands in a flat colour, to see where its edge lies on a hand (a tool's view, not a look)
+    if (o.skin) rec = { ...rec, debugKey: "skin" + o.skin, zones: rec.zones.map((z) => z.name === rec.face.zone ? { ...z, color: o.skin, metal: 0, rough: 1, wear: 0 } : z) };
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
     const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
     // one material for each normal map the file carries (a head baked on a map of its own is its own primitive, #463)
     for (const mesh of f.meshes) {
       const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
-      f.painted[k2] ??= paintMaterial(recipe, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+      f.painted[k2] ??= paintMaterial(rec, anchors, f.pivot, o.env === false ? { masks, fig: figures.indexOf(f), normalMap: nmap } : { masks, fig: figures.indexOf(f), normalMap: nmap, envMap: probe, envIntensity: o.envIntensity ?? 1.6 });
+      f.painted[k2].userData.paint.U.uInner.value.set(...(f.s.innerTint ?? [1, 1, 1]));   // likewise the inner garment's hue where the light is cooler at the ends
+      f.painted[k2].userData.paint.U.uLotus.value = f.s.lotusGain ?? 1;   // the white box's light is weaker at the two ends: the spec's compensation, not part of a figure's anchors
       f.painted[k2].userData.update(); if (o.envIntensity) f.painted[k2].envMapIntensity = o.envIntensity;
       mesh.material = f.painted[k2];
     }
@@ -573,8 +588,8 @@ function zoneIds() {
   if (dif) { for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { kept0.push([l, l.visible]); l.visible = false; } hemi.intensity = lastShot.hemi ?? 2.2; hemi.visible = true; }
   render(); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, shown);
   const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), kept = new Map(), mats = [];
-  const haloMat = (i) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(15. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
-  const own = new Set(); figures.forEach((f, i) => { const hm = haloMat(i); mats.push(hm); f.group.traverse((o) => { if (o.isMesh && o.userData.halo) { kept.set(o, o.material); o.material = hm; own.add(o); } }); for (const m of f.meshes) { own.add(m); if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 1; } });
+  const haloMat = (i, c = 15) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(${c}. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
+  const own = new Set(); figures.forEach((f, i) => { const hm = haloMat(i), hd = haloMat(i, 16); mats.push(hm, hd); f.group.traverse((o) => { if (o.isMesh && o.userData.halo) { kept.set(o, o.material); o.material = o.userData.haloBody ? hm : hd; own.add(o); } }); for (const m of f.meshes) { own.add(m); if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 1; } });
   scene.traverse((o) => { if ((o.isMesh || o.isLine || o.isPoints) && !own.has(o)) { kept.set(o, o.material); o.material = black; } });
   const tm = renderer.toneMapping, bg = scene.background, sv = sky.visible; renderer.toneMapping = THREE.NoToneMapping; scene.background = new THREE.Color(0); sky.visible = false;
   renderer.setRenderTarget(null); renderer.render(scene, camera); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, id);
@@ -582,22 +597,33 @@ function zoneIds() {
   for (const [o, m] of kept) o.material = m; for (const f of figures) for (const m of f.meshes) if (m.material.userData.paint) m.material.userData.paint.U.uIdMode.value = 0;
   if (dif) { for (const [l, v] of kept0) l.visible = v; hemi.visible = false; }
   black.dispose(); mats.forEach((m) => m.dispose());
+  // the head alone (the zone of face and hands also holds the hands, the neck and the chest): the skin pixels inside the screen
+  // rectangle from the hairline to the chin and from ear to ear, from each figure's own anchors (the reviewer's denominator, #683)
+  const faceZi = recipe.zones.findIndex((z) => z.name === recipe.face.zone) + 1, heads = figures.map((f) => {
+    const A = f.s.colour && ANCHORS[f.s.colour]?.anchors; if (!A) return null;
+    const eyeY = (A.eyeL[1] + A.eyeR[1]) / 2, ps = [A.hairFront, [A.mouth[0], A.mouth[1] - 0.6 * (eyeY - A.mouth[1]), A.mouth[2]], A.earL, A.earR].map((p) => figurePoint(figures.indexOf(f), p).project(camera));
+    const x = ps.map((q) => (q.x + 1) / 2 * Wd), y = ps.map((q) => (1 - q.y) / 2 * Hd); return [Math.min(...x), Math.min(...y), Math.max(...x), Math.max(...y)]; });
+  const headAcc = figures.map(() => [0, 0, 0, 0, new Uint32Array(256)]);
   const code = (k) => (id[k + 1] ? Math.round(id[k] * 16 / 255) * 100 + Math.round(id[k + 1] * 16 / 255) : 0);
   const acc = {};
   for (let y = 1; y < Hd - 1; y++) for (let x = 1; x < Wd - 1; x++) {
     const k = (y * Wd + x) * 4, c = code(k); if (!c) continue;
     if (code(k + 4) !== c || code(k - 4) !== c || code(k + Wd * 4) !== c || code(k - Wd * 4) !== c) continue;
-    const a = (acc[c] ??= [0, 0, 0, 0]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2];
+    if (Math.floor(c / 100) === faceZi && heads[(c % 100) - 1]) { const h = heads[(c % 100) - 1], yy = Hd - 1 - y; if (x >= h[0] && x <= h[2] && yy >= h[1] && yy <= h[3]) { const q = headAcc[(c % 100) - 1]; q[0]++; q[1] += shown[k]; q[2] += shown[k + 1]; q[3] += shown[k + 2]; q[4][Math.round(0.2126 * shown[k] + 0.7152 * shown[k + 1] + 0.0722 * shown[k + 2])]++; } }
+    const a = (acc[c] ??= [0, 0, 0, 0, new Uint32Array(256)]); a[0]++; a[1] += shown[k]; a[2] += shown[k + 1]; a[3] += shown[k + 2]; a[4][Math.round(0.2126 * shown[k] + 0.7152 * shown[k + 1] + 0.0722 * shown[k + 2])]++;
   }
-  const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光";
+  const names = [...recipe.zones.map((z) => z.name)]; names[13] = "唇"; names[14] = "背光"; names[15] = "头光与光环";
   const out = figures.map(() => ({}));
-  for (const [c, [n, r, g, b]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)) }; }
+  // the 10th, 50th and 90th percentile of each zone's luma (0–255), for how much light and shade the zone holds on screen
+  const pct = (h, n, q) => { let t = 0; for (let i = 0; i < 256; i++) { t += h[i]; if (t >= n * q) return i; } return 255; };
+  for (const [c, [n, r, g, b, h]] of Object.entries(acc)) { const zi = Math.floor(c / 100), fi = (c % 100) - 1; if (!out[fi]) continue; out[fi][zi === 0 ? "base" : names[zi - 1] ?? `zone${zi}`] = { px: n, rgb: [r / n, g / n, b / n].map((v) => +v.toFixed(1)), q: [0.1, 0.5, 0.9].map((q) => pct(h, n, q)) }; }
+  figures.forEach((f, i) => { const q = headAcc[i]; if (q[0]) out[i]["头"] = { px: q[0], rgb: [q[1] / q[0], q[2] / q[0], q[3] / q[0]].map((v) => +v.toFixed(1)), q: [0.1, 0.5, 0.9].map((qq) => pct(q[4], q[0], qq)) }; });
   return out;
 }
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, pixelPoint, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site
