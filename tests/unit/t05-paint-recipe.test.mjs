@@ -11,7 +11,7 @@ const anchors = readdirSync(new URL("paint/", dir)).filter((f) => /-t05\.json$|^
 test("the recipe's zones: at most 13, uniquely named, gains name a known kind", () => {
   assert.ok(recipe.zones.length <= 13);
   assert.equal(new Set(recipe.zones.map((z) => z.name)).size, recipe.zones.length);
-  for (const z of recipe.zones) if (z.gain !== undefined) assert.equal(z.gain, "lotus");
+  for (const z of recipe.zones) if (z.gain !== undefined) assert.ok(["lotus", "inner"].includes(z.gain), z.name);
   assert.ok(recipe.zones.some((z) => z.name === "座上"));
 });
 test("every figure places the lotus's upper tier under the top of its throne", () => {
