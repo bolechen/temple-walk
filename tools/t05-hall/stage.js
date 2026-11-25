@@ -519,7 +519,7 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
     // masks cost a frame (#370 round 6)
-    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "");
+    const key = (o.env === false ? "noenv" : "env" + (o.envIntensity ?? "")) + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "");
     let rec = o.folds === false ? { ...recipe, folds: { ...recipe.folds, hollow: 0, edge: 0 } } : recipe;
     // { skin: "#00ff00" }: the zone of face and hands in a flat colour, to see where its edge lies on a hand (a tool's view, not a look)
     if (o.skin) rec = { ...rec, debugKey: "skin" + o.skin, zones: rec.zones.map((z) => z.name === rec.face.zone ? { ...z, color: o.skin, metal: 0, rough: 1, wear: 0 } : z) };

@@ -70,14 +70,14 @@ if (process.env.SETS === "ship701") {
   const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0, ...(i === 0 || i === 6 ? { gain: 1.5 } : {}) }, paint: "clay", colour: c, ...(i === 0 || i === 6 ? { lotusGain: 1.25 } : {}), ...(i === 0 ? { innerTint: [0.97, 1, 1.03] } : {}), ...(i === 6 ? { innerTint: [0.96, 1, 1.05] } : {}) }));
   // winter by day, the altar lamp as the review specs set it (45, a little to the right of the figure and before it), on every shot
   const lamp = (i) => ({ lamp: 45, lampAt: [+(X[i] + 0.8).toFixed(2), 7.07, -14.0], lampColor: 16764826 });
-  const shots = [{ name: "cam03-winter", shoot: { paint: true, mood: "winter", view: "cam03", ...lamp(3) } }];
+  const shots = [{ name: "cam03-winter", shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "cam03", ...lamp(3) } }];
   for (const i of [1, 4, 5]) {
     const n = N[i].replace(/-.*/, ""), H = HEAD[i], sx = +(X[i] + 7 * Math.sin(55 * Math.PI / 180)).toFixed(2), sz = +(-18.1 + 7 * Math.cos(55 * Math.PI / 180)).toFixed(2);
-    const put = (name, over, paint = true) => shots.push({ name, shoot: { paint, mood: "winter", view: "faceFrom10", over: { ...over, exp: 4.5 }, ...lamp(i) } });
+    const put = (name, over, paint = { envIntensity: 0.6 }) => shots.push({ name, shoot: { paint, mood: "winter", view: "faceFrom10", over: { ...over, exp: 3.2 }, ...lamp(i) } });
     put("front10-" + n, { at: [X[i], 4.6, -8.1], look: [X[i], 9.9, -18.1], fov: 45 });
     put("aisle55-" + n, { at: [sx, 4.6, sz], look: [X[i], 9.9, -18.1], fov: 45 });
     put("join-" + n, { at: [X[i], 4.6, -12.1], look: [X[i], H - 0.45, -18.1], fov: 16 });
-    for (const [paint, t] of [[true, ""], [false, "-clay"]]) for (const [tag, at, fov] of [["mid10", [X[i], 4.6, -7.6], 11], ["front4", [X[i], 4.6, -13.6], 20]])
+    for (const [paint, t] of [[{ envIntensity: 0.6 }, ""], [false, "-clay"]]) for (const [tag, at, fov] of [["mid10", [X[i], 4.6, -7.6], 11], ["front4", [X[i], 4.6, -13.6], 20]])
       put(tag + t + "-" + n, { at, look: [X[i], H, -18.1], fov }, paint);
   }
   console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [{ name: "ship", size: [1920, 1080], statues: L, shots }] } })); process.exit(0);
