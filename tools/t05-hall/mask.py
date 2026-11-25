@@ -86,7 +86,7 @@ for ci, z in enumerate(spec["channels"]):
     inner = ndi.binary_erosion(reg, structure=st, iterations=max(1, int(round(si / mpp))))
     mk[inner] = 1
     reg = ndi.watershed_ift(gi2, mk) == 1
-    reg = ndi.binary_fill_holes(ndi.binary_opening(reg, structure=st, iterations=2))
+    reg = ndi.binary_fill_holes(ndi.binary_opening(reg, structure=st, iterations=max(2, int(round(z["snap"].get("open", 0.012) / mpp)))))   # `open`: a line thinner than that, where the growth ran along a crease, goes
   if z.get("rowfill"):
     # a block with straight sides (an inner garment's panel) is filled across each row between its leftmost and rightmost
     # pixel, inside the box: the small folds that the growth stopped at, along its top edge and sides, take the colour too
