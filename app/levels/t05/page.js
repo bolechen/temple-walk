@@ -32,13 +32,14 @@ export const PAGE = Object.freeze({
     act: "记下",   // what the button says once both looks are met (it is offered, never done for him: the eye is not taken while he only looks)
   }),
   stele: Object.freeze({ place: "copy", lines: STELE_TEXT.lines, from: "元大德七年碑" }),
-  // Where the stroke is written: he takes a step or two to the place of the look met last and writes there. Each shot is low behind
-  // him, a little to his right, looking up past him to the hall's front: him small under it, its eaves (kept in the picture) over him.
+  // Where the stroke is written: he takes a step or two to the place of the look met last and writes there. Each shot is low at his
+  // left shoulder from behind, three-quarters, looking up past him to the hall's front: the leaf in his left hand shows past the hat on
+  // his back, and the eaves (kept in the picture) are over him.
   places: Object.freeze({
     p1a: Object.freeze({ at: STATION.A, face: Math.PI,
-      shot: Object.freeze({ at: [-0.4, 0.5, -1.6], look: [0.05, 0.9, 6.0], fov: 48, in: 2.0, out: 1.0, drift: Object.freeze({ push: 0.012, for: 12 }), keep: [[0, 0.1, 0], [0, 1.1, 0], [0, 0.8, 0.25], [0, 12, 38]] }) }),
+      shot: Object.freeze({ at: [0.8, 0.9, -1.1], look: [0.05, 1.5, 2.0], fov: 52, in: 2.0, out: 1.0, drift: Object.freeze({ push: 0.012, for: 12 }), keep: [[0, 0.7, 0], [0, 1.1, 0], [0, 0.8, 0.25], [0, 12, 38]] }) }),
     p1b: Object.freeze({ at: STATION.B, face: Math.PI,
-      shot: Object.freeze({ at: [-0.4, 0.5, -2.1], look: [0.05, 0.9, 3.0], fov: 48, in: 2.2, out: 1.0, drift: Object.freeze({ rise: 0.01, for: 12 }), keep: [[0, 0.1, 0], [0, 1.1, 0], [0, 0.8, 0.25], [0, 11, 22]] }) }),
+      shot: Object.freeze({ at: [0.8, 0.9, -1.1], look: [0.05, 1.5, 2.0], fov: 56, in: 2.2, out: 1.0, drift: Object.freeze({ rise: 0.01, for: 12 }), keep: [[0, 0.7, 0], [0, 1.1, 0], [0, 0.8, 0.25], [0, 11, 22]] }) }),
   }),
   terraceZ: TERRACE.zS,
 });

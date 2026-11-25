@@ -104,9 +104,10 @@ export function buildStele(M) {
   walk.ramps.push({ x0: mx - fl.w / 2 + pad, x1: mx + fl.w / 2 - pad, z0: M0.z1 - 0.4, z1: M0.z1 + fl.run + 0.3, base: M0.y, h: fl.rise, low: [mx, M0.z1 + fl.run], high: [mx, M0.z1], floor: "stone" });
   for (const sx of [-1, 1]) walk.posts.push({ x0: sx > 0 ? mx + fl.w / 2 - BODY - 0.021 : mx - fl.w / 2 - CHEEK - BODY, x1: sx > 0 ? mx + fl.w / 2 + CHEEK + BODY : mx - fl.w / 2 + BODY + 0.021, z0: M0.z1 + 0.02, z1: M0.z1 + fl.run + BODY + 0.06, h: floor });
 
-  // Where he stands to copy: on the base, before the plinth, his robe clear of it, facing the stele (north). The shot: low at his
-  // right and a little before him, between him and the south-east column, looking up past his hands to the stele's face, so that
-  // his face bent to the leaf, the brush and the column he reads from are in one picture. From behind, the hat on his back hides
+  // Where he stands to copy: on the base, before the plinth, his robe clear of it, facing the stele (north). The shot: at his
+  // left and a little before him, a little above his head, between him and the south-west column, down onto the leaf his left
+  // hand holds almost flat (his right arm, with the brush, beyond it) and across to the stele's face, so that the page, the brush
+  // and the columns he reads from are in one picture. From behind, the hat on his back hides
   // his hands. (Found by trying a grid of poses against the safe area on four screens, with no column or stone between the eye
   // and any of them: t05-director.test.) In the place's own frame: x to his left, z the way he faces, y up from the floor.
   const stand = plinth.z1 + BODY + 0.22;
@@ -114,9 +115,9 @@ export function buildStele(M) {
   const copy = {
     at: [mx, stand], r: 1.1, face: Math.PI, act: "抄碑", rite: "copy",
     stele: { x: mx, face, y0: plinth.top + FACE.foot, y1: plinth.top + FACE.foot + fh, w: fw },
-    shot: { at: [-1.3, 0.9, 0.1], look: [-0.1, 1.2, 0.4], fov: 56, in: 2.0, out: 1.0, drift: { push: 0.012, for: 14 },
-      keep: [[0, 0.9, 0], [0, 1.12, 0], [0, 0.8, 0.26], [0, 1.3, toFace], [0, 1.9, toFace]] },   // his head and chest, the leaf in his hands, and the face he reads from
+    shot: { at: [1.3, 1.35, 0.3], look: [0.1, 1.25, 0.5], fov: 48, in: 2.0, out: 1.0, drift: { push: 0.012, for: 14 },
+      keep: [[0, 1.12, 0], [0, 0.8, 0.26], [0, 1.7, toFace]] },   // his head, the leaf in his hands, and the foot of the columns he reads
   };
-  const views = { "shot-copy": [mx, stand + 2.4, 0, 0.12], stele: [mx, stand + 0.2, 0, 0.32] };
+  const views = { "shot-copy": [mx, stand, Math.PI - copy.face, 0.05], stele: [mx, stand + 1.6, 0, 0.3] };   // (shot-<id> stands him at the place, as the prologue's do; `stele` looks at its face from the top of the steps)
   return { group, walk, places: { copy }, views, frame: S };
 }

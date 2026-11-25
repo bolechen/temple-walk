@@ -12,7 +12,7 @@ const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const ease = (u) => u * u * (3 - 2 * u), mix = (a, b, u) => a + (b - a) * u;
 
 /** Where the board is held in his own frame (x to his left, y up from his soles, z the way he faces), and how far the brush is held up its shaft. */
-export const HOLD = Object.freeze({ board: [0.03, 0.8, 0.25], tilt: 0.85, grip: 0.105, shaft: 0.17 });
+export const HOLD = Object.freeze({ board: [0.03, 0.8, 0.25], tilt: 0.35, grip: 0.105, shaft: 0.17 });
 
 /**
  * @param {{ act: any, play: (secs: number, fn: (u: number) => void, on: () => boolean) => Promise<boolean>, homeward: (u: number, secs: number, after?: number) => void,

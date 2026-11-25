@@ -199,7 +199,7 @@ export function buildSite(M) {
     ...ax.views,
     ...st.views,
     // The observation's two places, where its stroke is written (./page.js): his frame there and the eye on its shot (`?show=shot-p1a`).
-    "shot-p1a": [STATION.A[0], STATION.A[1] + 2.5, 0, 0.08], "shot-p1b": [STATION.B[0], STATION.B[1] + 2.5, 0, 0.2],
+    "shot-p1a": [STATION.A[0], STATION.A[1], 0, 0.05], "shot-p1b": [STATION.B[0], STATION.B[1], 0, 0.05],
     gateway: [0, C.zS + 6, 0, 0.08],
     terrace: [12, 8, -0.6, 0.05],
     back: [0, 6, Math.PI, -0.08],
