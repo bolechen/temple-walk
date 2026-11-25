@@ -334,7 +334,7 @@ export function buildSurround(M, C, opts = {}) {
   // The trees are merged by stretch of the town (east and west of the court, either side of the terrace and the way, and beyond the way's end), so that what is
   // out of the picture is not drawn; a tree that does not cast is grown coarser, unless it stands where the visitor comes near it (beside the way and at its end).
   const cs = C.zS + C.t / 2, region = (t) => (t.z < cs + 4 ? (t.x < 0 ? "w" : "e") : t.z < 222 ? (t.x < 0 ? "sw" : "se") : "end");
-  const coarse = (t) => !(t.z > 222 || (t.z > 144 && Math.abs(t.x) < 18));
+  const coarse = (t) => !((t.z > 144 && Math.abs(t.x) < 18) || Math.hypot(t.x, t.z - 215) < 18);   // (round the arrival only the trees within 18 m of where he stands are grown whole: the rest are 18 m and more off, beyond the plain field, seen through the air)
   const flora = [];
   const add = (set, name, cast) => {
     // the trees, grown (./flora.js): the near ones whole, casting into the sun's map; the far ones coarser, casting nothing

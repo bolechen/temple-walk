@@ -146,7 +146,9 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   const onTerrace = TRUNKS.list.filter((t) => t.y > 0), onLane = TRUNKS.list.filter((t) => t.y === 0);
   // (the terrace's two rows of old arborvitae, the art director's lines of 2026-11-25: 5 m or more from the archway's line, the nearest pair 8 to 10 m in from the inner gate, clear of the Wuliang hall's steps)
   assert.ok(onTerrace.every((t) => Math.abs(t.z - AXIS.paifangZ) >= 5 && t.z > FOOT.hall.z1 + 4 && t.z <= FOOT.inner.z0 - 8), `the terrace's trunks keep to the stretches between the hall's steps, the archway and the gate`);
-  assert.ok(onTerrace.length === 12 && [-1, 1].every((sx) => onTerrace.filter((t) => Math.sign(t.x) === sx).length === 6), "six a side");
+  assert.ok(onTerrace.length === 16 && [-1, 1].every((sx) => onTerrace.filter((t) => Math.sign(t.x) === sx).length === 8), "eight a side (the art director, #573 comment 7166589253: six the least, seven or eight better)");
+  // crown against crown north of the archway: no gap between neighbours over six metres
+  for (const sx of [-1, 1]) { const zs = onTerrace.filter((t) => Math.sign(t.x) === sx && t.z < AXIS.paifangZ).map((t) => t.z).sort((a, b) => a - b); assert.ok(zs.every((z, i) => i === 0 || z - zs[i - 1] <= 6), `side ${sx}: ${zs}`); }
   assert.ok(onLane.every((t) => t.z > FOOT.inner.z1 + 4 && t.z < FOOT.outer.z0 - 4));
   // Scattered, not a row of poles (the art director's reviews of #464, #482): radii 0.25–0.5 m, a crown on each; the stretch between the hall and the archway (42 m) is not laid in pairs at even gaps.
   assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && t.rx > 2.5 && t.ry > 2 && Math.abs(t.x) >= 4.9 && Math.abs(t.x) <= 11.5));
@@ -182,8 +184,8 @@ test("no tree crown stands in cam07's view of the middle 60% of the Great Hall's
 
 test("the terrace's rows stand close beside the path, 2 to 4 m off its edge where the kept lines allow, and the archway's own neighbourhood rule (#492) is set aside for them (the art director, 2026-11-25)", () => {
   const onTerrace = TRUNKS.list.filter((t) => t.y > 0);
-  assert.ok(onTerrace.every((t) => Math.abs(t.x) - PATH.hw >= 2 && Math.abs(t.x) - PATH.hw <= 5.2), onTerrace.map((t) => (Math.abs(t.x) - PATH.hw).toFixed(2)).join(" "));
-  assert.ok(onTerrace.filter((t) => Math.abs(t.x) - PATH.hw <= 4).length >= 8, "two thirds of them within 2 to 4 m (those by the Wuliang hall are pushed out by the ridge's lines)");
+  assert.ok(onTerrace.every((t) => Math.abs(t.x) - PATH.hw >= 2 && Math.abs(t.x) - PATH.hw <= 5.6), onTerrace.map((t) => (Math.abs(t.x) - PATH.hw).toFixed(2)).join(" "));
+  assert.ok(onTerrace.filter((t) => Math.abs(t.x) - PATH.hw <= 4).length >= 8, "most within 2 to 4 m (those by the Wuliang hall are pushed out by the ridge's lines, the last pair to 5.6 m)");
   assert.ok(TRUNKS.list.filter((t) => t.y === 0).every((t) => !AX.nearArchway(t)), "the way's trees keep #492's rule (none near the archway)");
 });
 

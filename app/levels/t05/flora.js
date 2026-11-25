@@ -44,7 +44,7 @@ const GROW = {
   cypress: (h, r, far) => ({ levels: 2, trunkLength: h * 0.82, trunkRadius: r * 1.1, trunkClear: 0.06, children: [far ? 7 : 12], childRadius: [0.34], branchAngle: [34], angleVariance: 10, lengthRatio: [0.3], branchLengthFalloff: 0.55, taper: [0.85, 0.6], taperCurve: 0.85, rootFlare: 0.4, flareFrac: 0.06, droop: 0.01, upPull: 0.45, gnarl: [0.05, 0.12], radialSegments: far ? [6, 3] : [9, 4], sectionLength: 1.0, minRadius: 0.012, minLength: 0.4, collar: 0.15, radiusExponent: 2.4 }),
   // (the bare broadleaf's trunk is short and divides at 3 to 4 m into four or five thick limbs that spread and crook; its crown wider than it is tall)
   broad: (h, r, far) => ({ levels: far ? 3 : 4, trunkLength: 4.2, trunkRadius: Math.min(r * 1.2, TRUNK_MAX), trunkClear: 0.78, children: far ? [4, 5] : [5, 5, 4], childRadius: far ? [0.62, 0.42] : [0.62, 0.42, 0.42], branchAngle: [46, 40, 44], angleVariance: 14, lengthRatio: [1.25, 0.5, 0.5], branchLengthFalloff: 0, taper: [0.45, 0.65, 0.75], taperCurve: 0.75, rootFlare: 0.45, flareFrac: 0.12, droop: 0.015, upPull: 0.24, gnarl: [0.04, 0.26, 0.3, 0.32], radialSegments: far ? [7, 4, 3] : [10, 5, 4, 3], sectionLength: 0.9, childStart: 0.25, minRadius: 0.008, minLength: 0.3, collar: 0.15, radiusExponent: 2.4 }),
-  poplar: (h, r, far) => ({ levels: 3, trunkLength: h, trunkRadius: Math.min(r * 1.05, TRUNK_MAX), trunkClear: 0.3, children: far ? [12, 4] : [22, 6], childRadius: [0.3, 0.45], branchAngle: [36, 28], angleVariance: 8, lengthRatio: [0.4, 0.5], branchLengthFalloff: 0.62, taper: [0.9, 0.7], taperCurve: 0.85, rootFlare: 0.35, flareFrac: 0.05, droop: 0.01, upPull: 0.42, gnarl: [0.02, 0.1, 0.18], radialSegments: far ? [7, 3] : [10, 4, 3], sectionLength: 1.0, childStart: 0.25, minRadius: 0.008, minLength: 0.35, collar: 0.12, radiusExponent: 2.4 }),
+  poplar: (h, r, far) => ({ levels: 3, trunkLength: h, trunkRadius: Math.min(r * 1.05, TRUNK_MAX), trunkClear: 0.3, children: far ? [12, 4] : [16, 5], childRadius: [0.3, 0.45], branchAngle: [36, 28], angleVariance: 8, lengthRatio: [0.4, 0.5], branchLengthFalloff: 0.62, taper: [0.9, 0.7], taperCurve: 0.85, rootFlare: 0.35, flareFrac: 0.05, droop: 0.01, upPull: 0.42, gnarl: [0.02, 0.1, 0.18], radialSegments: far ? [7, 3] : [10, 4, 3], sectionLength: 1.0, childStart: 0.25, minRadius: 0.008, minLength: 0.35, collar: 0.12, radiusExponent: 2.4 }),
 };
 
 /** The thickest a bare broadleaf's or a poplar's trunk may be (radius, m): on the three judged pictures no trunk of a bare tree is wider than a house's door (the art director, 2026-11-25). */
@@ -95,6 +95,7 @@ function lump(out, at, sx, sy, sz, yaw, centre, crownR, detail, salt) {
 export function growTree(t, far = false) {
   const { kind, x, z, h } = t, y = t.y ?? 0, env = t.env || null, yaw = t.yaw ?? hashAt(x, z, 9) * 6.283, rnd = mulberry(seedAt(x, z, 3));
   const r = t.r ?? h * 0.037, gen = /** @type {any} */ (new TreeGenerator(null)), P = GROW[kind](h, r, far);
+  if (t.foot) Object.assign(P, { children: [4, 3], childRadius: [0.62, 0.42] });   // (a sapling at a wall's foot: fewer, finer boughs)
   if (env) { const top = env.base + 2 * env.ry; Object.assign(P, { trunkRadius: r, rootFlare: t.old ? 0.45 : 0.3, gnarl: [t.old ? 0.02 : 0, ...P.gnarl.slice(1)], trunkLength: env.base + env.ry * (kind === "pine" ? 0.9 : 1.2), trunkClear: (env.base + 0.3) / (env.base + env.ry * (kind === "pine" ? 0.9 : 1.2)), lengthRatio: [Math.min(0.5, (env.rx * 1.05) / (env.base + env.ry)), 0.42], branchLengthFalloff: 0.3 }); P.top = top; }
   if (t.crownFrom) P.trunkClear = Math.min(0.6, (t.crownFrom + 0.2) / P.trunkLength);   // (no bough below where its needles start: he walks the earth beside it)
   const lean = env ? (t.old ? 0.025 : 0) : kind === "pine" ? 0.07 + 0.06 * hashAt(x, z, 4) : kind === "broad" ? 0.05 : 0.015;   // (a tree on the axis stands straight: its trunk is cleared against the views as an upright post)
@@ -143,7 +144,7 @@ export function growTree(t, far = false) {
     // in three or four clumps, as an old temple cypress's crown breaks up.
     const R = Math.min(t.crownR ?? Infinity, h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3))), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
     const radiusAt = (f) => { for (let i = 1; i < prof.length; i++) if (f <= prof[i][1]) { const [a, fa] = prof[i - 1], [b, fb] = prof[i]; return R * (a + ((b - a) * (f - fa)) / (fb - fa)); } return 0; };
-    const count = far ? 16 : env ? Math.round((t.old ? 34 : 26) + (t.old ? 4.4 : 3.2) * env.ry) : 34;   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
+    const count = far ? 16 : env ? Math.round((t.old ? 28 : 26) + (t.old ? 3.6 : 3.2) * env.ry) : 30;   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
     if (env) {
       // An old cypress with its lower boughs long gone: the head broken into four or five masses held out on the boughs, the widest low and
       // spread to the ellipsoid's rim, one over the leader, with sky between them (not a ball on a pole).
@@ -156,7 +157,7 @@ export function growTree(t, far = false) {
         cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? 0.5 : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
       }
       for (let i = 0; i < count; i++) {
-        const c0 = cs[i % clumps], w = c0.r * (t.old ? 0.42 + 0.22 * rnd() : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * (t.old ? 1.6 : 0.6), (rnd() - 0.5) * c0.r * 1.4));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
+        const c0 = cs[i % clumps], w = c0.r * (t.old ? 0.46 + 0.24 * rnd() : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * (t.old ? 1.6 : 0.6), (rnd() - 0.5) * c0.r * 1.4));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
         const e = inEllipsoid(p, centre, env.rx - w * 0.7, env.ry - w * 0.45); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
         if (t.old) lump(needles, p, w * 0.8, w * 1.15, w * 0.7, rnd() * 6.283, centre, env.rx, detail, i);   // (an arborvitae's sprays stand on edge: an old crown is a mass of upright tufts, not of pads)
         else lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);
@@ -192,7 +193,7 @@ export function floraHash(geos) {
 const made = new WeakMap();
 function paleBark(M) {
   const base = M.bark, m = base.clone(), was = base.onBeforeCompile;
-  m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", "{ float l_=dot(col,vec3(.2126,.7152,.0722)); float m_=smoothstep(.62,.7,fbm3(vWP*vec3(2.2,.9,2.2))); col=mix(vec3(l_)*vec3(2.25,2.28,2.2),vec3(.05,.045,.04),m_*.8); } diffuseColor.rgb=col;"); };
+  m.onBeforeCompile = (sh, rr) => { was.call(base, sh, rr); sh.fragmentShader = sh.fragmentShader.replace("diffuseColor.rgb=col;", "{ float l_=dot(col,vec3(.2126,.7152,.0722)); float m_=smoothstep(.62,.7,fbm3(vWP*vec3(2.2,.9,2.2))); col=mix(vec3(l_)*vec3(4.4,4.42,4.3),vec3(.05,.045,.04),m_*.5); } diffuseColor.rgb=col;"); };
   m.customProgramCacheKey = () => "paleBark"; m.name = "paleBark"; return m;
 }
 /**

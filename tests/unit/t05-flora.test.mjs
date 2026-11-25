@@ -118,3 +118,10 @@ test("no poplar's tip stands higher in the picture than the great hall's ridge, 
   }
   console.log("# " + rows.join("; "));
 });
+
+test("north of the rows the court's trees are broad pines, scattered, two framing cam01 below the eave (the art director, #573 comment 7166589253)", () => {
+  assert.ok(COURT_TREES.every((t) => t.kind === "pine"), "pines only in the court");
+  const corners = COURT_TREES.filter((t) => t.old);
+  assert.equal(corners.length, 2); for (const t of corners) assert.ok(t.rx >= 3.2 && Math.min(t.h, eaveCap(t.x, t.z)) <= eaveCap(t.x, t.z), `${t.x}: a wide crown under the eave`);
+  assert.ok(new Set(COURT_TREES.map((t) => Math.round(t.h))).size >= 3, "of uneven heights");
+});

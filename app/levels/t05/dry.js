@@ -40,6 +40,6 @@ const made = new WeakMap();
 export function dryMaterials(M) {
   if (!made.has(M)) made.set(M, { earth: dryCopy(M.earth, "dryEarth", 1, 0, 0.4), cedar: dryCopy(M.cedar, "dryCedar", [1.2, 1, 0.64], 0.7, 0.5),
     // the earth inside the walls, beside the path: withered grass, lighter and yellower than the town's dark earth (the art director, 2026-11-25: L* up by about 8, hue 75-90°, chroma 9 or less)
-    grass: dryCopy(M.earth, "dryGrass", [2.45, 1.5, 0.66], 0.15, 0.4) });
+    grass: dryCopy(M.earth, "dryGrass", [2.5, 1.48, 0.84], 0.2, 0.4) });
   return made.get(M);
 }
