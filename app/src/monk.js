@@ -103,10 +103,10 @@ export const HAT_OFF = { x: -0.53, z: -0.02, turn: 0.5, seat: 0.104, deep: 0.3, 
 // the meditation seal, 2026-11-25): palms up against his belly, the right below and the left lying on it (`stack` higher,
 // its fingers over the right's), each palm's middle `x` to its own side and `z` before his hips, the fingers running in
 // toward the other hand and `out` forward; the thumbs rise from the far edge of the palms and meet over the middle,
-// `thumb.up` over the left palm and `thumb.fwd` before the palms' middle, so that thumbs and fingers close round an
-// open oval. How high the hands lie is not written here: they are let down onto the cloth as the lap has it
+// `thumb.up` over the left palm and `thumb.fwd` before the palms' middle (each rising to `arch` of that height within
+// `turn` of its way in), so that thumbs and fingers close round an open oval. How high the hands lie is not written here: they are let down onto the cloth as the lap has it
 // (`layHands`), each lying no steeper than `tip`. `elbow` is the way the elbows are drawn.
-export const LAP_HAND = { x: 0.03, z: 0.166, out: 0.2, tip: 0.04, stack: 0.016, elbow: [1, -1, -0.6], thumb: { up: 0.023, fwd: 0.03, gap: 0.004 } };
+export const LAP_HAND = { x: 0.03, z: 0.166, out: 0.2, tip: 0.04, stack: 0.016, elbow: [1, -1, -0.6], thumb: { up: 0.023, fwd: 0.03, gap: 0.004, turn: 0.2, arch: 1.15 } };
 // A hand lying palm up, as rods along its fingers' way from the wrist's middle: how far along, how thick it is there
 // (the wrist's ball, the palm, the knuckles, the fingertips) and how far to either side it reaches.
 const HAND_ROD = [[0, 0.027, 0], [0.03, 0.013, 0.022], [0.052, 0.0105, 0.018], [0.082, 0.0105, 0.014]];
@@ -462,7 +462,8 @@ export function createMonk(opts = {}) {
       const reach = -tip.y, up = tip.z;
       // (the free thumb leaves the palm's far edge about half way along it)
       const by = -Math.min(0.03, Math.max(0.012, reach - 0.036));
-      h.thumb = { base: [0.021, by, 0.004], joint: [Math.max(tip.x, 0.021) + 0.005, by - 0.4 * (reach + by), up + 0.004], tip: tip.toArray() };
+      // (and rises steeply before it turns in, so that the two together are an arch with a level top, not a peak)
+      h.thumb = { base: [0.021, by, 0.004], joint: [Math.max(tip.x, 0.021) + 0.004, by - T.turn * (reach + by), up * T.arch], tip: tip.toArray() };
       h.meet = meet;
     }
     return out;
