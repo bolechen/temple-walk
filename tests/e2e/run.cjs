@@ -2784,12 +2784,16 @@ const scenarios = {
     p = await P(); expect(p.time === "day" && p.follow === false, "the hour must not turn while the book is open: " + JSON.stringify(p));
     // Every frame from here is read: from the first one the book is gone the hour is the visitor's own and the ink is shut over it, never a frame of the old hour.
     await t.page.evaluate(() => { const tag = () => document.getElementById("moodTag").textContent, leaf = () => document.querySelector("#curtain i").style.transform;
-      window.__frames = []; window.__dayWords = tag(); const f = () => { window.__frames.push({ open: document.getElementById("book").open, words: tag(), ink: leaf() }); requestAnimationFrame(f); }; requestAnimationFrame(f); });
+      window.__frames = []; window.__dayWords = tag(); const f = () => { window.__frames.push({ open: document.getElementById("book").open, words: tag(), ink: leaf(), veiled: document.body.classList.contains("veiled"), rail: getComputedStyle(document.querySelector(".rail")).opacity, stick: getComputedStyle(document.getElementById("stick")).opacity, hint: getComputedStyle(document.getElementById("hint")).opacity }); requestAnimationFrame(f); }; requestAnimationFrame(f); });
     await t.page.click("#bookClose");
     await t.until(async () => (await P()).time === "night", 30000, "the hour never turned to the visitor's own when the book was shut");
     await t.until(async () => t.page.evaluate(() => window.__frames.length > 0 && window.__frames.at(-1).ink === ""), 60000, "the ink never opened again");
     { const fr = await t.page.evaluate(() => ({ f: window.__frames, day: window.__dayWords })), after = fr.f.filter((x) => !x.open);
       expect(after.length > 1 && after.every((x) => x.words !== fr.day), "a frame after the book showed the old hour: " + JSON.stringify(after.slice(0, 4)));
+      // what floats over the picture steps aside while the ink is on it, and comes back when it has opened (#726)
+      const inked = after.filter((x) => x.ink !== "");
+      expect(inked.length > 0 && inked.every((x) => x.veiled && x.rail === "0" && x.stick === "0"), "the slips and the stick were on the ink: " + JSON.stringify(inked.find((x) => !(x.veiled && x.rail === "0" && x.stick === "0"))));
+      expect(after.at(-1).ink === "" && !after.at(-1).veiled, "the veil's class stayed after the ink opened: " + JSON.stringify(after.at(-1)));
       expect(/scaleY\(1(\.0+)?\)/.test(after[0].ink), "the ink was not shut over the first frame after the book: " + JSON.stringify(after[0])); }
     p = await P(); expect(p.follow === true && p.lamp > 0, "after the book the hour should follow the clock, lamps lit: " + JSON.stringify(p));
     await t.until(async () => (await hud()).tip === "seasons", 30000, "the line was not said: " + JSON.stringify(await hud()));
@@ -2805,6 +2809,9 @@ const scenarios = {
     // 山顶再坐一回 (from the book's small paper, as a visitor does) and then the book once more
     const R = () => t.page.evaluate(() => window.__rites().closing);
     await t.page.keyboard.press("Escape"); await t.until(async () => (await R()) === false, 60000, "the eye did not come home from the far view");
+    // with the eye home the slips are on the picture: the veil's class hides them and nothing else does, and they come back when it goes (#726)
+    { const o = await t.page.evaluate(async () => { const rail = document.querySelector(".rail"), op = () => getComputedStyle(rail).opacity, nap = () => new Promise((r) => setTimeout(r, 1200)); const before = op(); document.body.classList.add("veiled"); await nap(); const on = op(); document.body.classList.remove("veiled"); await nap(); return { before, on, after: op() }; });
+      expect(o.on === "0" && o.after !== "0" && o.before !== "0", "the veil's class should hide the slips and give them back: " + JSON.stringify(o)); }
     await t.page.evaluate(() => window.__book()); await t.until(() => shown("#book"), 30000, "the book"); await t.page.click("#bookMoreBtn"); await t.until(() => shown("#bookMore"), 10000, "更多"); await t.page.click("#bookReplay");
     await t.until(async () => (await R()) === true, 120000, "the close did not play again");
     await t.page.mouse.move(120, 120); await t.page.mouse.down(); await t.until(async () => (await R()) === false, 30000, "the close did not end"); await t.page.mouse.up();

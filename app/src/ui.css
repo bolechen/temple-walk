@@ -726,6 +726,8 @@ body.photo #keys, body.photo #stick, body.photo #jumpBtn, body.bare #jumpBtn, bo
 
 /* The close of the chapter (game.js `finale`): nothing on the picture but the words. */
 body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal, body.ending #way, body.ending #act, body.ending #hint, body.ending #say, body.ending #moodTag, body.ending #breathWord, body.ending #stick, body.ending #cross { opacity: 0 !important; pointer-events: none; }
+/* While the ink is shut over the picture after the book (yard.js followHour, #726): what floats over the picture steps aside, so that nothing sits on the black. The line at the foot says why, and stays. */
+body.veiled .rail, body.veiled #jumpBtn, body.veiled #turnBtn, body.veiled #bookBtn, body.veiled #goal, body.veiled #way, body.veiled #act, body.veiled #say, body.veiled #moodTag, body.veiled #breathWord, body.veiled #stick, body.veiled #cross { opacity: 0 !important; pointer-events: none; }
 #ending { position: absolute; inset: 0; z-index: 6; display: grid; place-items: end center; cursor: pointer; background: linear-gradient(to top, rgba(0,0,0,.42), rgba(0,0,0,0) 46%); }
 #ending[hidden] { display: none !important; }
 #endingLine { margin: 0 24px calc(15vh + env(safe-area-inset-bottom, 0px)); max-width: 30em; text-align: center; font: 400 clamp(21px, 3.6vmin, 32px)/1.7 var(--kai, serif); letter-spacing: .12em; color: var(--paper, #f3ecdc); text-shadow: 0 2px 14px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.6); opacity: 0; transform: translateY(8px); transition: opacity 1.1s ease, transform 1.1s ease; }

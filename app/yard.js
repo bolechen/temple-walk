@@ -1647,8 +1647,8 @@ createGame({
     const h = takeClock(state, Q); if (!h) return false;
     const changed = h !== state.time; setMood(state.season, h);
     if (!changed) return true;
-    inkVeil(1); const t0 = performance.now(), HOLD = 0.12, OPEN = 0.6;
-    const step = () => { const k = ((performance.now() - t0) / 1000 - HOLD) / OPEN; if (k >= 1) { inkVeil(0); return; } const e = k <= 0 ? 0 : k * k * (3 - 2 * k); inkVeil(1 - e); requestAnimationFrame(step); };
+    inkVeil(1); document.body.classList.add("veiled"); const t0 = performance.now(), HOLD = 0.12, OPEN = 0.6;
+    const step = () => { const k = ((performance.now() - t0) / 1000 - HOLD) / OPEN; if (k >= 1) { inkVeil(0); document.body.classList.remove("veiled"); return; } const e = k <= 0 ? 0 : k * k * (3 - 2 * k); inkVeil(1 - e); requestAnimationFrame(step); };
     requestAnimationFrame(step); return true;
   },
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
