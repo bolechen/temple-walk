@@ -32,6 +32,9 @@ export const DOU = Object.freeze({
   purlin: { h: 30, t: 10 },
   shy: 0.003,
 });
+/** How many steps out (each side's step, measured along either side) the corner set's two diagonal slanting arms reach: within the
+ *  sides' four, not out to the eave purlins' crossing. */
+export const CORNER_REACH = Object.freeze([2.6, 3.3]);
 /** The number of steps out (four: two plain arms, two slanting) and the height, in fen, from the cap board to the eave purlin's top. */
 export const STEPS = 4;
 export const HEIGHT = (f = 1) => (DOU.dou.h - 8 + DOU.tier * STEPS + DOU.arm.h + 6 + DOU.purlin.h) * f;   // (the first arm sits 8 fen down into the great block)
@@ -126,7 +129,9 @@ export function cornerSet(f) {
     const len = n * D.jump * r2 + D.jump * 0.4, g = arm(len * f, A.h * f * 1.15, A.t * f * 1.2, "x", len * f / 2 - D.jump * 0.2 * f, b(k) - 0.004, 0);
     out.push(g.rotateY(-Math.PI / 4)); small(n * D.jump, b(k) + A.h * f * 1.15, n * D.jump);
   }
-  out.push(slant(f, d, D.dou.h - 8 + D.tier * 2 - 0.5, 3 * D.jump * r2, D.ang.tail * 0.4, D.ang.rise, D.ang.drop * 1.3));
-  out.push(slant(f, d, D.dou.h - 8 + D.tier * 3 - 0.5, 4 * D.jump * r2 + 6, D.ang.tail * 0.3, D.ang.rise, D.ang.drop * 1.3));
+  // (held in among the sides' arms and hanging their beaks steeply: carried out to the eave purlins' crossing, a metre and a half
+  // under it with nothing beside them out there, the last one stuck out flat from the corner like a pole, the handover of #741)
+  out.push(slant(f, d, D.dou.h - 8 + D.tier * 2 - 0.5, CORNER_REACH[0] * D.jump * r2, D.ang.tail * 0.4, D.ang.rise, D.ang.drop * 2));
+  out.push(slant(f, d, D.dou.h - 8 + D.tier * 3 - 0.5, CORNER_REACH[1] * D.jump * r2, D.ang.tail * 0.3, D.ang.rise, D.ang.drop * 2));
   return out;
 }

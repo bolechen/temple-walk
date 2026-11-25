@@ -254,7 +254,8 @@ test("the timber overhead takes more of the inside's light than the walls, from 
 test("the wall ring's timber (frames, tie-beams, brackets) keeps the walls' share while the roof's timber rises: the roof's beams and purlins above it, its boards below (#608)", async () => {
   const { TIMBER } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), y0 = HALL.floor, at = [0, y0 + 9, -10];
-  assert.ok(h.parts.ring.size > 100, "the ring's boxes are recorded");
+  // (the bracket sets, their beams and the eave purlin are the ring's too, in lists of their own that the page keeps out of the floor's mirror: #741)
+  assert.ok(h.parts.ring.size > 20 && h.parts.bracketsX.length + h.parts.bracketsZ.length > 60, "the ring's boxes and the bracket sets are recorded");
   const brackets = h.parts.wood.filter((g) => h.parts.ring.has(g)), purlins = h.parts.wood.filter((g) => !h.parts.ring.has(g));
   assert.ok(brackets.length > 0 && purlins.length > 0 && purlins.length < 30, "the purlins stand apart from the ring");
   assert.ok(Math.abs(h.ringShut(...at) - Math.min(3, HALL.inside * TIMBER.ring)) < 1e-9, "the ring takes TIMBER.ring times the walls'");

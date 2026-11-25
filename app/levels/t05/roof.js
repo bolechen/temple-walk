@@ -57,10 +57,13 @@ const FAN = 0.7;
  * The roof over the eave's rectangle: x within ±EX, z from EB (back) to EF (front); the eave's edge at `eave` (along the
  * middle of each side, before the corners lift) and the ridge at `ridge`. Returns the surface, what lies under it, and the
  * meshes by material.
- * @param {{ EX: number, EF: number, EB: number, eave: number, ridge: number, columns: { X: number, zF: number, zB: number }, inner?: number }} o
+ * `purlin`, if given, is where the eave purlin lies (in from the eave's edge) in place of `ROOF.purlin`: the hall puts it on the bracket
+ * sets' outermost arms. `rest`, if given, is the eave purlins' crossing at each corner (how far out from the corner column, and its top):
+ * the corner beams rest on it.
+ * @param {{ EX: number, EF: number, EB: number, eave: number, ridge: number, columns: { X: number, zF: number, zB: number }, inner?: number, purlin?: number, rest?: { out: number, y: number }, surfaceOnly?: boolean }} o
  */
 export function buildRoof(o) {
-  const R = ROOF, { EX, EF, EB } = o, half = (EF - EB) / 2, zm = (EF + EB) / 2, rx = EX - half;
+  const R = o.purlin ? { ...ROOF, purlin: o.purlin } : ROOF, { EX, EF, EB } = o, half = (EF - EB) / 2, zm = (EF + EB) / 2, rx = EX - half;
   // The fold: from the eave purlin to the ridge in n falls about a rafter long, each purlin let down below the straight line
   // from the one above to the eave purlin (a tenth of the rise for the first, then half as much each one down); outside the
   // eave purlin the rafters run on at the lowest fall. The rise is what makes the ridge come out at `ridge` with the eave's edge at `eave`.
@@ -86,6 +89,8 @@ export function buildRoof(o) {
   const dPlan = (x, z) => Math.min(...dists(x, z));
   /** The shade under the eaves: deep under the roof, lighter toward its edge, where the court's light reaches up. */
   const ao = (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z) => 0.42 + 0.45 * (1 - smooth(0, 2.2, dPlan(x, z))) + 0.13 * smooth(o.eave - 3, o.eave + 0.5, -y + 2 * o.eave);
+
+  if (o.surfaceOnly) return /** @type {any} */ ({ heightAt, underAt, profile });   // (the hall asks the surface alone while it settles the bracket sets' size)
 
   // ---- The tiled slopes: four of them, each a grid of rows up the slope and columns along it, sharing the hips. ----
   // Rows: finely near the eave where the corners curl, at every fold, and every 0.8 m between.
@@ -176,7 +181,7 @@ export function buildRoof(o) {
   // ---- Rafters: round ones from the bracket sets out under the boards, square flying rafters over their ends. ----
   // Along each side they run straight out; past the corner column they fan, each aimed back at the corner column and
   // stopped where it meets the hip's line in plan, so that the two sides' fans meet along the corner beam.
-  const { X, zF, zB } = o.columns, raf = [], fly = [], beams = [];
+  const { X, zF, zB } = o.columns, raf = [], fly = [], beams = [], cornerBeams = [], CB = { w: 0.3, h: 0.42 };
   const zAxis = new THREE.Vector3(0, 0, 1), q = new THREE.Quaternion(), m4 = new THREE.Matrix4(), one = new THREE.Vector3(1, 1, 1), mid = new THREE.Vector3(), dv = new THREE.Vector3();
   // A straight piece of timber from a to b; given `square`, turned about its own length so that its top lies flat to the boards
   // over its middle (a flying rafter in the corner's fan, where the eave lifts, then hangs under the boards evenly instead of
@@ -225,7 +230,16 @@ export function buildRoof(o) {
     // The corner beam: out along the diagonal from over the corner column to past the eave's corner, its head turned up.
     const a = [cx, 0, cz], b = [ex + sx * 0.12, 0, ez + sz * 0.12];
     a[1] = heightAt(cx, cz) - R.deck - R.flyer.h - 0.35; b[1] = heightAt(ex, ez) - R.deck + 0.1;
-    stick(beams, a, b, (L) => new THREE.BoxGeometry(0.3, 0.42, L));
+    // Resting on the eave purlins' crossing (the corner bracket set's top, `o.rest`): the beam's underside on the crossing's top,
+    // its head as before under the corner's boards, and its tail carried on in to over the corner column along that line.
+    if (o.rest) {
+      const p = [cx + sx * o.rest.out, 0, cz + sz * o.rest.out], run = (q) => Math.hypot(q[0] - b[0], q[2] - b[2]);
+      let yc = o.rest.y + CB.h / 2;
+      for (let k = 0; k < 3; k++) { const pitch = Math.atan2(b[1] - yc, run(p)); yc = o.rest.y + CB.h / 2 / Math.cos(pitch); }
+      const t = run(a) / run(p); a[1] = b[1] + (yc - b[1]) * t;
+      cornerBeams.push({ x: p[0], z: p[2], rest: o.rest.y, bottom: (/** @type {number} */ x, /** @type {number} */ z) => { const u = Math.hypot(x - b[0], z - b[2]) / run(a); return b[1] + (a[1] - b[1]) * u - CB.h / 2 / Math.cos(Math.atan2(a[1] - b[1], run(a))); } });
+    }
+    stick(beams, a, b, (L) => new THREE.BoxGeometry(CB.w, CB.h, L));
     // its head sheathed in a small fired-clay beast (the taoshou), snout out along the diagonal, as the art director read off photograph 21
     // (#573, point 9: the corner's tip is a small beast); short, since from the court a longer head read as a spike past the eave
     const tip = [b[0] + sx * 0.15, b[1] + 0.17, b[2] + sz * 0.15];
@@ -375,6 +389,6 @@ export function buildRoof(o) {
     heightAt, underAt, profile, ao,
     parts: { tiles, underside: under, fascia: [fascia], step: [step], rafters: raf, flyers: fly, beams, ends, drips, ridge: [...ridgeParts, ...beasts.map((g) => plain(g))] },
     ridge: { rx, zm, top: ridgeTop(0) + RG.h, endTop: ridgeTop(rx) + RG.h, ornamentTop: o.ridge + OR.top },
-    fold: { n, seg, rise, s0, breaks },
+    fold: { n, seg, rise, s0, breaks }, purlin: R.purlin, cornerBeams,
   };
 }

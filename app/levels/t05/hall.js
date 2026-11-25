@@ -88,7 +88,7 @@ export const RIDGE = (() => { const EX = XS[XS.length - 1] + HALL.overhang, EF =
 export function buildHall(M) {
   const H = HALL, y0 = H.floor, top = y0 + H.column, X = XS[XS.length - 1], zB = ZS[ZS.length - 1];
   const wallIn = H.wall - H.out;   // how far the wall's inner face lies inside the column line
-  const ring = new Set(), plaster = [], wood = [], woodZ = [], dark = [], mural = [], leaves = [], ledges = [], iron = [], windowShade = [], walk = { solids: [], decks: [], posts: [] }, closed = [];
+  const ring = new Set(), brackets = { x: /** @type {THREE.BufferGeometry[]} */ ([]), z: /** @type {THREE.BufferGeometry[]} */ ([]) }, plaster = [], wood = [], woodZ = [], dark = [], mural = [], leaves = [], ledges = [], iron = [], windowShade = [], walk = { solids: [], decks: [], posts: [] }, closed = [];
   /** The wall ring's timber (door and window frames, tie-beams, cap boards, bracket sets, the eave purlins) takes the walls' share of the sky, not the roof timber's (TIMBER.ring). */
   const rw = (/** @type {THREE.BufferGeometry} */ g) => { wood.push(g); ring.add(g); };
   // The hall's own floor, a thin course laid over the platform's top within the walls: the platform's top is one face from
@@ -175,7 +175,17 @@ export function buildHall(M) {
   // the walls, the gongyan boards, the frames and the purlins below rise to (`underAt`).
   const EX = X + H.overhang, EF = ZS[0] + H.overhang, EB = zB - H.overhang, D = EF - EB, half = D / 2, zm = (EF + EB) / 2, rx = EX - half;
   const slope = (H.ridge - H.eave) / half;
-  const roofOf = buildRoof({ EX, EF, EB, eave: H.eave, ridge: H.ridge, columns: { X, zF: ZS[0], zB }, inner: H.overhang + 0.35 });
+  // The roof and the bracket sets under it are worked out together. The sets' fen (dougong.js) is the size that brings the eave
+  // purlin on their outermost arms up under the roof's boards where it lies; and the roof's eave purlin, where its fold begins
+  // (roof.js, `purlin`), is that purlin, so many fen out from the column line (#741: the two had stood 0.31 m apart). Each
+  // depends on the other: a few rounds settle both to well under a millimetre. The corner beams then rest on the crossing of the
+  // two eave purlins at each corner (`rest`), the corner set's top.
+  const lt = H.lintel, cap = top + 0.2;
+  const roofWith = (/** @type {number} */ f, full = false) => buildRoof({ EX, EF, EB, eave: H.eave, ridge: H.ridge, columns: { X, zF: ZS[0], zB }, inner: H.overhang + 0.35,
+    purlin: H.overhang - REACH(f), ...(full ? { rest: { out: REACH(f), y: cap + HEIGHT(f) } } : { surfaceOnly: true }) });
+  let fen = 0.0187;
+  for (let k = 0; k < 3; k++) { const surf = roofWith(fen); for (let i = 0; i < 30; i++) fen = (surf.underAt(0, ZS[0] + REACH(fen) + DOU.purlin.t * fen / 2) - cap) / HEIGHT(1); }
+  const roofOf = roofWith(fen, true);
   // The underside's height above a point (x, z) under the roof.
   const underAt = roofOf.underAt;
 
@@ -183,10 +193,7 @@ export function buildHall(M) {
   // underside, the wall between the bracket sets; and the bracket sets themselves, one on each column and one in the
   // middle of each bay, stepping out under the eave and in over the floor, so that from the terrace the eave reads as
   // columns, beam and brackets, not one dark band.
-  const lt = H.lintel, cap = top + 0.2;
-  // The bracket sets' fen (dougong.js): the size that brings the eave purlin on their outermost arms up under the roof's
-  // boards where it lies (the roof's underside falls outward, so the farther the sets reach the lower it is there).
-  let fen = 0.0187; for (let i = 0; i < 30; i++) fen = (underAt(0, ZS[0] + REACH(fen) + DOU.purlin.t * fen / 2) - cap) / HEIGHT(1);
+  // (the fen and the roof were settled together above)
   const set = merge(bracketSet(fen)), corner = merge(cornerSet(fen));
   /** @type {[boolean, number, number, readonly number[], number][]} */
   const sides = [   // [along x?, the column line's z or x, outward sign, the column positions along it, the wall's outer face off the line]
@@ -227,18 +234,20 @@ export function buildHall(M) {
     // from the third up, and on their outermost arms the eave purlin.
     const sets = []; pos.forEach((p, i) => { if (i > 0 && i < pos.length - 1) sets.push(p); if (i < pos.length - 1) sets.push((p + pos[i + 1]) / 2); });
     const turn = ax ? (out > 0 ? 0 : Math.PI) : (out > 0 ? Math.PI / 2 : -Math.PI / 2);
-    for (const u of sets) list.push(set.clone().rotateY(turn).translate(ax ? u : at, cap, ax ? at : u));
+    // (the sets, the beams along them and the purlin in lists of their own: the page leaves them out of the floor's mirror, site.js)
+    const bl = { push: (/** @type {THREE.BufferGeometry} */ g) => (ax ? brackets.x : brackets.z).push(g) };
+    for (const u of sets) bl.push(set.clone().rotateY(turn).translate(ax ? u : at, cap, ax ? at : u));
     // (Along the ends each of these is a hair shallower top and bottom: at the corners they cross the front's and back's
     // on one plane, #688.)
     const sh = ax ? 0 : DOU.shy;
-    const row = (yb, h, d, o) => put(list, len, h - 2 * sh, d - 2 * sh, mid, yb + h / 2, at + out * o);
+    const row = (yb, h, d, o) => put(bl, len, h - 2 * sh, d - 2 * sh, mid, yb + h / 2, at + out * o);
     const tierY = (k) => cap + (DOU.dou.h - 8 + DOU.tier * k) * fen;
     for (const k of [2, 3, 4]) row(tierY(k) + DOU.shy * 2, DOU.arm.h * fen - DOU.shy * 4, DOU.arm.t * fen, 0);   // the column-head beams (a hair shallower than the arms they cross)
     const pY = tierY(4) + (DOU.arm.h + 6) * fen;
-    put(list, len + 2 * REACH(fen) + 0.6, DOU.purlin.h * fen - 2 * sh, DOU.purlin.t * fen, mid, pY + DOU.purlin.h * fen / 2, at + out * REACH(fen));   // the eave purlin
+    put(bl, len + 2 * REACH(fen) + 0.6, DOU.purlin.h * fen - 2 * sh, DOU.purlin.t * fen, mid, pY + DOU.purlin.h * fen / 2, at + out * REACH(fen));   // the eave purlin
   }
   // The four corner sets, each reaching out along both sides and the diagonal.
-  for (const [sx, sz, turn] of [[1, 1, 0], [-1, 1, -Math.PI / 2], [-1, -1, Math.PI], [1, -1, Math.PI / 2]]) { const g = corner.clone().rotateY(turn).translate(sx * X, cap, sz > 0 ? ZS[0] : zB); wood.push(g); ring.add(g); }
+  for (const [sx, sz, turn] of [[1, 1, 0], [-1, 1, -Math.PI / 2], [-1, -1, Math.PI], [1, -1, Math.PI / 2]]) { brackets.x.push(corner.clone().rotateY(turn).translate(sx * X, cap, sz > 0 ? ZS[0] : zB)); }
 
   // Inside, the roof open to its timber: the inner columns, and on each of the eight inner column lines a frame of four
   // tiers of beams, each shorter than the one below, up to a post under the ridge; and the purlins along the hall, one at
@@ -297,11 +306,13 @@ export function buildHall(M) {
   return {
     // The plaster finds the foot of its wall (where the damp rises from) in its first texture coordinate: the hall's floor,
     // not a box's own 0 to 1, which laid the damp line slanting across every wall (the diagonal band the art review saw).
-    parts: { leaves, ledges, iron, windowShade, plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], ...roofOf.parts },
+    parts: { leaves, ledges, iron, windowShade, plaster: plaster.map((g) => footAt(g, y0)), wood, woodZ, ring, bracketsX: brackets.x, bracketsZ: brackets.z, dark, mural: mural.map((g) => footAt(g, y0)), floor, frame, columns: [...columnGeo, ...innerGeo], ...roofOf.parts },
     walk,
     closed,
     columns,
     inner,
+    // the bracket sets' fen (metres) and how far out of the column line their eave purlin lies, settled with the roof
+    dougong: { fen, reach: REACH(fen), purlinTop: cap + HEIGHT(fen), cap },
     // How much of the sky reaches a point: under the roof and inside the walls, little (the white box's stand-in for the
     // occlusion a closed hall has, which a mesh's own baked occlusion does not see); outside, all of it. Handed to
     // geo.mesh's `ao`, so that from the court the doorways read darker than the wall (the review of #425).
@@ -339,7 +350,7 @@ export function buildHall(M) {
       const t = Math.min(1, Math.max(0, (zF + FILL.out - z) / (FILL.out + FILL.depth)));
       return t * t * (3 - 2 * t);
     },
-    roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge, heightAt: roofOf.heightAt, underAt, ao: roofOf.ao, top: roofOf.ridge.top, ornamentTop: roofOf.ridge.ornamentTop },
+    roof: { EX, EF, EB, rx, zm, slope, eave: H.eave, ridge: H.ridge, heightAt: roofOf.heightAt, underAt, ao: roofOf.ao, top: roofOf.ridge.top, ornamentTop: roofOf.ridge.ornamentTop, purlin: roofOf.purlin, cornerBeams: roofOf.cornerBeams },
     box: { x0: -OUTER.x, x1: OUTER.x, z0: OUTER.zB, z1: OUTER.zF },
   };
 }
