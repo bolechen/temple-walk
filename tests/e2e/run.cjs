@@ -557,6 +557,23 @@ const scenarios = {
     expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // T05's sound field, first version (docs/t05/SOUND.md §1; score.js `layerOf`): the court's reverb out of doors, the great hall's
+  // long one under its roof, which is a shell on the platform and no room under the court, so it is where he stands that says
+  // which. In from the terrace, to station E, and out again, with no page error; the prologue's own reverbs stay the prologue's.
+  "t05-sound": { tier: 2, async run(b, base) {
+    const t = await open(b, base, "level=t05&q=low&fast=1&cam=0,20,0,0&view=first" + BARE);
+    await t.page.evaluate(() => window.__music(true)); await t.page.waitForTimeout(1500);
+    const room = () => t.page.evaluate(() => { const m = window.__music(); return { verb: m.verb, long: m.long, zone: m.zone, state: m.state }; });
+    let r = await room(); expect(r.state === "running" && r.verb === "court" && !r.long, "out of doors T05 should be in the court's reverb: " + JSON.stringify(r));
+    await t.until(async () => (await t.page.evaluate(() => window.__bird())).bed > 0, 30000, "T05's Z1 floor of sound (BED) never came up in the court");
+    await t.page.evaluate(() => window.__walk([[0, 14.4], [0, 2], [0, -12]]));
+    await t.until(async () => (await room()).verb === "hall", 300000, "under the great hall's roof the long reverb never took over");
+    r = await room(); expect(r.long === true, "the hall's reverb should be the long one: " + JSON.stringify(r));
+    const peak = await t.page.evaluate(() => { const x = window.__listen(); return x.peak ?? x.rms ?? 0; }); expect(Number.isFinite(peak), "the mix could not be read");
+    await t.page.evaluate(() => window.__walk([[0, 2], [0, 14.4], [0, 20]]));
+    await t.until(async () => (await room()).verb === "court", 300000, "coming out of the hall the court's reverb never came back");
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // T05 walked as a visitor walks it (PLAN.md item 12, PRD.md §9 item 3): ?level=t05 straight in on the workbench, at the
   // walking pace (no ?fast), from the outer gate's place to station F. The long way up the axis is walked by __walk; the two
   // stretches where the prologue once only let a hurried test through (docs/t00/PITFALLS.md A3) are walked on the keys:

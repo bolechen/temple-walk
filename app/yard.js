@@ -21,7 +21,7 @@ import { pickQuality, createGovernor, mirrorAt } from "./src/quality.js";
 import { recordTap, strike, flutter, cueState, shutterSound, stampSound, photoSounds, bellsRinging, startAmbience, listen, setLevels, musicState, wellDrip, onDrop, knock, bird, ambienceState, footstep, stepState } from "./src/audio.js";
 import { createWell } from "./src/well.js";
 import { underfoot } from "./src/steps.js";
-import { zoneOf } from "./src/score.js";
+import { zoneOf, layerOf } from "./src/score.js";
 import { createSettings, browserSettingsStore, DEFAULTS as SETTING_DEFAULTS } from "./src/settings.js";
 import { createBamboo } from "./src/bamboo.js";
 import { createTrees, geometryHash } from "./src/trees.js";
@@ -454,7 +454,7 @@ const ZB = L.zones;
 // heard are the ones the leaves and the smoke are seen to follow. (Under ?shot or reduced motion the picture holds its
 // clock at 0; the sound goes on along the timeline.)
 let joyaOn = false;   // the year-end bell's night is open (joya-ui.js says so): the bell's court plays only the drone (score.js)
-const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), joya: joyaOn, season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
+const hearing = () => ({ grove: grove(), zone: zoneOf(pos.x, pos.z, inside, ZB), layer: layerOf(pos.x, pos.z, inside, ZB), joya: joyaOn, season: state.season, time: state.time, wet: mood.wet, snow: mood.snow, t: performance.now() / 1000 });
 const hear = () => startAmbience(hearing);
 canvas.addEventListener("pointerdown", hear, { once: true });
 const touches = new Map(); let pinch = 0;
