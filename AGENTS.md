@@ -117,7 +117,7 @@ GitHub 给 issue 加了状态（issue 页标题下的按钮）。会话的 GitHu
 | 角色 | 会话 | 只管 | 不管 |
 |---|---|---|---|
 | 总主创 | `session_01Cq65vJbggEfsVdQmyXzsVi`（2026-11-22 起；之前是 `session_01Cq65vJpFyVG8js8MBGFUbt`，已停） | 和所有者对接的唯一入口；跨关卡的事：引擎与共用代码（`app/src` 的引擎部分、`tools`、CI）、发版、运营分析、几位美术与评审的调度；**合并的唯一闸门** | 关卡内的派活和逐条验收 |
-| T00 主创 | `session_01Cq65vJyJgCA8yZgDh5jo55` | T00 的积压、美术清单、真机反馈、独立评审的问题；派 T00 的活，先审一遍 PR，写「T00 主创可合」 | T05；共用代码怎么取舍 |
+| T00 主创 | `session_01Cq65vEug3TFxjsh2gYxj57`（2026-11-25 接任；交接见 `docs/handoff/T00-LEAD-HANDOFF-2026-11-25.md`） | T00 的积压、美术清单、真机反馈、独立评审的问题；派 T00 的活，先审一遍 PR，写「T00 主创可合」 | T05；共用代码怎么取舍 |
 | T05 主创 | `session_01Cq65vJaidrNYmuEkYhCvsm` | PRD 第 1–13 项的排程、造像、门殿、机位验收；派 T05 的活，先审一遍 PR，写「T05 主创可合」 | T00；共用代码怎么取舍 |
 
 - 关卡主创只跟总主创沟通。要所有者拍板的事，由总主创汇总后转达。
