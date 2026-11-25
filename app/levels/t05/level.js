@@ -37,6 +37,7 @@ export default {
   groveSound: () => 0,
   // Everything built that the following eye may meet: the compound and the way, with room round them.
   eyeBox: { x0: -COMPOUND.x - 20, x1: COMPOUND.x + 20, y0: -20, y1: 60, z0: COMPOUND.zN - 20, z1: WAY.zS + 20 },
+  firstMood: { season: "winter", time: "day" },   // the first look is early winter by day, J01 (the owner, 2026-11-25: agreed that T05's first look is early winter by day; docs/t05/DECISIONS.md); an address, a crossing's carried visit or a hand's choice still comes before it
   eyeThickWalls: true,                 // its gable walls are 1 m thick: the following eye does not sweep through them when he turns out of an aisle (#562)
   moodFor: (season, time) => (season === "winter" && time === "day" ? J01 : null),
   hallTapZ: -Infinity,                 // no hall to tap yet

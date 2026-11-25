@@ -82,6 +82,20 @@ export function moodOf(season, time, tune) {
   m.label = `${NAMES[season]} · ${NAMES[time]}`;
   return m;
 }
+// The season and hour a page opens in (#573 step 7). `query` is the address (has/get); `now` is moodNow(); `prologueDay` says the book has not
+// been filled once, so the walk is by day (the owner, 2026-11-17, yard.js). `firstMood` is what a level says about its own first look
+// ({ season, time }, Level.firstMood); a level that keeps no book of its own (`keepsPlace` false) has no "later", so it is always the first look.
+// An address that names a season, an hour or a fixed view (?shot, ?show, ?cam) is obeyed before all of this. A level that declares nothing
+// gets exactly what the prologue always had: the visitor's own season, and by day until the book is filled.
+export function startMood({ query, now, prologueDay, firstMood, keepsPlace }) {
+  const fixed = query.has("shot") || query.has("show") || query.has("cam"), first = !!firstMood && (!keepsPlace || prologueDay);
+  const askedSeason = SEASONS.includes(query.get("season")), askedTime = TIMES.includes(query.get("time"));
+  return {
+    season: askedSeason ? query.get("season") : fixed ? "summer" : first ? firstMood.season : now.season,
+    time: askedTime ? query.get("time") : fixed ? "day" : first ? firstMood.time : prologueDay ? "day" : now.time,
+    follow: !askedTime && !fixed && !prologueDay && !first,   // (the hour follows the clock only after the prologue, and not on a level's own first look)
+  };
+}
 // The season and hour it is now, where the visitor is.
 export function moodNow(d = new Date()) {
   const mo = d.getMonth(), h = d.getHours() + d.getMinutes() / 60;

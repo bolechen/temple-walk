@@ -661,6 +661,12 @@ const scenarios = {
             expect(lv.id === "t05" && lv.known === true, "the canary should walk T05: " + JSON.stringify(lv));
             const w = await t.page.evaluate(() => window.__walker()); expect(w.mode !== "old" && w.bytes > 0, "T05's own floor on the canary: " + JSON.stringify(w));
             const s0 = await t.state(); expect(Math.hypot(s0.x, s0.z - 215) < 1, "on the canary he arrives at T05's gate, not where the prologue kept him: " + JSON.stringify(s0));
+            // T05's first look is early winter by day (Level.firstMood, #573 step 7), whatever the hour at home; an address that names a season still comes first.
+            const first = await t.page.evaluate(() => { const q = window.__probe(); return [q.season, q.time]; });
+            expect(first[0] === "winter" && first[1] === "day", "T05 should open in early winter by day: " + JSON.stringify(first));
+            const asked = await open(b, srv.base, "level=t05&season=autumn&q=low&fast=1" + BARE, { route }), got = await asked.page.evaluate(() => { const q = window.__probe(); return [q.season, q.time]; });
+            expect(got[0] === "autumn" && got[1] === "day", "?season=autumn should still be autumn: " + JSON.stringify(got));
+            expect(asked.errors.length === 0, "canary (autumn): " + asked.errors.join("\n")); await asked.close();
             await t.page.evaluate(() => window.__walk([[0, 200]]));
             await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 200) < 0.6; }, 120000, "he did not walk on the canary's T05");
             await t.page.evaluate(() => dispatchEvent(new Event("pagehide")));
