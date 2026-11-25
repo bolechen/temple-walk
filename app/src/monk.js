@@ -830,7 +830,7 @@ export function createMonk(opts = {}) {
   const rest = bones.map((b) => [b.position.clone(), b.quaternion.clone()]);
   const springs = { trail: spring(), side: spring(), tailX: spring(60, 7), tailZ: spring(60, 7), hatX: spring(55, 6), hatZ: spring(55, 6) };
   const blink = createBlink(), lid = { value: 0 }; let eyed = false, blinking = true;
-  let phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, hopW = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
+  let hatAt = 0, phase = 0, gait = 0, palms = 0, seat = 0, perch = 0, legSit = 0, legKind = null, hopW = 0, lastYaw = null, lastSpeed = 0, turn = 0, accel = 0, drop = 0, bodyHeight = null, hangs = [false, false], pelvisRef = null, stairW = 0, climbing = 0;
   const footY = [null, null], launchY = [null, null], landY = [0, 0], pitchOf = [0, 0], hemScale = [1, 1, 1, 1], targets = [V3(), V3()];
   // Each time a shoe comes down flat, where (the middle of its sole), on what height and pointing which way: yard.js
   // takes these to press his prints into the snow. `lastN`: how many strides each foot had begun a frame ago.
@@ -853,24 +853,26 @@ export function createMonk(opts = {}) {
   }
   // The hands' own frame for a pose, in the frame of the bone they are placed against.
   function handFrame(mode, s, out) {
-    if (mode === "thigh") { _y.set(0, 0.15, -1).normalize(); _z.set(0, -1, -0.15).normalize(); }   // palms down on the thighs, fingers forward
+    if (mode === "lap") { _z.set(0, 1, 0); _y.set(s, 0, -0.3).normalize(); }   // (a worn body's: palms up in the lap, fingers in toward each other)
+    else if (mode === "thigh") { _y.set(0, 0.15, -1).normalize(); _z.set(0, -1, -0.15).normalize(); }   // palms down on the thighs, fingers forward
     else { _y.set(0, -Math.cos(0.22), -Math.sin(0.22)); _z.set(-s, 0, 0); }   // fingers up and a little forward, palm to palm
     _x.crossVectors(_y, _z).normalize(); _z.crossVectors(_x, _y);
     return out.setFromRotationMatrix(_m.makeBasis(_x, _y, _z));
   }
   // Seated on a cushion his hat is not on his back (#664: the design sheet's seated figure has none, and behind a seated
   // back it stood out like a shield): as he comes down it is taken off and laid on its rim on the floor at his right,
-  // HAT_OFF from his middle, and as he gets up it goes back. `k` is how far it has gone over (0 on his back, 1 laid
-  // down); between, it goes over on a low arc. The floor is what the cushion lies on: `surfaceAt` there, or, where that
+  // HAT_OFF from his middle (at his left if the page says his right is taken: `grounding.hat` 1, hatside.js), and as he
+  // gets up it goes back. `k` is how far it has gone over (0 on his back, 1 laid down); between, it goes over on a low arc. The floor is what the cushion lies on: `surfaceAt` there, or, where that
   // says nothing sensible (no floor given, or a drop beside the seat), a cushion's height under the seat.
   const hatP0 = V3(), hatP1 = V3(), hatS = V3(), hatQ0 = new THREE.Quaternion(), hatQ1 = new THREE.Quaternion(), hatM = new THREE.Matrix4();
-  function layHat(k, surfaceAt) {
+  function layHat(k, surfaceAt, side) {
+    const x = -side * HAT_OFF.x;   // (HAT_OFF is written for his right)
     group.updateMatrixWorld(true);
     B.hat.matrixWorld.decompose(hatP0, hatQ0, hatS);
-    group.localToWorld(hatP1.set(HAT_OFF.x, 0, HAT_OFF.z));
+    group.localToWorld(hatP1.set(x, 0, HAT_OFF.z));
     const groupY = group.matrixWorld.elements[13]; let floor = surfaceAt ? surfaceAt(hatP1.x, hatP1.z) - groupY : NaN;
     if (!(floor <= 0.001 && floor > -HAT_OFF.deep)) floor = -HAT_OFF.seat;
-    hatM.makeRotationY(HAT_OFF.turn).setPosition(HAT_OFF.x, floor + 0.006, HAT_OFF.z).multiply(hatOff).premultiply(group.matrixWorld).decompose(hatP1, hatQ1, hatS);
+    hatM.makeRotationY(-side * HAT_OFF.turn).setPosition(x, floor + 0.006, HAT_OFF.z).multiply(hatOff).premultiply(group.matrixWorld).decompose(hatP1, hatQ1, hatS);
     hatP0.lerp(hatP1, k); hatP0.y += HAT_OFF.arc * Math.sin(Math.PI * k); hatQ0.slerp(hatQ1, k);
     hatM.compose(hatP0, hatQ0, hatS.set(1, 1, 1)).premultiply(_inv.copy(B.hat.parent.matrixWorld).invert()).decompose(B.hat.position, B.hat.quaternion, hatS);
     B.hat.updateMatrixWorld(true);
@@ -1076,6 +1078,7 @@ export function createMonk(opts = {}) {
     // `grounding.act` is what an observance asks of him over the pose (rites.js): `bow` and `twist` of the trunk and
     // `nod` of the head in radians, `look` the head turned aside (radians, + to his left), `breath` from -1 (out) to 1 (in), and for either hand a place in the world to
     // reach (`hands.left.at`), which way its fingers and palm turn there, and how far it has gone over (`w`, 0 to 1).
+    // `grounding.hat` says which side of a cushion his hat is laid on (-1 or nothing his right, 1 his left).
     // `grounding.rise` (0 as he leaves the seat, 1 stood up) and `grounding.crouch` (how far his knees give as he lands,
     // in metres) are the getting-up-from-a-seat pose's.
     update(dt, speed, pose, t, surfaceAt, grounding = {}) {
@@ -1117,8 +1120,10 @@ export function createMonk(opts = {}) {
         lift = clamp(bodyHeight - rootY, -0.35, 0.2);
       } else bodyHeight = rootY;
       // (Landing from a seat, `crouch` lets his knees give a little under him before he stands straight.)
-      B.root.position.z = -SEAT_LEGS.back * seat;
-      B.root.position.y = lift - SIT_DROP * perch - CUSHION_DROP * seat + Math.sin(t * 0.9) * 0.006 * seat - (rise ? Math.max(0, grounding.crouch || 0) : 0);
+      // (A worn body, made elsewhere, sits as it did: the seat worked out here is for the robe built here, `lapSeat`.)
+      const lapSeat = !dressed;
+      B.root.position.z = lapSeat ? -SEAT_LEGS.back * seat : 0;
+      B.root.position.y = lift - SIT_DROP * perch - (lapSeat ? CUSHION_DROP : SIT_DROP) * seat + Math.sin(t * 0.9) * 0.006 * seat - (rise ? Math.max(0, grounding.crouch || 0) : 0);
 
       // The spine, posed directly: the pelvis turns with the leading leg, the chest against it; he leans into his walk,
       // bows to pray, and otherwise carries his face a little up.
@@ -1126,10 +1131,10 @@ export function createMonk(opts = {}) {
       B.hips.position.y += 0.0025 * breathe * (1 - gait);
       B.hips.position.z += 0.035 * perch;   // on a stool he sits toward its front edge, so that his shins hang clear of it
       B.hips.rotation.set(0, twist, 0.022 * Math.sin(phase) * gait);
-      B.spine.rotation.set(0.025 * gait + 0.04 * palms + 0.05 * perch + 0.5 * bow + lean, -twist * 0.5 + 0.5 * turnTo, 0);
+      B.spine.rotation.set(0.025 * gait + 0.04 * palms + (lapSeat ? 0 : 0.04 * seat) + 0.05 * perch + 0.5 * bow + lean, -twist * 0.5 + 0.5 * turnTo, 0);
       B.chest.rotation.set(0.03 * gait + 0.05 * palms + 0.006 * breathe + 0.4 * bow + 0.6 * lean - 0.035 * (air || 0), -twist * 0.9 + 0.5 * turnTo, -0.012 * Math.sin(phase) * gait);
       B.neck.rotation.x = -0.03 * gait - 0.25 * lean;   // (rising, his face stays up as his trunk comes over his feet)
-      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) * (1 - perch) + 0.2 * palms + 0.04 * seat + 0.05 * perch + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4 + 0.6 * look, -0.018 * Math.sin(phase) * gait);
+      B.head.rotation.set(-0.06 * (1 - palms) * (1 - seat) * (1 - perch) + 0.2 * palms + (lapSeat ? 0.04 : 0.14) * seat + 0.05 * perch + 0.015 * Math.sin(phase * 2) * gait + 0.1 * bow + nod, twist * 0.4 + 0.6 * look, -0.018 * Math.sin(phase) * gait);
       // A breath taken on purpose shows: the chest fills and rises, the shoulders with it; the head keeps its size.
       if (air !== null) { const k = 0.5 + 0.5 * air; B.chest.scale.set(1 + 0.035 * k, 1, 1 + 0.06 * k); B.neck.scale.set(1 / (1 + 0.035 * k), 1, 1 / (1 + 0.06 * k)); B.chest.position.y += 0.007 * k; for (const [n] of SIDES) B[n + "Shoulder"].position.y += 0.006 * k; }
 
@@ -1234,6 +1239,10 @@ export function createMonk(opts = {}) {
           if (onStool) {
             kneeL.copy(hipL).addScaledVector(tv.set(s * 0.12, -0.05, 1).normalize(), THIGH);
             ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.08, -1, 0.14).normalize(), SHIN);
+          } else if (!lapSeat) {
+            const front = s > 0 ? 0.04 : 0;
+            kneeL.copy(hipL).addScaledVector(tv.set(s * 0.235, 0.075, 0.13 + front).sub(hipL).normalize(), THIGH);
+            ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.959, 0, -0.283), SHIN); ankL.z += front * 0.5;
           } else {
             // (the seat's frame is his own, with the cushion's crown at his feet: SEAT_LEGS)
             const leg = seatRods[i];
@@ -1273,11 +1282,12 @@ export function createMonk(opts = {}) {
         const mode = palms >= Math.max(seat, perch) ? "pray" : perch > seat ? "thigh" : "lap", anchor = mode === "pray" ? B.chest : B.hips;
         group.updateMatrixWorld(true);
         if (mode === "pray") anchor.localToWorld(tv.set(s * 0.0125, 0.02, 0.165));
+        else if (mode === "lap" && !lapSeat) anchor.localToWorld(tv.set(s * 0.012, 0.055 + (s > 0 ? 0.012 : 0), 0.13));
         else if (mode === "lap") { tv.copy(lapHands[n].wrist); tv.z -= SEAT_LEGS.back; tv.y += CUSHION_DROP * (1 - seat); group.localToWorld(tv); }
         else anchor.localToWorld(tv.set(s * 0.085, 0.062, 0.14));
-        reach(ua, la, UPPER, FORE, tv, (mode === "lap" ? tv2.set(s * LAP_HAND.elbow[0], LAP_HAND.elbow[1], LAP_HAND.elbow[2]) : tv2.set(s, mode === "pray" ? -1.3 : -0.8, mode === "pray" ? -0.35 : -0.5)).applyQuaternion(gq), -1);
+        reach(ua, la, UPPER, FORE, tv, (mode === "lap" && !lapSeat ? tv2.set(s, -0.2, -0.6) : mode === "lap" ? tv2.set(s * LAP_HAND.elbow[0], LAP_HAND.elbow[1], LAP_HAND.elbow[2]) : tv2.set(s, mode === "pray" ? -1.3 : -0.8, mode === "pray" ? -0.35 : -0.5)).applyQuaternion(gq), -1);
         ua.updateMatrixWorld(true);
-        if (mode === "lap") tq.copy(gq).multiply(lapHands[n].q); else anchor.getWorldQuaternion(tq).multiply(handFrame(mode, s, tq2));
+        if (mode === "lap" && lapSeat) tq.copy(gq).multiply(lapHands[n].q); else anchor.getWorldQuaternion(tq).multiply(handFrame(mode, s, tq2));
         la.getWorldQuaternion(qa); hd.quaternion.copy(qa.invert().multiply(tq));
         qa.copy(ua.quaternion); qb.copy(la.quaternion); qc.copy(hd.quaternion);
         ua.quaternion.slerpQuaternions(q0, qa, w); la.quaternion.slerpQuaternions(q1, qb, w); hd.quaternion.slerpQuaternions(q2, qc, w);
@@ -1335,7 +1345,7 @@ export function createMonk(opts = {}) {
       // On a cushion the hat comes off his back and its straps with it (they are not drawn while it is off).
       const hatDown = smooth(0.15, 0.9, seat);
       straps.visible = hatDown < 0.2;
-      if (hatDown > 0) layHat(hatDown, surfaceAt);
+      if (hatDown <= 0) hatAt = 0; else { hatAt ||= grounding.hat === 1 ? 1 : -1; layHat(hatDown, surfaceAt, hatAt); }   // (the side is chosen as it leaves his back and kept until it is back)
       if (surfaceAt && seat < 0.01 && perch < 0.01 && !hop) liftHem(surfaceAt, dt);
 
       // The shadow keeps to the ground and to the sun, whichever way he turns.

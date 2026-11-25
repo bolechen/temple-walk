@@ -154,3 +154,26 @@ test("seated on a cushion his hat is off his back and stands on its rim beside t
   m.group.position.y = 0; stand(90); const again = box().getCenter(V());
   assert.ok(again.distanceTo(backAt) < 0.01 && m.parts.straps.visible, `standing again, the hat is on his back (${again.distanceTo(backAt).toFixed(3)} m from where it hung)`);
 });
+
+test("asked to, he lays the hat at his left; and beside every cushion of the level the side the page chooses is clear of everything drawn there", async () => {
+  const m = createMonk(); m.group.position.y = TOP; for (let i = 0; i < 120; i++) m.update(1 / 30, 0, "sit", i / 30, () => 0, { hat: 1 });
+  m.group.updateMatrixWorld(true); assert.ok(new THREE.Box3().setFromObject(m.parts.hat, true).getCenter(V()).x > 0.4, "the hat is at his left");
+  const { buildSite, createWalker } = await import("../../app/src/site.js"), { buildInteriors } = await import("../../app/src/interior.js"), { hatSide } = await import("../../app/src/hatside.js");
+  const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+  const site = buildSite(M), walker = createWalker(site), rooms = buildInteriors(M, site.halls), meshes = [];
+  for (const g of [site.root, rooms.group]) { g.updateMatrixWorld(true); g.traverse((o) => { if (o.isMesh && o.geometry?.attributes?.position) { o.geometry.boundingBox || o.geometry.computeBoundingBox(); meshes.push([o, o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld)]); } }); }
+  const a = V(), b = V(), c = V(), tri = new THREE.Box3(); let cushions = 0, lefts = 0;
+  for (const s of [...site.seats, ...rooms.seats]) {
+    if (s.kind !== "cushion") continue; cushions++;
+    walker.setRoom(s.room ? rooms.rooms[s.room].room : null);
+    const side = hatSide(walker, s.at[0], s.at[1], s.face), lx = -side * HAT_OFF.x; if (side > 0) lefts++;
+    const x = s.at[0] + lx * Math.cos(s.face) + HAT_OFF.z * Math.sin(s.face), z = s.at[1] - lx * Math.sin(s.face) + HAT_OFF.z * Math.cos(s.face), floor = s.top - TOP;
+    // the hat's own space over the floor: a hand's breadth inside its rim, from just over the floor to its crown
+    const space = new THREE.Box3(V(x - 0.17, floor + 0.03, z - 0.17), V(x + 0.17, floor + 0.15, z + 0.17)); let hits = 0;
+    for (const [o, box] of meshes) { if (!box.intersectsBox(space)) continue; const p = o.geometry.attributes.position, ix = o.geometry.index?.array, n = ix ? ix.length : p.count;
+      for (let k = 0; k < n; k += 3) { a.fromBufferAttribute(p, ix ? ix[k] : k).applyMatrix4(o.matrixWorld); b.fromBufferAttribute(p, ix ? ix[k + 1] : k + 1).applyMatrix4(o.matrixWorld); c.fromBufferAttribute(p, ix ? ix[k + 2] : k + 2).applyMatrix4(o.matrixWorld); if (tri.makeEmpty().expandByPoint(a).expandByPoint(b).expandByPoint(c).intersectsBox(space)) hits++; } }
+    assert.equal(hits, 0, `beside the cushion at (${s.at.map((q) => q.toFixed(2))}) in ${s.room || "the open"}, something drawn stands where the hat is laid (at his ${side > 0 ? "left" : "right"})`);
+  }
+  walker.setRoom(null);
+  assert.ok(cushions >= 30 && lefts >= 3, `${cushions} cushions, the hat at his left beside ${lefts} of them`);
+});
