@@ -161,7 +161,7 @@ function leafUniforms(leaf, A) {
 
 function faceUniforms(face, A) {
   const out = new Array(32).fill(0);
-  const L = A.eyeL, R = A.eyeR, M = A.mouth, U = A.urna; if (!face || !L || !R || !M) return out;
+  const L = A.eyeL, R = A.eyeR, M = A.lipAt ?? A.mouth, U = A.urna;   // `lipAt`: where the lips lie, when the mouth anchor was set on the chin pad below them (issue #701) if (!face || !L || !R || !M) return out;
   const e = Math.abs(L[0] - R[0]) / 2, k = (x) => x * e;
   out.splice(0, 4, L[0], L[1], R[0], R[1]);
   out.splice(4, 4, M[0], M[1], U ? U[0] : 0, U ? U[1] : -99);

@@ -40,3 +40,9 @@ test("the inner garment's tint for the two end figures is in the spec, and the z
   for (const n of ["胸衣", "内衣"]) assert.equal(recipe.zones.find((z) => z.name === n).gain, "inner");
   for (const [f, a] of anchors) assert.equal(a.innerTint, undefined, f);
 });
+
+test("a figure that names where its lips lie (lipAt) draws a closed mouth: a lens at most 0.06 m high, below the eyes and above its mouth anchor's chin pad", () => {
+  const withAt = anchors.filter(([, a]) => a.lipAt);
+  assert.ok(withAt.length >= 3);
+  for (const [f, a] of withAt) { assert.ok(a.lipH <= 0.06, f); assert.ok(a.lipAt[1] > a.mouth[1] && a.lipAt[1] < a.eyeL[1], f); assert.ok(a.lipHalf > 0.1 && a.lipHalf < 0.2, f); }
+});
