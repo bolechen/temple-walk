@@ -48,6 +48,20 @@ if (process.env.SETS === "seven370") {
   for (const k of [1, 2]) { sets.push({ name: "none-" + k, statues: [], views: V }, { name: "seven-clay-" + k, statues: L, paint: false, views: V }, { name: "seven-paint-" + k, statues: L, paint: true, views: V }); }
   console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets } })); process.exit(0);
 }
+if (process.env.SETS === "lips701") {
+  // issue #701: the pad under the lower lip painted as chin and the lips only where the lips are. The seven as made, in the winter hall with no lamp, and for the three figures
+  // that read as an open mouth (Krakucchanda, Visvabhu, Kanakamuni) and the middle one for comparison two pictures each: from the middle of the hall, 10 m from
+  // the figure (about 36 degrees up), and from the foot of the altar, 4 m from it; the same pictures as the faces of tools/t05-hall/specs/t05-paint-463.json
+  const N = ["kasyapa-t05", "krakucchanda-t05", "sikhin-t05", "vipasyin-t05", "visvabhu-t05", "kanakamuni-t05", "sakyamuni-370"], X = [16.45, 11.33, 5.8, 0, -5.8, -11.33, -16.45];
+  const HT = [8.6, 8.75, 8.9, 9.0, 8.9, 8.75, 8.6], HEAD = [11.15, 11.2, 11.28, 11.48, 11.38, 11.17, 11.2];
+  const L = N.map((c, i) => ({ url: "s/" + (10 + i) + ".glb", x: X[i], h: HT[i], base: false, plinth: 0.4, turn: 0, headAt: 0.13, maxW: 10, halo: { rings: 0, tips: 0, ...(i === 0 || i === 6 ? { gain: 1.5 } : {}) }, paint: "clay", colour: c, ...(i === 0 || i === 6 ? { lotusGain: 1.25 } : {}), ...(i === 0 ? { innerTint: [0.97, 1, 1.03] } : {}), ...(i === 6 ? { innerTint: [0.96, 1, 1.05] } : {}) }));
+  // L2=1: the three figures that read as an open mouth are drawn on the L2 meshes with their own anchors (paint/<name>-L2.json); give their files in SEVEN
+  if (process.env.L2) for (const i of [1, 4, 5]) L[i].colour = N[i].replace("-t05", "-L2");
+  const shots = [{ name: "cam03-winter", shoot: { paint: true, mood: "winter", view: "cam03" } }];
+  for (const i of [1, 3, 4, 5]) for (const [tag, at, fov] of [["mid10", [X[i], 4.6, -7.6], 11], ["front4", [X[i], 4.6, -13.6], 20]])
+    shots.push({ name: tag + "-" + N[i].replace(/-.*/, ""), shoot: { paint: true, mood: "winter", view: "faceFrom10", over: { at, look: [X[i], HEAD[i], -18.1], fov, exp: 4.5 } } });
+  console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [{ name: "lips", size: [1920, 1080], statues: L, shots }] } })); process.exit(0);
+}
 if (process.env.SETS === "masks370") {
   // what the masks cost (#370 round 6): the seven painted with and without their masks, inside the hall, at the high tier
   // (1920×1080, GTAO) and the low (960×540, no AO), each pair taken in turn twice over in one job
