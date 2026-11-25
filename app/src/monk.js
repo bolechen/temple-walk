@@ -395,27 +395,33 @@ export function createMonk(opts = {}) {
     const u = clamp((0.645 - y0) / (0.645 - 0.277), 0, 1);
     if (u > 0) {
       const blend = smooth(0, 0.22, u), front = Math.max(0, c), back = Math.max(0, -c), side = Math.abs(s);
+      // Twin knee mounds at ±60° and a soft valley between them under the hands, plus a pressed resting fold at the cushion rim (#664).
+      const kneePeak = Math.exp(-sq((Math.abs(a) - 1.05) / 0.46));
+      const centerDip = Math.exp(-sq(a / 0.42));
       // Target world height above cushion top (y = 0) mapped back to bind space (y_bind = y_world + SIT_DROP).
-      // Waist (u=0) sits at y_world = 0.235; hem (u=1) rests flush on the cushion at y_world = 0.008.
-      // Front-centre drops below the folded hands (y_world ~ 0.14 at u=0.35) then curves down over the shins;
-      // sides arch softly over the folded knees; back falls smoothly straight onto the cushion.
-      const hemW = inner ? 0.013 : 0.008;
-      const yLap = 0.235 * Math.pow(1 - u, 1.38) + hemW * (1 - Math.pow(1 - u, 1.38));
-      const kneeArch = 0.036 * Math.sin(Math.PI * smooth(0.18, 0.96, u)) * (0.35 * front + 0.85 * side * smooth(-0.3, 0.5, c));
-      const lapDip = -0.022 * Math.sin(Math.PI * smooth(0.05, 0.72, u)) * Math.pow(front, 2.2) * (1 - 0.65 * side);
-      const yTarget = SIT_DROP + Math.max(hemW, yLap + kneeArch + lapDip);
+      const hemW = inner ? 0.013 : 0.007;
+      const yLap = 0.235 * Math.pow(1 - u, 1.42) + hemW * (1 - Math.pow(1 - u, 1.42));
+      const kneeArch = (0.024 * (0.3 * front + 0.75 * side * smooth(-0.25, 0.5, c)) + 0.022 * kneePeak) * Math.sin(Math.PI * smooth(0.16, 0.92, u));
+      const lapDip = -(0.020 * Math.pow(front, 2.2) * (1 - 0.65 * side) + 0.015 * centerDip) * Math.sin(Math.PI * smooth(0.06, 0.82, u));
+      const rimStep = (inner ? 0 : 0.0065) * Math.exp(-sq((u - 0.86) / 0.075)) * (0.55 + 0.45 * front);
+      const yTarget = SIT_DROP + Math.max(hemW, yLap + kneeArch + lapDip + rimStep);
       yy = y + (yTarget - y) * blend;
-      // Target radial fullness: flares smoothly over both folded knees (including the ±45° knee lobes) and forward to the
-      // front edge of the cushion (z ~ 0.255 m), while the back settles cleanly onto the cushion behind him (z ~ -0.20 m).
-      const spread = smooth(0, 0.84, u);
-      const kneeLobe = Math.sin(Math.PI * smooth(0.2, 0.98, u)) * Math.pow(side * front, 0.75);
-      const kneeBulge = 0.036 * Math.sin(Math.PI * smooth(0.24, 0.98, u)) * side * smooth(-0.15, 0.55, c) + 0.045 * kneeLobe;
-      const softFold = (inner ? 0 : 0.006) * Math.sin(Math.PI * smooth(0.7, 1.0, u)) * (0.6 + 0.4 * Math.cos(4 * a));
-      const rxTarget = (rxAt(0.645) + (0.282 - rxAt(0.645)) * Math.pow(spread, 0.72) + kneeBulge + softFold) * (inner ? 0.93 : 1);
-      const rzFront = (rzAt(0.645, 1) + (0.254 - rzAt(0.645, 1)) * Math.pow(spread, 0.72) + 0.032 * kneeLobe + softFold) * (inner ? 0.93 : 1);
-      const rzBack = (rzAt(0.645, -1) + (0.198 - rzAt(0.645, -1)) * Math.pow(spread, 0.82) + softFold * 0.6) * (inner ? 0.93 : 1);
+      // Target radial fullness: twin knee fullness at ±60°, slight center tuck, pinched crease above the cushion edge,
+      // and a softly flared resting lip along the cushion rim (no uniform "steamed bun" silhouette).
+      const spread = smooth(0, 0.82, u);
+      const kneeLobe = Math.sin(Math.PI * smooth(0.18, 0.95, u)) * (0.6 * Math.pow(side * front, 0.75) + 0.55 * kneePeak);
+      const kneeBulge = 0.030 * Math.sin(Math.PI * smooth(0.22, 0.95, u)) * side * smooth(-0.15, 0.55, c) + 0.044 * kneeLobe - 0.014 * centerDip * Math.sin(Math.PI * smooth(0.18, 0.88, u));
+      const rimPinch = -0.0075 * Math.exp(-sq((u - 0.81) / 0.075)) * (0.5 + 0.5 * front);
+      const rimFlare = (inner ? 0 : 0.017) * smooth(0.84, 0.99, u) * (0.65 + 0.35 * kneePeak);
+      const crossFold = (inner ? 0 : 0.006) * Math.sin((u - 0.52) * 14 + a * 1.35) * smooth(0.48, 0.64, u) * smooth(0.94, 0.80, u) * front;
+      const rimWave = (inner ? 0 : 0.005) * Math.cos(3 * a) * smooth(0.76, 1.0, u);
+      const drapeDelta = rimPinch + rimFlare + crossFold + rimWave;
+      const inK = inner ? 0.84 : 1;
+      const rxTarget = (rxAt(0.645) + (0.278 - rxAt(0.645)) * Math.pow(spread, 0.72) + kneeBulge + drapeDelta) * inK;
+      const rzFront = (rzAt(0.645, 1) + (0.246 - rzAt(0.645, 1)) * Math.pow(spread, 0.72) + 0.028 * kneeLobe - 0.012 * centerDip * Math.sin(Math.PI * smooth(0.2, 0.85, u)) + drapeDelta) * inK;
+      const rzBack = (rzAt(0.645, -1) + (0.196 - rzAt(0.645, -1)) * Math.pow(spread, 0.82) + rimFlare * 0.55 + rimPinch * 0.45) * inK;
       const rzTarget = front * rzFront + back * rzBack + (1 - front - back) * (0.5 * rzFront + 0.5 * rzBack);
-      const xTarget = rxTarget * s, zTarget = zOffAt(0.645) + rzTarget * c + 0.012 * spread * front;
+      const xTarget = rxTarget * s, zTarget = zOffAt(0.645) + rzTarget * c + 0.01 * spread * front;
       x = x + (xTarget - x) * blend;
       z = z + (zTarget - z) * blend;
     }
@@ -1029,8 +1035,8 @@ export function createMonk(opts = {}) {
             kneeL.copy(hipL).addScaledVector(tv.set(s * 0.12, -0.05, 1).normalize(), THIGH);
             ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.08, -1, 0.14).normalize(), SHIN);
           } else {
-            const front = s > 0 ? 0.028 : 0;
-            kneeL.copy(hipL).addScaledVector(tv.set(s * 0.19, 0.075, 0.105 + front).sub(hipL).normalize(), THIGH);
+            const front = s > 0 ? 0.022 : 0;
+            kneeL.copy(hipL).addScaledVector(tv.set(s * 0.185, 0.075, 0.102 + front).sub(hipL).normalize(), THIGH);
             ankL.copy(kneeL).addScaledVector(tv.set(-s * 0.959, 0, -0.283), SHIN); ankL.z += front * 0.5;
           }
           group.localToWorld(kneeW.copy(kneeL)); group.localToWorld(ankW.copy(ankL)); group.localToWorld(hipW.copy(hipL));
@@ -1048,7 +1054,7 @@ export function createMonk(opts = {}) {
           ft.quaternion.setFromAxisAngle(XV, onStool ? 0.45 : 1.0);   // the feet hang, toes a little down; folded, they lie along the shin
           qc.copy(ft.quaternion); ft.quaternion.slerpQuaternions(q2, qc, w);
           // Cross-legged under the draped robe, the loose balloon trousers compress radially inside the cloth (joints stay put).
-          if (!onStool && !dressed) { const tuck = 1 - 0.36 * w; up.scale.set(tuck, 1, tuck); lo.scale.set(tuck, 1, tuck); }
+          if (!onStool && !dressed) { const tuck = 1 - 0.5 * w; up.scale.set(tuck, 1, tuck); lo.scale.set(tuck, 1, tuck); }
         });
       }
 
