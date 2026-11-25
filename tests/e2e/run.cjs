@@ -544,6 +544,8 @@ const scenarios = {
     expect(lv.id === "t05" && lv.known === true, "the workbench should walk T05: " + JSON.stringify(lv));
     const w = await t.page.evaluate(() => window.__walker());
     expect(w.mode !== "old" && w.bytes > 0, "T05's own baked floor should be fetched: " + JSON.stringify(w));
+    const named = await t.page.evaluate(() => ({ tab: document.title, sub: document.querySelector("#title .title-name .sub").textContent, seal: document.querySelector("#menu h2 .seal-mark").textContent }));
+    expect(named.tab.includes("奉明寺") && named.sub === "奉明寺" && named.seal === "奉明" && !JSON.stringify(named).includes("云径"), "T05 should wear its own name, not the prologue's: " + JSON.stringify(named));
     let s = await t.state(); expect(Math.hypot(s.x, s.z - 215) < 1, "he should arrive at the outer gate's place (0, 215): " + JSON.stringify(s));
     await t.page.evaluate(() => window.__walk([[0, 120], [0, 44], [0, 27], [0, 14.4]]));
     let lo = 9, hi = -9;

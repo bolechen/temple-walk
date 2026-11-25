@@ -28,6 +28,8 @@ export default {
   createWalker,
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
+  // The name the page wears here (docs/t05/DECISIONS.md, 2026-11-20: 奉明寺; its other languages are in app/locales/, one entry each). A rename after the name search is these four values and those entries.
+  name: { temple: "奉明寺", seal: "奉明", sub: "奉明寺", page: "山门之外 · 奉明寺" },
   writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level
   backdrop: null,

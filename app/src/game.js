@@ -20,6 +20,7 @@ import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
 import { track } from "./analytics.js";
 import { titleHow } from "./titlehow.js";
+import { applyLevelName } from "./levelname.js";
 import { t, lang, glyphs, FONT } from "./i18n.js";
 import { moodOf } from "./mood.js";
 import { WEB } from "./channel.js";
@@ -652,6 +653,7 @@ export function createGame(y) {
     y.walker.setLoft(null);
   }
   // The line at the foot of the title is this level's own, or nothing (#445).
+  applyLevelName(y.level, document);   // a level that names its temple puts the name on the title, the tab and the small seals
   const how = /** @type {HTMLElement | null} */ (document.querySelector("#title .how")), says = titleHow(y.level);
   if (how && says) { how.querySelector("b").textContent = t(says.place); how.querySelector("span").textContent = t(says.line); how.hidden = false; }
   const offer = () => {
