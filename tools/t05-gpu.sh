@@ -75,17 +75,15 @@ if (process.env.SETS === "ship701") {
   const KEY = +(process.env.KEYI || 260), AIM = +(process.env.KEYAIM || 12);
   const lamp = (i, D1 = false) => (D1 ? { lamp: 1.5, lampAt: [X[i], 4.12, -15.75], lampColor: 0xffb070, lampDist: 2.0, noFloor: true, keyI: KEY, keyAim: AIM } : { lamp: 0, noFloor: true, keyI: KEY, keyAim: AIM });
   const shots = [{ name: "cam03-winter", shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "cam03", ...lamp(3) } }];
+  // what the director asked for after the T4 of 225000: cam03, the mid10 of each figure (painted and as clay) and join, and the aisle view from the middle of
+  // the hall (a camera 3 m toward the middle and 7.4 m out, 5.6 m up, so the neighbour's lotus leaves the foreground; the trial positions are df9)
   for (const i of [0, 1, 2, 3, 4, 5, 6]) {
-    const n = N[i].replace(/-.*/, ""), H = HEAD[i], sx = +(X[i] + 7 * Math.sin(55 * Math.PI / 180)).toFixed(2), sz = +(-18.1 + 7 * Math.cos(55 * Math.PI / 180)).toFixed(2);
+    const n = N[i].replace(/-.*/, ""), H = HEAD[i];
     const put = (name, over, paint = { envIntensity: 0.6 }) => shots.push({ name, shoot: { paint, mood: "winter", view: "faceFrom10", over: { ...over, exp: 3.2 }, ...lamp(i) } });
-    put("front10-" + n, { at: [X[i], 4.6, -8.1], look: [X[i], 9.9, -18.1], fov: 45 });
-    put("aisle55-" + n, { at: [sx, 4.6, sz], look: [X[i], 9.9, -18.1], fov: 45 });
+    put("aisle55-" + n, { at: [+(X[i] + 3.0).toFixed(2), 5.6, -7.4], look: [X[i], 10.0, -18.1], fov: 45 });
     put("join-" + n, { at: [X[i], 4.6, -12.1], look: [X[i], H - 0.45, -18.1], fov: 16 });
-    for (const [paint, t] of [[{ envIntensity: 0.6 }, ""], [false, "-clay"]]) for (const [tag, at, fov] of [["mid10", [X[i], 4.6, -7.6], 11], ["front4", [X[i], 4.6, -13.6], 20]])
-      put(tag + t + "-" + n, { at, look: [X[i], H, -18.1], fov }, paint);
-    shots.push({ name: "mid10-d1-" + n, shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "faceFrom10", over: { at: [X[i], 4.6, -7.6], look: [X[i], H, -18.1], fov: 11, exp: 3.2 }, ...lamp(i, true) } });
+    for (const [paint, t] of [[{ envIntensity: 0.6 }, ""], [false, "-clay"]]) put("mid10" + t + "-" + n, { at: [X[i], 4.6, -7.6], look: [X[i], H, -18.1], fov: 11 }, paint);
   }
-  shots.push({ name: "cam03-d1", shoot: { paint: { envIntensity: 0.6 }, mood: "winter", view: "cam03", ...lamp(3, true) } });
   console.log(JSON.stringify({ script: "t05-hall-gpu.cjs", args: { out: "hall", sets: [{ name: "ship", size: [1920, 1080], statues: L, shots, aoi: +(process.env.AOI || 0.4) }] } })); process.exit(0);
 }
 if (process.env.SETS === "masks370") {
