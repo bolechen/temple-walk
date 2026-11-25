@@ -35,6 +35,7 @@ export default {
   // One line said once as the walk begins, in the foot line: the first edition has no seals and no book yet (the lead's and the owner's step one, 2026-11-25). No temple's name in it.
   intro: "这座寺还在修建，眼下没有朱印，也没有朱印帐。慢慢走一走就好。",
   tr: { ja, en, ko },   // its own words in the other languages, kept with the level
+  keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4); no book yet
   writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level
   backdrop: null,
