@@ -58,9 +58,15 @@ if not only:
     fops = fops + [{"op": "lowerback", "note": f"the lower face (lip, chin, jaw) pressed back {L['d']} m, whole within {L['x0']} m of the middle, easing out by {L['x1']} m, from z {z0} down to {z1} and out by {round(z1 - L['fz'], 4)} (file units, z up, {L['below']} under the bowed slit), in front of y {round(-neck['c'][1] / s, 4)} (the neck's axis); relaxed {L['iter']} passes (#701, 自拟)",
                     "d": round(L["d"] / s, 5), "z0": z0, "fz0": L["fz0"], "z1": z1, "fz": L["fz"], "x0": round(L["x0"] / s, 5), "x1": round(L["x1"] / s, 5),
                     "front": round(-neck["c"][1] / s, 4), "ffront": L["ffront"], "smooth": {"iter": L["iter"], "lam": L["lam"]}}]
+  if _R.get("chinshape"):   # #701: the lower profile rebuilt (repair.py `chinshape`): a soft groove, a round chin behind the lip
+    C = _R["chinshape"]; m_ = 1 / s
+    fops = fops + [{"op": "chinshape", "from": "bow", "z0": round(pts["mouth"][1] / s, 4), "s": round(s, 4), "k_groove": C["k_groove"], "k_chin": C["k_chin"], "lip0": C["lip0"] * m_, "lip1": C["lip1"] * m_, "gr0": C["gr0"] * m_, "gr1": C["gr1"] * m_,
+                    "chin0": C["chin0"] * m_, "chin1": C["chin1"] * m_, "jaw": C["jaw"] * m_, "bin": C["bin"] * m_, "span": C["span"] * m_, "xm": C["xm"] * m_, "x0": C["x0"] * m_, "x1": C["x1"] * m_,
+                    "front": round(-neck["c"][1] / s, 4), "ffront": C["ffront"], "smooth": {"iter": C["iter"], "lam": C["lam"]}, "dsmooth": C["dsmooth"], "ramp": C["ramp"],
+                    "note": f"the lower profile from the lower lip to the jaw rebuilt: the groove under the lip at {C['k_groove']} of r3c's depth, the chin at {C['k_chin']} of r3c's bulge over the lip-to-jaw line (#701, 自拟)"}]
   if _R.get("hold") and face.get("nose"):   # #701: the upper face is the bow's own: whole from the tip of the nose up, eased to none at its base (face.json "nose": metres above the slit)
     _slit = pts["mouth"][1] / s - _R["lowerback"]["below"] + _R["lowerback"]["below"]   # the bowed slit (file units)
-    _tip = _slit + face["nose"]["tipAboveSlit"] / s; _base = _slit + face["nose"]["baseAboveSlit"] / s
+    _tip = _slit + face["nose"]["tipAboveSlit"] / s - _R.get("holdEarly", 0.008); _base = _slit + face["nose"]["baseAboveSlit"] / s
     fops = fops + [{"op": "hold", "from": "bow", "z0": round(_tip, 4), "z1": round(_base, 4), "note": f"the upper face held to the bow's shape: whole from the nose's tip (z {round(_tip, 4)}) up, easing to none at its base (z {round(_base, 4)}) (#701)"}]
     j = repair(base_ops + [tilt_op, snap_op] + small + fops, final)
   else:
