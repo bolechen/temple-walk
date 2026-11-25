@@ -4,9 +4,10 @@
 #
 # gate.py judges the grafted hand of Sakyamuni against its original through varada.json and varada-check3; it cannot be pointed at
 # a face. This one compares two full-detail files of one figure that share their points (repair.py keeps the order), and
-# needs only the figure's face.json (its neck: z0 and fade, and the stage height) to know where the head begins. Five checks:
+# needs only the figure's face.json (its neck: z0 and fade, and the stage height) to know where the head begins. Six checks:
 #   elsewhere   no point below the head line moves more than --move-mm (1 by default; the head line is the neck's z0 less its fade,
 #               where the bow's weight is gone, in the stage frame: metres up from the seat, the figure `height` tall)
+#   folded      no triangle's normal turned over (more than 90 degrees from its normal before: the surface folded on itself; #701)
 #   faces       the face count is unchanged (face edits move points, they do not add or remove any)
 #   closed      welded open edges, non-manifold edges and pieces of 10 faces or fewer are no more than before; the winding agrees
 #   backfaces   raycompare.py's lines from the six visitor places that end on the back of a face are no more than before at each
@@ -25,6 +26,9 @@ else:
   below = y < face["neck"]["z0"] - face["neck"]["fade"] - 0.001; mv = np.linalg.norm(A.vertices - B.vertices, axis=1) * s * 1000
   worst = float(mv[below].max()) if below.any() else 0.0
   row("elsewhere: largest move below the head line (mm)", round(worst, 4), f"<= {lim}", worst <= lim)
+if len(A.faces) == len(B.faces):   # folded: a triangle whose normal turned over (more than 90 degrees from before) is a fold in the surface (#701)
+  def nrm(M): a, b, c = (M.vertices[M.faces[:, i]].astype(np.float64) for i in range(3)); n = np.cross(b - a, c - a); return n / np.maximum(np.linalg.norm(n, axis=1, keepdims=True), 1e-30)
+  flips = int(((nrm(A) * nrm(B)).sum(1) < 0).sum()); row("folded: triangles whose normal turned over (> 90 degrees) from before", flips, "0", flips == 0)
 row("faces: after / before", f"{len(B.faces)} / {len(A.faces)}", "equal", len(B.faces) == len(A.faces))
 tj = os.path.join(tmp, "topo.json"); run(os.path.join(here, "topology.py"), before, after, f"--json={tj}"); T = json.load(open(tj)); a, b = T[before], T[after]
 row("closed: open edges (before)", f"{b['boundary_edges']} ({a['boundary_edges']})", "<= before", b["boundary_edges"] <= a["boundary_edges"])

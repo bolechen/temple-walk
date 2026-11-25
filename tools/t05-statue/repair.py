@@ -34,7 +34,7 @@
 #   push    move what lies within r of the seed along `dir` by up to `d` (falloff as above): to straighten a finger or
 #           part a fingertip from the throne.
 # Each op prints how many points it moved and the largest move, so the edit is written down and can be redone.
-import bpy, sys, math, json
+import bpy, sys, math, json, os
 import numpy as np
 from mathutils import Matrix
 src, opsf, dst = sys.argv[1:4]
@@ -66,7 +66,11 @@ def region(seed, r):
     keep[e[grow].ravel()] = True
   w = np.where(keep, 0.5 - 0.5 * np.cos(np.pi * np.clip(1 - d / r, 0, 1)), 0.0)   # 1 at the seed, 0 at r
   return keep, w
-for op in spec["ops"]:
+DUMP = os.environ.get("REPAIR_DUMP")   # a folder: the points before each op and the faces, as .npy, for finding which op made what (#701)
+if DUMP:
+  os.makedirs(DUMP, exist_ok=True); np.save(os.path.join(DUMP, "faces.npy"), np.array([list(pl.vertices) for pl in me.polygons], dtype=np.int32))
+for _k, op in enumerate(spec["ops"]):
+  if DUMP: np.save(os.path.join(DUMP, f"before{_k:02d}.npy"), co.astype(np.float32))
   if op["op"] == "groove":
     before = co.copy(); L = np.array(op["points"], float); dep, wid = op["depth"], op["width"]
     # distance of each point to the polyline, in the x–z plane of the face (the groove runs across, seen from the front)
@@ -103,11 +107,31 @@ for op in spec["ops"]:
       for _ in range(sp["iter"]):
         acc = np.zeros_like(co); np.add.at(acc, ed[:, 0], co[ed[:, 1]]); np.add.at(acc, ed[:, 1], co[ed[:, 0]])
         mean = acc / np.maximum(cnt, 1)[:, None]; co += sp["lam"] * w[:, None] * (mean - co)
+    # no triangle may turn over (#701): where the push and the relaxation together turned one (a few millimetres across, at the jaw's edge
+    # where the field is easing out), the move of its points and of their neighbours is halved, again until none is
+    if "_tri" not in globals(): globals()["_tri"] = np.array([list(pl.vertices) for pl in me.polygons], dtype=np.int64)
+    def _nrm(c):
+      a_, b_, c_ = c[_tri[:, 0]], c[_tri[:, 1]], c[_tri[:, 2]]; x_ = np.cross(b_ - a_, c_ - a_); return x_ / np.maximum(np.linalg.norm(x_, axis=1, keepdims=True), 1e-30)
+    n_before = _nrm(before); undone = 0
+    for _ in range(12):
+      bad = np.nonzero((_nrm(co) * n_before).sum(1) < 0)[0]
+      if not len(bad): break
+      # halved at the turned triangle's points and eased back to the full move over six rings of neighbours (a halving at the one ring left a dimple)
+      ring = np.full(len(co), 99); ring[_tri[bad].ravel()] = 0
+      for k_ in range(1, 7):
+        a_, b_ = ring[ed[:, 0]], ring[ed[:, 1]]; g_ = (a_ == k_ - 1) & (b_ == 99); ring[ed[g_, 1]] = k_; g_ = (b_ == k_ - 1) & (a_ == 99); ring[ed[g_, 0]] = k_
+      f_ = np.where(ring < 7, 1 - 0.5 * (1 - ring / 7.0), 1.0)
+      co[:] = before + f_[:, None] * (co - before); undone += 1
     mv = np.linalg.norm(co - before, axis=1)
-    log.append({"op": "lowerback", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5)}); print(json.dumps(log[-1])); continue
+    log.append({"op": "lowerback", "note": op.get("note", ""), "points": int((mv > 1e-9).sum()), "moved_max": round(float(mv.max()), 5), "fold_passes": undone, "folds_left": int((((_nrm(co) * n_before).sum(1)) < 0).sum())}); print(json.dumps(log[-1])); continue
   if op["op"] == "facex":
     before = co.copy(); z = co[:, 2]; f = op["fade"]
-    t = np.clip((op["y0"] - z) / f, 0, 1) * (np.abs(co[:, 0]) < op["rx"]) * (co[:, 1] < op["front"])
+    # the half-width test and the front plane were hard steps: across the plane (a 4 mm layer from cheek to cheek) the points on one side
+    # narrowed and the points on the other did not, and the surface there folded over on itself (#701: 120 triangles of Krakucchanda's
+    # L2 turned their normals more than 90°, all made by this op). Both now ease to nothing over `ffade` (file units, 0.012 by default,
+    # about 10 cm on the stage) and `fx` (0.02, about 17 cm), as smoothstep.
+    sm = lambda u: u * u * (3 - 2 * u)
+    t = np.clip((op["y0"] - z) / f, 0, 1) * (1 - sm(np.clip((np.abs(co[:, 0]) - (op["rx"] - op.get("fx", 0.02))) / op.get("fx", 0.02), 0, 1))) * sm(np.clip((op["front"] - co[:, 1]) / op.get("ffade", 0.012), 0, 1))
     if "ymin" in op: t *= np.clip((z - op["ymin"]) / op.get("fadeLow", 1e-6), 0, 1)   # and easing out again down the neck
     co[:, 0] *= 1 + (op["k"] - 1) * t
     mv = np.linalg.norm(co - before, axis=1)
@@ -238,6 +262,7 @@ for op in spec["ops"]:
   mv = np.linalg.norm(co - before, axis=1)
   log.append({"op": op["op"], "note": op.get("note", ""), "points": int(keep.sum()), "moved_max": round(float(mv.max()), 5), "moved_mean": round(float(mv[keep].mean()), 5)})
   print(json.dumps(log[-1]))
+if DUMP: np.save(os.path.join(DUMP, "final.npy"), co.astype(np.float32))
 me.vertices.foreach_set("co", co.ravel()); me.update(); me.validate()
 # shade by the surface as it now is: drop the normals stored in the file (glTF import keeps them as custom split
 # normals, which would carry an edited surface's old shading, or hide a ring the shape has), and smooth by angle

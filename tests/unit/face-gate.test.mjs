@@ -14,6 +14,7 @@ s.export("${dir}/a.glb")
 head = s.copy(); i = int(np.argmax(s.vertices[:, 1])); head.vertices[i, 1] += 0.0005; head.vertices[i, 2] += 0.002; head.export("${dir}/head.glb")   # the crown moves 2 mm
 foot = s.copy(); j = int(np.argmin(s.vertices[:, 1])); foot.vertices[j, 1] += 0.01; foot.export("${dir}/foot.glb")   # the base moves 1 cm
 more = trimesh.Trimesh(s.vertices, s.faces[:-1], process=False); more.export("${dir}/fewer.glb")
+fold = s.copy(); k = int(np.argmax(s.vertices[:, 1])); fold.vertices[k, 1] -= 0.8; fold.export("${dir}/fold.glb")   # the crown pushed through its neighbours: the triangles round it turn over
 `]);
   assert.equal(mk.status, 0, mk.stderr.toString());
   writeFileSync(join(dir, "face.json"), JSON.stringify({ height: 1, neck: { z0: 0.6, fade: 0.1 } }));
@@ -21,4 +22,5 @@ more = trimesh.Trimesh(s.vertices, s.faces[:-1], process=False); more.export("${
 const gate = (after) => spawnSync("python3", ["tools/t05-statue/closed/face-gate.py", join(dir, "a.glb"), join(dir, after), join(dir, "face.json")], { encoding: "utf8" });
 test("a move in the head only passes", { skip: !have }, () => { const r = gate("head.glb"); assert.equal(r.status, 0, r.stdout); assert.match(r.stdout, /PASS elsewhere/); });
 test("a move below the head line fails", { skip: !have }, () => { const r = gate("foot.glb"); assert.equal(r.status, 1); assert.match(r.stdout, /FAIL elsewhere/); });
+test("a surface folded over in the head fails", { skip: !have }, () => { const r = gate("fold.glb"); assert.equal(r.status, 1); assert.match(r.stdout, /FAIL folded/); });
 test("a different face count fails", { skip: !have }, () => { const r = gate("fewer.glb"); assert.equal(r.status, 1); assert.match(r.stdout, /FAIL (faces|elsewhere)/); });
