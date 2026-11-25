@@ -476,7 +476,7 @@ function shoot(s) {
     key.position.copy(at).add(W3([-9, 10, 12])); key.target.position.copy(at); fill.position.copy(at).add(W3([12, 3, 8])); fill.target.position.copy(at);
     rim.position.copy(at).add(W3([4, 9, -14])); rim.target.position.copy(at);
     renderer.toneMappingExposure = (o.exp ?? 1.0) * exposureScale;
-  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; altarLamp.distance = s.lampDist ?? 14; for (const l of keyLights) l.intensity = s.keyI ?? 0; floorFill.intensity = s.noFloor ? 0 : MOODS[mood].floor; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
+  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; altarLamp.distance = s.lampDist ?? 14; keyLights.forEach((l, j) => { l.intensity = s.keyI ?? 0; l.target.position.x = (j ? 1 : -1) * (s.keyAim ?? 6); }); floorFill.intensity = s.noFloor ? 0 : MOODS[mood].floor; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
   // { light: "diffuse" }: the same view lit only by a hemisphere light, the sun, the doors' light, the floor's fill and the
   // lamp put out, so a form can be told from the shadows the hall's light throws on it (#463, the 3D review's third round)
   const diffuse = s.light === "diffuse", keep = []; lastShot = s;
