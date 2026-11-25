@@ -40,6 +40,9 @@ test("skin and cloth are skinned to the skeleton, the weights whole; nothing els
     if (!o.isMesh) return;
     if (o.isSkinnedMesh) {
       skinned++; assert.equal(o.skeleton, m.skeleton);
+      // A morph moves each point by its number, and three.js does not check the counts: one that differs reads the wrong
+      // points and pulls the skin into spikes (#664: a thumb laid in two pieces in the lap and one standing).
+      for (const [k, list] of Object.entries(o.geometry.morphAttributes || {})) for (const a of list) assert.equal(a.count, o.geometry.attributes[k].count, `${k} morph of a ${o.name || "part"} has as many points as the part`);
       const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight;
       for (let i = 0; i < si.count; i++) {
         let sum = 0; for (let k = 0; k < 4; k++) { sum += sw.getComponent(i, k); assert.ok(si.getComponent(i, k) < m.skeleton.bones.length); }
@@ -131,21 +134,10 @@ test("on a stool he sits as on a chair: thighs level, knees bent, feet hanging t
   keepsOut(m, STOOL, 0.44, "stool");
 });
 
-test("on a cushion he sits cross-legged upon it: knees out and low, shins before him, hands in his lap, left over right", () => {
-  const m = seated("sit", 0.104), B = m.bones, ankles = [];
-  assert.ok(m.parts.legs.visible && m.parts.shoes.visible, "his legs are seen, folded");
-  for (const s of ["left", "right"]) {
-    const hip = world(B[s + "UpperLeg"]), knee = world(B[s + "LowerLeg"]), ankle = world(B[s + "Foot"]), shin = ankle.clone().sub(knee);
-    assert.ok(hip.y > 0.03 && hip.y < 0.11, `${s} hip ${hip.y.toFixed(3)} m above the cushion`);
-    assert.ok(knee.y <= hip.y && knee.y > -0.03, `${s} knee should rest low on the cushion (${knee.y.toFixed(3)})`);
-    assert.ok(Math.abs(knee.x) > 0.15 && knee.z > 0.05 && Math.hypot(knee.x, knee.z) < 0.3, `${s} knee should be out to the side and forward, on the cushion (${knee.toArray().map((v) => v.toFixed(2))})`);
-    assert.ok(Math.abs(shin.y) < 0.06 && ankle.z > 0.02 && Math.abs(ankle.x) < 0.12, `${s} shin should lie folded before him (${ankle.toArray().map((v) => v.toFixed(2))})`);
-    ankles.push(ankle);
-  }
-  assert.ok(Math.abs(ankles[0].z - ankles[1].z) > 0.015, "one shin lies in front of the other");
-  const l = world(B.leftHand), r = world(B.rightHand), hips = world(B.hips);
-  assert.ok(l.distanceTo(r) < 0.05 && l.y > r.y, `the left hand lies on the right (${l.distanceTo(r).toFixed(3)} m apart)`);
-  assert.ok(l.y > hips.y - 0.02 && l.y < hips.y + 0.15 && l.z > hips.z + 0.06, "in his lap, below the navel");
+// (How he sits on a cushion, his legs, the robe over them, his hands, sleeves and hat: monk-sit.test.mjs, #664.)
+test("on a cushion he sits cross-legged upon it, his legs folded under the robe, and nothing of him is in the cushion or under the floor", () => {
+  const m = seated("sit", 0.104);
+  assert.ok(m.parts.legs.visible && m.parts.shoes.visible, "his legs are there, folded");
   keepsOut(m, CUSHION, 0.104, "cushion");
 });
 

@@ -1,0 +1,14 @@
+{
+  "front": {
+    "iou": 0.9298,
+    "pxPerMetre": 487.2,
+    "onlyOurs": 3101,
+    "onlySheet": 1272
+  },
+  "side": {
+    "iou": 0.9087,
+    "pxPerMetre": 488.5,
+    "onlyOurs": 2441,
+    "onlySheet": 2117
+  }
+}
