@@ -1,0 +1,439 @@
+{
+ "seat": {
+  "at": [
+   118.9,
+   -1.25
+  ],
+  "top": -59.896,
+  "face": 3.141592653589793,
+  "room": "main",
+  "kind": "cushion"
+ },
+ "errs": [],
+ "frames": [
+  {
+   "n": 20,
+   "dist": 1.179,
+   "hips": -59.6438,
+   "green": 49,
+   "legsAboveHem": 16,
+   "any": 40000
+  },
+  {
+   "n": 21,
+   "dist": 0.766,
+   "hips": -59.7,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 22,
+   "dist": 0.498,
+   "hips": -59.7423,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 23,
+   "dist": 0.324,
+   "hips": -59.772,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 24,
+   "dist": 0.21,
+   "hips": -59.7912,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 25,
+   "dist": 0.137,
+   "hips": -59.8027,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 26,
+   "dist": 0.089,
+   "hips": -59.8083,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 27,
+   "dist": 0.058,
+   "hips": -59.8094,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 28,
+   "dist": 0.038,
+   "hips": -59.808,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 29,
+   "dist": 0.024,
+   "hips": -59.8057,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 30,
+   "dist": 0.016,
+   "hips": -59.8034,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 31,
+   "dist": 0.01,
+   "hips": -59.8015,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 32,
+   "dist": 0.007,
+   "hips": -59.7998,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 33,
+   "dist": 0.004,
+   "hips": -59.7986,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 34,
+   "dist": 0.003,
+   "hips": -59.798,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 35,
+   "dist": 0.002,
+   "hips": -59.7979,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 36,
+   "dist": 0.001,
+   "hips": -59.7984,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 37,
+   "dist": 0.001,
+   "hips": -59.7995,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 38,
+   "dist": 0.001,
+   "hips": -59.8009,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 39,
+   "dist": 0,
+   "hips": -59.8026,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 40,
+   "dist": 0,
+   "hips": -59.8042,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 41,
+   "dist": 0,
+   "hips": -59.806,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 42,
+   "dist": 0,
+   "hips": -59.8075,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 43,
+   "dist": 0,
+   "hips": -59.8084,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 44,
+   "dist": 0,
+   "hips": -59.8094,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 45,
+   "dist": 0,
+   "hips": -59.81,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 46,
+   "dist": 0,
+   "hips": -59.8102,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 47,
+   "dist": 0,
+   "hips": -59.8102,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 48,
+   "dist": 0,
+   "hips": -59.81,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 49,
+   "dist": 0,
+   "hips": -59.8098,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 50,
+   "dist": 0,
+   "hips": -59.8096,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 51,
+   "dist": 0,
+   "hips": -59.8094,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 52,
+   "dist": 0,
+   "hips": -59.8094,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 53,
+   "dist": 0,
+   "hips": -59.8094,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 54,
+   "dist": 0,
+   "hips": -59.8094,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 55,
+   "dist": 0,
+   "hips": -59.8093,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 56,
+   "dist": 0,
+   "hips": -59.809,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 57,
+   "dist": 0,
+   "hips": -59.8085,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 58,
+   "dist": 0,
+   "hips": -59.8076,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 59,
+   "dist": 0,
+   "hips": -59.8064,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 60,
+   "dist": 0,
+   "hips": -59.8052,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 61,
+   "dist": 0,
+   "hips": -59.8035,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 62,
+   "dist": 0,
+   "hips": -59.8017,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 63,
+   "dist": 0,
+   "hips": -59.8002,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 64,
+   "dist": 0,
+   "hips": -59.7989,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 65,
+   "dist": 0,
+   "hips": -59.7981,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 66,
+   "dist": 0,
+   "hips": -59.7979,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 67,
+   "dist": 0,
+   "hips": -59.7982,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 68,
+   "dist": 0,
+   "hips": -59.7988,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 69,
+   "dist": 0,
+   "hips": -59.8001,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 70,
+   "dist": 0,
+   "hips": -59.8021,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 71,
+   "dist": 0,
+   "hips": -59.805,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  },
+  {
+   "n": 72,
+   "dist": 0,
+   "hips": -59.8076,
+   "green": 0,
+   "legsAboveHem": 0,
+   "any": 40000
+  }
+ ]
+}
