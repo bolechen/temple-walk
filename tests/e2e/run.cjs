@@ -2706,8 +2706,15 @@ const scenarios = {
     p = await P(); expect(p.time === "day" && p.follow === false, "the hour must not turn before the book is shut: " + JSON.stringify(p));
     await t.page.keyboard.press("b"); await t.until(() => shown("#book"), 90000, "the book never opened after the close");
     p = await P(); expect(p.time === "day" && p.follow === false, "the hour must not turn while the book is open: " + JSON.stringify(p));
+    // Every frame from here is read: from the first one the book is gone the hour is the visitor's own and the ink is shut over it, never a frame of the old hour.
+    await t.page.evaluate(() => { const tag = () => document.getElementById("moodTag").textContent, leaf = () => document.querySelector("#curtain i").style.transform;
+      window.__frames = []; window.__dayWords = tag(); const f = () => { window.__frames.push({ open: document.getElementById("book").open, words: tag(), ink: leaf() }); requestAnimationFrame(f); }; requestAnimationFrame(f); });
     await t.page.click("#bookClose");
     await t.until(async () => (await P()).time === "night", 30000, "the hour never turned to the visitor's own when the book was shut");
+    await t.until(async () => t.page.evaluate(() => window.__frames.length > 0 && window.__frames.at(-1).ink === ""), 60000, "the ink never opened again");
+    { const fr = await t.page.evaluate(() => ({ f: window.__frames, day: window.__dayWords })), after = fr.f.filter((x) => !x.open);
+      expect(after.length > 1 && after.every((x) => x.words !== fr.day), "a frame after the book showed the old hour: " + JSON.stringify(after.slice(0, 4)));
+      expect(/scaleY\(1(\.0+)?\)/.test(after[0].ink), "the ink was not shut over the first frame after the book: " + JSON.stringify(after[0])); }
     p = await P(); expect(p.follow === true && p.lamp > 0, "after the book the hour should follow the clock, lamps lit: " + JSON.stringify(p));
     await t.until(async () => (await hud()).tip === "seasons", 30000, "the line was not said: " + JSON.stringify(await hud()));
     const line = await t.page.evaluate(() => document.getElementById("hint").textContent);

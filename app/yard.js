@@ -1642,7 +1642,15 @@ createGame({
   setJoya(on) { joyaOn = !!on; },
   eventMood: () => ({ before: beforeJoya, hand: state.hand, season: state.season, time: state.time }),
   // The book shut for the first time after the close (#726): the hour goes to the visitor's own, as the clock's own check does; false where it must stay.
-  followHour() { const h = takeClock(state, Q); if (!h) return false; setMood(state.season, h); return true; },
+  // The book's paper goes in a single frame, so the hour is changed in that same task and the ink leaves are already shut when the picture shows: the first frame after the book is ink, the hour behind it is the visitor's own, and the ink opens on it (no cut is seen, #726).
+  followHour() {
+    const h = takeClock(state, Q); if (!h) return false;
+    const changed = h !== state.time; setMood(state.season, h);
+    if (!changed) return true;
+    inkVeil(1); const t0 = performance.now(), HOLD = 0.12, OPEN = 0.6;
+    const step = () => { const k = ((performance.now() - t0) / 1000 - HOLD) / OPEN; if (k >= 1) { inkVeil(0); return; } const e = k <= 0 ? 0 : k * k * (3 - 2 * k); inkVeil(1 - e); requestAnimationFrame(step); };
+    requestAnimationFrame(step); return true;
+  },
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),
