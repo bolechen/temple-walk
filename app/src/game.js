@@ -225,7 +225,8 @@ export function createGame(y) {
     if (!lp) return; const v = lp.view(), last = whole ? (v.copy ? "stele" : "p1") : lp.state().last;
     const text = last === "stele" ? v.copy : v.note, from = last === "stele" ? (v.note ? `${v.from}　·　${v.note}` : v.from) : "";
     if (!text) return;
-    holdOut(text, from, t("收下"), () => {});
+    $("slip")?.classList.add("own-page");
+    holdOut(text, from, t("收下"), () => $("slip")?.classList.remove("own-page"));
     pageRow();
   }
   // The pause menu's 这一页 (only in a temple with a page of its own, once something is on it): the page shown again.
