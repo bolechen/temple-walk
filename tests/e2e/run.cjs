@@ -2787,6 +2787,7 @@ const scenarios = {
           return { ps, dots, lh, avail: line.clientWidth - 32 };
         }, text);
         expect(g.ps.every((p) => p.h <= g.lh * 1.6 || p.w >= g.avail - 2), `${lang}: a phrase that fits a line was broken inside: ` + JSON.stringify(g));
+        if (lang === "zh" && g.ps.length === 2) expect(g.ps[1].top > g.ps[0].top && g.ps[1].h <= g.lh * 1.6, "zh: the line said when the book is shut should be two lines, the second beginning at 季节与时辰, whole: " + JSON.stringify(g));
         expect(g.dots.every((d) => d.hidden === d.broke), `${lang}: a dot is shown at a break or hidden where the line goes on: ` + JSON.stringify(g));
       }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
