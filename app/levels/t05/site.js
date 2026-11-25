@@ -13,6 +13,7 @@ import { buildHall, OUTER, FILL } from "./hall.js";
 import { buildAltar, benchFigures } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE, AXIS_TREES } from "./axis.js";
 import { buildTower } from "./tower.js";
+import { buildDistance } from "./distance.js";
 import { buildSurround, eaveCap } from "./surround.js";
 import { buildFlora } from "./flora.js";
 import { dryMaterials } from "./dry.js";
@@ -34,12 +35,12 @@ export const ARRIVE = [0, 215];
 /**
  * The court's own trees (ours: "old pines and cypresses tower in the court" (docs/t05/SOURCES.md §15) is a news report quoted second-hand, with no place or number;
  * docs/t05/ART.md §4.2 "院树落叶，枝干清楚", the court's trees bare in winter): two pines and two pagoda trees, off the axis and out of cam01's and cam02's
- * pictures, standing in square stone pits in the paving. The two on the east stand where the low morning sun (from the south-south-east, 17° up) lays their
+ * pictures (two in the court's south corners), standing in square stone pits in the paving. The two on the east stand where the low morning sun (from the south-south-east, 17° up) lays their
  * shadows north-west across the court before cam01 (ART-SPEC: light that comes from somewhere; the art director's #665 note 4: shadows in the court wait for trees).
  */
 export const COURT_TREES = Object.freeze([
   Object.freeze({ kind: "huai", x: 27.5, z: 48.5, h: 10.4, r: 0.42 }),
-  Object.freeze({ kind: "pine", x: 37.5, z: 4.0, h: 11.2, r: 0.4 }),   // (by the platform's east end, out of cam01's picture: further south it stood before the houses over the east wall seen from B)
+  Object.freeze({ kind: "pine", x: 38.3, z: 58.3, h: 11.2, r: 0.4 }),   // (in the court's south-east corner, behind cam01: its shadow lies across the court before it; beside the platform it stood in cam01's picture or before the houses seen from B)
   Object.freeze({ kind: "pine", x: -29.5, z: 43.5, h: 10.2, r: 0.38 }),
   Object.freeze({ kind: "huai", x: -34.8, z: 15.5, h: 9.6, r: 0.4 }),
 ]);
@@ -207,6 +208,8 @@ export function buildSite(M) {
   // The old town's pagoda far to the west-south-west (./tower.js, #548 step two): a part of its own, left out by ?off=tower, nothing else reads it.
   const offTower = typeof location !== "undefined" && (new URLSearchParams(location.search).get("off") || "").split(",").includes("tower");
   if (!offTower) root.add(buildTower());
+  // The middle town and the far layers beyond it (./distance.js, the art director's lines of 2026-11-25): the north hill line (`?off=farhills`), the town's middle band and the southern plain (`?off=farland`).
+  root.add(buildDistance());
   root.add(mesh(merge(stone), M.stone), mesh(merge(steps), M.steps), mesh(merge(plaster), M.plaster()));
   const land = mesh(merge(earth), dryMaterials(M).earth, { cast: false }); land.userData.walk = false; root.add(land);
 

@@ -22,7 +22,8 @@ const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? 
 const site = buildSite(M); site.root.updateMatrixWorld(true);
 const plan = planSurround(COMPOUND), C = COMPOUND, cx = C.x + C.t / 2, cs = C.zS + C.t / 2;
 const meshes = []; site.root.traverse((o) => { if (o.isMesh && o.visible) meshes.push(o); });
-const outside = (o) => !!o.userData.surround, rad = (d) => (d * Math.PI) / 180;
+// (the middle town and the far layers, ./distance.js, are the town too)
+const outside = (o) => !!(o.userData.surround || o.userData.distance), rad = (d) => (d * Math.PI) / 180;
 const ray = new THREE.Raycaster();
 
 // The walls a visitor sees the top of, as plan segments with the top's height over the court's paving: the court's, the terrace's, the way's.
