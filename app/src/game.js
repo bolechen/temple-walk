@@ -18,6 +18,7 @@ import { traceStubCount } from "./censer.js";
 import { createAwake } from "./awake.js";
 import { placeLift } from "./site.js";
 import { readPlace, writePlace, clearPlace, labelOf, titleOffer, placeKept } from "./resume.js";
+import { readLevelPlace, writeLevelPlace, clearLevelPlace } from "./levelsave.js";
 import { track } from "./analytics.js";
 import { titleHow } from "./titlehow.js";
 import { t, lang, glyphs, FONT } from "./i18n.js";
@@ -641,7 +642,9 @@ export function createGame(y) {
   const free = placeKept(Q, BENCH, y.level);
   const titleOn = free && (!y.level || !!y.level.title);   // the prologue's title rises in the prologue only
   awaitTitle(titleOn && !titled);   // the gate's first phrase is kept for the prologue's title (audio.js)
-  let left = free ? readPlace(localStorage) : null, kept = 0;
+  // The prologue's place is yunjing.place.v1; a level with a place of its own keeps it in yunjing.levels.v1 and the prologue's key is never read or written from there.
+  const ownPlace = !!y.level && !y.level.keepsPlace && !!y.level.keepsOwnPlace;
+  let left = free ? (ownPlace ? (readLevelPlace(localStorage, levelId) && { ...readLevelPlace(localStorage, levelId), label: "", up: null, hall: null }) : readPlace(localStorage)) : null, kept = 0;
   if (left && left.up && !y.lofts[left.up]) left = null;
   if (left && left.hall && !y.hallIds?.includes(left.hall)) left = null;   // a hall this level does not have
   // A place is kept to the centimetre, which against a railing or a wall can fall just past the edge of the floor: it
@@ -662,7 +665,7 @@ export function createGame(y) {
     return o;
   };
   if (left && !y.relang && !y.crossing && titleOffer(journey.count(), SEALS.length, left, y.start).going) y.place(left.x, left.z, left.yaw, left.up, left.hall);   // the title is shown over where they were (after a change of language yard.js has already stood him where he was)
-  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
+  const keepPlace = () => { if (!entered || !free || closing) return; const w = y.where(); if (!y.inside() && !w.up && y.walker.blocked(w.x, w.z)) return; if (ownPlace) { writeLevelPlace(localStorage, levelId, w); return; } writePlace(localStorage, { ...w, label: w.up ? "凌霄阁上" : labelOf(w, y.inside() ? y.hallName() : null, named) }); };
   // Where the visit ends (#326): the first time the page is hidden after he has stepped in, named from the same source
   // as the place "接着走" offers, so the two always agree. A second hide of the same page says nothing.
   let leftNamed = false;
@@ -686,7 +689,7 @@ export function createGame(y) {
     if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = titleOffer(journey.count(), SEALS.length, left, y.start).confirm; return; }
     track("demo.restart", { from: "title", seals: journey.count() });
     // Another level's start empties nothing of the prologue's.
-    journey.reset(); visit.metres = visit.seconds = 0; keep(); if (ours) { clearPlace(localStorage); forgetTitle(); } left = null; b.dataset.asked = "";
+    journey.reset(); visit.metres = visit.seconds = 0; keep(); if (ours) { clearPlace(localStorage); forgetTitle(); } else if (ownPlace) clearLevelPlace(localStorage, levelId); left = null; b.dataset.asked = "";
     const [x, z, turn] = y.start; y.place(x, z, turn); refresh(); rites.rest(); enter(true);
   });
   // Stepping in. A first visit (and a visit begun again from the foot of the path) is shown where it is going first

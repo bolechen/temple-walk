@@ -557,6 +557,32 @@ const scenarios = {
     expect(!veil && Math.abs(s.h - 3) < 0.1, `inside the hall on its floor, with no room: ${JSON.stringify({ veil, h: s.h })}`);
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // T05 keeps its own place and the prologue's save is not touched (S4, docs/t05/LEVEL-SPLIT.md; the first edition of T05 on production):
+  // the prologue's ten kinds of key are seeded, T05 is walked a way up the axis and left, and what is kept lies under yunjing.levels.v1
+  // alone; the prologue opened with no address finds its own place and book exactly as they were, and T05 opened again offers 接着走
+  // on its title and stands him where he stood.
+  "t05-save": { tier: 2, async run(b, base) {
+    const T00 = { "yunjing.journey.v1": JSON.stringify({ v: 1, born: 1, seals: { bell: 2 }, strikes: 3, verse: null, done: null, opened: null, told: false }), "yunjing.place.v1": JSON.stringify({ x: 0, z: -20, yaw: 0, label: "大殿前", at: 5 }), "yunjing.incense.v1": "1795233520952", "yunjing.visit.v1": JSON.stringify({ metres: 812, seconds: 640 }), "yunjing.prologue.v1": "1", "yunjing.ending.v1": "1795233000000" };
+    const mine = (page) => page.evaluate((keys) => Object.fromEntries(keys.map((k) => [k, localStorage.getItem(k)])), Object.keys(T00));
+    const t = await open(b, base, "level=t05&q=low&fast=1" + BARE, { init: `(() => { const p = ${JSON.stringify(T00)}; for (const k in p) if (localStorage.getItem(k) === null) localStorage.setItem(k, p[k]); })()` });
+    expect((await t.page.evaluate(() => window.__level())).id === "t05", "T05 should be what is walked");
+    await t.page.evaluate(() => window.__walk([[0, 120], [0, 100]]));
+    await t.until(async () => { const s = await t.state(); return Math.hypot(s.x, s.z - 100) < 0.6; }, 300000, "he never walked up the axis");
+    await t.until(async () => !!(await t.page.evaluate(() => { try { return JSON.parse(localStorage.getItem("yunjing.levels.v1")).place.t05.z < 105; } catch { return false; } })), 120000, "T05's place was never kept under yunjing.levels.v1");
+    expect(JSON.stringify(await mine(t.page)) === JSON.stringify(T00), "the prologue's keys changed while T05 was walked: " + JSON.stringify(await mine(t.page)));
+    // T05 again: where he stood, no title.
+    await t.page.goto(base + "?level=t05&q=low&fast=1" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    const s = await t.state(); expect(Math.hypot(s.x, s.z - 100) < 3, "T05 opened again should have him where he stood: " + JSON.stringify(s));
+    expect((await t.page.textContent("#enterBtn")) === "接着走", "T05's title should offer to go on from where he stood");
+    await t.page.waitForFunction(() => !document.getElementById("enterBtn").disabled, null, { timeout: 60000 }); await t.page.click("#enterBtn");
+    await t.page.waitForFunction(() => document.body.classList.contains("entered") && !window.__opening().active, null, { timeout: 60000 });
+    // The prologue with no address: its own place and book, as seeded.
+    await t.page.goto(base + "?q=low" + BARE, { waitUntil: "commit" }); await t.page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
+    expect(JSON.stringify(await mine(t.page)) === JSON.stringify(T00), "the prologue's keys changed: " + JSON.stringify(await mine(t.page)));
+    const left = await t.page.evaluate(() => ({ level: window.__level().id, place: window.__left().place }));
+    expect(left.level === "t00" && left.place && left.place.z === -20 && left.place.label === "大殿前", "the prologue should find its own place: " + JSON.stringify(left));
+    expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+  } },
   // T05 walked as a visitor walks it (PLAN.md item 12, PRD.md §9 item 3): ?level=t05 straight in on the workbench, at the
   // walking pace (no ?fast), from the outer gate's place to station F. The long way up the axis is walked by __walk; the two
   // stretches where the prologue once only let a hurried test through (docs/t00/PITFALLS.md A3) are walked on the keys:
