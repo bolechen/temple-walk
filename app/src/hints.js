@@ -27,6 +27,7 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     }
   };
   addEventListener("resize", unhang);
+  document.fonts?.addEventListener?.("loadingdone", unhang);   // (a face that arrives after the line is set changes where it breaks)
   function tip(id, html, secs = 7) {
     if (off || !line || said.has(id) || now === "hold") return false;   // (the far view's line is held until it is released: a tip refused is not counted as said)
     said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on"); unhang();

@@ -2788,6 +2788,10 @@ const scenarios = {
         }, text);
         expect(g.ps.every((p) => p.h <= g.lh * 1.6 || p.w >= g.avail - 2), `${lang}: a phrase that fits a line was broken inside: ` + JSON.stringify(g));
         if (lang === "zh" && g.ps.length === 2) expect(g.ps[1].top > g.ps[0].top && g.ps[1].h <= g.lh * 1.6, "zh: the line said when the book is shut should be two lines, the second beginning at 季节与时辰, whole: " + JSON.stringify(g));
+        if (text === LONG[lang]) {   // a face that arrives late: the dots are set right again when the fonts say so (not only on a resize)
+          const again = await t.page.evaluate(() => { for (const d of document.querySelectorAll("#hint .dot")) d.hidden = !d.hidden; document.fonts.dispatchEvent(new Event("loadingdone")); const ps = [...document.querySelectorAll("#hint .phrase")].map((e) => e.getBoundingClientRect()); return [...document.querySelectorAll("#hint .dot")].every((d, i) => d.hidden === (ps[i + 1].top >= ps[i].top + ps[i].height - 1)); });
+          expect(again, `${lang}: the dots were not set right again when the fonts finished loading`);
+        }
         expect(g.dots.every((d) => d.hidden === d.broke), `${lang}: a dot is shown at a break or hidden where the line goes on: ` + JSON.stringify(g));
       }
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
