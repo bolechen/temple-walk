@@ -99,14 +99,25 @@ const grow = () => {
   // the way between the gates: pairs about 9 m apart, each off its place a little, two places left empty
   const lane = []; for (let z = FOOT.inner.z1 + 7.8; z <= FOOT.outer.z0 - 8; z += 9) lane.push(z);
   lane.forEach((z, n) => { for (const sx of [-1, 1]) { const dz = (rnd() * 2 - 1) * 0.8, dx = (rnd() * 2 - 1) * 0.5, r = rr(), c = crown(); if ((sx === 1 && n === 2) || (sx === -1 && n === 4)) continue; add({ x: sx * (5.5 + dx), z: +(z + dz).toFixed(2), y: 0, r, ...c }, 0.4); } });
-  // The terrace (the art director, 2026-11-25, after the concept picture for cam07, refs/t05-concept-2026-11-20/03-axis-from-inner-gate.webp): two rows of old
-  // arborvitae close beside the path, six a side, the nearest pair 8 to 10 m in from the inner gate, the rest from the archway down to the Wuliang hall, their crowns
-  // nearly meeting overhead, two walls of trees; trunk 0.6 to 0.9 m through, 14 to 18 m tall, the crown from 3.5 to 4.5 m up and 5 to 6 m across, the trunk 2.2 to 3.8 m
-  // off the path's edge; spaced a little unevenly. #482/#492's lines are set aside for this stretch; the two kept (KEPT_SIGHTS) push a tree out if it stops one.
-  const ROWS = { [-1]: [127.2, 112.0, 107.4, 101.4, 97.0, 91.0, 86.2, 80.6], [1]: [126.5, 112.6, 106.8, 102.2, 96.5, 91.8, 85.9, 81.3] };   // (eight a side since the art director's second look at the photographs, #573 comment 7166589253: 4.5 to 6 m apart north of the archway, unevenly, crown against crown, one dark wall each side)
-  for (const sx of [-1, 1]) for (const [k, z] of ROWS[sx].entries()) {   // (the fourth of each row a pine: arborvitae first, with a pine or two among them, quoted second-hand: Ming arborvitae and Qing pines, the general director's research of 2026-11-25)
-    const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2), x = PATH.hw + 2.2 + rnd() * 1.6;
-    for (let j = 0; j <= 16; j++) { const t = { x: +(sx * (x + 0.3 * j)).toFixed(2), z, y: SECOND.y, r, rx, ry, base, h, old: true, kind: k === 3 ? "pine" : "cypress" }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
+  // The stretch between the inner gate and the archway (the art director, 2026-11-25, after the concept picture for cam07 and then the owner's photographs,
+  // #573 comment 7166589253: about eight to ten a side in the real temple, conical, dark, crown against crown, two continuous dark walls seen from above, a
+  // second row outside them): old arborvitae in two staggered rows each side, the inner 2.2 to 2.8 m off the path's edge, the outer about 5.5 m, trunks about
+  // 2.8 m apart along each, 0.6 to 0.9 m through, 14 to 18 m tall, the crowns from 3.5 to 4.5 m up and 5 to 6 m across. Our stretch is shorter than the
+  // temple's (the inner gate stands 20 m south of the first white box, INNER_SHIFT): between the archway's roof (to z 120) and the gate's eave (from z 134.7,
+  // 4.75 m up) a crown has about eleven metres, so the rows are eight a side in two lines rather than one long one; the last of each outer row stands beyond
+  // the eave's width, nearer the gate. The two kept lines (KEPT_SIGHTS) push a tree out if it stops one.
+  const SOUTH = { inner: [123.2, 126.0, 128.9, 131.6], outer: [124.5, 127.3, 130.1, 133.0] };
+  for (const sx of [-1, 1]) for (const row of /** @type {const} */ (["inner", "outer"])) for (const [k, z0] of SOUTH[row].entries()) {
+    const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2);
+    const x = row === "inner" ? PATH.hw + 2.2 + rnd() * 0.6 : k === 3 ? 11.9 : PATH.hw + 5.3 + rnd() * 0.6, z = +(z0 + (sx < 0 ? 0.35 : -0.2) + 0.3 * (rnd() - 0.5)).toFixed(2);
+    for (let j = 0; j <= 16; j++) { const t = { x: +(sx * (x + 0.3 * j)).toFixed(2), z, y: SECOND.y, r, rx, ry, base, h, old: true, kind: "cypress", back: row === "outer" }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
+  }
+  // North of the archway to the Wuliang hall (the same comment, from the owner's photograph 11): not rows of cypress but broad pines, scattered, their crowns
+  // round, wide and layer on layer, of uneven heights, standing where no row would put them. Six, three a side, pushed out of the kept lines as the cypresses are.
+  const PINES = [[-7.6, 109.4, 11.6], [8.9, 106.0, 13.2], [-10.4, 95.8, 12.4], [7.2, 92.2, 10.8], [-8.1, 84.4, 13.8], [10.6, 80.8, 12.0]];
+  for (const [px, pz, h] of PINES) {
+    const r = +(0.32 + rnd() * 0.12).toFixed(2), base = +(3.0 + rnd() * 0.8).toFixed(2), rx = +(3.4 + rnd() * 0.8).toFixed(2), ry = +((h - base) / 2).toFixed(2);
+    for (let j = 0; j <= 16; j++) { const t = { x: +(px + Math.sign(px) * 0.3 * j).toFixed(2), z: pz, y: SECOND.y, r, rx, ry, base, h, old: true, kind: "pine" }; if (keptClear(t)) { out.push(Object.freeze(t)); break; } }
   }
   return Object.freeze(out);
 };
@@ -118,7 +129,7 @@ export const WAY_CYPRESS = Object.freeze({ crownFrom: 2.6, radius: 1.2, height: 
 const way01 = (t) => { const v = Math.sin(t.x * 12.9898 + t.z * 78.233 + 14 * 37.719) * 43758.5453; return v - Math.floor(v); };
 export const AXIS_TREES = Object.freeze(TRUNKS.list.map((t) => Object.freeze(t.y === 0
   ? { kind: "cypress", x: t.x, z: t.z, y: t.y, h: +(WAY_CYPRESS.height[0] + (WAY_CYPRESS.height[1] - WAY_CYPRESS.height[0]) * way01(t)).toFixed(2), r: Math.min(t.r, 0.3), crownFrom: WAY_CYPRESS.crownFrom, crownR: Math.min(WAY_CYPRESS.radius, Math.abs(t.x) - PATH.hw - 1 - 0.2) }   // (its crown's edge at least a metre from the paved path's: the lumps reach a little past the radius)
-  : { kind: t.kind || "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
+  : { kind: t.kind || "cypress", x: t.x, z: t.z, y: t.y, h: t.h, r: t.r, old: true, back: !!t.back, env: Object.freeze({ base: t.base, rx: t.rx, ry: t.ry }) })));
 /** Half the hall's platform: where the court's south wall meets the hall. */
 export const HALL_HALF = FOOT.hall.x1;
 

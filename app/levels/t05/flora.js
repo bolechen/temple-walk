@@ -144,7 +144,7 @@ export function growTree(t, far = false) {
     // in three or four clumps, as an old temple cypress's crown breaks up.
     const R = Math.min(t.crownR ?? Infinity, h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3))), prof = [[0.78, 0], [0.96, 0.15], [1, 0.4], [0.94, 0.65], [0.72, 0.85], [0.42, 1]];   // (a narrow egg to a column, the top a little loose, not a point: the art director)
     const radiusAt = (f) => { for (let i = 1; i < prof.length; i++) if (f <= prof[i][1]) { const [a, fa] = prof[i - 1], [b, fb] = prof[i]; return R * (a + ((b - a) * (f - fa)) / (fb - fa)); } return 0; };
-    const count = far ? 16 : env ? Math.round((t.old ? 28 : 26) + (t.old ? 3.6 : 3.2) * env.ry) : 30;   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
+    const count = far ? 16 : env ? Math.round(t.old ? (t.back ? 0.7 * (28 + 3.6 * env.ry) : 34 + 4.4 * env.ry) : 26 + 3.2 * env.ry) : 30;   // (an old tree's tall crown takes more, smaller tufts; one of the outer row, behind the inner from the path, fewer and a little larger)   // (an old tree's tall crown takes more, smaller: dense, not a stack of balls)
     if (env) {
       // An old cypress with its lower boughs long gone: the head broken into four or five masses held out on the boughs, the widest low and
       // spread to the ellipsoid's rim, one over the leader, with sky between them (not a ball on a pole).
@@ -157,7 +157,7 @@ export function growTree(t, far = false) {
         cs.push({ at: new THREE.Vector3(centre.x + Math.cos(a) * d * env.rx * w, centre.y + lift * env.ry, centre.z + Math.sin(a) * d * env.rx * w), r: env.rx * (top ? 0.38 : (t.old ? 0.5 : 0.42) + 0.1 * rnd()) * (t.old ? 0.6 + 0.4 * w : 1) });
       }
       for (let i = 0; i < count; i++) {
-        const c0 = cs[i % clumps], w = c0.r * (t.old ? 0.46 + 0.24 * rnd() : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * (t.old ? 1.6 : 0.6), (rnd() - 0.5) * c0.r * 1.4));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
+        const c0 = cs[i % clumps], w = c0.r * (t.old ? (t.back ? 0.46 + 0.24 * rnd() : 0.42 + 0.22 * rnd()) : 0.55 + 0.25 * rnd()), p = c0.at.clone().add(new THREE.Vector3((rnd() - 0.5) * c0.r * 1.4, (rnd() - 0.5) * c0.r * (t.old ? 1.6 : 0.6), (rnd() - 0.5) * c0.r * 1.4));   // (an old crown's tufts spread up and down their mass too, so that the masses run into one another)
         const e = inEllipsoid(p, centre, env.rx - w * 0.7, env.ry - w * 0.45); if (e > 1) p.sub(centre).multiplyScalar(1 / e).add(centre);
         if (t.old) lump(needles, p, w * 0.8, w * 1.15, w * 0.7, rnd() * 6.283, centre, env.rx, detail, i);   // (an arborvitae's sprays stand on edge: an old crown is a mass of upright tufts, not of pads)
         else lump(needles, p, w, w * 0.62, w * 0.85, rnd() * 6.283, centre, env.rx, detail, i);

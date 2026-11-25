@@ -69,11 +69,11 @@ test("what he meets of a tree is its trunk only: boughs and needles are out of t
   assert.ok(trunks >= 1);
 });
 
-test("a budget: under 340 000 triangles of trees in the whole place, in under 30 meshes, merged by stretch so that only what is in view is drawn", () => {
+test("a budget: under 370 000 triangles of trees in the whole place, in under 30 meshes, merged by stretch so that only what is in view is drawn", () => {
   let tris = 0, meshes = 0;
   site.root.traverse((o) => { if (o.isMesh && /(^|-)trees-/.test(o.name)) { meshes++; tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } });
   console.log(`# T05 trees: ${Math.round(tris)} triangles in ${meshes} meshes`);
-  assert.ok(tris < 340000, `${tris} triangles`); assert.ok(meshes < 30, `${meshes} meshes`);
+  assert.ok(tris < 370000, `${tris} triangles (the T05 lead, 2026-11-25: the trees as the art director drew them first, the cap from 340k to 370k, the T4 frame cost to decide)`); assert.ok(meshes < 30, `${meshes} meshes`);
   const one = buildFlora(M, [{ kind: "pine", x: 0, z: 0, h: 10 }]); assert.ok(one.group.children.length <= 2, "one tree's wood and needles in a draw each");
 });
 

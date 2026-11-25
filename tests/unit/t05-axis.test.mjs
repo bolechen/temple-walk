@@ -144,20 +144,23 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   for (const [name, w] of both) { assert.ok(near(w.heightAt(6.8, 150), 0, 0.02), name); assert.ok(near(w.heightAt(6.8, 95), SECOND.y, 0.02), name); }
   // Trunks keep clear of the archway and of both platforms, and the crowns of the gate's eave.
   const onTerrace = TRUNKS.list.filter((t) => t.y > 0), onLane = TRUNKS.list.filter((t) => t.y === 0);
-  // (the terrace's two rows of old arborvitae, the art director's lines of 2026-11-25: 5 m or more from the archway's line, the nearest pair 8 to 10 m in from the inner gate, clear of the Wuliang hall's steps)
-  assert.ok(onTerrace.every((t) => Math.abs(t.z - AXIS.paifangZ) >= 5 && t.z > FOOT.hall.z1 + 4 && t.z <= FOOT.inner.z0 - 8), `the terrace's trunks keep to the stretches between the hall's steps, the archway and the gate`);
-  assert.ok(onTerrace.length === 16 && [-1, 1].every((sx) => onTerrace.filter((t) => Math.sign(t.x) === sx).length === 8), "eight a side (the art director, #573 comment 7166589253: six the least, seven or eight better)");
-  // crown against crown north of the archway: no gap between neighbours over six metres
-  for (const sx of [-1, 1]) { const zs = onTerrace.filter((t) => Math.sign(t.x) === sx && t.z < AXIS.paifangZ).map((t) => t.z).sort((a, b) => a - b); assert.ok(zs.every((z, i) => i === 0 || z - zs[i - 1] <= 6), `side ${sx}: ${zs}`); }
+  // (the art director's lines of 2026-11-25 and #573 comment 7166589253: old arborvitae in rows only between the inner gate and the archway, eight a side in two
+  // staggered lines, crown against crown; north of the archway broad pines, scattered, none of them a cypress; nothing at the Wuliang hall's steps)
+  const rows = onTerrace.filter((t) => t.kind === "cypress"), pines = onTerrace.filter((t) => t.kind === "pine");
+  assert.ok(rows.every((t) => t.z > AXIS.paifangZ + 4 && t.z < FOOT.inner.z0 - 2), `the rows keep between the archway and the gate: ${rows.map((t) => t.z)}`);
+  assert.ok([-1, 1].every((sx) => rows.filter((t) => Math.sign(t.x) === sx).length === 8), "eight a side (six the least, seven or eight better)");
+  for (const sx of [-1, 1]) { const zs = rows.filter((t) => Math.sign(t.x) === sx).map((t) => t.z).sort((a, b) => a - b); assert.ok(zs.every((z, i) => i === 0 || z - zs[i - 1] <= 3.2), `side ${sx}, crown against crown: ${zs}`); }
+  assert.ok(pines.length >= 5 && pines.every((t) => t.z < AXIS.paifangZ - 5 && t.z > FOOT.hall.z1 + 4) && onTerrace.length === rows.length + pines.length, "north of the archway broad pines only");
+  assert.ok(pines.every((t) => t.rx >= 3.3) && new Set(pines.map((t) => Math.round(t.h))).size >= 4, "broad crowns, of uneven heights");
   assert.ok(onLane.every((t) => t.z > FOOT.inner.z1 + 4 && t.z < FOOT.outer.z0 - 4));
   // Scattered, not a row of poles (the art director's reviews of #464, #482): radii 0.25–0.5 m, a crown on each; the stretch between the hall and the archway (42 m) is not laid in pairs at even gaps.
-  assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && t.rx > 2.5 && t.ry > 2 && Math.abs(t.x) >= 4.9 && Math.abs(t.x) <= 11.5));
+  assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && t.rx > 2.5 && t.ry > 2 && Math.abs(t.x) >= 4.9 && Math.abs(t.x) <= 12.5));
   assert.ok(new Set(TRUNKS.list.map((t) => t.r)).size > 6, "radii differ");
   const behind = onTerrace.filter((t) => t.z < AXIS.paifangZ), gaps = (side) => { const zs = behind.filter((t) => Math.sign(t.x) === side).map((t) => t.z).sort((p, q) => p - q); return zs.slice(1).map((z, i) => z - zs[i]); };
   for (const side of [-1, 1]) { const g = gaps(side); assert.ok(g.length >= 2 && Math.max(...g) - Math.min(...g) > 1.5, `uneven gaps on side ${side}: ${g.map((v) => v.toFixed(1))}`); }
   assert.ok(behind.some((l) => behind.every((r) => Math.sign(r.x) === Math.sign(l.x) || Math.abs(r.z - l.z) > 1.5)), "not every tree has a partner across the way");
   assert.ok(onLane.every((t) => t.y + TRUNKS.canopyBase > 6), "the way's data: a crown's underside over six metres up (the way's arborvitae are drawn as low columns behind cam07, AXIS_TREES)");
-  assert.ok(onTerrace.every((t) => t.base >= 3.5 && t.base <= 4.5 && t.h >= 14 && t.h <= 18 && t.r >= 0.3 && t.r <= 0.45 && t.rx >= 2.5 && t.rx <= 3), "the terrace's old arborvitae: crown from 3.5 to 4.5 m, 14 to 18 m tall, a trunk 0.6 to 0.9 m through, a crown 5 to 6 m across");
+  assert.ok(onTerrace.filter((t) => t.kind === "cypress").every((t) => t.base >= 3.5 && t.base <= 4.5 && t.h >= 14 && t.h <= 18 && t.r >= 0.3 && t.r <= 0.45 && t.rx >= 2.5 && t.rx <= 3), "the terrace's old arborvitae: crown from 3.5 to 4.5 m, 14 to 18 m tall, a trunk 0.6 to 0.9 m through, a crown 5 to 6 m across");
 });
 
 test("from cam07, the archway's middle bay shows the hall and the middle 60% of its ridge is clear of trees (the art director, 2026-11-25; #482's whole ridge and ornaments set aside for the terrace's rows)", () => {
@@ -182,12 +185,15 @@ test("no tree crown stands in cam07's view of the middle 60% of the Great Hall's
   assert.deepEqual(blocked, [], "no crown is in the line of sight");
 });
 
-test("the terrace's rows stand close beside the path, 2 to 4 m off its edge where the kept lines allow, and the archway's own neighbourhood rule (#492) is set aside for them (the art director, 2026-11-25)", () => {
-  const onTerrace = TRUNKS.list.filter((t) => t.y > 0);
-  assert.ok(onTerrace.every((t) => Math.abs(t.x) - PATH.hw >= 2 && Math.abs(t.x) - PATH.hw <= 5.6), onTerrace.map((t) => (Math.abs(t.x) - PATH.hw).toFixed(2)).join(" "));
-  assert.ok(onTerrace.filter((t) => Math.abs(t.x) - PATH.hw <= 4).length >= 8, "most within 2 to 4 m (those by the Wuliang hall are pushed out by the ridge's lines, the last pair to 5.6 m)");
+test("the rows between the inner gate and the archway stand close beside the path, the inner line 2 to 3 m off its edge and the outer behind it; the archway's own neighbourhood rule (#492) is set aside for them (the art director, 2026-11-25)", () => {
+  const rows = TRUNKS.list.filter((t) => t.y > 0 && t.kind === "cypress"), off = (t) => Math.abs(t.x) - PATH.hw;
+  const inner = rows.filter((t) => !t.back), outer = rows.filter((t) => t.back);
+  assert.equal(inner.length, 8); assert.equal(outer.length, 8);
+  assert.ok(inner.every((t) => off(t) >= 2 && off(t) <= 3.2), inner.map((t) => off(t).toFixed(2)).join(" "));
+  assert.ok(outer.every((t) => off(t) >= 5 && off(t) <= 9.2), outer.map((t) => off(t).toFixed(2)).join(" "));
   assert.ok(TRUNKS.list.filter((t) => t.y === 0).every((t) => !AX.nearArchway(t)), "the way's trees keep #492's rule (none near the archway)");
 });
+
 
 test("the monument pavilion is open on all four sides: between its columns, at the height of his eye and over the stele's foot, nothing stands in the way through it", () => {
   const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, y = M0.y + 0.45 + 1.2, ray = new THREE.Raycaster();
