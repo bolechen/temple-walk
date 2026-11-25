@@ -2,5 +2,5 @@
 // whole while the public page carries nothing of T05 (#449). A draft by the project, not yet read by a native speaker (docs/t05/I18N.md).
 // One line to an entry: tools/fonts.py reads the values line by line.
 export default {
-  "这座寺还在修建，眼下没有朱印，也没有朱印帐。慢慢走一走就好。": "この寺はまだ建設の途中で、朱印も朱印帳もありません。ゆっくり歩いてみてください。",
+  "这座寺还在修建，眼下没有朱印，也没有朱印帐。慢慢走一走就好。": "この寺はまだ建設の途中で、朱印も御朱印帳もありません。ゆっくり歩いてみてください。",
 };
