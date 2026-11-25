@@ -146,6 +146,10 @@ export function buildSite(M) {
   // walls are painted (ART.md, phase two).
   // The shut doors' leaves face the court: they take the open air's light, not the inside's (hall.js, HALL_DOORS).
   if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodV, { ao: () => 1 }), mesh(merge(hp.ledges), M.woodX, { ao: () => 1 }), mesh(merge(hp.iron), M.iron, { ao: () => 1, cast: false }));   // (the planks' vertical grain, the ledges across, the iron of the ring and the studs: as the prologue's shut doors, building.js)
+  if (hp.windowShade.length) {   // (the windows of a shut hall: a sheet that casts the sun's shadow and draws nothing; hall.js)
+    const veil = mesh(merge(hp.windowShade), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }), { receive: false });
+    veil.userData.keep = true; veil.userData.bake = false; root.add(veil);
+  }
   root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
   // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
