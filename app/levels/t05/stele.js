@@ -5,7 +5,8 @@
 // of the temple is: SOURCES.md, our own), the written plan's say of the base, columns and stele, the inscription's face,
 // and the place with its shot.
 //
-// What is cut in the stone is only what has been collated (STELE_TEXT; docs/t05/SOURCES.md, 碑文): the rest of its face is
+// What is cut in the stone is only what a transcription we have read gives (STELE_TEXT: Luo Fuyi's, by way of a 2021 paper;
+// the 1931 gazetteer was not reached, so it is not collated against it: docs/t05/SOURCES.md §17): the rest of its face is
 // left as weathered stone, not filled with characters nobody has read. The face is a canvas laid a millimetre proud of the
 // shaft's south face; drawn when a face is there to draw with (the browser), a plain plane in Node.
 import * as THREE from "three";
@@ -13,8 +14,8 @@ import { box, mesh, merge, stairGeo, stairProfile, BODY, CHEEK } from "../../src
 import { MONUMENT, MONUMENT_FORM, STELE } from "./axis.js";
 
 /**
- * The inscription: the stele's title as the transcriptions give it, and the passages collated (SOURCES.md), in the forms a
- * Yuan stone would be cut in. Each line is one column, read top to bottom, the columns from right to left. `lines` are the
+ * The inscription: the stele's title and the passages as the transcription read gives them (SOURCES.md §17), turned back into
+ * the full forms by us (our own reading of the simplified text, not a rubbing). Each line is one column, read top to bottom, the columns from right to left. `lines` are the
  * lines that may be copied: an id (kept on the page, never the words), its text as cut, and which column holds it.
  */
 export const STELE_TEXT = Object.freeze({
@@ -40,7 +41,7 @@ export const FACE = Object.freeze({ margin: 0.07, foot: 0.12, head: 0.1 });
 
 // The inscription drawn on a canvas, characters in the kai (the project's own regular hand, Yunjing Kai, written in the forms
 // cut), as incised characters: a darker hollow with a lit lower edge, the stone's grain over all. Weathered where nothing was
-// collated (SOURCES.md): no characters there.
+// read in a transcription (SOURCES.md §17): no characters there.
 function inscription(w, h, again = true) {
   if (typeof document === "undefined" || !document.createElement) return null;
   const c = document.createElement("canvas"); if (!c.getContext) return null;
@@ -54,7 +55,7 @@ function inscription(w, h, again = true) {
     g.fillStyle = "rgba(255,248,232,0.22)"; g.fillText(ch, x + size * 0.03, y + size * 0.04);   // the lit lower lip of the cut
     g.fillStyle = "rgba(28,24,20,0.62)"; g.fillText(ch, x, y);                                   // the hollow
   };
-  // The title down the first column, larger; then the collated columns, right to left.
+  // The title down the first column, larger; then the columns read, right to left.
   [...STELE_TEXT.title].forEach((ch, i) => draw(ch, px - step * 0.9, ph * 0.04 + cell * 0.55 + i * cell * 0.98, fs * 0.92));
   cols.forEach((s, k) => [...s].forEach((ch, i) => draw(ch, px - step * (2.2 + k * 1.05), ph * 0.04 + cell * 0.55 + i * cell, fs * 0.82)));
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
