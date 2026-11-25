@@ -7,7 +7,7 @@
 //
 // Sizes and how far each is sourced: docs/t05/SOURCES.md §14 (the hall table), DECISIONS.md (2026-11-21, item 7).
 import * as THREE from "three";
-import { box, BODY } from "../../src/geo.js";
+import { box, merge, mesh, BODY } from "../../src/geo.js";
 import { HALL } from "./hall.js";
 
 /**
@@ -49,6 +49,47 @@ function haloShape(w, h) {
   return s;
 }
 
+/**
+ * One of the seven with everything that stands on his bay, in the hall's frame, from the altar's top `top`: the base, the figure, his
+ * halo and his two attendants, each geometry already turned and placed. `f` is a FIGURES entry or the same shape with other numbers
+ * (the debug panel's way of trying them, #684): `{ id, x, h, yaw? }`. buildAltar is this for each of FIGURES.
+
+ * @param {{ id: string, x: number, h: number, yaw?: number }} f @param {number} [top] the altar's top (the hall's floor and the altar's height)
+ */
+export function buildFigure(f, top = HALL.floor + ALTAR.h) {
+  const clay = [], halo = [], attendants = [];
+  const g = [], { x } = f, z = SEAT.z;
+  // the Sumeru base, waisted, and the lotus on it
+  let y = top;
+  for (const [kw, kd, h] of [[1, 1, 0.35], [0.86, 0.86, 1.2], [1.02, 1.02, 0.45]]) { g.push(box(SEAT.w * kw, h, SEAT.d * kd, 0, y + h / 2, 0)); y += h; }
+  g.push(new THREE.CylinderGeometry(1, 0.86, SEAT.lotus, 24).scale(SEAT.w * 0.45, 1, SEAT.d * 0.45).translate(0, y + SEAT.lotus / 2, 0)); y += SEAT.lotus;
+  // the figure seated on it, as three masses: the crossed legs, the body to the shoulders, and the head with its crown
+  const fig = f.h - SEAT.sumeru - SEAT.lotus, legs = fig * 0.22, body = fig * 0.5, head = fig - legs - body;
+  g.push(box(3.4, legs, 2.4, 0, y + legs / 2, 0.1)); y += legs;
+  g.push(new THREE.CylinderGeometry(0.95, 1.15, body, 16).scale(1, 1, 0.72).translate(0, y + body / 2, -0.15)); y += body;
+  g.push(new THREE.CylinderGeometry(0.5, 0.58, head * 0.72, 16).translate(0, y + head * 0.36, -0.1), new THREE.SphereGeometry(0.34, 12, 8).translate(0, y + head * 0.86, -0.1)); y += head;
+  const topRec = { id: f.id, x, z, top: y, head: y - head * 0.5 };
+  // the halo behind, from the lotus up to over the head
+  const hy = top + SEAT.sumeru + SEAT.lotus, hh = y + SEAT.halo.over - hy;
+  const h = [new THREE.ExtrudeGeometry(haloShape(SEAT.halo.w, hh), { depth: SEAT.halo.t, bevelEnabled: false, curveSegments: 12 }).translate(0, hy, -SEAT.halo.t / 2)];   // (about its own middle: see below)
+  // the attendants either side, a little in front: a lotus and a standing figure
+  for (const s of [-1, 1]) {
+    const ax = s * ATTEND.dx, az = ATTEND.z - z, a = ATTEND.w;
+    g.push(new THREE.CylinderGeometry(a * 0.6, a * 0.5, 0.25, 12).translate(ax, top + 0.125, az));
+    g.push(new THREE.CylinderGeometry(a * 0.3, a * 0.42, ATTEND.h - 0.25 - 0.5, 12).translate(ax, top + 0.25 + (ATTEND.h - 0.75) / 2, az));
+    g.push(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 10).translate(ax, top + ATTEND.h - 0.25, az));
+  }
+  // the whole group, Buddha, halo and attendants, stood on its bay and turned as it faces
+  const turn = new THREE.Matrix4().makeTranslation(x, 0, z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
+  for (const p of g) clay.push(p.applyMatrix4(turn));
+  // the halo turned about its own middle, not the base's: turned about the base it would swing 0.26 m sideways into the
+  // frame's beam beside it (the outer halos keep only 0.09 m from those beams, the structural review of #493)
+  const turnHalo = new THREE.Matrix4().makeTranslation(x, 0, SEAT.halo.z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
+  for (const p of h) halo.push(p.applyMatrix4(turnHalo));
+  for (const s of [-1, 1]) { const at = new THREE.Vector3(s * ATTEND.dx, 0, ATTEND.z - z).applyMatrix4(turn); attendants.push({ of: f.id, side: s, x: at.x, z: at.z, top: top + ATTEND.h }); }
+  return { clay, halo, top: topRec, attendants };
+}
+
 /** The altar's meshes (by material), where each figure's top is, and what the written plan's walker is told of them. */
 export function buildAltar() {
   const y0 = HALL.floor, top = y0 + ALTAR.h, zc = (ALTAR.zF + ALTAR.zB) / 2;
@@ -58,45 +99,48 @@ export function buildAltar() {
   post(-ALTAR.w / 2 - 0.15, ALTAR.w / 2 + 0.15, ALTAR.zB - 0.15, ALTAR.zF + 0.15);
   const tops = [], attendants = [];
   for (const f of FIGURES) {
-    const g = [], { x } = f, z = SEAT.z;
-    // the Sumeru base, waisted, and the lotus on it
-    let y = top;
-    for (const [kw, kd, h] of [[1, 1, 0.35], [0.86, 0.86, 1.2], [1.02, 1.02, 0.45]]) { g.push(box(SEAT.w * kw, h, SEAT.d * kd, 0, y + h / 2, 0)); y += h; }
-    g.push(new THREE.CylinderGeometry(1, 0.86, SEAT.lotus, 24).scale(SEAT.w * 0.45, 1, SEAT.d * 0.45).translate(0, y + SEAT.lotus / 2, 0)); y += SEAT.lotus;
-    // the figure seated on it, as three masses: the crossed legs, the body to the shoulders, and the head with its crown
-    const fig = f.h - SEAT.sumeru - SEAT.lotus, legs = fig * 0.22, body = fig * 0.5, head = fig - legs - body;
-    g.push(box(3.4, legs, 2.4, 0, y + legs / 2, 0.1)); y += legs;
-    g.push(new THREE.CylinderGeometry(0.95, 1.15, body, 16).scale(1, 1, 0.72).translate(0, y + body / 2, -0.15)); y += body;
-    g.push(new THREE.CylinderGeometry(0.5, 0.58, head * 0.72, 16).translate(0, y + head * 0.36, -0.1), new THREE.SphereGeometry(0.34, 12, 8).translate(0, y + head * 0.86, -0.1)); y += head;
-    tops.push({ id: f.id, x, z, top: y, head: y - head * 0.5 });
-    // the halo behind, from the lotus up to over the head
-    const hy = top + SEAT.sumeru + SEAT.lotus, hh = y + SEAT.halo.over - hy;
-    const h = [new THREE.ExtrudeGeometry(haloShape(SEAT.halo.w, hh), { depth: SEAT.halo.t, bevelEnabled: false, curveSegments: 12 }).translate(0, hy, -SEAT.halo.t / 2)];   // (about its own middle: see below)
-    // the attendants either side, a little in front: a lotus and a standing figure
-    for (const s of [-1, 1]) {
-      const ax = s * ATTEND.dx, az = ATTEND.z - z, a = ATTEND.w;
-      g.push(new THREE.CylinderGeometry(a * 0.6, a * 0.5, 0.25, 12).translate(ax, top + 0.125, az));
-      g.push(new THREE.CylinderGeometry(a * 0.3, a * 0.42, ATTEND.h - 0.25 - 0.5, 12).translate(ax, top + 0.25 + (ATTEND.h - 0.75) / 2, az));
-      g.push(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 10).translate(ax, top + ATTEND.h - 0.25, az));
-    }
-    // the whole group, Buddha, halo and attendants, stood on its bay and turned as it faces
-    const turn = new THREE.Matrix4().makeTranslation(x, 0, z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
-    for (const p of g) clay.push(p.applyMatrix4(turn));
-    // the halo turned about its own middle, not the base's: turned about the base it would swing 0.26 m sideways into the
-    // frame's beam beside it (the outer halos keep only 0.09 m from those beams, the structural review of #493)
-    const turnHalo = new THREE.Matrix4().makeTranslation(x, 0, SEAT.halo.z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
-    for (const p of h) halo.push(p.applyMatrix4(turnHalo));
-    for (const s of [-1, 1]) { const at = new THREE.Vector3(s * ATTEND.dx, 0, ATTEND.z - z).applyMatrix4(turn); attendants.push({ of: f.id, side: s, x: at.x, z: at.z, top: top + ATTEND.h }); }
+    const one = buildFigure(f, top);
+    clay.push(...one.clay); halo.push(...one.halo); tops.push(one.top); attendants.push(...one.attendants);
   }
   // the two kings at the ends, on the floor, each on its plinth
-  const kings = [];
+  const kings = [], kingClay = [];
   for (const s of [-1, 1]) {
     const kx = s * KING.x, w = KING.w, k = KING.h;
     stone.push(box(w, KING.plinth, w, kx, y0 + KING.plinth / 2, KING.z));
     const b = y0 + KING.plinth;
-    clay.push(new THREE.CylinderGeometry(0.38, 0.48, k * 0.82, 12).scale(1, 1, 0.8).translate(kx, b + k * 0.41, KING.z), new THREE.CylinderGeometry(0.2, 0.24, k * 0.18, 10).translate(kx, b + k * 0.91, KING.z));
+    const kc = [new THREE.CylinderGeometry(0.38, 0.48, k * 0.82, 12).scale(1, 1, 0.8).translate(kx, b + k * 0.41, KING.z), new THREE.CylinderGeometry(0.2, 0.24, k * 0.18, 10).translate(kx, b + k * 0.91, KING.z)];
+    clay.push(...kc); kingClay.push(...kc);
     post(kx - w / 2, kx + w / 2, KING.z - w / 2, KING.z + w / 2);
     kings.push({ x: kx, z: KING.z, top: b + k });
   }
-  return { parts: { stone, clay, halo }, walk, tops, attendants, kings };
+  return { parts: { stone, clay, halo }, walk, tops, attendants, kings, kingClay };
 }
+
+/**
+ * The seven as parts of their own for the debug panel (#684): each one's clay and halo in two meshes of its own, kept out of the static merge
+ * (`userData.keep`), and `rebuild(id, params)` drawing one again from `{ ...his FIGURES entry, ...params }` (x, h, yaw in radians). Returns what is
+ * left of the altar's clay once the seven are out of it (`built.kingClay`, the two kings), to be merged as before, the group of the seven, and the hook. A rebuilt
+ * figure also updates his place in `built.tops` and `built.attendants`.
+ * @param {*} M the level's materials @param {ReturnType<typeof buildAltar>} built @param {*} sh the options the hall's meshes are made with
+ */
+export function benchFigures(M, built, sh) {
+  const group = new THREE.Group(), clayMat = M.plaster(), haloMat = M.woodX;
+  const at = (id) => built.tops.findIndex((t) => t.id === id);
+  const list = FIGURES.map((f) => ({ id: f.id, f: /** @type {{ id: string, x: number, h: number, yaw?: number }} */ ({ ...f }), parts: /** @type {any[]} */ ([]) }));
+  const make = (e) => {
+    for (const m of e.parts) { group.remove(m); m.geometry.dispose(); }
+    const o = buildFigure(e.f, HALL.floor + ALTAR.h);
+    e.parts = [[o.clay, clayMat, "clay"], [o.halo, haloMat, "halo"]].map(([geos, material, kind]) => {
+      const m = mesh(merge(geos), material, sh); m.userData.keep = true; m.userData.figure = e.id; m.name = `altar-${e.id}-${kind}`; group.add(m); return m;
+    });
+    const k = at(e.id); if (k >= 0) built.tops[k] = o.top;
+    built.attendants = built.attendants.filter((a) => a.of !== e.id).concat(o.attendants);
+  };
+  list.forEach(make);
+  return {
+    group, rest: built.kingClay, list,
+    /** @param {string} id @param {{ x?: number, h?: number, yaw?: number }} params */
+    rebuild(id, params) { const e = list.find((x) => x.id === id); if (!e) throw new Error(`no figure ${id}`); e.f = { ...e.f, ...params }; make(e); },
+  };
+}
+

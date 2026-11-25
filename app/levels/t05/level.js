@@ -19,6 +19,7 @@ const J01 = {
   exp: 1.1, bloom: 0.16, glow: 0.35, hal: 0.12, mist: 0.7, fogLayer: [0.15, -6, 20, 2],
   sh: [0.93, 1, 1.035], hi: [1.01, 1, 0.97], sat: 1,
   lut: { lift: [0, 0.002, 0.006], gamma: [1, 1, 1.01], gain: [1, 1, 1], sat: 1.02, shadow: [0, 0, 0.005], light: [0.004, 0.002, -0.003] },
+  leaf: [1.75, 0.95, 0.5],   // dry earth and olive evergreens: what app/levels/t05/dry.js multiplies by on a dry day without snow
   drift: "none", line: "寒霜清晨，钟声独远",
 };
 
@@ -29,6 +30,7 @@ export default {
   createWalker,
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
+  keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4); no book yet
   writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level
   backdrop: null,
