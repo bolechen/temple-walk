@@ -287,9 +287,9 @@ const bounce = new THREE.RectAreaLight(0xffe2c0, 0, 3.6, 6); bounce.rotation.x =
 const hemi = new THREE.HemisphereLight(0xf2ece2, 0x6f6152, 2.2); hemi.visible = false; scene.add(hemi);   // for { light: "diffuse" } only
 const altarLamp = new THREE.PointLight(0xffa860, 0, 14, 2); altarLamp.position.set(0, AT + 0.9, ALTAR.z + 3.2); scene.add(altarLamp);
 // The hall's main light as the sky and light session set it (#754): the light that comes in from the doors and windows high and
-// before the figures, two wide spots at (±8, F+14, +8) aimed at (±6, F+10.5, ALTAR.z+0.3), half angle 0.5, no shadow; off unless a
+// before the figures, two wide spots at (±8, F+14, +8) aimed at (±6, F+10.5, ALTAR.z+0.3), half angle 0.7 and penumbra 0.6 (0.5 and 1 left the outer two figures at a third of the middle ones), no shadow; off unless a
 // shot gives `keyI` (the candela of each), so the old pictures stay as they were.
-const keyLights = [-1, 1].map((sx) => { const l = new THREE.SpotLight(0xfff4e8, 0, 42, 0.5, 1, 1.6); l.position.set(sx * 8, F + 14, 8); l.target.position.set(sx * 6, F + 10.5, ALTAR.z + 0.3); l.castShadow = false; scene.add(l, l.target); return l; });
+const keyLights = [-1, 1].map((sx) => { const l = new THREE.SpotLight(0xfff4e8, 0, 42, 0.7, 0.6, 1.6); l.position.set(sx * 8, F + 14, 8); l.target.position.set(sx * 6, F + 10.5, ALTAR.z + 0.3); l.castShadow = false; scene.add(l, l.target); return l; });
 
 // Two moods. Summer by day (the T00 baseline, for comparison) and early winter, clear and cold, about 09:45 in early
 // December at 41.5° N (docs/t05/ART.md §4.2): the sun at about 17° in the south-south-east comes in low through the doors.
