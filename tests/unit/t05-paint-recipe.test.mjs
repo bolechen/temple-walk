@@ -46,3 +46,9 @@ test("a figure that names where its lips lie (lipAt) draws a closed mouth: a len
   assert.ok(withAt.length >= 3);
   for (const [f, a] of withAt) { assert.ok(a.lipH <= 0.06, f); assert.ok(a.lipAt[1] > a.mouth[1] && a.lipAt[1] < a.eyeL[1], f); assert.ok(a.lipHalf > 0.1 && a.lipHalf < 0.2, f); }
 });
+
+test("a seam lift is named whole (half-height and strength) and only on a figure whose mouth shows as one dark line", () => {
+  const withSeam = anchors.filter(([, a]) => a.seamLift !== undefined || a.seamH !== undefined);
+  assert.ok(withSeam.length >= 1 && withSeam.length <= 2, "a lift for one or two figures, not a recipe for all");
+  for (const [f, a] of withSeam) { assert.ok(a.seamH > 0.005 && a.seamH < 0.03, f); assert.ok(a.seamLift > 0 && a.seamLift <= 0.6, f); }
+});
