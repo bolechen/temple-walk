@@ -137,6 +137,8 @@ export async function mountDebug({ link }) {
   const on = W.__part();
   for (const name of Object.keys(on)) parts.add(on, name).name(LABELS[name] || name).onChange((v) => { on[name] = W.__part(name, v); });
 
+  if (typeof __DEPLOY__ === "undefined" || __DEPLOY__ !== "production") await (await import("./objects-debug.js")).mountObjects(gui, W);   // 「物件」 (#684): written out here, not read from deploy.js, so that the bundler cuts the import from production
+
   // The readings, a few times a second: often enough to watch, not so often that the panel costs frames.
   let f0 = y0.frames, t0 = performance.now();
   setInterval(() => {
