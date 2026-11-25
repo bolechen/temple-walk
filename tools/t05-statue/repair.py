@@ -174,8 +174,8 @@ for _k, op in enumerate(spec["ops"]):
     if "chin_behind" in op:
       yl_, yc_ = zs[nL] * sc0, zs[nC] * sc0   # heights in metres of the stage
       want = Pn[nL] + (((yc_ - yl_) * np.sin(a_b) - op["chin_behind"]) / np.cos(a_b)) / sc0   # the chin's depth (file units) that stands chin_behind behind the lip's tip when upright
-      sig = op.get("chin_sigma", 0.04) / sc0; extra = want - T[nC]
-      T[nL:nJ + 1] += extra * np.exp(-((zs[nL:nJ + 1] - zs[nC]) / sig) ** 2)
+      sig = op.get("chin_sigma", 0.04) / sc0; extra = want - T[nC]; zc_ = zs[nC] - op.get("chin_shift", 0.0) / sc0   # chin_shift: the bump's centre lower than the chin's tip (metres): from below the chin's top edge then reads less like a second lip
+      T[nL:nJ + 1] += extra * np.exp(-((zs[nL:nJ + 1] - zc_) / sig) ** 2)
     delta = np.zeros(len(zs)); delta[nL:nJ + 1] = T[nL:nJ + 1] - Pn[nL:nJ + 1]   # + : forward (toward the viewer)
     # c1 at both ends: ease the first and last tenth of the span
     ramp = np.ones(len(zs)); n_ = max(nJ - nL, 1); e_ = max(int(op.get("ramp", 0.15) * n_), 2)
