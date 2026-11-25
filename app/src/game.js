@@ -221,11 +221,17 @@ export function createGame(y) {
   }
   // The page as it now stands, on a slip of paper written down the page (the library's slip, #203's fitting): the copied line
   // as cut, or the observation's line, and under it where it is from. Put away by its button, Esc or E.
-  function showPage() {
-    if (!lp) return; const v = lp.view(), last = lp.state().last;
-    const text = last === "stele" ? v.copy : v.note, from = last === "stele" ? v.from : (v.copy ? `${v.copy}　${v.from}` : "");
+  function showPage(whole = false) {
+    if (!lp) return; const v = lp.view(), last = whole ? (v.copy ? "stele" : "p1") : lp.state().last;
+    const text = last === "stele" ? v.copy : v.note, from = last === "stele" ? (v.note ? `${v.from}　·　${v.note}` : v.from) : "";
+    if (!text) return;
     holdOut(text, from, t("收下"), () => {});
+    pageRow();
   }
+  // The pause menu's 这一页 (only in a temple with a page of its own, once something is on it): the page shown again.
+  const pageRow = () => document.body.classList.toggle("page", !!lp && Object.keys(lp.marks()).length > 0);
+  pageRow();
+  $("menuPage")?.addEventListener("click", () => { ui.close("menu"); showPage(true); });
   async function begin(id) {
     if (lp && (lp.offers(id) || lp.isStroke(id))) return beginPage(id);
     if (rite || !places[id]) return;

@@ -704,6 +704,12 @@ const scenarios = {
     expect(stored.p1 && stored.stele && stored.stele.line === "qifo", "both marks are kept under yunjing.levels.v1: " + JSON.stringify(stored));
     expect(JSON.stringify(await mine()) === JSON.stringify(PROLOGUE), "the prologue's keys changed: " + JSON.stringify(await mine()));
     expect((await D()).cuts === cuts0, "no cut through the whole of it");
+    // The pause menu's 这一页 shows the page again; the prologue (no page of its own) never shows the row.
+    await t.page.keyboard.press("Escape"); await t.until(async () => !(await t.page.isVisible("#slip")), 10000, "the slip did not go away");
+    await t.page.click("#menuBtn"); await t.until(() => t.page.isVisible("#menu"), 10000, "the menu did not open");
+    expect(await t.page.isVisible("#menuPage"), "这一页 should be in the menu once the page has something on it");
+    await t.page.click("#menuPage"); await t.until(() => t.page.isVisible("#slip"), 10000, "这一页 did not show the page");
+    expect((await t.page.textContent("#slipText")) === "觀其寶殿崔嵬，儼居七佛", "the page shown again leads with the copied line");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
   // A named view's own lens (`site.lens`, app/yard.js `baseFov`; T05's cam06 is 65° from his eyes, 50° from behind him): `?show=<name>` takes it, a view with no
