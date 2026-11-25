@@ -126,3 +126,15 @@ test("north of the rows the court's trees are broad pines, scattered, two framin
   assert.equal(corners.length, 2); for (const t of corners) assert.ok(t.rx >= 3.2 && Math.min(t.h, eaveCap(t.x, t.z)) <= eaveCap(t.x, t.z), `${t.x}: a wide crown under the eave`);
   assert.ok(new Set(COURT_TREES.map((t) => Math.round(t.h))).size >= 3, "of uneven heights");
 });
+
+test("no grown crown stops the low sun's rays to the archway's middle bay or the faces of its two middle posts (J01, the art director's 55% line; #722)", async () => {
+  // The ellipsoid test in axis.js (sunClear) samples the bay between the posts; this asks the needles as they are grown, across the posts' faces too
+  // (x ±2.65): the T4 of 2410f50 found the east post in the shade of the wall's last cypress, which the ellipsoid test had never sampled.
+  const { SUN, AXIS } = await import("../../app/levels/t05/axis.js");
+  const sun = new THREE.Vector3(...SUN), rc = new THREE.Raycaster(), stops = [];
+  for (const t of [...AXIS_TREES, ...T05S.EAST_WALL_TREES]) {
+    const g = growTree(t, false), meshes = g.needles.map((n) => new THREE.Mesh(n, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })));
+    for (let x = -2.65; x <= 2.651; x += 0.265) for (let y = 1.5; y <= 8.51; y += 0.5) { rc.set(new THREE.Vector3(x, y, AXIS.paifangZ + 0.4), sun); if (rc.intersectObjects(meshes).length) stops.push(`${t.x},${t.z} at (${x.toFixed(2)}, ${y})`); }
+  }
+  assert.deepEqual(stops, [], "no crown in the sun's way to the archway's middle bay");
+});

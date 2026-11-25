@@ -107,6 +107,12 @@ const BAY = (() => { const pts = []; for (let x = -2; x <= 2.001; x += 0.5) for 
 export const sunClear = (t) => { const w = { ...t, rx: t.rx + SUN_MARGIN, ry: t.ry + SUN_MARGIN }; return BAY.every((P) => !treeBlocks(P, P.map((v, i) => v + SUN[i] * 120), w)); };
 /** How far past its crown a tree's shadow still darkens (the soft shadow's half-shade, as the T4 shows it): the crown is cleared by this much more. */
 const SUN_MARGIN = 0.8;
+/**
+ * Where the east outer row's last tree stands along the axis: north of the line the check walks across the gate's foot (z 132.8), not south of it as the
+ * west's does. By the wall its crown is narrowed to 1.4 m and still the low sun's rays to the archway's east middle post (x 2.4, its face 2.65 m out)
+ * pass through it south of that line; the T4 of 2410f50 showed that post in its shade once the near crowns were drawn as whole masses (#722).
+ */
+const EAST_LAST = 131.5;
 /** How far out an east tree may step: its trunk a metre and a half inside the terrace's east wall. */
 const SUN_WALL = SECOND.hw - SECOND.wallT / 2 - 1.5;
 const grow = () => {
@@ -122,10 +128,10 @@ const grow = () => {
   // temple's (the inner gate stands 20 m south of the first white box, INNER_SHIFT): between the archway's roof (to z 120) and the gate's eave (from z 134.7,
   // 4.75 m up) a crown has about eleven metres, so the rows are eight a side in two lines rather than one long one; the last of each outer row stands beyond
   // the eave's width, nearer the gate. The two kept lines (KEPT_SIGHTS) push a tree out if it stops one.
-  const SOUTH = { inner: [123.2, 126.0, 128.9, 131.6], outer: [124.5, 127.3, 130.1, 134.3] };   // (the last of each outer row past the eave's width and past the line the check walks across the terrace at the gate's foot, z 132.8)
+  const SOUTH = { inner: [123.2, 126.0, 128.9, 131.6], outer: [124.5, 127.3, 130.1, 134.3] };   // (the last of each outer row past the eave's width and past the line the check walks across the terrace at the gate's foot, z 132.8; on the east, where the sun comes from, it stands north of that line instead, EAST_LAST)
   for (const sx of [-1, 1]) for (const row of /** @type {const} */ (["inner", "outer"])) for (const [k, z0] of SOUTH[row].entries()) {
     const r = +(0.3 + rnd() * 0.15).toFixed(2), h = +(14 + rnd() * 4).toFixed(2), base = +(3.5 + rnd()).toFixed(2), rx = +(2.55 + rnd() * 0.45).toFixed(2), ry = +((h - base) / 2).toFixed(2);
-    const x = row === "inner" ? PATH.hw + 2.2 + rnd() * 0.6 : k === 3 ? 11.9 : PATH.hw + 5.3 + rnd() * 0.6, z = +(z0 + (sx < 0 ? 0.35 : -0.2) + 0.3 * (rnd() - 0.5)).toFixed(2);
+    const x = row === "inner" ? PATH.hw + 2.2 + rnd() * 0.6 : k === 3 ? 11.9 : PATH.hw + 5.3 + rnd() * 0.6, z = +((sx > 0 && row === "outer" && k === 3 ? EAST_LAST : z0) + (sx < 0 ? 0.35 : -0.2) + 0.3 * (rnd() - 0.5)).toFixed(2);
     if (sx > 0 && SUNWARD_GAP.includes(`${row}${k}`)) continue;   // (drawn after its numbers, so that every other tree keeps its own)
     // an east tree kept steps out until its crown stops none of the sun's rays to the archway's middle bay, its crown narrowing by the wall if it must
     const sunward = sx > 0;
