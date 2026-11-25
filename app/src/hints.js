@@ -14,14 +14,26 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
   // One line at the foot of the view. `id` is said only once in a visit; a later line replaces an earlier one.
   // A line is a few phrases between middle dots; each is kept whole, so that on a narrow screen the line breaks between
   // them and not in the middle of one (a dot with no space round it, as in a Korean pair of words, belongs to its phrase).
-  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? part : `<span class="phrase">${part}</span>`)).join("");
+  // The dot between two phrases is its own span, so that where the line breaks there it can be put away (`unhang`): left at the end of
+  // the first line it reads as one dot too many.
+  const phrases = (html) => html.split(/([\s\u3000]+·[\s\u3000]+)/).map((part, i) => (i % 2 ? part.replace("·", '<span class="dot">·</span>') : `<span class="phrase">${part}</span>`)).join("");
+  const unhang = () => {
+    if (!line) return;
+    const ps = [...line.querySelectorAll(".phrase")];
+    for (const d of /** @type {NodeListOf<HTMLElement>} */ (line.querySelectorAll(".dot"))) d.hidden = false;
+    for (let i = 1; i < ps.length; i++) {
+      const dot = /** @type {HTMLElement | null} */ (ps[i - 1].nextElementSibling);   // (the dot between two phrases is the element right after the first)
+      if (dot?.classList.contains("dot") && ps[i].offsetTop >= ps[i - 1].offsetTop + ps[i - 1].offsetHeight - 1) dot.hidden = true;
+    }
+  };
+  addEventListener("resize", unhang);
   function tip(id, html, secs = 7) {
     if (off || !line || said.has(id) || now === "hold") return false;   // (the far view's line is held until it is released: a tip refused is not counted as said)
-    said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on");
+    said.add(id); now = id; line.innerHTML = phrases(html); line.classList.add("on"); unhang();
     clearTimeout(lineT); lineT = setTimeout(() => drop(id), secs * 1000); return true;
   }
   // A line that stays until it is released (the far view's way to the book): not said once, not faded.
-  function hold(html) { if (off || !line) return false; now = "hold"; line.innerHTML = phrases(html); line.classList.add("on"); clearTimeout(lineT); return true; }
+  function hold(html) { if (off || !line) return false; now = "hold"; line.innerHTML = phrases(html); line.classList.add("on"); unhang(); clearTimeout(lineT); return true; }
   function release() { drop("hold"); }
   function drop(id) { if (!line || (id && now !== id)) return; line.classList.remove("on"); now = null; }
   // A label that shows for a while and fades: the season's name, the next place.

@@ -2762,6 +2762,23 @@ const scenarios = {
     const ev = JSON.stringify(await events()); expect(!/demo\.complete/.test(ev.split("demo.ending.replay").slice(1).join("")), "watching again sent demo.complete");
     expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
   } },
+  // The line at the foot of the view breaks between its phrases (hints.js `phrases`); where it breaks, the middle dot between two phrases
+  // must not be left hanging at the end of the first line (it reads as one dot too many): in each language, on a phone 390 wide.
+  "hint-break": { tier: 2, async run(b, base) {
+    for (const lang of ["zh", "ja", "en", "ko"]) {
+      const t = await open(b, base, `q=low&lang=${lang}&view=third`, { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+      await t.until(async () => (await t.page.evaluate(() => window.__hud().tip)) === "walk", 60000, `${lang}: the line about walking was never said`);
+      const r = await t.page.evaluate(() => {
+        const line = document.getElementById("hint"), rows = [], w = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
+        const phrases = [...line.querySelectorAll(".phrase")].map((e) => e.getBoundingClientRect()), lines = new Set(phrases.map((p) => Math.round(p.top)));
+        for (let n; (n = w.nextNode());) { if (n.parentElement.closest(".phrase")) continue; const i = n.data.indexOf("·"); if (i < 0) continue; const g = document.createRange(); g.setStart(n, i); g.setEnd(n, i + 1); const dot = g.getBoundingClientRect(); if (!dot.width) continue; rows.push({ top: dot.top, bottom: dot.bottom, next: phrases.find((p) => p.left > dot.left - 1 && Math.abs(p.top - dot.top) < 60 || p.top > dot.top)?.top ?? null }); }
+        return { lines: lines.size, dots: rows, text: line.textContent, on: line.classList.contains("on") };
+      });
+      const hung = r.dots.filter((d) => d.next !== null && d.next >= d.bottom - 1);
+      expect(hung.length === 0, `${lang}: a middle dot hangs at the end of a line: ` + JSON.stringify(r));
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+  } },
   // The opening after 入山 (src/opening.js, issue #110): a first visitor sees the summit and is brought down the mountain
   // to him before the walk is theirs; nothing lies over the picture meanwhile; the bell sounds at the click and the music
   // waits; the first line about walking comes only after; at the gate the prologue's title rises and leaves, once. A
