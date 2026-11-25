@@ -21,6 +21,12 @@
    "rev": "6b34c3cdcf46a0dbdfb26fec80c31f403a220b27"
   },
   {
+   "path": "png/raised-hand-krakucchanda-wrist-after.png",
+   "bytes": 350347,
+   "sha256": "57935ed4d0f2dda81137a8d1e43cb2b9039e88588ec30830d70e25c473d83165",
+   "rev": "0a34feb0856a3fb1a00cf281b0319a4d7e79d460"
+  },
+  {
    "path": "png/raised-hands-before-after.jpg",
    "bytes": 154004,
    "sha256": "51de8d14a8325d2f664bc0b8f76830e25648ad2e1dccc06e9bb33dab1823bd3e",
