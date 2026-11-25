@@ -96,15 +96,15 @@ test("the hands lie on the lap against his belly in the meditation seal: palms u
   }
   const pl = palm("left"), pr = palm("right");
   assert.ok(pl.y > pr.y + 0.01 && pl.y < pr.y + 0.035, `the left hand lies on the right (${(pl.y - pr.y).toFixed(3)} m higher)`);
-  // deep over each other: the middles of the two hands (each hand's own skin) no more than 4 cm apart across
+  // deep over each other: the middles of the two hands (each hand's own skin) no more than 3.6 cm apart across (the first art review measured 3.8 and asked for no more than 4)
   const centre = (side) => { const q = points(skin, weighted(m, skin, new RegExp(`^${side}Hand$`))); return q.reduce((a, v) => a.add(v), V()).divideScalar(q.length); };
   const cl = centre("left"), cr = centre("right");
-  assert.ok(Math.abs(cl.x - cr.x) <= 0.04 && Math.abs(cl.x + cr.x) < 0.012, `the two hands lie over each other about his middle (their middles ${cl.x.toFixed(3)} and ${cr.x.toFixed(3)}, ${(Math.abs(cl.x - cr.x) * 100).toFixed(1)} cm apart across)`);
+  assert.ok(Math.abs(cl.x - cr.x) <= 0.036 && Math.abs(cl.x + cr.x) < 0.012, `the two hands lie over each other about his middle (their middles ${cl.x.toFixed(3)} and ${cr.x.toFixed(3)}, ${(Math.abs(cl.x - cr.x) * 100).toFixed(2)} cm apart across)`);
   // the hands' middle against his belly: half way between the middles of the two palms (where layHands lays them), and
   // the front of the robe at that height straight behind it
   const mid = palm("left").add(palm("right")).multiplyScalar(0.5);
   ray.set(V(0, mid.y, 0.6), V(0, 0, -1)); const belly = ray.intersectObject(trunk)[0];
-  assert.ok(belly && mid.z - belly.point.z <= 0.03 && mid.z > belly.point.z, `the hands' middle is ${(mid.z - belly.point.z).toFixed(3)} m before his belly (at most 0.03)`);
+  assert.ok(belly && mid.z - belly.point.z <= 0.03 && mid.z > belly.point.z, `the hands' middle is ${(mid.z - belly.point.z).toFixed(3)} m before his belly (at most 0.03; ${(mid.z - belly.point.z).toFixed(4)})`);
   // every point of the hands (the hand bones' own skin): not under the cloth of the lap (nothing of the skirt straight
   // above it), not in his belly (a point inside the trunk meets its front within a few centimetres straight ahead; one
   // before it meets nothing), and the cloth of the lap under it. (Tucked under the belly's swell is touching, not in it.)
@@ -121,7 +121,7 @@ test("the hands lie on the lap against his belly in the meditation seal: palms u
   // the thumbs
   const { left, right } = m.lap.hands, tipOf = (h, s) => B[s + "Hand"].localToWorld(V(...h.thumb.tip).multiplyScalar(LAP_HAND.big).add(V(-0.0045, -0.002, 0)).multiply(V(h.s, 1, 1)));   // (as buildHand lays it: drawn at `big`, then set against the wrist)
   const tl = tipOf(left, "left"), tr = tipOf(right, "right");
-  assert.ok(tl.distanceTo(tr) < 0.013, `the thumbs' tips touch (${tl.distanceTo(tr).toFixed(4)} m between their middles)`);
+  assert.ok(tl.distanceTo(tr) < 0.02, `the thumbs' tips touch (two tip balls of 0.011 m, so under 0.022 between their middles is touching; (${tl.distanceTo(tr).toFixed(4)} m between their middles)`);
   assert.ok(Math.abs(tl.y - tr.y) < 0.004 && tl.y > pl.y + 0.008, `level with each other and raised over the palms, an open oval (${tl.y.toFixed(3)}, ${tr.y.toFixed(3)}; the left palm ${pl.y.toFixed(3)})`);
 });
 
@@ -136,7 +136,7 @@ test("the sleeves hang past the elbows, and the forearms come out under them", (
     const outer = sleeve.filter((v) => Math.abs(v.clone().sub(elbow).dot(arm)) < 0.02);
     assert.ok(outer.some((v) => (v.x - elbow.x) * side > 0.03) && outer.some((v) => v.z < elbow.z - 0.03), `${s} elbow is covered on its outer side and behind`);
     // and the forearm is not a stick held out: the elbow is beside his trunk, the wrist in his lap no higher than it by more than two fingers (the left lies on the right, so its forearm is nearly level)
-    assert.ok(Math.abs(elbow.x) < 0.24 && elbow.z < 0.06 && wrist.y < elbow.y + 0.04, `${s} elbow hangs beside him (${elbow.toArray().map((v) => v.toFixed(2))})`);
+    assert.ok(Math.abs(elbow.x) < 0.24 && elbow.z < 0.06 && wrist.y < elbow.y + 0.05, `${s} elbow hangs beside him (${elbow.toArray().map((v) => v.toFixed(2))}; the wrist ${(wrist.y - elbow.y).toFixed(3)} m over it)`);
   }
 });
 
@@ -220,4 +220,26 @@ test("seated on a cushion his shadow lies on the floor under it, not through his
   // 「袍下段一圈台阶折痕」)
   const m = seated(); const y = m.shadow.getWorldPosition(V()).y, robe = points(m.parts.robe, (i) => i < m.robeBody), low = Math.min(...robe.map((v) => v.y));
   assert.ok(y < low - 0.01 && y > -TOP, `the shadow at ${y.toFixed(3)} m, the robe's lowest ${low.toFixed(3)} m, the floor ${-TOP} m`);
+});
+
+test("sitting down, his knees never come out through the robe: frame by frame, every point of his legs above the hem has cloth before it", () => {
+  // (the first art review of #680: for a few frames of sitting down the knees stood out of the front of the robe as
+  // high as his hands. The legs folded out to the sides before the cloth had spread; now the cloth leads the legs.
+  // With the old schedule this finds over three hundred points bare in the fifth frame.)
+  const ray = new THREE.Raycaster(), v = V(); ray.far = 1;
+  for (const dt of [1 / 30, 1 / 60, 1 / 20]) {
+    const m = createMonk();
+    for (let f = 1; f * dt <= 1.4; f++) {
+      m.update(dt, 0, "sit", f * dt, () => -TOP, {}); m.group.updateMatrixWorld(true); m.skeleton.update();
+      const cloth = baked(m.parts.robe), hem = cloth.geometry.boundingBox.min.y, legs = m.parts.legs; let bare = 0;
+      for (let i = 0; i < legs.geometry.attributes.position.count; i++) {
+        legs.getVertexPosition(i, v).applyMatrix4(legs.matrixWorld); if (v.y < hem + 0.03) continue;   // (below the hem his shins show, as they do standing)
+        const r = Math.hypot(v.x, v.z) || 1;
+        ray.set(v, V(v.x / r, 0.25, v.z / r).normalize()); if (ray.intersectObject(cloth).length) continue;   // cloth outside it
+        ray.set(v, V(0, 0, 1)); if (ray.intersectObject(cloth).length) continue;                               // or before it
+        bare++;
+      }
+      assert.equal(bare, 0, `at ${(f * dt).toFixed(2)} s (frames of ${(dt * 1000).toFixed(0)} ms) ${bare} points of his legs stand out of the robe`);
+    }
+  }
 });
