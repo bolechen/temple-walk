@@ -90,9 +90,9 @@ test("pages.yml: the publication waits for both sets of unit tests, the build an
   const y = read("pages.yml");
   assert.match(jobOf(y, "verify"), /needs: \[changes, unit, floor, build, tests, grid, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
-  assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/4\n/);
-  assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/4 --import \.\/tools\/walk\/swap\.mjs/);
-  for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3, 4\]/, `${j}: four machines, as SHARDS says`);
+  assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5\n/);
+  assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5 --import \.\/tools\/walk\/swap\.mjs/);
+  for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3, 4, 5\]/, `${j}: five machines, as SHARDS says`);
   // the floor is baked once, by `floor`, and handed to every shard as an artifact before any test reads it (#442)
   assert.match(jobOf(y, "floor"), /node tools\/bake-walk\.mjs/); assert.doesNotMatch(y, /floor-[^\n]*run_attempt/, "the floor's name has no run_attempt: re-running only the failed jobs must find it"); assert.match(jobOf(y, "floor"), /overwrite: true/); assert.match(jobOf(y, "floor"), /upload-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n/);
   for (const j of ["tests", "grid"]) {
@@ -202,7 +202,7 @@ test("release-please.yml deploys production when, and only when, a version was m
   assert.match(job, /secrets: inherit/);
 });
 
-test("unit tests: every file runs on exactly one of the four machines, none over its budget, and `pnpm test` is the same set", async () => {
+test("unit tests: every file runs on exactly one of the five machines, none over its budget, and `pnpm test` is the same set", async () => {
   const { createRequire } = await import("node:module");
   const sh = createRequire(import.meta.url)("../../tools/ci/unit-shard.cjs");
   const all = sh.files(), { parts, loads } = sh.plan(all, sh.SHARDS), seen = parts.flat();
