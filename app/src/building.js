@@ -279,8 +279,13 @@ export function buildHall(M, opts) {
     const y = COL_TOP + 0.12, cell = 0.4, w = Z - ZB, ribs = [], panel = new THREE.PlaneGeometry(2 * X, w, Math.max(1, Math.round(2 * X)), Math.max(1, Math.round(w))).rotateX(Math.PI / 2).translate(0, y - 0.02, (Z + ZB) / 2);
     const uv = panel.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, panel.attributes.position.getX(i) / cell, 2000);   // a v of 1000 or more is the plain ground (unused by the `passage` material, which is plain boards)
     for (let i = 0; i <= nx; i++) ribs.push(box(0.22, 0.16, w, xs[i], y - 0.1, (Z + ZB) / 2));
-    for (let x = xs[0]; x < X - 0.01; x += 0.9) ribs.push(box(0.07, 0.1, w, x + 0.45, y - 0.07, (Z + ZB) / 2));
-    for (const z of [Z, ZB, (Z + ZB) / 2]) ribs.push(box(2 * X, 0.2, 0.2, 0, y - 0.12, z));
+    // (The small rails stop at the plate's inner face, 0.26 m in from each end, instead of running into it: their undersides lie in the
+    // plate's own underside, and where they overlapped it the two fought, #655.)
+    for (let x = xs[0]; x < X - 0.01; x += 0.9) ribs.push(box(0.07, 0.1, w - 0.52, x + 0.45, y - 0.07, (Z + ZB) / 2));
+    // (Only the middle tie beam is a rib of its own. The two at the ends stood in the line of the lintel and the plate over it, the same
+    // width, thickness and depth, so that their faces lay in one plane with those and fought them (#655); they were buried in
+    // that timber, and drawing them added nothing.)
+    ribs.push(box(2 * X, 0.2, 0.2, 0, y - 0.12, (Z + ZB) / 2));
     // (Overhead, 4.9 m up: nothing to stand on, and nothing he reaches, so it is left out of the baked floor (`bake: false`; the eye still keeps
     // out of it, as it must, or the camera backing out of the doorway would go through the boards and see the roof's bare underside again). In the
     // floor it moved the cells at the library's stair heads by a centimetre, ninety metres away: the bake bisected it to this panel and I did not run that to ground, #288.)
