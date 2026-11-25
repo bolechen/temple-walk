@@ -1,0 +1,14 @@
+{
+ "note": "Characters this level will write that no script or table of it holds yet, cut into the faces by tools/fonts.py (docs/t05/FONTS.md). `all`: what is drawn large (the temple's name, titles): every face of that language, including the brush and the running hand. `text`: what is read (the terms, the glossary, the draft lines of docs/t05/I18N.md §3–§5): the kai and the serif of that language only. `bang`: the name boards' hand. A character a face does not have is left out by the cutter. Add here only what a level has not yet written down; once it is in a table or a script the scan finds it.",
+ "all": {
+  "zh": "奉明寺",
+  "ja": "奉明寺",
+  "ko": "봉명사"
+ },
+ "text": {
+  "zh": "一七三上下不东两个中丹么义九也了亭人什从他以们会但体佛作侍倒偷儿光全冬冷减到刹匾十单印去县句只可台右叶后咸四国在地坛城基塑墙壁外天奉契好婆子宜寂察尊就尸层峰州希序庑座弥彩影彻律心愿手抄拱整斗昂明是晴暗更最有来架柱样栿梁椽槛檐殿每比毗没泥深灰炉点焦熙物瓦画畏的看知石矿砖碑秩窄窗站第结继绪续绰绿耶胁背花营萧补西见观记赟赭走趺跏边辽过还这迦道释里金钉钟铺门间院隆雪露青面音页顺须香驼高鼓",
+  "ja": "ジペー七上下与丹亭仏代作侍倒光印去双同后咸営国坐堂塑壁壇大天太奉契宜察寺州希座廡弥彩律徹思成承抄斗施昂明架柱栱梁殿減無焦熙王画畏相県碑結綽緒義者耶背脇蕭観記贇趺跏造過遼量鋪録鐘隆雄音頂須願",
+  "ko": "가감거결공과관광국기나단당대도동들라란량록명무미방배벽보봉부불붕비사상서성소수승시쌍앙야여왕외요우웅원윤율융음의이인자작전정조종좌주지찰채천철초칠태페포하함현협화후희"
+ },
+ "bang": "奉明"
+}

@@ -35,7 +35,8 @@ export async function composeCard(shot, { line, label, temple, url, seal = templ
   x.fillStyle = "#26221e"; x.textBaseline = "middle"; x.textAlign = "left";
   const lineSize = small(Math.round(u * 6.6), line, XING); x.font = `${lineSize}px ${XING}`; x.fillText(line, m + u, cy - u * 2.4);
   x.fillStyle = "#6f695e"; try { x.letterSpacing = `${u * 0.7}px`; } catch {}
-  const name = `${temple} · ${label}`, nameSize = small(Math.round(u * 2.1), name, SERIF); x.font = `${nameSize}px ${SERIF}`; x.fillText(name, m + u, cy + u * 3.4);
+  // With no verse above it (a level that gives none for this hour) the name is the card's one line: larger, and level with the seal's middle, not left half a figure below it.
+  const bare = !line, name = `${temple} · ${label}`, nameSize = small(Math.round(u * (bare ? 2.8 : 2.1)), name, SERIF); x.font = `${nameSize}px ${SERIF}`; x.fillText(name, m + u, bare ? cy : cy + u * 3.4);
   x.fillStyle = "#a39c8e"; try { x.letterSpacing = `${u * 0.15}px`; } catch {}
   const urlSize = small(Math.round(u * 1.5), url, SERIF); x.font = `${urlSize}px ${SERIF}`; x.fillText(url, m + u, cy + u * 6.6);
   // The seal: two characters cut in red, pressed a little unevenly.
