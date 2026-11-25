@@ -1,0 +1,120 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 216765,
+   "sha256": "603f6694b2fe87d1fec5b94a452feb53b35e3a6934245dbd0b49b478bd70ffc4",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/cam03-mouths.jpg",
+   "bytes": 50957,
+   "sha256": "9b2ec23be2fc34fbe97e7eeab5b150be974b4eaa5f05da90c02d00346ac4c577",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/eyes-clay-vs-paint.jpg",
+   "bytes": 117592,
+   "sha256": "aef0bcf501b254e6510495c649bccf49d784fcc7193253e6701d449624e48d1c",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-cam03-winter.png",
+   "bytes": 1151761,
+   "sha256": "20a8d03c794f08fa524fe5057f4e74646e34e0976893c683d3ad9fd936c96975",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-front4-clay-kanakamuni.png",
+   "bytes": 844725,
+   "sha256": "b4b438eb0512ee0ff3ee1d81ab3fd794c8f8f235d21d9aab5a7136aac34886a3",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-front4-clay-krakucchanda.png",
+   "bytes": 769526,
+   "sha256": "355caa3d2f3edceb45c27053276c58b4b2a7b1b257683f5129185fc56a2d1e50",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-front4-clay-visvabhu.png",
+   "bytes": 785600,
+   "sha256": "e51f0ea19e9a9fc9ae846c0292ad39da84cdcb5aa2bb8cd9d39ecb45de7b0b05",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-front4-kanakamuni.png",
+   "bytes": 806411,
+   "sha256": "9d95a591fe34bc60e1b115fc4d7c6030b92504927faab36b693aba3ab0a383b8",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-front4-krakucchanda.png",
+   "bytes": 725417,
+   "sha256": "3f164e96f574f143a20068c0969b768f66eaebb00f552c32b20883b153de3650",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-front4-visvabhu.png",
+   "bytes": 737488,
+   "sha256": "b11ab0138719ad757c4311cbee320b2cdf0ab608177aa4b757eea2b182dad6af",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-mid10-clay-kanakamuni.png",
+   "bytes": 921216,
+   "sha256": "f4d0337e54bd7d0dd7805d0a2988a9341ebd9ee88e3db65b1b54c3c904e218cc",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-mid10-clay-krakucchanda.png",
+   "bytes": 906403,
+   "sha256": "601101c0c8146b5fdf67ebbb92d10ce737f3419d7c4fd25a4eb9a7d059394a34",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-mid10-clay-visvabhu.png",
+   "bytes": 955422,
+   "sha256": "5f9cd579fa563c9999c3d14bf5d61cc84db876a2862d63ba20080637e68f8bfd",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-mid10-kanakamuni.png",
+   "bytes": 914891,
+   "sha256": "2e3e701453bb4e89afaa2b8189d9ed9a617cc5982718a1e6f6ccf924402aab54",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-mid10-krakucchanda.png",
+   "bytes": 884119,
+   "sha256": "5e60e5cb1e0e819e61827f8595787de74b422babe175faeba598df79f464bc0b",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-mid10-visvabhu.png",
+   "bytes": 923507,
+   "sha256": "8dd738700534547cebf8b71242537bcd031ef34a8f5063d77032727dbd3cb3dd",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-side7-kanakamuni.png",
+   "bytes": 867580,
+   "sha256": "002ee892a2d418228a1d93343c4d29355a7075f7ee34293b7c23d1097aa9871c",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-side7-krakucchanda.png",
+   "bytes": 827954,
+   "sha256": "d4d83dca392d688ca2d9f4ee94f5b5800948a0cde686d7afd6c44b23893eac3a",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  },
+  {
+   "path": "png/ship-side7-visvabhu.png",
+   "bytes": 946412,
+   "sha256": "cca4f3c8e2d55c441473f167bef7874ae6e1233f6e960b06328e48be9a7960f9",
+   "rev": "23c83239e400d23f627282295068060f3f6453e8"
+  }
+ ]
+}
