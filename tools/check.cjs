@@ -40,18 +40,20 @@ const BAKE_ONLY = fs.readdirSync(path.join(root, "levels")).flatMap((d) => ["bak
 // `tools/fonts.py --lang`: each table's characters must be in its own cut, and the Chinese cut is not asked to hold them.
 // So is the name of each language on its button in index.html, which is written in that language.
 const TABLES = { ja: path.join(root, "locales", "ja.js"), en: path.join(root, "locales", "en.js"), ko: path.join(root, "locales", "ko.js") };
-const WORK_TABLES = { ja: path.join(root, "levels", "t00", "locales", "ja.js"), en: path.join(root, "levels", "t00", "locales", "en.js"), ko: path.join(root, "levels", "t00", "locales", "ko.js") };
+// Every level's own tables (levels/<id>/locales/<lang>.js: T00's works' cards, T05's name) are written in the same faces.
+const levelTables = (l) => fs.readdirSync(path.join(root, "levels")).map((d) => path.join(root, "levels", d, "locales", `${l}.js`)).filter((f) => fs.existsSync(f));
+const WORK_TABLES = { ja: levelTables("ja"), en: levelTables("en"), ko: levelTables("ko") };
 const cut = (name) => new Set(fs.readFileSync(path.join(root, "shared", "fonts", name), "utf8"));
 const wide = (c) => c.codePointAt(0) > 0x2000 && !(c.codePointAt(0) >= 0xe000 && c.codePointAt(0) <= 0xf8ff);
 const have = cut("chars.txt"), missing = new Set();
 const own = { ja: "", en: "", ko: "" };
 const page = (f) => { let s = fs.readFileSync(f, "utf8"); if (f.endsWith("index.html")) s = s.replace(/<[^>]*\slang="(ja|en|ko)"[^>]*>([^<]*)</g, (m, l, text) => { own[l] += text; return ""; }); return s; };
-for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !BAKE_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
+for (const f of [...files.filter((f) => !f.includes(path.sep + "textures" + path.sep) && !DEV_ONLY.includes(f) && !BAKE_ONLY.includes(f) && !Object.values(TABLES).includes(f) && !Object.values(WORK_TABLES).flat().includes(f)), path.join(root, "index.html"), path.join(root, "src", "ui.css")]) for (const c of page(f)) if (wide(c) && !have.has(c)) missing.add(c);
 if (missing.size) { bad++; console.error("characters used but not in app/shared/fonts (run tools/fonts.py): " + [...missing].join("")); }
 for (const [l, f] of Object.entries(TABLES)) {
   const theirs = cut(`chars-${l}.txt`), lacking = new Set();
   // Only the translations: the keys are the Chinese, which the Chinese faces hold.
-  for (const m of (fs.readFileSync(f, "utf8") + fs.readFileSync(WORK_TABLES[l], "utf8")).matchAll(/:\s*"((?:[^"\\]|\\.)*)",?\s*$/gm)) for (const c of m[1]) if (wide(c) && !theirs.has(c)) lacking.add(c);
+  for (const m of (fs.readFileSync(f, "utf8") + WORK_TABLES[l].map((w) => fs.readFileSync(w, "utf8")).join("")).matchAll(/:\s*"((?:[^"\\]|\\.)*)",?\s*$/gm)) for (const c of m[1]) if (wide(c) && !theirs.has(c)) lacking.add(c);
   for (const c of own[l]) if (wide(c) && !theirs.has(c)) lacking.add(c);
   if (lacking.size) { bad++; console.error(`characters in the ${l} tables but not in its faces (run tools/fonts.py --lang ${l}): ` + [...lacking].join("")); }
 }
