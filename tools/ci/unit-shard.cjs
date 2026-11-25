@@ -10,9 +10,9 @@
 //                                           `node --test` given no files would run the whole suite.
 const fs = require("fs"), path = require("path");
 const DIR = path.join(__dirname, "../../tests/unit");
-const SHARDS = 3;
-/** Longest a machine's share may be counted at, seconds: the PR's checks are held to three minutes from first check to `verify`. */
-const BUDGET = 166;   // (was 160: main alone already planned 160.1 s a machine, so the trailer script test, 4.5 s of plan building that cannot be shortened, #610, needed 3 s more room; then 163, and main planned 162.2, so the flush-faces test, 8.9 s of measuring every drawn triangle of three levels, needed 3 s more)
+const SHARDS = 4;
+/** Longest a machine's share may be counted at, seconds: the PR's checks are held to three minutes from first check to `verify`. Four machines plan about 133 s each (#697), leaving a new test 15 s or more before this is reached. */
+const BUDGET = 150;   // (166 on three machines, raised twice from 160 for single tests; #697 added the fourth machine and gave it back)
 
 const files = () => fs.readdirSync(DIR).filter((f) => f.endsWith(".test.mjs")).sort();
 const durations = () => JSON.parse(fs.readFileSync(path.join(DIR, "durations.json"), "utf8")).files;
