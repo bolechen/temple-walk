@@ -165,6 +165,72 @@
    "rev": "c5d067759d478486b16e4531af8f65e8878075bf"
   },
   {
+   "path": "r3-route-autumn-upright-12s.jpg",
+   "bytes": 60654,
+   "sha256": "3565c187c23661235f516406253dfcea5829c707eb0e7027f374e5fa974cc383",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-upright-13_5s.jpg",
+   "bytes": 69064,
+   "sha256": "5819b30e44350ffaa27161c9ed692c24b2b0dcf7c6740472233a03b8fb3d0c6f",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-upright-29_5s.jpg",
+   "bytes": 71651,
+   "sha256": "8bd2863b419f56b79283b9b43aa84ee1fb95e3566e0da998e794ed1167de7c37",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-upright-9s.jpg",
+   "bytes": 54591,
+   "sha256": "8dcc4e406531612dd398ca15fd10d6afa4cee5590562b63df65ec8284e8b435e",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-wide-12s.jpg",
+   "bytes": 176573,
+   "sha256": "61a79ddc188f3586ef36f75881ad10ab7a0a705670a8065c180400ba93c13136",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-wide-13_5s.jpg",
+   "bytes": 191063,
+   "sha256": "a51a4484d606a304cbd192d5e41fe1aadb952b6a93e48fca35a25a4327cd2ff1",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-wide-15s.jpg",
+   "bytes": 207954,
+   "sha256": "a9a02e621c2e732b01ab60a763954509595e59c9f3000194d87dae9c03f5d80f",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-wide-29_5s.jpg",
+   "bytes": 221100,
+   "sha256": "864fdb02d5a35e8b7d84949f9723709651e133b57df7d7c94a7e58423b253938",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-route-autumn-wide-9s.jpg",
+   "bytes": 162823,
+   "sha256": "86a8a706cdc02c739dfc9548e1e9f645445bca659d58153700349a6695578e5e",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-title-upright-zh.jpg",
+   "bytes": 62091,
+   "sha256": "6163b04242a88257c74410fb7aa8a1bf659963b9d5e5db3a5fc086aea1ba67cb",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
+   "path": "r3-title-wide-zh.jpg",
+   "bytes": 377921,
+   "sha256": "7dde04394f7fdd83d45339a4cde94a77c3fec7e427e01d7b0d0f08e3b5c93a05",
+   "rev": "92cb39226e87b912c2cd682cce65fd060b8213ee"
+  },
+  {
    "path": "title-small-en.jpg",
    "bytes": 48702,
    "sha256": "558bfc1bfc6089575196a6156b6341d09d79da54493270a862b533d217b608ef",
