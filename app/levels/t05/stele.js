@@ -80,7 +80,7 @@ function inscription(w, h, again = true) {
   let ws = 3; const wr = () => ((ws = (ws * 16807) % 2147483647) / 2147483647);
   for (const c of steleLayout(px, ph)) {
     if (!c.worn) { draw(c.ch, c.x, c.y, c.size); continue; }
-    for (let k = 0; k < 5; k++) { g.fillStyle = `rgba(${wr() < 0.5 ? "20,18,15" : "196,190,178"},${(0.06 + 0.1 * wr()).toFixed(3)})`; g.beginPath(); g.ellipse(c.x + (wr() - 0.5) * c.size * 0.7, c.y + (wr() - 0.5) * c.size * 0.7, c.size * (0.08 + 0.18 * wr()), c.size * (0.05 + 0.14 * wr()), wr() * 3, 0, 6.283); g.fill(); }
+    for (let k = 0; k < 6; k++) { g.fillStyle = `rgba(${wr() < 0.6 ? "20,18,15" : "196,190,178"},${(0.08 + 0.12 * wr()).toFixed(3)})`; g.beginPath(); g.ellipse(c.x + (wr() - 0.5) * c.size * 0.7, c.y + (wr() - 0.5) * c.size * 0.7, c.size * (0.16 + 0.3 * wr()), c.size * (0.1 + 0.22 * wr()), wr() * 3, 0, 6.283); g.fill(); }
   }
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
   let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
