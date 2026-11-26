@@ -1,0 +1,366 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 276893,
+   "sha256": "c13be8bcff89609efb1995e857d5e9120c376c0a838431ac15499b86a318a357",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/cam03-d1.png",
+   "bytes": 969616,
+   "sha256": "181a7200c4b5907f2ecc44409e5346c67bbf6fdbacea74f20310bd6562ede584",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/cam03-new.png",
+   "bytes": 969167,
+   "sha256": "ffaed7972d2a4704276c4770eff452912ef8656628a0f1da123ba8cba0531d56",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/cam03-old.png",
+   "bytes": 1013663,
+   "sha256": "b55990252fb4ad3d3f5a59c89bbd0b7816e3f7bba4b92e1ba109bcd9b9c3abdc",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-d1-kanakamuni.png",
+   "bytes": 747762,
+   "sha256": "c3ecd522442cc9c0048c788b0d96e7386c2b854d58ea13468fab7725e669026e",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-d1-kasyapa.png",
+   "bytes": 550640,
+   "sha256": "82815f6576002390f3b9c5867422aaba2f2c76ffe820a6f67fb9eff7678affba",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-d1-krakucchanda.png",
+   "bytes": 727216,
+   "sha256": "5f7835eeca1c41b75359c360004580459f272d5c940dc83f49c4db90f36776c1",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-d1-sakyamuni.png",
+   "bytes": 539819,
+   "sha256": "97ac6a2939bafca11f2825a547d88e5ae7d51f541342238447606c06826f9d56",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-d1-sikhin.png",
+   "bytes": 773987,
+   "sha256": "4cd4fbc280a1120f6b1d09aa1b43b0cd29c5a70f8634e99ad617adf83c74dfa1",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-d1-vipasyin.png",
+   "bytes": 773340,
+   "sha256": "0b40badff15c0ea785e5e777b1c1abfcef532932adbaa5a963ee9d7102b5c473",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-d1-visvabhu.png",
+   "bytes": 754321,
+   "sha256": "deaed828c8759845cab987b3a6493290f1eaa021bf8114e25d89fbace3d14098",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-new-kanakamuni.png",
+   "bytes": 749515,
+   "sha256": "1cdef676eaf63a20250ed595508448c899cf74ed49e853872ff16b1be9bddbdb",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-new-kasyapa.png",
+   "bytes": 553108,
+   "sha256": "ab099c8b26910bf59702c5f34be914e6006af6b4debaa4928847d1756ae2728e",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-new-krakucchanda.png",
+   "bytes": 728757,
+   "sha256": "5962d80752d16eb73643cdb6288d7cee50709082cdc37147a7b9e91860bd9639",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-new-sakyamuni.png",
+   "bytes": 541752,
+   "sha256": "c5dd086faff0922f3f1b5a9ac1fd5a103a6770a6ea141ec1c649fd9dafd4ed97",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-new-sikhin.png",
+   "bytes": 775189,
+   "sha256": "dcaa1b75ff566f0f3bd8a9c73d7a564b1188dfc14537ac9a7e8cf6140fc80511",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-new-vipasyin.png",
+   "bytes": 774123,
+   "sha256": "b1b9a7292c4a6c8d14d39280bbd2b3b36691377a38576b2e4b0a2e44a0bbdd2f",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-new-visvabhu.png",
+   "bytes": 755562,
+   "sha256": "5dd342335cc4723c729ffb8091662e496887c2ee561fa0edba4a93a766e32a9e",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-old-kanakamuni.png",
+   "bytes": 820681,
+   "sha256": "b24c4357b1a23dbbc8498fb986f82473a0f81d534f7bfc541989a654acdc5ce5",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-old-kasyapa.png",
+   "bytes": 761682,
+   "sha256": "d14372099061a5806b6d4c07b2b90fbd5d05c59aecc387e7c96181db9a366e6d",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-old-krakucchanda.png",
+   "bytes": 798647,
+   "sha256": "9e53a4998921a1e405f5226109d12cafd499616f7df8f89bc97716ab4898fe8a",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-old-sakyamuni.png",
+   "bytes": 699560,
+   "sha256": "cc3f1fcef97f0c5d7c9b675151b88048b0b586f9df8f67511eb1babfefae0b4c",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-old-sikhin.png",
+   "bytes": 833572,
+   "sha256": "9b87d68e697dc8886799fad22cd1d900669b5f3ff48c6b8251431e699ee40302",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-old-vipasyin.png",
+   "bytes": 808332,
+   "sha256": "d81214bf7c7fb0d499443ae9759a58292aa352dec43c6a526a0874ae902ac43d",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/mid10-old-visvabhu.png",
+   "bytes": 798661,
+   "sha256": "20455cb737b37d30cbd38e20532a170f01bcb178206d4446df2bbc61e7d76113",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-new-kanakamuni.png",
+   "bytes": 665851,
+   "sha256": "f51169e6b6ef2c197a024820498c1e43f7416b7d613186623f62d6471821d38d",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-new-kasyapa.png",
+   "bytes": 527874,
+   "sha256": "d2935a0e67091276959f4ed87b1ea18b7889aa96634ab2518f52dd15f6520f5e",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-new-krakucchanda.png",
+   "bytes": 622533,
+   "sha256": "c4d09e8618a11c27e88b67a747ae270e47343555a4b49d2c0587ab0ea60b9c0a",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-new-sakyamuni.png",
+   "bytes": 476919,
+   "sha256": "d654ecc61648a832daa2e18a69f3432591ec1cccb1887fb0190e915f75ebfe28",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-new-sikhin.png",
+   "bytes": 745022,
+   "sha256": "7a59c591b87dbbf13e37785cc1d0f41d80180dacd72aa8a2535674aa9dbaee92",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-new-vipasyin.png",
+   "bytes": 753894,
+   "sha256": "0feadbab02edb94db5ee9886afc19a1ce597126d222b758caf8e03e9a249d789",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-new-visvabhu.png",
+   "bytes": 756251,
+   "sha256": "fc143daa5280a84769e25ebb7e7fcc0e69722493b688054e9130fa7ce87d9ef4",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-old-kanakamuni.png",
+   "bytes": 824564,
+   "sha256": "bd5a0de89ddf60e1e1c5a99c9b3f6537dd67296e4ae6e429cea51ba49d08ae14",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-old-kasyapa.png",
+   "bytes": 760472,
+   "sha256": "e5fb2e779e755e382c79e30d1def4ff2e0849d677e357aba4dde2fc608b21f7b",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-old-krakucchanda.png",
+   "bytes": 843215,
+   "sha256": "24465690d7c25739f8e8babcc8b60d25244bc8352113fb067fae0a3c5542156d",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-old-sakyamuni.png",
+   "bytes": 669208,
+   "sha256": "73551710e5fca1592a7c1c10d9408bb3cbcc0379b520eb7d6856f41336e312e7",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-old-sikhin.png",
+   "bytes": 870593,
+   "sha256": "c252e30a63f73c16e92a7f492840a52cba6056f40d3340ce7d4914e61349b67b",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-old-vipasyin.png",
+   "bytes": 836017,
+   "sha256": "078991e23a9ede8ad1155fffccaf28ec096e6421119a2167068f86dec4d5cdcc",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/side7-old-visvabhu.png",
+   "bytes": 868691,
+   "sha256": "4c7329b44d17eb6065db81d8da59dfbc1a23b389f66b53b6e711301b71b2aa33",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-d1-kanakamuni.png",
+   "bytes": 867695,
+   "sha256": "7af8853860e6fcf7539d9bf132caf00962a9134e281fe785a3601b61a0e18159",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-d1-kasyapa.png",
+   "bytes": 660491,
+   "sha256": "172317eea9b50b07513fae1db0c58ad1954f56665d3c50070c607acc3f32f7ce",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-d1-krakucchanda.png",
+   "bytes": 819520,
+   "sha256": "9823e1caf309d48da2540c9cc8aabb4b3a7d34e1ae74e8fb9f5ee898077d69a2",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-d1-sakyamuni.png",
+   "bytes": 642185,
+   "sha256": "0145cad3dc53963279dab7ea48ffeb7d54858baad35b8a2b057ad0cfc9bce2f7",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-d1-sikhin.png",
+   "bytes": 864865,
+   "sha256": "120673d6f2a5e1cd90ea5b4b3cc8b43b1c53d2a8e643907392f1fa2af1960ec4",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-d1-vipasyin.png",
+   "bytes": 825367,
+   "sha256": "f73b9368fa158dd19023b7906dd205667cf736c6e7f3b3112cb5a2e0b47918ab",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-d1-visvabhu.png",
+   "bytes": 850007,
+   "sha256": "04fb497c64062351427da7da9489dd33481cabed9fc395082bcb5ddda3a68f82",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-new-kanakamuni.png",
+   "bytes": 869424,
+   "sha256": "5e1faffca6cf67876c9a30e6a2c6bc9978bedad2034d63b6126ad74700f7e742",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-new-kasyapa.png",
+   "bytes": 661679,
+   "sha256": "fb02cb3ec402f11b2574994df467bce4847e717c9d47f33008f8c39c07be9d7d",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-new-krakucchanda.png",
+   "bytes": 820729,
+   "sha256": "b5f4c13dc8788b13fc9586b9b38b175dcde54cafc815f1f5e99121c63181afb9",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-new-sakyamuni.png",
+   "bytes": 643310,
+   "sha256": "a4867cd0e9beab307616a70665e6a29a1c7f1e89043775ead75e747d455b493e",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-new-sikhin.png",
+   "bytes": 866386,
+   "sha256": "e84dd4045e07793ce1e3795e4b040f8fc03d337aea97e11946c85277e7aab754",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-new-vipasyin.png",
+   "bytes": 827557,
+   "sha256": "f2a4514517f645565c236453f9f1a438f5a646ed48f54c7626d1f995c1ce2c55",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-new-visvabhu.png",
+   "bytes": 850956,
+   "sha256": "37a51d7e4e8c7fee86ba2ef700b9e0e19b8dc9435b93d67000ce1aae0a231902",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-old-kanakamuni.png",
+   "bytes": 1125772,
+   "sha256": "e39df9fe44b1278d89729316f07925b717af8d6a7f8537d36a08febb51b45e02",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-old-kasyapa.png",
+   "bytes": 995104,
+   "sha256": "9b9132de7451f86bd385d3297aa56a8b1b904b13a1617afccb10561a0f6a06e0",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-old-krakucchanda.png",
+   "bytes": 1069708,
+   "sha256": "ceadcbdd1536ebd43eee9f6a5c792f2ee003a05283058da1ddaba608c68b36a2",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-old-sakyamuni.png",
+   "bytes": 964229,
+   "sha256": "97c68a40c8485ee4f06f4693f77e866d03c11d298c187fe52b8b2c4bed26e126",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-old-sikhin.png",
+   "bytes": 1044734,
+   "sha256": "d05a24ff7c910d86b4b6cb7ede2d5d651d5f7b448cf28f52e6d2f2320ffed9cd",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-old-vipasyin.png",
+   "bytes": 986270,
+   "sha256": "b7226035fbbe7a5c03b4feea40ef4d25a9f97dbdd5955612e3fbdd043719b27b",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  },
+  {
+   "path": "png/wide-old-visvabhu.png",
+   "bytes": 1036080,
+   "sha256": "cee124d0e287535873549b1f9df1fdb70c65bfb1639f46c041daba04860409f0",
+   "rev": "e1b1f3bb1b9691e15f93af9a9a2c3a230ade099c"
+  }
+ ]
+}

@@ -71,12 +71,39 @@ for ci, z in enumerate(spec["channels"]):
   k = max(1, int(round(z.get("close", 0.03) / mpp)))
   st = ndi.generate_binary_structure(2, 1)
   reg = ndi.binary_closing(reg, structure=st, iterations=k) & allow
-  reg = ndi.binary_fill_holes(reg); regs.append(reg)
+  reg = ndi.binary_fill_holes(reg)
+  if z.get("snap"):
+    # the edge laid on the mesh's own crease: the region (however it was found) is held to within `in` metres inside and `out`
+    # metres outside its edge, and the two sides grow against each other over the strength of the normals' change and meet on
+    # its strongest line within that band: a collar's fold, not a box's side (ndimage.watershed_ift, as `stops` above)
+    si, so = z["snap"].get("in", 0.04), z["snap"].get("out", 0.07)
+    g2 = np.zeros((H, W), np.float32)
+    g2[:, 1:] += np.linalg.norm(n[:, 1:] - n[:, :-1], axis=2); g2[1:] += np.linalg.norm(n[1:] - n[:-1], axis=2)
+    g2 = ndi.gaussian_filter(g2, 1.0); gi2 = np.clip(g2 / max(g2.max(), 1e-6) * 65535, 0, 65535).astype(np.uint16)
+    mk = np.zeros((H, W), np.int16)
+    mk[~ndi.binary_dilation(reg, structure=st, iterations=max(1, int(round(so / mpp))))] = 2
+    mk[bg] = 2
+    inner = ndi.binary_erosion(reg, structure=st, iterations=max(1, int(round(si / mpp))))
+    mk[inner] = 1
+    reg = ndi.watershed_ift(gi2, mk) == 1
+    reg = ndi.binary_fill_holes(ndi.binary_opening(reg, structure=st, iterations=max(2, int(round(z["snap"].get("open", 0.012) / mpp)))))   # `open`: a line thinner than that, where the growth ran along a crease, goes
+  if z.get("rowfill"):
+    # a block with straight sides (an inner garment's panel) is filled across each row between its leftmost and rightmost
+    # pixel, inside the box: the small folds that the growth stopped at, along its top edge and sides, take the colour too
+    rows = np.nonzero(reg.any(axis=1))[0]
+    for r in rows:
+      cs = np.nonzero(reg[r])[0]; reg[r, cs.min():cs.max() + 1] = True
+    reg &= allow
+  regs.append(reg)
   # surfaces seen edge-on lie on the picture's silhouette; let the region run on into the empty backdrop a little, so the
   # blur does not fade them (a bare arm's side, seen from neither front nor back)
   spill = reg | (ndi.binary_dilation(reg, structure=st, iterations=max(1, int(round(3 * z.get("blur", 0.012) / mpp)))) & bg)
   m = ndi.gaussian_filter(spill.astype(np.float32), sigma=z.get("blur", 0.012) / mpp)
-  out[..., ch] = np.clip(m * 255, 0, 255).astype(np.uint8)
+  val = np.clip(m * z.get("gain", 1.0) * 255, 0, 255).astype(np.uint8)   # gain: a region whose rim is a pale fringe (a finger's grazing edge the growth stops short of) is pushed to full over its blur
+  for ex in z.get("exclude", []):
+    # a patch the picture could not tell from the zone (a nail of cloth just behind a hand's edge): boxes cleared from this channel
+    ex0, ey0 = px(ex[0], ex[3]); ex1, ey1 = px(ex[2], ex[1]); val[max(ey0, 0):max(ey1, 0), max(ex0, 0):max(ex1, 0)] = 0
+  out[..., ch] = np.maximum(out[..., ch], val) if z.get("union") else val   # union: this region joins what an earlier entry put in the same channel (the bare chest and the raised hand are both skin)
   report["channels"].append({"zone": z["zone"], "pixels": int(reg.sum()), "area_m2": round(float(reg.sum()) * mpp * mpp, 3)})
 if spec.get("depth"):
   # alpha: the depth of the surface the picture saw (tools/t05-hall.cjs ortho with "depth": true), grown a little into the
@@ -86,7 +113,7 @@ if spec.get("depth"):
   out[..., 3] = d[idx[0], idx[1]].astype(np.uint8)
 else:
   out[..., 3] = 255
-assert len(spec["channels"]) <= 3, "the fourth channel is the depth (or 255)"
+assert len({z.get("ch", i) for i, z in enumerate(spec["channels"])}) <= 3, "the fourth channel is the depth (or 255)"
 os.makedirs(os.path.dirname(spec["out"]), exist_ok=True)
 Image.fromarray(out, "RGBA").save(spec["out"])
 # a picture to look at: the normals with the mask laid over in red

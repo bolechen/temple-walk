@@ -1,0 +1,58 @@
+{
+ "normals": "tools/out/t05/kasmask/run/sakyamuni-normals-wide.png",
+ "depth": "tools/out/t05/kasmask/run/sakyamuni-depth-wide.png",
+ "rect": [
+  -3.5,
+  2.7,
+  1.5,
+  7.7
+ ],
+ "z": -0.6,
+ "out": "tools/t05-hall/paint/masks/sakyamuni-front-c.png",
+ "preview": "tools/out/t05/kasmask/run/sakyamuni-front-c-preview.png",
+ "channels": [
+  {
+   "zone": "面与手（袒露的胸、肩、右臂）",
+   "ch": 0,
+   "seeds": [
+    [
+     -0.6,
+     5.55
+    ],
+    [
+     -1.2,
+     5.4
+    ],
+    [
+     -0.9,
+     5.0
+    ],
+    [
+     -1.6,
+     4.6
+    ],
+    [
+     -1.77,
+     3.9
+    ],
+    [
+     -1.65,
+     3.7
+    ],
+    [
+     -0.3,
+     6.0
+    ]
+   ],
+   "box": [
+    -3.4,
+    3.2,
+    0.8,
+    6.75
+   ],
+   "tol": 0.05,
+   "close": 0.01,
+   "blur": 0.005
+  }
+ ]
+}

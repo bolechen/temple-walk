@@ -1,0 +1,616 @@
+{
+ "out": "tools/out/t05/701kE/run",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/ship701c/kasyapa-B4H10b.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "kasyapa-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.97,
+    1.0,
+    1.03
+   ]
+  },
+  {
+   "url": "tools/out/t05/ship701b/krakucchanda-B4H10b.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-L2"
+  },
+  {
+   "url": "tools/out/t05/r3c2/sikhin-r3c.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/r3c2/vipasyin-r3c.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/ship701b/visvabhu-V3b.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701b/kanakamuni-K1Lb.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701c/sakyamuni-V14b.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.96,
+    1.0,
+    1.05
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "face10-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 0,
+    "pts": {
+     "cheekL": [
+      0.365125,
+      6.72425,
+      0.426
+     ],
+     "cheekR": [
+      -0.365125,
+      6.72425,
+      0.426
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 0,
+    "pts": {
+     "cheekL": [
+      0.365125,
+      6.72425,
+      0.426
+     ],
+     "cheekR": [
+      -0.365125,
+      6.72425,
+      0.426
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-kasyapa",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 0,
+    "pts": {
+     "lip": [
+      -0.002,
+      6.495,
+      0.375
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.22,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 6,
+    "pts": {
+     "cheekL": [
+      0.33809999999999996,
+      6.946,
+      0.046
+     ],
+     "cheekR": [
+      -0.33809999999999996,
+      6.946,
+      0.046
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.22,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 6,
+    "pts": {
+     "cheekL": [
+      0.33809999999999996,
+      6.946,
+      0.046
+     ],
+     "cheekR": [
+      -0.33809999999999996,
+      6.946,
+      0.046
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-sakyamuni",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 6,
+    "pts": {
+     "lip": [
+      0.0,
+      6.74,
+      0.067
+     ]
+    }
+   }
+  },
+  {
+   "name": "mid10-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "mid10-clay-kasyapa",
+   "shoot": {
+    "paint": false,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "side7-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      22.18,
+      4.6,
+      -14.08
+     ],
+     "look": [
+      16.45,
+      10.55,
+      -18.1
+     ],
+     "fov": 30,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "front4-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -12.1
+     ],
+     "look": [
+      16.45,
+      9.25,
+      -17.6
+     ],
+     "fov": 34,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "mouth-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      10.950000000000001,
+      -18.1
+     ],
+     "fov": 5,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "mid10-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "mid10-clay-sakyamuni",
+   "shoot": {
+    "paint": false,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "side7-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -10.719999999999999,
+      4.6,
+      -14.08
+     ],
+     "look": [
+      -16.45,
+      10.6,
+      -18.1
+     ],
+     "fov": 30,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "front4-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -12.1
+     ],
+     "look": [
+      -16.45,
+      9.299999999999999,
+      -17.6
+     ],
+     "fov": 34,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "mouth-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.0,
+      -18.1
+     ],
+     "fov": 5,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "cam03-winter",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "zones": true
+  },
+  {
+   "name": "cam04-winter",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "cam04"
+   }
+  },
+  {
+   "name": "cam06-winter",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "cam06"
+   },
+   "zones": true
+  }
+ ]
+}
