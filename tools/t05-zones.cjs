@@ -17,6 +17,7 @@ const fs = require("fs"), path = require("path");
 const VIEWS = {
   cam03: "show=cam03&view=first",          // the light pass's T4s were all from his eyes
   "cam03-third": "show=cam03&view=third",  // the acceptance still (checks.js): from behind him, outside the threshold, the hall's fill not yet risen
+  cam04: "show=cam04",
   cam05: "show=cam05",
   cam06: "show=cam06",
 };
@@ -36,14 +37,20 @@ async function prepare(page, view) {
   await page.waitForFunction(() => { const f = window.__t05Figures?.(); return f && f.figures.length && f.figures.every((x) => x.status === "ready" || x.status === "failed"); }, null, { timeout: 600000, polling: 1000 });
   // mid10-<i>: 10 m before the figure at the height of its brow; head-<i>: 3.5 m before it, its head filling the picture (the hairline)
   const mid = /^(mid10|head)-(\d)$/.exec(view);
-  // A column or a beam may stand on the line from the eye to the brow (the fifth figure's, from 10 m, met a beam end on):
-  // then the eye steps aside a little at a time, never more than 1.5 m, until the middle of the picture lands on the figure.
+  // A column or a beam may stand on the line from the eye to the brow, or the eye itself inside a column (the fifth figure's, from 10 m, stood in
+  // one: a ray from the eye does not see a column's faces from inside). So the line is tried the other way, from a metre before the figure back
+  // toward the eye, and the eye steps aside a little at a time, never more than 1.5 m, until nothing stands on it.
   if (mid) for (const side of [0, 0.5, -0.5, 1, -1, 1.5, -1.5]) {
     const clear = await page.evaluate(([i, d0, dx]) => new Promise((done) => {
       const d = window.__t05FiguresDebug(), f = Object.values(d.figures).find((x) => x.paints[0].userData.paint.U.uFig.value === i), A = f.anchors;
       const head = f.pivot.localToWorld(new d.camera.position.constructor(...A.hairFront)), at = f.pivot.position, y = head.y - (d0 > 5 ? 0.6 : 0.35);
-      window.__look([at.x + dx, y, at.z + d0], [at.x, y, at.z]);
-      requestAnimationFrame(() => requestAnimationFrame(() => { const h = window.__pick(innerWidth / 2, innerHeight / 2, 1)[0]; done(!h || h.distance > d0 - 1.5); }));
+      const eye = [at.x + dx, y, at.z + d0], from = [at.x, y, at.z + 1], far = Math.hypot(dx, d0 - 1);
+      window.__look(from, eye);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const h = window.__pick(innerWidth / 2, innerHeight / 2, 1)[0], ok = !h || h.distance > far - 0.3;
+        window.__look(eye, [at.x, y, at.z]);
+        requestAnimationFrame(() => requestAnimationFrame(() => done(ok)));
+      }));
     }), [+mid[2], mid[1] === "mid10" ? 10 : 3.5, side]);
     if (clear) { if (side) console.log(`${view}: the eye stepped ${side} m aside to see past what stood in the way`); break; }
   }
