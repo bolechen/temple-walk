@@ -1,6 +1,6 @@
 {
   "name": "temple-walk",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "A walk through a code-built mountain temple, in the browser",
   "scripts": {

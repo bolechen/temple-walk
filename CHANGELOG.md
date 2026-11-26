@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.10.0](https://github.com/bolechen/temple-walk/compare/v0.9.0...v0.10.0) (2026-11-26)
+
+
+### Features
+
+* **fonts:** add the stele's text and the observation page's words ([#721](https://github.com/bolechen/temple-walk/issues/721)) ([98f333a](https://github.com/bolechen/temple-walk/commit/98f333a5960645a5d0971de23287fcb14c4e84be))
+* **fonts:** recut the faces for T05's characters ([#714](https://github.com/bolechen/temple-walk/issues/714)) ([a6d420f](https://github.com/bolechen/temple-walk/commit/a6d420f95a25ba1b96d9c3f01944f242e487d231))
+* **level:** a level may refuse the paving's mirror in a mood; T05 draws it only on wet stone ([#753](https://github.com/bolechen/temple-walk/issues/753)) ([fa58278](https://github.com/bolechen/temple-walk/commit/fa58278f11dd02b8cd41267a439b026db2c60095))
+* **level:** take the temple's name and seal from the level ([#705](https://github.com/bolechen/temple-walk/issues/705)) ([a8fef0a](https://github.com/bolechen/temple-walk/commit/a8fef0a965cf19bb2726d6617df4e9b6b5bada31))
+* **mood:** after the close, the first time the book is shut, the hour follows the visitor's clock ([#726](https://github.com/bolechen/temple-walk/issues/726)) ([#739](https://github.com/bolechen/temple-walk/issues/739)) ([d5b7d37](https://github.com/bolechen/temple-walk/commit/d5b7d376bc8d1bafb515981b07258903bc63b715))
+* **t05:** close the great hall's doors for the canary preview ([#724](https://github.com/bolechen/temple-walk/issues/724)) ([b490e16](https://github.com/bolechen/temple-walk/commit/b490e163fb04383278dde1bc45044d9291f9a663))
+* **t05:** copy a line of the Yuan stele and write the whole-court page ([#728](https://github.com/bolechen/temple-walk/issues/728)) ([36c0433](https://github.com/bolechen/temple-walk/commit/36c0433d09afb25db1637bdd5095f057dc6de1c3))
+* **t05:** cut the monument's stele from one block ([#723](https://github.com/bolechen/temple-walk/issues/723)) ([9cdfb5d](https://github.com/bolechen/temple-walk/commit/9cdfb5d104dc1a615ec52ee83e21b59f2e687d5a))
+* **t05:** debug panel objects, second half — houses and the seven figures rebuilt live ([#684](https://github.com/bolechen/temple-walk/issues/684)) ([#711](https://github.com/bolechen/temple-walk/issues/711)) ([bb8f0d7](https://github.com/bolechen/temple-walk/commit/bb8f0d7c7f3ae3f04671ac3d57fb92aa70247754))
+* **t05:** dry earth and olive evergreen crowns on J01's clear winter day ([#686](https://github.com/bolechen/temple-walk/issues/686)) ([8f231c9](https://github.com/bolechen/temple-walk/commit/8f231c9d6885b237262034dc02cc5f20a656b613))
+* **t05:** face pipeline for the seven figures, tools and docs ([#701](https://github.com/bolechen/temple-walk/issues/701)) ([#706](https://github.com/bolechen/temple-walk/issues/706)) ([221a562](https://github.com/bolechen/temple-walk/commit/221a56222e7708440477edddcdbf5b685d373937))
+* **t05:** fold, tile and lift the great hall's roof ([#741](https://github.com/bolechen/temple-walk/issues/741)) ([#742](https://github.com/bolechen/temple-walk/issues/742)) ([e9b4a2e](https://github.com/bolechen/temple-walk/commit/e9b4a2ee1323caeb4f4ee1b7597272cd490fa476))
+* **t05:** grow real trees, the far view and the withered grass in place of the placeholders ([#722](https://github.com/bolechen/temple-walk/issues/722)) ([10696af](https://github.com/bolechen/temple-walk/commit/10696af1a34ba58edc99aa27cca50d9dd9ccc276))
+* **t05:** Liao seven-puzuo bracket sets under the great hall's eave ([#741](https://github.com/bolechen/temple-walk/issues/741)) ([#748](https://github.com/bolechen/temple-walk/issues/748)) ([0880066](https://github.com/bolechen/temple-walk/commit/088006614b3b9bcefa2129c7492bac1995b08f6c))
+* **t05:** one line on arrival saying the temple is still being built ([#710](https://github.com/bolechen/temple-walk/issues/710)) ([8979c49](https://github.com/bolechen/temple-walk/commit/8979c49eb6f0398e8e9d0c5eaa8c534931d7f0c6))
+* **t05:** paint pipeline for the seven figures, tools and docs ([#701](https://github.com/bolechen/temple-walk/issues/701)) ([#743](https://github.com/bolechen/temple-walk/issues/743)) ([6a3ed28](https://github.com/bolechen/temple-walk/commit/6a3ed28d2c337adfac5f0004eaa7339dc27ae945))
+* **t05:** paint round for [#463](https://github.com/bolechen/temple-walk/issues/463) — lip, inner garment, gilt recipe and masks ([#683](https://github.com/bolechen/temple-walk/issues/683)) ([cd6f522](https://github.com/bolechen/temple-walk/commit/cd6f5223d68f35caacf4651c4a876733f444437a))
+* **t05:** seven painted figures on the great hall's altar, behind a workbench-only ?hall=open ([#763](https://github.com/bolechen/temple-walk/issues/763)) ([4b8f8f2](https://github.com/bolechen/temple-walk/commit/4b8f8f2103dd8aa7e6626b7a6d97b8d31e29e9d6))
+* **t05:** sound field first version, court and hall layers with the hall's long reverb ([#709](https://github.com/bolechen/temple-walk/issues/709)) ([03425a0](https://github.com/bolechen/temple-walk/commit/03425a0a450cd59e9138c9546e1d0e88c15b4285))
+* **t05:** T05 keeps its own save, apart from the prologue's ([#704](https://github.com/bolechen/temple-walk/issues/704)) ([3efb25b](https://github.com/bolechen/temple-walk/commit/3efb25ba7f342cd9b4c238c9c3e89747f160db7a))
+* **t05:** T05's own verse on its card, no QR or address until it is public ([#734](https://github.com/bolechen/temple-walk/issues/734)) ([12dcfb0](https://github.com/bolechen/temple-walk/commit/12dcfb0ccd946ba08325de1251189da1778eaeb5))
+* **t05:** the hall's light for the seven once they stand in it ([#762](https://github.com/bolechen/temple-walk/issues/762)) ([3ac1154](https://github.com/bolechen/temple-walk/commit/3ac1154aafddbd9b350525806a4a2214c291f23e))
+* **t05:** the slip's stroke as one brush stroke, and the writing hand placed ([#744](https://github.com/bolechen/temple-walk/issues/744)) ([#746](https://github.com/bolechen/temple-walk/issues/746)) ([4dc857c](https://github.com/bolechen/temple-walk/commit/4dc857c8a6b528cb4817fc86bc3533258dd7a6e7))
+* **t05:** the stele's head ([#716](https://github.com/bolechen/temple-walk/issues/716)) ([5dfa237](https://github.com/bolechen/temple-walk/commit/5dfa237bfc769cb61dd1dc62d99ad7e180db8d9e))
+* **ui:** write the seals earned beside the book's seal ([#776](https://github.com/bolechen/temple-walk/issues/776)) ([1f8942b](https://github.com/bolechen/temple-walk/commit/1f8942bbb7f26cb83c680bb4b5e383c18f422594))
+
+
+### Bug Fixes
+
+* **art:** J01's bamboo lets the sky through and the prologue's timber is lighter ([#769](https://github.com/bolechen/temple-walk/issues/769)) ([0274f70](https://github.com/bolechen/temple-walk/commit/0274f70bc4edf0f74482077c3b37c61c1b692519))
+* **backdrop:** stagger the side grove's runs so their overlaps stop flickering ([#693](https://github.com/bolechen/temple-walk/issues/693)) ([ccc00e7](https://github.com/bolechen/temple-walk/commit/ccc00e76232da60443ace08773319b6d168c6a69))
+* **doorway:** fingerprint the light of the baked moods, not the whole mood.js ([#760](https://github.com/bolechen/temple-walk/issues/760)) ([#761](https://github.com/bolechen/temple-walk/issues/761)) ([04ec393](https://github.com/bolechen/temple-walk/commit/04ec39304c2ded792888609c0ad8a2635e6afa0f))
+* **ending:** keep the upright title clear of the pavilion and the close's camera off the trees ([#497](https://github.com/bolechen/temple-walk/issues/497), [#498](https://github.com/bolechen/temple-walk/issues/498)) ([#759](https://github.com/bolechen/temple-walk/issues/759)) ([af78dfc](https://github.com/bolechen/temple-walk/commit/af78dfcfd1d693f6924304505cabed43787a9e0c))
+* **hints:** break the hint line at the dot, not leave it hanging ([#747](https://github.com/bolechen/temple-walk/issues/747)) ([d9d13ff](https://github.com/bolechen/temple-walk/commit/d9d13ff66b3b8801725d41ba0c9e4b66f4149852))
+* **materials:** stop far tile rows crawling as the eye drifts ([#731](https://github.com/bolechen/temple-walk/issues/731)) ([#735](https://github.com/bolechen/temple-walk/issues/735)) ([e1c60b3](https://github.com/bolechen/temple-walk/commit/e1c60b3d649f7b2e8bec38eb8fb0f678449adc8a))
+* part faces that lay on one plane across both temples ([#655](https://github.com/bolechen/temple-walk/issues/655)) ([#708](https://github.com/bolechen/temple-walk/issues/708)) ([fa19bb3](https://github.com/bolechen/temple-walk/commit/fa19bb339ba73f7bbbc58477735384b78bc56ac4))
+* **render:** stop beams, plates, the stele pavilion's slab and the caisson's boards fighting what they cross ([#655](https://github.com/bolechen/temple-walk/issues/655)) ([#707](https://github.com/bolechen/temple-walk/issues/707)) ([6b34545](https://github.com/bolechen/temple-walk/commit/6b3454523a9656e048b1600345f3557e831c42a0))
+* **render:** stop the plaque, screen-wall and gate-lintel faces flickering ([#655](https://github.com/bolechen/temple-walk/issues/655)) ([#692](https://github.com/bolechen/temple-walk/issues/692)) ([0a9af86](https://github.com/bolechen/temple-walk/commit/0a9af86f4c4f466e200b784a53e0445f8cae32ae))
+* **t05:** center the temple's name on T05's card ([#736](https://github.com/bolechen/temple-walk/issues/736)) ([c286ad2](https://github.com/bolechen/temple-walk/commit/c286ad273440532144c330b777fa00fb8a71f9e6))
+* **t05:** give J01 a blue sky, clear air and a warmer sun ([#740](https://github.com/bolechen/temple-walk/issues/740)) ([1d2ecd4](https://github.com/bolechen/temple-walk/commit/1d2ecd4e22b7193a1e97a93476dfe59a8603e288))
+* **t05:** keep J01's eave shade cool under a less warm sun ([#745](https://github.com/bolechen/temple-walk/issues/745)) ([7eeee46](https://github.com/bolechen/temple-walk/commit/7eeee4690c7fa7dc1707113c722091b6f511ccca))
+* **t05:** light the seven from before and above, not from under the floor ([#754](https://github.com/bolechen/temple-walk/issues/754)) ([#756](https://github.com/bolechen/temple-walk/issues/756)) ([bc12a82](https://github.com/bolechen/temple-walk/commit/bc12a82e8a9fa33baef6b69af43eda065da320b2))
+* **t05:** move the monument pavilion out 2.25 m ([#715](https://github.com/bolechen/temple-walk/issues/715)) ([b889676](https://github.com/bolechen/temple-walk/commit/b889676d022f638dd0e634f8b13393fdda868db9))
+* **t05:** no sunlit patch on the shut hall's windows ([#733](https://github.com/bolechen/temple-walk/issues/733)) ([a004550](https://github.com/bolechen/temple-walk/commit/a00455033dbbdbf0a0b8a673adf5a22c1f519c40))
+* **t05:** paint the lips where the lips are on three figures ([#718](https://github.com/bolechen/temple-walk/issues/718)) ([f3caf01](https://github.com/bolechen/temple-walk/commit/f3caf01dc634451d53d28ddd3f9a5f121e5f78e1))
+* **t05:** write the Korean name in Hangul, kept in T05's own locale ([#738](https://github.com/bolechen/temple-walk/issues/738)) ([3f2ac00](https://github.com/bolechen/temple-walk/commit/3f2ac0077d2e3e76fa6161db6b9cf619ff376224))
+* **yard:** time the frame as drawn, the mirror only where the frame draws it ([#774](https://github.com/bolechen/temple-walk/issues/774)) ([2fa02a8](https://github.com/bolechen/temple-walk/commit/2fa02a8c0fc0d202ee39880ff97afaccf4ca37f2))
+
+
+### Reverts
+
+* **novice:** keep the hat on his back when seated on a cushion ([#713](https://github.com/bolechen/temple-walk/issues/713)) ([14b4a83](https://github.com/bolechen/temple-walk/commit/14b4a8359f2260c72f08e3cdf2744280c11d0442))
+
 ## [0.9.0](https://github.com/bolechen/temple-walk/compare/v0.8.0...v0.9.0) (2026-11-25)
 
 
