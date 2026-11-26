@@ -1,0 +1,1398 @@
+{
+ "out": "tools/out/t05/df1/run",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/ship701c/kasyapa-B4H10b.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "kasyapa-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.97,
+    1.0,
+    1.03
+   ]
+  },
+  {
+   "url": "tools/out/t05/ship701b/krakucchanda-B4H10b.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701d/sikhin-M40b.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-B"
+  },
+  {
+   "url": "tools/out/t05/ship701d/vipasyin-B4H10b.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-B"
+  },
+  {
+   "url": "tools/out/t05/ship701b/visvabhu-V3b.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701b/kanakamuni-K1Lb.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701c/sakyamuni-V14b.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.96,
+    1.0,
+    1.05
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "side-kasyapa",
+   "ortho": {
+    "i": 0,
+    "side": "side",
+    "cx": 0.0,
+    "cy": 7.0,
+    "half": 1.6,
+    "square": true,
+    "grid": true
+   }
+  },
+  {
+   "name": "hair-p-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.6,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-p-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      16.45,
+      9.700000000000001,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-p-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.35,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "hair-g-kasyapa",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.6,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-g-kasyapa",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      16.45,
+      9.700000000000001,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-g-kasyapa",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.35,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "side-krakucchanda",
+   "ortho": {
+    "i": 1,
+    "side": "side",
+    "cx": 0.0,
+    "cy": 7.0,
+    "half": 1.6,
+    "square": true,
+    "grid": true
+   }
+  },
+  {
+   "name": "hair-p-krakucchanda",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.649999999999999,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-p-krakucchanda",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      11.33,
+      9.75,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-p-krakucchanda",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.399999999999999,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "hair-g-krakucchanda",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.649999999999999,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-g-krakucchanda",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      11.33,
+      9.75,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-g-krakucchanda",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.399999999999999,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "side-sikhin",
+   "ortho": {
+    "i": 2,
+    "side": "side",
+    "cx": 0.0,
+    "cy": 7.0,
+    "half": 1.6,
+    "square": true,
+    "grid": true
+   }
+  },
+  {
+   "name": "hair-p-sikhin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.729999999999999,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-p-sikhin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      5.8,
+      9.83,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-p-sikhin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.479999999999999,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "hair-g-sikhin",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.729999999999999,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-g-sikhin",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      5.8,
+      9.83,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-g-sikhin",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.479999999999999,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "side-vipasyin",
+   "ortho": {
+    "i": 3,
+    "side": "side",
+    "cx": 0.0,
+    "cy": 7.0,
+    "half": 1.6,
+    "square": true,
+    "grid": true
+   }
+  },
+  {
+   "name": "hair-p-vipasyin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      0,
+      11.93,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-p-vipasyin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      0,
+      10.030000000000001,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-p-vipasyin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      0,
+      11.68,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "hair-g-vipasyin",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      0,
+      11.93,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-g-vipasyin",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      0,
+      10.030000000000001,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-g-vipasyin",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      0,
+      11.68,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "side-visvabhu",
+   "ortho": {
+    "i": 4,
+    "side": "side",
+    "cx": 0.0,
+    "cy": 7.0,
+    "half": 1.6,
+    "square": true,
+    "grid": true
+   }
+  },
+  {
+   "name": "hair-p-visvabhu",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.83,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-p-visvabhu",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -5.8,
+      9.930000000000001,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-p-visvabhu",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.58,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "hair-g-visvabhu",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.83,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-g-visvabhu",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -5.8,
+      9.930000000000001,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-g-visvabhu",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.58,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "side-kanakamuni",
+   "ortho": {
+    "i": 5,
+    "side": "side",
+    "cx": 0.0,
+    "cy": 7.0,
+    "half": 1.6,
+    "square": true,
+    "grid": true
+   }
+  },
+  {
+   "name": "hair-p-kanakamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.62,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-p-kanakamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -11.33,
+      9.72,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-p-kanakamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.37,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "hair-g-kanakamuni",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.62,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-g-kanakamuni",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -11.33,
+      9.72,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-g-kanakamuni",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.37,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "side-sakyamuni",
+   "ortho": {
+    "i": 6,
+    "side": "side",
+    "cx": 0.0,
+    "cy": 7.0,
+    "half": 1.6,
+    "square": true,
+    "grid": true
+   }
+  },
+  {
+   "name": "hair-p-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.649999999999999,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-p-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -16.45,
+      9.75,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-p-sakyamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.399999999999999,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "hair-g-sakyamuni",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.649999999999999,
+      -18.1
+     ],
+     "fov": 13,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "neck-g-sakyamuni",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -16.45,
+      9.75,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "eyes-g-sakyamuni",
+   "shoot": {
+    "paint": {
+     "skin": "#00ff00"
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.399999999999999,
+      -18.1
+     ],
+     "fov": 4,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  }
+ ]
+}

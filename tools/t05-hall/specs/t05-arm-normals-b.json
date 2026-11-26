@@ -1,0 +1,258 @@
+{
+ "out": "tools/out/t05/seven/armb",
+ "size": [
+  1400,
+  1400
+ ],
+ "ao": false,
+ "statues": [
+  {
+   "url": "tools/out/t05/tripo-six/kasyapa-r3.60000.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05"
+  },
+  {
+   "url": "tools/out/t05/ship701b/krakucchanda-B4H10b.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/sikhin-r3.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/tripo-six/vipasyin-r5b.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/ship701b/visvabhu-V3b.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-t05"
+  },
+  {
+   "url": "tools/out/t05/ship701b/kanakamuni-K1Lb.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-t05"
+  }
+ ],
+ "shots": [
+  {
+   "name": "krakucchanda-normals-wide",
+   "ortho": {
+    "i": 1,
+    "grid": false,
+    "square": true,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 2.5
+   }
+  },
+  {
+   "name": "krakucchanda-depth-wide",
+   "ortho": {
+    "i": 1,
+    "grid": false,
+    "square": true,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 2.5,
+    "depth": true
+   }
+  },
+  {
+   "name": "krakucchanda-normals-side",
+   "ortho": {
+    "i": 1,
+    "grid": false,
+    "square": true,
+    "side": "side",
+    "cx": 0.4,
+    "cy": 4.9,
+    "half": 1.9
+   }
+  },
+  {
+   "name": "krakucchanda-depth-side",
+   "ortho": {
+    "i": 1,
+    "grid": false,
+    "square": true,
+    "side": "side",
+    "cx": 0.4,
+    "cy": 4.9,
+    "half": 1.9,
+    "depth": true
+   }
+  },
+  {
+   "name": "visvabhu-normals-wide",
+   "ortho": {
+    "i": 4,
+    "grid": false,
+    "square": true,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 2.5
+   }
+  },
+  {
+   "name": "visvabhu-depth-wide",
+   "ortho": {
+    "i": 4,
+    "grid": false,
+    "square": true,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 2.5,
+    "depth": true
+   }
+  },
+  {
+   "name": "visvabhu-normals-side",
+   "ortho": {
+    "i": 4,
+    "grid": false,
+    "square": true,
+    "side": "side",
+    "cx": 0.4,
+    "cy": 4.9,
+    "half": 1.9
+   }
+  },
+  {
+   "name": "visvabhu-depth-side",
+   "ortho": {
+    "i": 4,
+    "grid": false,
+    "square": true,
+    "side": "side",
+    "cx": 0.4,
+    "cy": 4.9,
+    "half": 1.9,
+    "depth": true
+   }
+  },
+  {
+   "name": "kanakamuni-normals-wide",
+   "ortho": {
+    "i": 5,
+    "grid": false,
+    "square": true,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 2.5
+   }
+  },
+  {
+   "name": "kanakamuni-depth-wide",
+   "ortho": {
+    "i": 5,
+    "grid": false,
+    "square": true,
+    "side": "front",
+    "cx": 0,
+    "cy": 5.2,
+    "half": 2.5,
+    "depth": true
+   }
+  },
+  {
+   "name": "kanakamuni-normals-side",
+   "ortho": {
+    "i": 5,
+    "grid": false,
+    "square": true,
+    "side": "side",
+    "cx": 0.4,
+    "cy": 4.9,
+    "half": 1.9
+   }
+  },
+  {
+   "name": "kanakamuni-depth-side",
+   "ortho": {
+    "i": 5,
+    "grid": false,
+    "square": true,
+    "side": "side",
+    "cx": 0.4,
+    "cy": 4.9,
+    "half": 1.9,
+    "depth": true
+   }
+  }
+ ]
+}

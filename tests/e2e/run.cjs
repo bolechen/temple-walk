@@ -2776,6 +2776,153 @@ const scenarios = {
   // (hidden, or only a gap in the frames: some in-app browsers send no visibilitychange); the first watch is passed over only by
   // holding for a second and a half, and letting go half way carries on; once seen, a tap does it; 山顶再坐一回 plays it again
   // and writes nothing in the book.
+  // The close's eye (#498), the case nearest to what was reported (high tier, autumn, the workbench's way in: `?play=ending` travels him to
+  // the summit mat, he sits, the following eye behind him, and the close begins), held upright and wide. The route is laid from where
+  // he sits and carries the eye's own starting place as an offset that is gone by the fifth second, so the close is begun from three
+  // places (where the eye was, where it stood on the mat's own shot, and in front of him: `__closeEye0`) and each route is asked of the eye's
+  // hierarchy at every tenth of a second, with the sphere of the near plane's corners and again 0.5 m round it, and held to the
+  // director's limits (15 m/s, 144 degrees a second of the view's own turn). Held upright, from 8 s to 16 s the clock is stepped by a
+  // quarter and the picture's centre, corners and edges are asked what is nearest (`__pick`, for what the hierarchy lets pass), 0.6 m at least.
+  "ending-eye": { tier: 3, async run(b, base) {
+    const bad = [], Q = "high", season = "autumn";
+    const SHAPES = { upright: { width: 390, height: 844 }, wide: { width: 1280, height: 720 } };
+    for (const [shape, viewport] of Object.entries(SHAPES)) {
+      if (process.env.ENDING_SHAPE && process.env.ENDING_SHAPE !== shape) continue;
+      const t = await open(b, base, `q=${Q}&view=third&season=${season}&time=day&off=reflect,bloom,drift`, { viewport });
+      await t.until(async () => (await t.page.evaluate(() => window.__eyeSpace().state)) === "ready", 180000, "the eye's hierarchy was not built");
+      await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, Math.PI - p.face, 0); }); await t.frames(3);
+      await t.page.evaluate(() => { window.__riteClock(null); const p = window.__places.sit, i = window.__seats.findIndex((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3); window.__sit(i); });
+      await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) > 0, 120000, "he did not sit on the summit mat"); await t.frames(1);   // (the turn onto the mat is not finished: the close is begun on a frame where he is not yet facing the way the mat faces, as on a slow page)
+      // one close: begun with the eye where it is (`from` null) or put at `from` ([left, up, ahead] of him) first; held where it begins
+      const begin = async (from) => {
+        let placed = null;
+        await t.page.evaluate(() => window.__riteClock(null));
+        if (from) {
+          const him = await t.page.evaluate(() => window.__rites().him), fr = (await t.page.evaluate(() => window.__closeFrame())) || { f: [0.4992, 0, 0.8665], l: [0.8665, 0, -0.4992] };
+          placed = await t.page.evaluate(([him, fr, from]) => { const x = him[0] + fr.l[0] * from[0] + fr.f[0] * from[2], z = him[2] + fr.l[2] * from[0] + fr.f[2] * from[2]; window.__closeEye0 = [x, him[1] + from[1], z]; return window.__closeEye0; }, [him, fr, from]);
+        }
+        await t.page.evaluate(() => { void window.__ending(); });
+        await t.until(async () => (await t.page.evaluate(() => window.__rites().closing)) === true, 60000, "the close never began");
+        await t.page.evaluate(() => { window.__riteClock(0); window.__closeEye0 = null; }); await t.frames(3);
+        return placed;
+      };
+      const check = async (what, withRays = false) => {
+        const r = await t.page.evaluate((withRays) => {
+          const rt = window.__closeRoute(0.1), at = (p, dx, dy, dz) => window.__eyeShutAt(p[0] + dx, p[1] + dy, p[2] + dz);
+          const hit = [], near = [], MARGIN = [[0.5, 0, 0], [-0.5, 0, 0], [0, 0.5, 0], [0, -0.5, 0], [0, 0, 0.5], [0, 0, -0.5]];
+          rt.forEach((p, i) => { if (at(p, 0, 0, 0)) hit.push(+(i * 0.1).toFixed(1)); else if (i >= 50 && MARGIN.some((m) => at(p, ...m))) near.push(+(i * 0.1).toFixed(1)); });
+          // what the hierarchy may let pass (a crown of cut-out cards): rays out of every half second's point, in the 26 directions of a cube
+          const rays = [];
+          rt.forEach((p, i) => { if (!withRays || i % 5) return; const n = window.__nearest(p[0], p[1], p[2], 1.0); if (n && n.distance < (i >= 50 ? 0.5 : 0.15)) rays.push(`${(i * 0.1).toFixed(1)} s ${n.distance} m ${n.part}`); });
+          // speeds of the eye, and the turn of the view (yaw and pitch of the line from the eye to what it looks at), by the tenth of a second
+          let fast = 0, turn = 0;
+          for (let i = 1; i < rt.length; i++) {
+            const a = rt[i - 1], c = rt[i], v = Math.hypot(c[0] - a[0], c[1] - a[1], c[2] - a[2]) / 0.1; fast = Math.max(fast, v);
+            const ang = (q) => { const dx = q[3] - q[0], dy = q[4] - q[1], dz = q[5] - q[2]; return [Math.atan2(dx, -dz), Math.atan2(dy, Math.hypot(dx, dz))]; };
+            const [y0, p0] = ang(a), [y1, p1] = ang(c); let dy = y1 - y0; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+            turn = Math.max(turn, Math.hypot(dy, p1 - p0) * 180 / Math.PI / 0.1);
+          }
+          const fr = window.__closeFrame(), face = window.__places.sit.face;   // ahead is the way the mat faces, whatever way he is turned on the frame the close begins
+          const ahead = Math.hypot(fr.f[0] - Math.sin(face), fr.f[2] - Math.cos(face)) < 0.001 && Math.hypot(fr.l[0] - Math.cos(face), fr.l[2] + Math.sin(face)) < 0.001;
+          return { first: rt[0], hit, near, rays, fast, turn, ahead, frame: fr.f };
+        }, withRays);
+        return { what, ...r };
+      };
+      const verdict = (r, from) => {
+        if (from && Math.hypot(r.first[0] - from[0], r.first[1] - from[1], r.first[2] - from[2]) > 0.05) bad.push(`${shape} ${r.what}: the eye was not where it was put (${r.first.slice(0, 3).map((v) => v.toFixed(2))})`);
+        if (!r.ahead) bad.push(`${shape} ${r.what}: the route is laid from the way he happens to be turned (${r.frame.map((v) => v.toFixed(2))}), not from the way the mat faces`);
+        if (r.hit.length) bad.push(`${shape} ${r.what}: the eye is inside something at ${r.hit.length} of 301 points, ${r.hit[0]} s to ${r.hit[r.hit.length - 1]} s`);
+        if (r.near.length) bad.push(`${shape} ${r.what}: something stands within 0.5 m of the eye at ${r.near.length} of 301 points (the first at ${r.near[0]} s) after the fifth second` + "");
+        if (r.rays.length) bad.push(`${shape} ${r.what}: something drawn stands within 0.5 m of the eye by rays (the first: ${r.rays[0]}, ${r.rays.length} of 61 points)`);
+        if (r.fast > 15) bad.push(`${shape} ${r.what}: the eye goes ${r.fast.toFixed(1)} m/s, over 15`);
+        if (r.turn > 144) bad.push(`${shape} ${r.what}: the view turns ${r.turn.toFixed(0)} degrees a second, over 144`);
+      };
+      await begin(null);
+      verdict(await check("close as begun", true), null);
+      if (shape === "upright") {
+        // what the picture itself shows from 8 s to 16 s
+        await t.page.evaluate(() => window.__riteClock(8000)); await t.frames(2);
+        const NEAR_MIN = 0.6, close = []; let road = false;
+        for (let i = 0; i < 32; i++) {
+          const r = await t.page.evaluate(() => { const w = innerWidth, h = innerHeight; const d = [[.5,.5],[.02,.02],[.98,.02],[.02,.98],[.98,.98],[.5,.05],[.5,.95],[.05,.5],[.95,.5]].map(([x, y]) => window.__pick(w * x, h * y, 4).filter((q) => q.part !== "monk")[0]).filter(Boolean); const nearest = d.sort((p, q) => p.distance - q.distance)[0]; return { t: window.__rites().close.u * 30, line: document.getElementById("endingLine").textContent, nearest: nearest && [nearest.distance, nearest.part, nearest.material] }; });
+          if (/山门之外/.test(r.line) && !road) { road = true; require("fs").mkdirSync("tools/out/ending-eye", { recursive: true }); await t.page.screenshot({ path: `tools/out/ending-eye/${Q}-${season}-${shape}-road.png` }); }
+          if (i === 4) { require("fs").mkdirSync("tools/out/ending-eye", { recursive: true }); await t.page.screenshot({ path: `tools/out/ending-eye/${Q}-${season}-${shape}-9s.png` }); }
+          if (r.nearest && r.nearest[0] < NEAR_MIN) close.push(`${r.t.toFixed(1)} s ${JSON.stringify(r.nearest)}`);
+          await t.page.evaluate(() => window.__riteClock(250)); await t.frames(2);
+        }
+        if (close.length) bad.push(`${shape}: something drawn within ${NEAR_MIN} m of the eye in the picture at ${close.length} of 32 frames, first ` + close.slice(0, 3).join("; "));
+        // and the close begun from two other places: where the eye stood on the mat's own shot, and in front of him
+        for (const [what, from] of [["close begun on the mat's shot", [-1.55, 0.55, 0.71]], ["close begun in front of him", [0.12, 1.27, -0.22]]]) {
+          await t.page.evaluate(() => window.__riteClock(60000)); await t.until(async () => (await t.page.evaluate(() => window.__rites().closing)) === false, 120000, "the close did not end");
+          const placed = await begin(from); verdict(await check(what), placed);
+        }
+      }
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+    }
+    expect(bad.length === 0, bad.join("\n     "));
+  } },
+  // The title of what has ended (#497): at the moment it comes (after TITLE_AT, held with the rites' clock), each of its three lines
+  // reads on what lies under it, at 4.5:1 or better, on two phones held upright and on a wide screen, and in all four languages upright. The
+  // lines' own colour is taken as it is drawn (the third is thinner: its opacity blends it into the picture), the picture under
+  // them from a second shot with the words hidden, the median over each line's box; the words stay inside the picture.
+  "ending-title": { tier: 3, async run(b, base) {
+    const SHAPES = { upright: { width: 390, height: 844 }, small: { width: 360, height: 780 }, wide: { width: 1920, height: 1080 } };
+    const LOCALE = { zh: "zh-CN", ja: "ja-JP", en: "en-US", ko: "ko-KR" }, bad = [], rows = [];
+    // Every picture in Chinese; the other three languages upright, where their longer lines have the least room.
+    const CASES = (process.env.ENDING_CASES || "upright:zh,small:zh,wide:zh,upright:en,upright:ko,upright:ja").split(",").map((c) => c.split(":"));
+    for (const [shape, lang] of CASES) {
+      const touch = shape !== "wide", viewport = SHAPES[shape];
+      const t = await open(b, base, `q=low&view=third&season=autumn&time=day&lang=${lang}&off=reflect,bloom,drift`, { viewport, locale: LOCALE[lang], ...(touch ? { hasTouch: true, isMobile: true } : {}) });
+      await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, Math.PI - p.face, 0); }); await t.frames(3);
+      await t.page.evaluate(() => { window.__riteClock(null); const p = window.__places.sit, i = window.__seats.findIndex((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3); window.__sit(i); });
+      await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) > 0, 120000, "he did not sit on the summit mat"); await t.frames(30);
+      await t.page.evaluate(() => { void window.__ending(); });
+      await t.until(async () => (await t.page.evaluate(() => window.__rites().closing)) === true, 60000, "the close never began");
+      await t.page.evaluate(() => window.__riteClock(0)); await t.frames(3);
+      await t.page.evaluate(() => window.__riteClock(26500)); await t.frames(3);   // (TITLE_AT is 25.5)
+      await t.until(async () => t.page.evaluate(() => +getComputedStyle(document.getElementById("endingTitle")).opacity >= 0.99), 60000, "the title did not come");
+      const read = () => t.page.evaluate(() => { const hold = document.getElementById("endingHold"); hold.style.visibility = "hidden"; const out = [...document.querySelectorAll("#endingTitle > *")].map((e) => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return { tag: e.tagName, text: e.textContent, x: r.x, y: r.y, w: r.width, h: r.height, color: c.color, opacity: +c.opacity }; }); return { out, w: innerWidth, h: innerHeight }; });
+      const lines = await read();
+      require("fs").mkdirSync("tools/out/ending-title", { recursive: true }); await t.page.screenshot({ path: `tools/out/ending-title/${shape}-${lang}.png` });
+      await t.page.addStyleTag({ content: "#endingTitle > * { visibility: hidden !important; }" });
+      const png = (await t.page.screenshot()).toString("base64");
+      const lum = await t.page.evaluate(async ([b64, lines]) => {
+        const img = new Image(); img.src = "data:image/png;base64," + b64; await img.decode();
+        const k = img.width / innerWidth, c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+        const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }, L = (r, gg, bb) => 0.2126 * lin(r) + 0.7152 * lin(gg) + 0.0722 * lin(bb);
+        return lines.out.map((e) => { const x = Math.max(0, Math.floor(e.x * k)), y = Math.max(0, Math.floor(e.y * k)), w = Math.max(1, Math.min(img.width - x, Math.ceil(e.w * k))), h = Math.max(1, Math.min(img.height - y, Math.ceil(e.h * k)));
+          const d = g.getImageData(x, y, w, h).data, ls = [], rs = [], gs = [], bs = []; for (let i = 0; i < d.length; i += 4) { ls.push(L(d[i], d[i + 1], d[i + 2])); rs.push(d[i]); gs.push(d[i + 1]); bs.push(d[i + 2]); }
+          const med = (a) => a.sort((p, q) => p - q)[a.length >> 1]; return { bg: med(ls), rgb: [med(rs), med(gs), med(bs)] }; });
+      }, [png, lines]);
+      lines.out.forEach((e, i) => {
+        const m = /rgba?\((\d+), (\d+), (\d+)/.exec(e.color), ink = m.slice(1, 4).map(Number), bg = lum[i].rgb;
+        const eff = ink.map((v, j) => e.opacity * v + (1 - e.opacity) * bg[j]);   // (as it lies on the picture)
+        const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }, Lt = 0.2126 * lin(eff[0]) + 0.7152 * lin(eff[1]) + 0.0722 * lin(eff[2]);
+        const ratio = (Math.max(Lt, lum[i].bg) + 0.05) / (Math.min(Lt, lum[i].bg) + 0.05);
+        rows.push(`${shape} ${lang} ${e.tag} ${ratio.toFixed(2)}`);
+        if (ratio < 4.5) bad.push(`${shape} ${lang}: "${e.text}" reads at ${ratio.toFixed(2)}:1 on its ground (box ${Math.round(e.x)},${Math.round(e.y)} ${Math.round(e.w)}×${Math.round(e.h)})`);
+        if (e.x < 0 || e.x + e.w > lines.w || e.y < 0 || e.y + e.h > lines.h) bad.push(`${shape} ${lang}: "${e.text}" is not inside the picture`);
+      });
+      // The ground must not sink what the title is laid over (#497, ART-LESSONS: a darkening has a floor): the same frame with the ground and
+      // without it, the mean brightness over the novice and over the stretch of the hall just above him, 0.85 or more of what it was.
+      const monk = await t.page.evaluate(() => window.__probe().monkBox);
+      expect(monk, `${shape} ${lang}: the novice is not in the picture`);
+      await t.page.addStyleTag({ content: "#endingTitle::before { display: none !important; }" });
+      const bare = (await t.page.screenshot()).toString("base64");
+      const keep = await t.page.evaluate(async ([a64, b64, m]) => {
+        const lum = async (b) => { const img = new Image(); img.src = "data:image/png;base64," + b; await img.decode(); const k = img.width / innerWidth, c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+          const mean = (x, y, w, h) => { const d = g.getImageData(Math.max(0, Math.floor(x * k)), Math.max(0, Math.floor(y * k)), Math.max(1, Math.ceil(w * k)), Math.max(1, Math.ceil(h * k))).data; let t = 0; for (let i = 0; i < d.length; i += 4) t += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; return t / (d.length / 4); };
+          return [mean(m[0], m[1], m[2], m[3]), mean(m[0] - 40, m[1] - 60, m[2] + 80, 55)]; };
+        const withG = await lum(a64), without = await lum(b64); return { novice: withG[0] / without[0], hall: withG[1] / without[1] };
+      }, [png, bare, monk]);
+      rows.push(`${shape} ${lang} brightness kept: novice ${keep.novice.toFixed(2)}, hall above him ${keep.hall.toFixed(2)}`);
+      if (keep.novice < 0.85 || keep.hall < 0.85) bad.push(`${shape} ${lang}: the ground under the title sinks the novice to ${keep.novice.toFixed(2)} and the hall above him to ${keep.hall.toFixed(2)} of their brightness (0.85 at least)`);
+      await t.page.evaluate(() => document.getElementById("endingHold").style.removeProperty("visibility"));
+      await t.close();
+    }
+    console.log(rows.join("\n"));
+    expect(bad.length === 0, bad.join("\n     "));
+  } },
   "ending-skip": { tier: 2, async run(b, base) {
     const t = await open(b, base, "q=low&cam=0,30,0,-0.05&view=third" + BARE, { init: () => {
       // six seals and the close not yet seen (once the page is opened again the book is left as it was)

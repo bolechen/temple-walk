@@ -40,5 +40,11 @@
    0.053
   ],
   "browY": 7.255
- }
+ },
+ "nose": {
+  "baseAboveSlit": 0.147,
+  "tipAboveSlit": 0.243,
+  "note": "the base of the nose and its tip, metres above the slit, measured on the figure's f2 by face-ratios.py (#701); the upper face is held to the bow's own shape from the tip up and eased down to the base"
+ },
+ "chinBehind": 0.0065
 }
