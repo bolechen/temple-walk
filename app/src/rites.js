@@ -350,7 +350,10 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   /** @param {() => boolean} on @param {(seconds: number) => void} [cue] */
   async function close(on, cue = () => {}) {
     const eye = { p: V(), q: new THREE.Quaternion(), fov: 50 };   // where the eye stood on the last frame: the far view is made of it
-    const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = dir(0, 0, 1).clone(), l = dir(1, 0, 0).clone();
+    // Which way is ahead: the way the mat faces, not the way he happens to be turned on the frame the close begins (the turn onto the mat is not
+    // finished a second after he sits on a slow page, and the whole route was laid from it).
+    const turned = places.sit && typeof places.sit.face === "number" ? new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), places.sit.face) : G.quaternion;
+    const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = V(0, 0, 1).applyQuaternion(turned), l = V(1, 0, 0).applyQuaternion(turned);
     const P = (a, b, c) => o.clone().addScaledVector(l, a).addScaledVector(f, c).setY(o.y + b);
     END.frame = { o: o.toArray(), f: f.toArray(), l: l.toArray() };
     let path = null, aim = null, off = null;

@@ -2770,11 +2770,12 @@ const scenarios = {
     const bad = [], Q = "high", season = "autumn";
     const SHAPES = { upright: { width: 390, height: 844 }, wide: { width: 1280, height: 720 } };
     for (const [shape, viewport] of Object.entries(SHAPES)) {
+      if (process.env.ENDING_SHAPE && process.env.ENDING_SHAPE !== shape) continue;
       const t = await open(b, base, `q=${Q}&view=third&season=${season}&time=day&off=reflect,bloom,drift`, { viewport });
       await t.until(async () => (await t.page.evaluate(() => window.__eyeSpace().state)) === "ready", 180000, "the eye's hierarchy was not built");
       await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, Math.PI - p.face, 0); }); await t.frames(3);
       await t.page.evaluate(() => { window.__riteClock(null); const p = window.__places.sit, i = window.__seats.findIndex((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3); window.__sit(i); });
-      await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) > 0, 120000, "he did not sit on the summit mat"); await t.frames(30);
+      await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) > 0, 120000, "he did not sit on the summit mat"); await t.frames(1);   // (the turn onto the mat is not finished: the close is begun on a frame where he is not yet facing the way the mat faces, as on a slow page)
       // one close: begun with the eye where it is (`from` null) or put at `from` ([left, up, ahead] of him) first; held where it begins
       const begin = async (from) => {
         let placed = null;
@@ -2788,11 +2789,14 @@ const scenarios = {
         await t.page.evaluate(() => { window.__riteClock(0); window.__closeEye0 = null; }); await t.frames(3);
         return placed;
       };
-      const check = async (what) => {
-        const r = await t.page.evaluate(() => {
+      const check = async (what, withRays = false) => {
+        const r = await t.page.evaluate((withRays) => {
           const rt = window.__closeRoute(0.1), at = (p, dx, dy, dz) => window.__eyeShutAt(p[0] + dx, p[1] + dy, p[2] + dz);
           const hit = [], near = [], MARGIN = [[0.5, 0, 0], [-0.5, 0, 0], [0, 0.5, 0], [0, -0.5, 0], [0, 0, 0.5], [0, 0, -0.5]];
           rt.forEach((p, i) => { if (at(p, 0, 0, 0)) hit.push(+(i * 0.1).toFixed(1)); else if (i >= 50 && MARGIN.some((m) => at(p, ...m))) near.push(+(i * 0.1).toFixed(1)); });
+          // what the hierarchy may let pass (a crown of cut-out cards): rays out of every half second's point, in the 26 directions of a cube
+          const rays = [];
+          rt.forEach((p, i) => { if (!withRays || i % 5) return; const n = window.__nearest(p[0], p[1], p[2], 1.0); if (n && n.distance < (i >= 50 ? 0.5 : 0.15)) rays.push(`${(i * 0.1).toFixed(1)} s ${n.distance} m ${n.part}`); });
           // speeds of the eye, and the turn of the view (yaw and pitch of the line from the eye to what it looks at), by the tenth of a second
           let fast = 0, turn = 0;
           for (let i = 1; i < rt.length; i++) {
@@ -2801,19 +2805,23 @@ const scenarios = {
             const [y0, p0] = ang(a), [y1, p1] = ang(c); let dy = y1 - y0; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
             turn = Math.max(turn, Math.hypot(dy, p1 - p0) * 180 / Math.PI / 0.1);
           }
-          return { first: rt[0], hit, near, fast, turn };
-        });
+          const fr = window.__closeFrame(), face = window.__places.sit.face;   // ahead is the way the mat faces, whatever way he is turned on the frame the close begins
+          const ahead = Math.hypot(fr.f[0] - Math.sin(face), fr.f[2] - Math.cos(face)) < 0.001 && Math.hypot(fr.l[0] - Math.cos(face), fr.l[2] + Math.sin(face)) < 0.001;
+          return { first: rt[0], hit, near, rays, fast, turn, ahead, frame: fr.f };
+        }, withRays);
         return { what, ...r };
       };
       const verdict = (r, from) => {
         if (from && Math.hypot(r.first[0] - from[0], r.first[1] - from[1], r.first[2] - from[2]) > 0.05) bad.push(`${shape} ${r.what}: the eye was not where it was put (${r.first.slice(0, 3).map((v) => v.toFixed(2))})`);
+        if (!r.ahead) bad.push(`${shape} ${r.what}: the route is laid from the way he happens to be turned (${r.frame.map((v) => v.toFixed(2))}), not from the way the mat faces`);
         if (r.hit.length) bad.push(`${shape} ${r.what}: the eye is inside something at ${r.hit.length} of 301 points, ${r.hit[0]} s to ${r.hit[r.hit.length - 1]} s`);
         if (r.near.length) bad.push(`${shape} ${r.what}: something stands within 0.5 m of the eye at ${r.near.length} of 301 points (the first at ${r.near[0]} s) after the fifth second` + "");
+        if (r.rays.length) bad.push(`${shape} ${r.what}: something drawn stands within 0.5 m of the eye by rays (the first: ${r.rays[0]}, ${r.rays.length} of 61 points)`);
         if (r.fast > 15) bad.push(`${shape} ${r.what}: the eye goes ${r.fast.toFixed(1)} m/s, over 15`);
         if (r.turn > 144) bad.push(`${shape} ${r.what}: the view turns ${r.turn.toFixed(0)} degrees a second, over 144`);
       };
       await begin(null);
-      verdict(await check("close as begun"), null);
+      verdict(await check("close as begun", true), null);
       if (shape === "upright") {
         // what the picture itself shows from 8 s to 16 s
         await t.page.evaluate(() => window.__riteClock(8000)); await t.frames(2);
