@@ -1,0 +1,715 @@
+{
+  "started": "2026-11-26T02:45:43.911Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "cam03",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "base",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 53.8,
+      "ms": 18.59,
+      "cost": 12.11,
+      "loadMs": 10406,
+      "tris": 778077,
+      "calls": 84,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1495,
+        "decodeMs": 138,
+        "prepareMs": 841,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 4.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 5087.7,
+        "spikes": [
+          5088,
+          126,
+          5041,
+          828
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam03",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "A",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 53,
+      "ms": 18.87,
+      "cost": 12.21,
+      "loadMs": 6074,
+      "tris": 778077,
+      "calls": 84,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1502,
+        "decodeMs": 131,
+        "prepareMs": 857,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 4.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 874.3,
+        "spikes": [
+          874,
+          321,
+          115
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "base",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 62.5,
+      "ms": 16,
+      "cost": 8.67,
+      "loadMs": 6030,
+      "tris": 441478,
+      "calls": 65,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1471,
+        "decodeMs": 130,
+        "prepareMs": 849,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 863,
+        "spikes": [
+          863,
+          347,
+          101
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -9
+      ]
+    },
+    {
+      "view": "cam05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "A",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 63.5,
+      "ms": 15.75,
+      "cost": 9.18,
+      "loadMs": 6094,
+      "tris": 441478,
+      "calls": 65,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1444,
+        "decodeMs": 129,
+        "prepareMs": 869,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 874.8,
+        "spikes": [
+          875,
+          369
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -9
+      ]
+    },
+    {
+      "view": "cam06",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "base",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 51.7,
+      "ms": 19.34,
+      "cost": 12.94,
+      "loadMs": 6026,
+      "tris": 795752,
+      "calls": 86,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1406,
+        "decodeMs": 128,
+        "prepareMs": 864,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 872.6,
+        "spikes": [
+          873,
+          328
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -2
+      ]
+    },
+    {
+      "view": "cam06",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "A",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 50.8,
+      "ms": 19.69,
+      "cost": 12.68,
+      "loadMs": 5909,
+      "tris": 795752,
+      "calls": 86,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1368,
+        "decodeMs": 129,
+        "prepareMs": 849,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 892.4,
+        "spikes": [
+          892,
+          329
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -2
+      ]
+    },
+    {
+      "view": "cam03",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "A",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 51.8,
+      "ms": 19.31,
+      "cost": 12.3,
+      "loadMs": 6104,
+      "tris": 778077,
+      "calls": 84,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1465,
+        "decodeMs": 131,
+        "prepareMs": 890,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 4.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 833.4,
+        "spikes": [
+          833,
+          244
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam03",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "trial": "base",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 52.8,
+      "ms": 18.94,
+      "cost": 12.2,
+      "loadMs": 5873,
+      "tris": 778077,
+      "calls": 84,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1509,
+        "decodeMs": 129,
+        "prepareMs": 838,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 4.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 775.9,
+        "spikes": [
+          776,
+          247
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "cam03-base",
+      "file": "cam03-base.png",
+      "tris": 778077,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam05-base",
+      "file": "cam05-base.png",
+      "tris": 441478,
+      "calls": 65,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam06-base",
+      "file": "cam06-base.png",
+      "tris": 795752,
+      "calls": 86,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-0-base",
+      "file": "mid10-0-base.png",
+      "tris": 460422,
+      "calls": 69,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-3-base",
+      "file": "mid10-3-base.png",
+      "tris": 597797,
+      "calls": 76,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-6-base",
+      "file": "mid10-6-base.png",
+      "tris": 461275,
+      "calls": 67,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "aisleE-base",
+      "file": "aisleE-base.png",
+      "tris": 802883,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam03-A",
+      "file": "cam03-A.png",
+      "tris": 778077,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam05-A",
+      "file": "cam05-A.png",
+      "tris": 441478,
+      "calls": 65,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam06-A",
+      "file": "cam06-A.png",
+      "tris": 795752,
+      "calls": 86,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-0-A",
+      "file": "mid10-0-A.png",
+      "tris": 460422,
+      "calls": 69,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-3-A",
+      "file": "mid10-3-A.png",
+      "tris": 597797,
+      "calls": 76,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-6-A",
+      "file": "mid10-6-A.png",
+      "tris": 461275,
+      "calls": 67,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "aisleE-A",
+      "file": "aisleE-A.png",
+      "tris": 802883,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam03-Askin",
+      "file": "cam03-Askin.png",
+      "tris": 778077,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam05-Askin",
+      "file": "cam05-Askin.png",
+      "tris": 441478,
+      "calls": 65,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam06-Askin",
+      "file": "cam06-Askin.png",
+      "tris": 795752,
+      "calls": 86,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-0-Askin",
+      "file": "mid10-0-Askin.png",
+      "tris": 460422,
+      "calls": 69,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-3-Askin",
+      "file": "mid10-3-Askin.png",
+      "tris": 597797,
+      "calls": 76,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-6-Askin",
+      "file": "mid10-6-Askin.png",
+      "tris": 461275,
+      "calls": 67,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "aisleE-Askin",
+      "file": "aisleE-Askin.png",
+      "tris": 802883,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "42bf2a53932dd607a1fa5b5258a21719b624496b",
+    "entry": "assets/index-D4CyZiGy.js",
+    "files": 244,
+    "sha256": "12db62058add5fca5a3f8b101224e01077534757abb3f8400f35f34d761b7620"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-26T02:52:44.956Z"
+}

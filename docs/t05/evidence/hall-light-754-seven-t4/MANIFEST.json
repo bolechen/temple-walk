@@ -1,0 +1,138 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "aisleE-A.png",
+   "bytes": 2597369,
+   "sha256": "4a147f8de496132f1a814b52495aa39eeb67751ebe2972a51970772996e2592c",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "aisleE-Askin.png",
+   "bytes": 2604233,
+   "sha256": "442d934d05d66666bc3a68ff29201f6990ad20be9545147bb2e911c9ff44fef1",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "aisleE-base.png",
+   "bytes": 2417500,
+   "sha256": "bb01f49252953c3ed4280d9909ffb80ab8085dfa38cf93fde9b4e736ab7cb6d1",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam03-A.png",
+   "bytes": 2647216,
+   "sha256": "d725c9e85aaa7680ad54a625ab639f20db4b7810f85a998c307b852e67523e36",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam03-Askin.png",
+   "bytes": 2653375,
+   "sha256": "ddea19593e13b6eff903b692799438583a63279f835577169561d465bf0d6ef8",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam03-base.png",
+   "bytes": 2472959,
+   "sha256": "e495dd7f8d9eb99b78441c2a9842fb2bcfb0060f12242b2800ad33131fb305f1",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam05-A.png",
+   "bytes": 2636792,
+   "sha256": "64c5d0447b9b323a72fc2eca52fe7aefb20c4300fd403b9ec478242642b12646",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam05-Askin.png",
+   "bytes": 2641055,
+   "sha256": "e10f3da1d761f650a16c5f683491c98b851cddd59b73d0be97785221167389e8",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam05-base.png",
+   "bytes": 2436618,
+   "sha256": "a688284ce8b0cd9b91d0af96e822cbe96a3a6bc111fdb0816b35329b5ee32e11",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam06-A.png",
+   "bytes": 2751471,
+   "sha256": "10fe25e1c97bbe7ac73440c2b0b56f9618f9f57aeeddab4005fda762ccafe703",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam06-Askin.png",
+   "bytes": 2758607,
+   "sha256": "8d2d992a85a023fcc132f35476ab33fba29f3cf0cbfccd454246c7ff0a959fd9",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "cam06-base.png",
+   "bytes": 2558470,
+   "sha256": "f28e1b9a0421ad7b103ff64190c94f947def8ef9c0734adfc664ecb52f9c7d16",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 287714,
+   "sha256": "e2ba12f480295faaac59d4157acf4749d73703aa7c581df6b0c88d17ab692dc9",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-0-A.png",
+   "bytes": 2328735,
+   "sha256": "5935c60485e18e18dcda180fb7e5d97886c734a9edc15b9f96d1bb1afee80984",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-0-Askin.png",
+   "bytes": 2333320,
+   "sha256": "091accd83e52f6af52b5459e67ff13caac98a010f3b04bc0194047693f21e108",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-0-base.png",
+   "bytes": 2203829,
+   "sha256": "84841187a95945b58536d34905b4d419435799b06a8d23a2b1a8843c3395a504",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-3-A.png",
+   "bytes": 2447269,
+   "sha256": "df811e06071b78f263cd5cedab9f048fceb2653b3787bbe3aea615d8112a4a32",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-3-Askin.png",
+   "bytes": 2454500,
+   "sha256": "d75beff85182a32ec9d2d309366c5ca942d1b0179f0da4bc51a9656c409a3343",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-3-base.png",
+   "bytes": 2275788,
+   "sha256": "4813b787f9893283ebea733d7683e2f0a2667e4f8c89892a21379024f29b23c5",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-6-A.png",
+   "bytes": 2317318,
+   "sha256": "e68d227d5e9c2414489016cbe6af433c740048bc060ea8b04beb70eb1535d473",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-6-Askin.png",
+   "bytes": 2321839,
+   "sha256": "ae3efff13f2816a742367da57b12735b6e5b908a54ac1315a0e2dfeddb7200df",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  },
+  {
+   "path": "mid10-6-base.png",
+   "bytes": 2196276,
+   "sha256": "98f98c0deb3dc42f7c2b9bd47bba3d5d0ade948814385fb0082fb5b234e260d1",
+   "rev": "c2828a1be3ddbe3cd26cd7c040dc3d7a31657ebd"
+  }
+ ]
+}
