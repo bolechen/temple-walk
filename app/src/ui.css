@@ -736,12 +736,12 @@ body.veiled .rail, body.veiled #jumpBtn, body.veiled #turnBtn, body.veiled #book
 #endingTitle b { font: 400 clamp(54px, 11vmin, 112px)/1.1 "Yunjing Brush", var(--kai, serif); letter-spacing: .14em; }
 #endingTitle span { font: 400 clamp(17px, 2.6vmin, 24px)/1.4 var(--kai, serif); letter-spacing: .5em; text-indent: .5em; }
 #endingTitle em { margin-top: 14px; font: 400 clamp(14px, 2vmin, 18px)/1.4 var(--kai, serif); font-style: normal; letter-spacing: .4em; text-indent: .4em; opacity: .88; }
-/* Held upright (#497) the pavilion stands in the middle of the picture, the whole height of the words: they go down to the foot, over the court's hedges and paving, on a ground of their own, darker towards the bottom, so that the thinnest line still reads. Wide pictures are as they were. */
+/* Held upright (#497) the pavilion stands in the middle of the picture, the whole height of the words: they go down to the foot, over the court's hedges and paving, on a ground of their own that begins under the novice's court and is darker towards the bottom (the hall and he keep their light: 0.85 of it at least, `ending-title`), so that the thinnest line still reads. Wide pictures are as they were. */
 #endingTitle { isolation: isolate; }
 #endingTitle::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse 42% 26% at 50% 50%, rgba(8,10,6,.34), rgba(8,10,6,0)); }   /* wide: a faint ground behind the three lines (#497) */
 @media (max-aspect-ratio: 1/1) {
-  #endingTitle { isolation: isolate; place-content: end center; padding-bottom: calc(9vh + env(safe-area-inset-bottom, 0px)); }
-  #endingTitle::before { inset: auto 0 0 0; height: 58%; z-index: -1; background: linear-gradient(to top, rgba(8,10,6,.78), rgba(8,10,6,.6) 55%, rgba(8,10,6,0)); }
+  #endingTitle { isolation: isolate; place-content: end center; padding-bottom: calc(5vh + env(safe-area-inset-bottom, 0px)); }
+  #endingTitle::before { inset: auto 0 0 0; height: 34%; z-index: -1; background: linear-gradient(to top, rgba(8,10,6,.74), rgba(8,10,6,.58) 50%, rgba(8,10,6,0)); }
 }
 #ending { overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 /* The ring drawn while something is held (src/holdring.js): the one-breath ring of paper.js over a conic gradient that uncovers it clockwise from twelve; at rest there is none. */

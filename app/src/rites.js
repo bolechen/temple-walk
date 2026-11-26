@@ -366,11 +366,12 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     END.on = true; END.u = 0; END.route = null;
     y.cine((camera) => {
       if (!path) { y.undirect?.(); cam0.copy(camera.position);   // from wherever the eye was, the sitting's own shot included
+        if (typeof window === "object" && window.__closeEye0) cam0.fromArray(window.__closeEye0);   // (a test begins the close from another place: `__closeEye0 = [x, y, z]`)
         camera.getWorldDirection(look0).multiplyScalar(6).add(cam0);
         // The last look is raised, if need be, until the pavilion's ridge ornaments stand clear of the picture's top.
         const far = P(9, 17, 34), roofs = site.walk.roofs.filter((r) => Math.hypot((r.x0 + r.x1) / 2 - o.x, (r.z0 + r.z1) / 2 - o.z) < 16), tall = roofs.sort((p, q) => q.top - p.top)[0];
-        path = new THREE.CatmullRomCurve3([cam0.clone(), P(1.5, 0.75, 3.1), P(3.6, 2.6, 8.5), P(7, 9, 19), far], false, "centripetal");
-        off = V();
+        path = new THREE.CatmullRomCurve3([P(0, 1.3, 1.0), P(1.7, 2.65, 4.1), P(4.7, 3.5, 8.3), P(7.1, 7.7, 19.5), far], false, "centripetal");
+        off = cam0.clone().sub(path.getPoint(0));
         const tops = [new THREE.Vector3((tall?.x0 + tall?.x1) / 2, tall?.top + 1.6, (tall?.z0 + tall?.z1) / 2), ...(tall?.crest || []).map(([x, cy, z]) => new THREE.Vector3(x, cy, z))];
         const last = tall ? aimToFrame(far, P(0, 5, -6), tops, camera.fov, camera.aspect) : P(0, 5, -6);
         aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2);

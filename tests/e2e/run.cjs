@@ -2762,7 +2762,7 @@ const scenarios = {
   // The close's eye (#498), the case nearest to what was reported (high tier, autumn, the workbench's way in: `?play=ending` travels him to
   // the summit mat, he sits, the following eye behind him, and the close begins), held upright and wide. The route is laid from where
   // he sits and carries the eye's own starting place as an offset that is gone by the fifth second, so the close is begun from three
-  // places (where the eye was, where it stood on the mat's own shot, and in front of him) and each route is asked of the eye's
+  // places (where the eye was, where it stood on the mat's own shot, and in front of him: `__closeEye0`) and each route is asked of the eye's
   // hierarchy at every tenth of a second, with the sphere of the near plane's corners and again 0.5 m round it, and held to the
   // director's limits (15 m/s, 144 degrees a second of the view's own turn). Held upright, from 8 s to 16 s the clock is stepped by a
   // quarter and the picture's centre, corners and edges are asked what is nearest (`__pick`, for what the hierarchy lets pass), 0.6 m at least.
@@ -2781,11 +2781,11 @@ const scenarios = {
         await t.page.evaluate(() => window.__riteClock(null));
         if (from) {
           const him = await t.page.evaluate(() => window.__rites().him), fr = (await t.page.evaluate(() => window.__closeFrame())) || { f: [0.4992, 0, 0.8665], l: [0.8665, 0, -0.4992] };
-          placed = await t.page.evaluate(([him, fr, from]) => { const x = him[0] + fr.l[0] * from[0] + fr.f[0] * from[2], z = him[2] + fr.l[2] * from[0] + fr.f[2] * from[2]; window.__look([x, him[1] + from[1], z], [him[0], him[1] + 1, him[2]]); return [x, him[1] + from[1], z]; }, [him, fr, from]); await t.frames(3);
+          placed = await t.page.evaluate(([him, fr, from]) => { const x = him[0] + fr.l[0] * from[0] + fr.f[0] * from[2], z = him[2] + fr.l[2] * from[0] + fr.f[2] * from[2]; window.__closeEye0 = [x, him[1] + from[1], z]; return window.__closeEye0; }, [him, fr, from]);
         }
         await t.page.evaluate(() => { void window.__ending(); });
         await t.until(async () => (await t.page.evaluate(() => window.__rites().closing)) === true, 60000, "the close never began");
-        await t.page.evaluate(() => window.__riteClock(0)); await t.frames(3);
+        await t.page.evaluate(() => { window.__riteClock(0); window.__closeEye0 = null; }); await t.frames(3);
         return placed;
       };
       const check = async (what) => {
@@ -2878,6 +2878,20 @@ const scenarios = {
         if (ratio < 4.5) bad.push(`${shape} ${lang}: "${e.text}" reads at ${ratio.toFixed(2)}:1 on its ground (box ${Math.round(e.x)},${Math.round(e.y)} ${Math.round(e.w)}×${Math.round(e.h)})`);
         if (e.x < 0 || e.x + e.w > lines.w || e.y < 0 || e.y + e.h > lines.h) bad.push(`${shape} ${lang}: "${e.text}" is not inside the picture`);
       });
+      // The ground must not sink what the title is laid over (#497, ART-LESSONS: a darkening has a floor): the same frame with the ground and
+      // without it, the mean brightness over the novice and over the stretch of the hall just above him, 0.85 or more of what it was.
+      const monk = await t.page.evaluate(() => window.__probe().monkBox);
+      expect(monk, `${shape} ${lang}: the novice is not in the picture`);
+      await t.page.addStyleTag({ content: "#endingTitle::before { display: none !important; }" });
+      const bare = (await t.page.screenshot()).toString("base64");
+      const keep = await t.page.evaluate(async ([a64, b64, m]) => {
+        const lum = async (b) => { const img = new Image(); img.src = "data:image/png;base64," + b; await img.decode(); const k = img.width / innerWidth, c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+          const mean = (x, y, w, h) => { const d = g.getImageData(Math.max(0, Math.floor(x * k)), Math.max(0, Math.floor(y * k)), Math.max(1, Math.ceil(w * k)), Math.max(1, Math.ceil(h * k))).data; let t = 0; for (let i = 0; i < d.length; i += 4) t += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; return t / (d.length / 4); };
+          return [mean(m[0], m[1], m[2], m[3]), mean(m[0] - 40, m[1] - 60, m[2] + 80, 55)]; };
+        const withG = await lum(a64), without = await lum(b64); return { novice: withG[0] / without[0], hall: withG[1] / without[1] };
+      }, [png, bare, monk]);
+      rows.push(`${shape} ${lang} brightness kept: novice ${keep.novice.toFixed(2)}, hall above him ${keep.hall.toFixed(2)}`);
+      if (keep.novice < 0.85 || keep.hall < 0.85) bad.push(`${shape} ${lang}: the ground under the title sinks the novice to ${keep.novice.toFixed(2)} and the hall above him to ${keep.hall.toFixed(2)} of their brightness (0.85 at least)`);
       await t.page.evaluate(() => document.getElementById("endingHold").style.removeProperty("visibility"));
       await t.close();
     }
