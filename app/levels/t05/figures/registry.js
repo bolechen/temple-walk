@@ -22,21 +22,21 @@ export const PIVOT_DZ = 0.3;
  * @type {readonly { id: string, file: string, sha256: string, stageH: number, inner?: number[], lotus?: number, halo?: number }[]}
  */
 export const FIGURE_FILES = Object.freeze([
-  { id: "kasyapa", file: "kasyapa.glb", sha256: "03a2cb334a9dd03c54b1026e62726840e1ae2197b4cd5a3175232fb9b47b2102", stageH: 8.6, inner: [0.97, 1, 1.03], lotus: 1.25, halo: 1.5 },
+  { id: "kasyapa", file: "kasyapa.glb", sha256: "03a2cb334a9dd03c54b1026e62726840e1ae2197b4cd5a3175232fb9b47b2102", stageH: 8.6, inner: [0.97, 1, 1.03], lotus: 1.25 },
   { id: "krakucchanda", file: "krakucchanda.glb", sha256: "c92c4da2f644fbbcb6d4a24893cbdd248564a6972e7b9feb496d52eb8cc3334e", stageH: 8.75 },
   { id: "sikhin", file: "sikhin.glb", sha256: "8112799fb9c79c3fb636250c494f884f878fb6c27b93ea2f6c105bb6139b91d7", stageH: 8.9 },
   { id: "vipasyin", file: "vipasyin.glb", sha256: "1421c0abc563ea3782a83e433687f60f419e39870f19f32003c0904784bcd97f", stageH: 9.0 },
   { id: "visvabhu", file: "visvabhu.glb", sha256: "011abb1a09e6d264d7ca73f6880be8f0c6e297f357cf6afddadc1a7f06aebc7d", stageH: 8.9 },
   { id: "kanakamuni", file: "kanakamuni.glb", sha256: "d05629685149e510a33295e62129e8f25769eb850f5698faccf5253592252997", stageH: 8.75 },
-  { id: "sakyamuni", file: "sakyamuni.glb", sha256: "589ac283bde1b1e2f77edd3fbf957c6e0974bd448b26f33f976cd1f4be50ddd4", stageH: 8.6, inner: [0.96, 1, 1.05], lotus: 1.25, halo: 1.5 },
+  { id: "sakyamuni", file: "sakyamuni.glb", sha256: "589ac283bde1b1e2f77edd3fbf957c6e0974bd448b26f33f976cd1f4be50ddd4", stageH: 8.6, inner: [0.96, 1, 1.05], lotus: 1.25 },
 ].map((f) => Object.freeze(f)));
 
 /** The order they are fetched in: the middle one first, then outward (east before west). */
 export const LOAD_ORDER = Object.freeze(["vipasyin", "sikhin", "visvabhu", "krakucchanda", "kanakamuni", "kasyapa", "sakyamuni"]);
 /** Paint's reflection of the hall, as the pictures were judged (`paint: { envIntensity: 0.6 }`). */
 export const ENV_INTENSITY = 0.6;
-/** The boat-shaped halo's colour, the stage's (the painted halo, ../altar.js keeps the shape). */
-export const HALO_COLOR = 0x6c5641;
+/** The boat-shaped halo board's colour: darker and greyer than the stage's 0x6c5641 so that in the hall it reads at least 15 L* under the face and with about half its chroma (the art director, 2026-11-26; ../altar.js keeps the shape). */
+export const HALO_COLOR = 0x42392d;
 
 /**
  * The masks the paint reads (`masks/<name>` beside the files in app/shared/models/t05/), with their SHA-256. The files are not in git: tools/setup.mjs fetches
