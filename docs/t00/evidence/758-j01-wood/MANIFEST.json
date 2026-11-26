@@ -639,6 +639,114 @@
    "rev": "3f9e9ee47adf950061a6f08b468f148ed1f57fec"
   },
   {
+   "path": "E-bamboo-open/art1_summer-dawn_first.png",
+   "bytes": 3023060,
+   "sha256": "b94da9915fa843d276e10319ef2e677e2f8d552c2ddb19d6de9763fc9f40498d",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/art2_autumn-day_first.png",
+   "bytes": 2285847,
+   "sha256": "4ad94dbe045eeea593353361520d22dce36dda26dae7077f74b454c9dbb49f64",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/art3_autumn-dusk_third.png",
+   "bytes": 2360442,
+   "sha256": "89a0cfef9b7ace047ad832908aa07154172e36676d40127a4ba66b7cef3783ff",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/art5_summer-dusk_first.png",
+   "bytes": 2080141,
+   "sha256": "b29f828d9b21f79e1ae6e7977e80af8ddfa8dbb224ebc26b18664177f26f1146",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam01_summer-day_first.png",
+   "bytes": 3446889,
+   "sha256": "6423015f43ff725e5d2d55e3f0d53c2f9615d925083f566dec5ef31cfb20f286",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam01_summer-dusk_first.png",
+   "bytes": 3188998,
+   "sha256": "7bb9e1f5e97c06751af1864ed08e95236870ef6212d66e16815265fd755ba442",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam01_summer-dusk_first_base.png",
+   "bytes": 3166735,
+   "sha256": "e09f6c77ba9bae1971f2d043dbcf34e73fe7d2ea5d6dfb5a9ab13ea26861207e",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam01_summer-night_first.png",
+   "bytes": 2929489,
+   "sha256": "7562771a13c4e90e79e2727da26ddbee4ccd85240aaa69d767063d2957e5fd0f",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam01_summer-night_first_base.png",
+   "bytes": 2926655,
+   "sha256": "5235e95e2a498e8a013e2f755c8a54da56739c8483bbb6e6001beeaa438a4d2c",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam02_summer-day_first.png",
+   "bytes": 3226139,
+   "sha256": "812804a79b37a9e150883517cd14619068daaa9a9378cbc58328b94e7a27ce7d",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam03_summer-day_first.png",
+   "bytes": 2672645,
+   "sha256": "e8603658e9852c219f887e68f2c9f0435273c0e204b141aa62c5f9b86de01458",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam04_summer-day_first.png",
+   "bytes": 2837619,
+   "sha256": "31c5e379f39277e62665c124dc7ddcd482bedde2b11658c315fcd22b9c7ddb87",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam05_summer-day_first.png",
+   "bytes": 2728528,
+   "sha256": "026d7e050916505457e4cd7180320e5f3597b00d168495a46e0197171356c2fb",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/cam06_summer-day_first.png",
+   "bytes": 2854798,
+   "sha256": "027f4efb522c72d2f97071bec3539579feb477cd004601352a0e9ce6b5d4a3ad",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/gate_summer-day_third.png",
+   "bytes": 2713577,
+   "sha256": "a48e23102ed4de8eda562e94065909056d531b15de2c3543c9d89ebe7058c37e",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/gate_summer-day_third_base.png",
+   "bytes": 2581160,
+   "sha256": "6cae44953a9fce38fc2cb315ad4301836b68c42336f686d3ec6d4bfe66053e13",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/stair_summer-day_third.png",
+   "bytes": 3039877,
+   "sha256": "d4eb22037e13025fd012ae8fad3d9dfe572efdab5f5d4f8fa7fea1d8facd0e2f",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
+   "path": "E-bamboo-open/stair_summer-day_third_base.png",
+   "bytes": 3040047,
+   "sha256": "3a42454ea12b1326d76c829186e60b1de92c96e716d55f14b927dcbaa5ec050c",
+   "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 371733,
    "sha256": "c1c51c851dba6e9f889f859387c2567602d0eeb696d504b62545013be9377088",
