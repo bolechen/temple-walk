@@ -22,6 +22,11 @@ import { paintMaterial } from "./paint.js";
 import recipe from "./recipe.json";
 import { FIGURE_FILES, LOAD_ORDER, NEAR, PLINTH, DOOR, PIVOT_DZ, ENV_INTENSITY, HALO_COLOR } from "./registry.js";
 
+// `?skin=1.25` (this file runs only where the doors are open, the workbench's `?hall=open`): the skin zone's pigment lifted by that factor in linear light, hue unchanged, for the T4 that sets the lamps
+// alone against the lamps with a lighter skin side by side (the art director chooses; nothing is ever the default). 1 (or no parameter, or a bad one) is the recipe as it is.
+const SKIN = (() => { const v = typeof location === "undefined" ? NaN : Number(new URLSearchParams(location.search).get("skin")); return Number.isFinite(v) && v >= 0.5 && v <= 2 ? v : 1; })();
+const paintRecipe = SKIN === 1 ? recipe : { ...recipe, debugKey: `skin${SKIN}`, zones: recipe.zones.map((z) => (z.name === recipe.face.zone ? { ...z, color: `#${new THREE.Color(z.color).multiplyScalar(SKIN).getHexString()}` } : z)) };
+
 const ANCHORS = import.meta.glob("./anchors/*.json", { eager: true, import: "default" });
 const anchorsOf = (id) => /** @type {any} */ (ANCHORS[`./anchors/${id}.json`]).anchors;
 
@@ -85,7 +90,7 @@ export function createFigures({ root, fg, M, sh }) {
         const m = /** @type {THREE.Mesh} */ (o); if (!m.isMesh) return;
         const nmap = /** @type {any} */ (m.material).normalMap ?? null, key = nmap ? nmap.uuid : "none";
         if (!paints.has(key)) {
-          const p = paintMaterial(recipe, anchors, pivot, { masks: { front, hair }, fig: FIGURE_FILES.indexOf(d), normalMap: nmap, envMap: state.probe, envIntensity: ENV_INTENSITY });
+          const p = paintMaterial(paintRecipe, anchors, pivot, { masks: { front, hair }, fig: FIGURE_FILES.indexOf(d), normalMap: nmap, envMap: state.probe, envIntensity: ENV_INTENSITY });
           p.userData.paint.U.uInner.value.set(...(d.inner ?? [1, 1, 1])); p.userData.paint.U.uLotus.value = d.lotus ?? 1;
           paints.set(key, p);
         }
@@ -116,7 +121,7 @@ export function createFigures({ root, fg, M, sh }) {
     busy = true; state.started = true;
     load(/** @type {string} */ (queue.shift())).finally(() => { busy = false; });
   };
-  const report = () => ({ near: NEAR, started: state.started, loaded: state.loaded, probe: !!state.probe, figures: [...figs.values()].map((r) => ({ id: r.d.id, status: r.status, ms: Math.round(r.ms) })), scale: FIGURES.map((f) => { const d = /** @type {any} */ (figs.get(f.id)).d; return { id: f.id, stageH: d.stageH, gameH: f.h, s: +((f.h - PLINTH.h) / (d.stageH - PLINTH.h)).toFixed(4) }; }) });
+  const report = () => ({ skin: SKIN, near: NEAR, started: state.started, loaded: state.loaded, probe: !!state.probe, figures: [...figs.values()].map((r) => ({ id: r.d.id, status: r.status, ms: Math.round(r.ms) })), scale: FIGURES.map((f) => { const d = /** @type {any} */ (figs.get(f.id)).d; return { id: f.id, stageH: d.stageH, gameH: f.h, s: +((f.h - PLINTH.h) / (d.stageH - PLINTH.h)).toFixed(4) }; }) });
   // For the workbench's measuring tools (site.js hangs it on `__t05FiguresDebug`): the renderer, the scene and each loaded figure's pivot and paint materials.
   const debug = () => ({ renderer: state.renderer, scene: state.scene, camera: state.camera, figures: Object.fromEntries([...figs].filter(([, r]) => r.pivot).map(([id, r]) => [id, { pivot: r.pivot, paints: [...(r.paints?.values() ?? [])], anchors: anchorsOf(id) }])) });
   return { tick, report, debug };
