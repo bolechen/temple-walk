@@ -957,6 +957,160 @@
     "exp": 4.2
    },
    "paint": true
+  },
+  {
+   "name": "cam03-lip-kasyapa",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 0,
+    "pts": {
+     "lip": [
+      -0.002,
+      6.495,
+      0.375
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-krakucchanda",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 1,
+    "pts": {
+     "lip": [
+      0.008,
+      6.685,
+      0.098
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-sikhin",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 2,
+    "pts": {
+     "lip": [
+      -0.066,
+      6.615,
+      0.412
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-vipasyin",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 3,
+    "pts": {
+     "lip": [
+      -0.002,
+      6.827,
+      0.31
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-visvabhu",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 4,
+    "pts": {
+     "lip": [
+      0.015,
+      6.832,
+      0.208
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-kanakamuni",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 5,
+    "pts": {
+     "lip": [
+      0.0,
+      6.634,
+      0.077
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-sakyamuni",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 6,
+    "pts": {
+     "lip": [
+      0.0,
+      6.74,
+      0.067
+     ]
+    }
+   }
   }
  ]
 }

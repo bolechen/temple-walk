@@ -90,9 +90,9 @@ test("pages.yml: the publication waits for both sets of unit tests, the build an
   const y = read("pages.yml");
   assert.match(jobOf(y, "verify"), /needs: \[changes, unit, floor, build, tests, grid, quick, worker\]/);
   assert.match(jobOf(y, "deploy"), /needs: \[verify, quick\]/);
-  assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/3\n/);
-  assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/3 --import \.\/tools\/walk\/swap\.mjs/);
-  for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3\]/, `${j}: three machines, as SHARDS says`);
+  assert.match(jobOf(y, "tests"), /node tools\/ci\/unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5\n/);
+  assert.match(jobOf(y, "grid"), /unit-shard\.cjs run \$\{\{ matrix\.shard \}\}\/5 --import \.\/tools\/walk\/swap\.mjs/);
+  for (const j of ["tests", "grid"]) assert.match(jobOf(y, j), /shard: \[1, 2, 3, 4, 5\]/, `${j}: five machines, as SHARDS says`);
   // the floor is baked once, by `floor`, and handed to every shard as an artifact before any test reads it (#442)
   assert.match(jobOf(y, "floor"), /node tools\/bake-walk\.mjs/); assert.doesNotMatch(y, /floor-[^\n]*run_attempt/, "the floor's name has no run_attempt: re-running only the failed jobs must find it"); assert.match(jobOf(y, "floor"), /overwrite: true/); assert.match(jobOf(y, "floor"), /upload-artifact@v4[\s\S]*name: floor-\$\{\{ github\.run_id \}\}\n/);
   for (const j of ["tests", "grid"]) {
@@ -202,12 +202,13 @@ test("release-please.yml deploys production when, and only when, a version was m
   assert.match(job, /secrets: inherit/);
 });
 
-test("unit tests: every file runs on exactly one of the three machines, none over its budget, and `pnpm test` is the same set", async () => {
+test("unit tests: every file runs on exactly one of the five machines, none over its budget, and `pnpm test` is the same set", async () => {
   const { createRequire } = await import("node:module");
   const sh = createRequire(import.meta.url)("../../tools/ci/unit-shard.cjs");
   const all = sh.files(), { parts, loads } = sh.plan(all, sh.SHARDS), seen = parts.flat();
   assert.equal(seen.length, all.length); assert.deepEqual([...seen].sort(), all);
   for (const l of loads) assert.ok(l <= sh.BUDGET, `a machine's share is ${l.toFixed(0)} s, over ${sh.BUDGET}`);
+  for (const l of loads) assert.ok(l <= sh.BUDGET - 15, `a machine's share is ${l.toFixed(0)} s: less than 15 s of room under ${sh.BUDGET} for a new test (#697)`);
   for (const f of Object.keys(sh.durations())) assert.ok(all.includes(f), `durations.json names ${f}, which is not a test`);
   assert.match(fs.readFileSync(new URL("../../.github/workflows/pages.yml", import.meta.url), "utf8"), new RegExp(`unit-shard\\.cjs run \\$\\{\\{ matrix\\.shard \\}\\}/${sh.SHARDS}`));
 });

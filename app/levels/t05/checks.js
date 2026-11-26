@@ -3,18 +3,24 @@
 // Each route is a run of [x, z] points, walked at his pace with the following eye behind him and from his own eyes.
 import { AXIS, FOOT, LANE, SECOND } from "./axis.js";
 import { ARRIVE, PLATFORM, STATION } from "./site.js";
+import { HALL_DOORS } from "./hall.js";
 
 const FLIGHT = "up the flight to the terrace and down again", SILL = "over the middle door's sill into the hall";
 const AISLE_E = "round the east aisle of the worship band", AISLE_W = "round the west aisle of the worship band", AISLES = "round both aisles, east first";
 // The camera is walked up the flight and down again, over the middle door's sill, and round the worship band's two aisles (PRD.md §1.4 route 3;
 // #562: turned out of an aisle's end the eye used to be taken through the hall's 1 m side wall and stand outside it).
-const HALL_ROUTES = Object.freeze({
+// While the great hall's doors are shut (HALL_DOORS in hall.js; the first release, DECISIONS.md 先行版关殿门) nothing is walked through them: the sill and aisle routes
+// give way to one that stops at the doors (the eye behind him is still taken up to them), and come back with the hall, `shut: false`.
+const AT_DOORS = "up to the shut doors";
+const ALL_ROUTES = Object.freeze({
   [FLIGHT]: [[0, 26], [0, 12], [0, 26]],
   [SILL]: [[0, 6], [0, -4]],
   [AISLE_E]: [[0, -4], [12, -5], [21.3, -7], [21.3, -13], [12, -11], [0, -9], [0, -4]],
   [AISLE_W]: [[0, -4], [-12, -5], [-21.3, -7], [-21.3, -13], [-12, -11], [0, -9], [0, -4]],
   [AISLES]: [[0, -4], [12, -5], [21.3, -7], [21.3, -13], [12, -11], [0, -9], [-12, -5], [-21.3, -7], [-21.3, -13], [-12, -11], [0, -9], [0, -4]],
+  [AT_DOORS]: [[0, 6], [0, 1.2]],
 });
+const HALL_ROUTES = Object.freeze(Object.fromEntries(Object.entries(ALL_ROUTES).filter(([k]) => (HALL_DOORS.shut ? k === FLIGHT || k === AT_DOORS : k !== AT_DOORS))));
 
 /** @type {Record<string, any>} */
 export default {
@@ -51,13 +57,13 @@ export default {
   // down the flight that plan pushes the eye 3 m in 8 frames and the aisles force it in 18 frames of 2973 (DECISIONS.md, 2026-11-21).
   // spring-arm.test, which asks what is drawn, walks both whole.
   follow: {
-    routes: () => ({ [SILL]: HALL_ROUTES[SILL], "up the flight to the terrace": [[0, 26], [0, 12]] }),
+    routes: () => ({ ...(HALL_DOORS.shut ? { [AT_DOORS]: HALL_ROUTES[AT_DOORS] } : { [SILL]: HALL_ROUTES[SILL] }), "up the flight to the terrace": [[0, 26], [0, 12]] }),
     // Where he stands still and the view is swung right round: a grid over the terrace, the flight's foot and the hall's front half.
     spots: { x: [-12, 12], z: [-12, 24], step: 3 },
   },
   springArm: {
     routes: () => HALL_ROUTES,
-    lensRoutes: [SILL],
+    lensRoutes: HALL_DOORS.shut ? [AT_DOORS] : [SILL],
     // What the walks of the eye's space are gathered over: the hall, its platform and terrace, and the court before them.
     gather: { x0: -40, x1: 40, z0: -40, z1: 45, bottom: -10, top: 40 },
   },

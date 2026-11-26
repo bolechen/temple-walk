@@ -2,6 +2,7 @@
 // thanks (#310), small and quiet, never over the walk. On the public page it is the version; on the internal address
 // and a pull request's preview, the commit, so that a report can say exactly what was played.
 import { t } from "./i18n.js";
+import { saidNow } from "./temple.js";
 import { asset } from "./assets.js";
 import { DEPLOY } from "./deploy.js";
 
@@ -17,7 +18,7 @@ export function versionLine({ deploy = DEPLOY, version = VERSION, commit = COMMI
   const c = commit.slice(0, 7) || "?";
   if (deploy === "canary") return t("内测版 · {c}", { c }, to);
   if (deploy === "preview") return pr ? t("预览 · PR #{pr} · {c}", { pr, c }, to) : t("预览 · {c}", { c }, to);
-  return t("云径禅寺 v{v}", { v: version }, to);
+  return saidNow("云径禅寺 v{v}", { v: version }, to);
 }
 
 /** Writes the line into the page's places for it, and lays the hook. @param {Document} doc */

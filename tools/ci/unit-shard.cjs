@@ -8,11 +8,14 @@
 //   node tools/ci/unit-shard.cjs run i/N [node options…]   runs machine i's files with `node --test` (the grid job adds
 //                                           `--import ./tools/walk/swap.mjs`); a share with no file says so and exits 0, because
 //                                           `node --test` given no files would run the whole suite.
+//   node tools/ci/unit-shard.cjs time i/N [node options…]  runs machine i's files one at a time, each alone, and prints the seconds it took
+//                                           (`unit-time <file> <secs>`, then one JSON line): how tests/unit/durations.json is measured
+//                                           on a CI machine (#697), since node's own report names no file.
 const fs = require("fs"), path = require("path");
 const DIR = path.join(__dirname, "../../tests/unit");
-const SHARDS = 3;
-/** Longest a machine's share may be counted at, seconds: the PR's checks are held to three minutes from first check to `verify`. */
-const BUDGET = 166;   // (was 160: main alone already planned 160.1 s a machine, so the trailer script test, 4.5 s of plan building that cannot be shortened, #610, needed 3 s more room; then 163, and main planned 162.2, so the flush-faces test, 8.9 s of measuring every drawn triangle of three levels, needed 3 s more)
+const SHARDS = 5;
+/** Longest a machine's share may be counted at, in the seconds of tests/unit/durations.json, which are each file run alone on a CI machine. A shard really takes about 2.5 times less than its plan, because `node --test` runs its files side by side on the runner's cores, so this is a bound on balance, not on the clock: what the clock follows is the longest single file, which is why no test file may be much over a minute (#697). Four machines planned 303.2 s each by 2026-11-25, 1.8 s short of the 15 s of room a new test needs (#728 could not add its three files); five plan about 243 s each. */
+const BUDGET = 320;   // (was 166 on three machines when durations.json held dev-machine times and left out the slowest files; #697 measured them all on CI)
 
 const files = () => fs.readdirSync(DIR).filter((f) => f.endsWith(".test.mjs")).sort();
 const durations = () => JSON.parse(fs.readFileSync(path.join(DIR, "durations.json"), "utf8")).files;
@@ -39,6 +42,16 @@ module.exports = { plan, files, durations, testArgs, shareOf, SHARDS, BUDGET };
 if (require.main === module) {
   const [a, b] = process.argv.slice(2);
   if (a === "plan") { const n = Number(b || SHARDS), { parts, loads } = plan(files(), n); parts.forEach((p, i) => console.log(`shard ${i + 1}/${n}: ${loads[i].toFixed(1)} s  ${p.length} files  ${p.slice(0, 4).join(" ")}…`)); }
+  else if (a === "time") {
+    const share = shareOf(b); if (!share) { console.error("usage: unit-shard.cjs time i/N [node options…]"); process.exit(2); }
+    const out = {}, extra = process.argv.slice(4);
+    for (const f of share) {
+      const t0 = process.hrtime.bigint(), r = require("child_process").spawnSync(process.execPath, [...extra, "--test", `tests/unit/${f}`], { stdio: "ignore" });
+      out[f] = Math.round(Number(process.hrtime.bigint() - t0) / 1e8) / 10;
+      console.log(`unit-time ${f} ${out[f]}${r.status ? " FAILED" : ""}`);
+    }
+    console.log("unit-times-json " + JSON.stringify(out));
+  }
   else if (a === "run") {
     const share = shareOf(b); if (!share) { console.error("usage: unit-shard.cjs run i/N [node options…]"); process.exit(2); }
     const args = testArgs(share, process.argv.slice(4));

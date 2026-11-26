@@ -315,3 +315,5 @@ export const OBJECT_KINDS = ({ W }) => [{
 - 因此「参数 → 片段 → 再解析」结果相等（`tests/unit/objects-debug.test.mjs` 用一个假物件随机跑 300 组）。贴回关卡文件、把默认值改成它之后，画面应与面板里调出来的一样；**改默认外观要另开 PR、走审图**，面板只是帮你找数。
 
 **怎么量单件重建的耗时：** 面板「重建」一行是每次拖动时 `rebuild` 本身的毫秒数，「见到效果」是到下一帧画出为止；「量重建用时」按钮用当前参数连续重建 15 次，写出中位数和最大值（控制台里同样：`__objects.time(15)` 返回 `{ n, median, max, min }`）。开发服务器（`pnpm dev`）上量，验收线是中位数 < 200 ms；量过的数写进该物件所属 PR 的说明里，带上提交号。
+
+**T05 的接法（#684 下半，`app/levels/t05/debug-objects.js`）。** 合批的东西要单件重建，得先让它在工作台页上「各自成一块」：站点文件在面板开着的页上（`debugGate`：开发服务器、PR 预览、canary 带 `?debug=1`）给每件物件各自的 mesh、`userData.keep = true`（`mergeStatic` 认它），并设 `window.__t05Objects = { houses, figures }`；其他页（正式版、canary 不带 `?debug=1`）走原来的合批路径，一字不变，几何逐顶点相同（`tests/unit/t05-objects-debug.test.mjs`）。物件的生成函数要能「按一件、按给定参数」调用：房子是 `house(h, walls, roofs)`，造像是 `buildFigure(f, top)`（`buildAltar` 就是它的七次调用）。阴影图每个季时只画一次，所以挪了位置的物件要在重建后再 `__mood(当前季, 当前时)` 一次才会把影子画到新位置（`debug-objects.js` 的 `refresh`）。烘好的可走地面不会跟着变，调的只是画面。

@@ -8,7 +8,7 @@
 // is tall: a tree, and the ridge of the first house. Seen from the platform (4.3 m up) the horizon lies open and these read as a band
 // of trees and roofs along it. (The farther roofs and the tower of the old town are the second step, not built here.)
 //
-// All of it is white-box geometry in this level's own build: nothing here goes through trees.js (the prologue's trees), nothing is
+// The houses are white-box geometry in this level's own build; the trees are grown by this level's own ./flora.js (not the prologue's trees.js). Nothing is
 // walked on or into (`userData.walk = false`: the bake leaves it out, and it stands outside the walls where nothing is walked),
 // and nothing is a place held for anything. The row nearest each wall is drawn as real trees that cast shadows into the sun's map:
 // the base light is a morning at 17° with its shadows lying to the north-north-west, so that a tree 10 m high just outside the east or
@@ -21,12 +21,14 @@ import * as THREE from "three";
 import { box, merge, mesh } from "../../src/geo.js";
 import { SECOND, LANE, AXIS } from "./axis.js";
 import { HALL } from "./hall.js";
+import { buildFlora, hashAt } from "./flora.js";
 
 /** The ceilings the art director set (#548: her comments 7068262688 and 7069444907) and the great hall's eave line. */
 export const LIMITS = Object.freeze({
   eave: HALL.eave,          // the great hall's eave line: kept in cam01's picture, and in cam07's within `axisBearing` of the axis
   axisBearing: 12,          // degrees: in cam07 the hall's roof stands within this either side of the axis; outside it the trees are free of the eave line (the art director, 2nd round)
-  treeMax: 13,              // and no tree is higher than this
+  treeMax: 13,              // and no tree is higher than this, but for a poplar:
+  poplarMax: 19,            // a poplar outside both eave views, not beside the hall nor on the pagoda's line, up to this (the art director lifted the 13 m for poplars, 2026-11-25)
   nearHall: 10,             // outside the east and west walls south of z = +15 ... the whole stretch beside the hall, the trees stand no higher than this
   nearHallZ: 15,
   ridgeMax: 6.3,            // a house's ridge (5 to 6.3 m; eaves at 3 m)
@@ -72,6 +74,34 @@ export const onTowerLine = (x, z, pad = 0) => {
  * `salt` keeps the two uses (which shape, which tile) apart.
  */
 const hash01 = (x, z, salt) => { const v = Math.sin(x * 12.9898 + z * 78.233 + salt * 37.719) * 43758.5453; return v - Math.floor(v); };
+/**
+ * What a tree of the plan is grown as (./flora.js): a pine (油松) and a cypress (ce bai) as planned; a bare broadleaf is a bare broadleaf or, about
+ * one in three and more in the rows behind, a white poplar (mao bai yang), by a hash of where it stands (not the seeded stream: nothing the art director passed moves). Ours.
+ */
+export const POPLAR_SHARE = Object.freeze({ front: 0.25, behind: 0.45 });
+/**
+ * Trees the arrival looks south over, whose kind is set by hand (the art director, 2026-11-25: beyond the way's end at least six in ten bare, evergreens a quarter or
+ * fewer; the bare tree beside the earth-grey house kept as it was, a bare broadleaf, not a poplar): [x, z, kind].
+ */
+/** @type {ReadonlyArray<[number, number, string, number?]>} */
+export const KIND_AT = Object.freeze([[-13.02, 228.09, "broad", 7.2], [-37.67, 229.7, "broad"], [-3.37, 238.87, "broad"]]);   // (the first kept low: its boughs reached over the arrival's picture, the art director)
+export const growKind = (t) => {
+  const set = KIND_AT.find(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (set) return set[2];
+  return t.kind !== "bare" ? t.kind : hashAt(t.x, t.z, 11) < (t.row === 0 || t.cast ? POPLAR_SHARE.front : POPLAR_SHARE.behind) ? "poplar" : "broad";
+};
+/**
+ * How tall a tree is grown. A poplar is the one thing in the town that stands well over the roofs (the art director: 15 to 20 m), but only where no picture's ceiling
+ * holds it down: outside both eave views (`eaveCap`), not beside the hall (z < +15 east and west of the court), not on the line to the pagoda; elsewhere its plan height.
+ */
+const COMPOUND_ZN = -40;   // (site.js COMPOUND.zN; not imported, the site imports this module)
+export const POPLAR_H = Object.freeze([15, LIMITS.poplarMax]);
+export const growHeight = (t, kind = growKind(t)) => {
+  const at = KIND_AT.find(([x, z]) => Math.abs(t.x - x) < 0.05 && Math.abs(t.z - z) < 0.05); if (at && at[3]) return at[3];
+  if (kind !== "poplar" || eaveCap(t.x, t.z) < 40 || onTowerLine(t.x, t.z, 4) || (t.z < LIMITS.nearHallZ + 1 && t.z > COMPOUND_ZN - 8)) return t.h;
+  return +(POPLAR_H[0] + (POPLAR_H[1] - POPLAR_H[0]) * hashAt(t.x, t.z, 12)).toFixed(2);
+};
+/** A group of white poplars off to one side of the view south from the arrival, the vertical accent (the art director): about 25° east of the view's middle (so in the picture, not in its middle), in front of the houses. Ours. */
+export const ARRIVAL_POPLARS = Object.freeze([{ x: 11.6, z: 240.6 }, { x: 14.4, z: 243.4 }, { x: 9.4, z: 244.2 }].map((t, i) => Object.freeze({ kind: "poplar", x: t.x, z: t.z, h: +(16 + 2.2 * hashAt(t.x, t.z, 13) - i * 0.6).toFixed(2), r: 0.28, row: 1, cast: false, strip: "arrival-poplars" })));
 /** The roof's shape: the gable roof is the town's common one; a few of the middling houses are hipped (four slopes), a few of the narrow ones lean (one slope). Ours (SOURCES.md §15), not read from anywhere. */
 export const ROOF_SHARE = Object.freeze({ hip: 0.22, shed: 0.8 });   // by the hash: under `hip` and the house at least 6 m each way, hipped; a narrow house (7 m or less across, ridge 5.3 or lower) with the other hash over `shed`, one slope
 const roofOf = (x, z, w, d, ridge, where) => {
@@ -220,42 +250,7 @@ const memo = new WeakMap();
 export const planSurround = (C) => memo.get(C) || memo.set(C, (() => { const p = plan(C); return Object.freeze({ trees: Object.freeze(p.trees), houses: Object.freeze(p.houses) }); })()).get(C);
 
 // ---- geometry ----
-const squash = (rx, ry, rz, x, y, z) => new THREE.SphereGeometry(1, 8, 5).scale(rx, ry, rz).translate(x, y, z);
-/**
- * A Chinese pine (油松): a bare trunk for the lower half, and above it two to four flat layers of needles, each a pressed ellipsoid a little off the last, the top one the flattest:
- * a flat-topped crown with sky between its layers, not a stack of cones (the art director, 2nd round: cones read as spruce and Christmas trees).
- */
-function pine(t, trunk, crown) {
-  const { x, z, h, r, yaw } = t, y0 = ground, n = 2 + (Math.abs(Math.round(x * 3 + z)) % 3);   // 2, 3 or 4 layers, by where it stands
-  // The layers sit one on the next from the top down, the second the widest (an old 油松 is an umbrella with a flat top, not a tower), each pushed to one side so that the outline is not even; a bare trunk below them.
-  const ry = h * 0.075, step = h * 0.105, top = h * 0.93 - ry, wide = [0.3, 0.36, 0.27, 0.2];
-  trunk.push(new THREE.CylinderGeometry(r * 0.55, r * 1.3, top, 7).translate(x, y0 + top / 2, z));
-  for (let i = 0; i < n; i++) {
-    const y = y0 + top - i * step, rx = h * wide[i] * (0.9 + 0.2 * (((i * 5 + Math.round(z)) % 3) / 2)), a = (yaw || 0) + i * 2.4, off = i ? rx * 0.45 : rx * 0.15;
-    crown.push(squash(rx, ry * (i ? 1 : 0.8), rx * 0.8, x + Math.cos(a) * off, y, z + Math.sin(a) * off));
-  }
-}
-/** A cypress: a narrow flame, a little fuller below the middle and tapering to a tip. */
-function cypress(t, trunk, crown) {
-  const { x, z, h, r } = t, y0 = ground, R = h * (0.095 + 0.02 * (Math.abs(Math.round(x * 7 + z * 3)) % 3));
-  trunk.push(new THREE.CylinderGeometry(r * 0.5, r * 0.7, h * 0.16, 6).translate(x, y0 + h * 0.08, z));
-  const prof = [[R * 0.7, 0], [R, 0.22], [R * 1.05, 0.4], [R * 0.78, 0.66], [R * 0.36, 0.86], [0.001, 1]].map(([rr, f]) => new THREE.Vector2(rr, h * 0.12 + f * h * 0.88));
-  crown.push(new THREE.LatheGeometry(prof, 8).translate(x, y0, z));
-}
-/** A bare broadleaf, in winter: a trunk, a crown of branches that fork twice, no leaves. Rays between the branches meet nothing. */
-function bare(t, trunk) {
-  const { x, z, h, r, yaw } = t, y0 = ground, tr = h * 0.45;
-  trunk.push(new THREE.CylinderGeometry(r * 0.6, r, tr, 7).translate(x, y0 + tr / 2, z));
-  const spread = (a, b, k) => ((Math.sin((x + 3) * 12.9 + (z + 1) * 7.3 + k * 4.1) * 43758.5453) % 1 + 1) % 1 * (b - a) + a;
-  const limb = (px, py, pz, len, ax, ay, rr, depth, k) => {   // from (px, py, pz) outward and upward at angle ax from vertical, around ay
-    const dx = Math.sin(ax) * Math.cos(ay), dy = Math.cos(ax), dz = Math.sin(ax) * Math.sin(ay), ex = px + dx * len, ey = py + dy * len, ez = pz + dz * len;
-    const g = new THREE.CylinderGeometry(rr * 0.55, rr, len, 3, 1, true); g.translate(0, len / 2, 0);   // (a three-sided limb, open at its ends: a branch is seen from far off)
-    g.rotateZ(-ax); g.rotateY(-ay); g.translate(px, py, pz); trunk.push(g);
-    if (depth > 0) for (let j = 0; j < 2; j++) limb(ex, ey, ez, len * 0.68, ax + spread(0.25, 0.7, k + j), ay + (j ? 1 : -1) * spread(0.6, 1.5, k * 3 + j), rr * 0.62, depth - 1, k + 7 + j);
-  };
-  const top = y0 + tr, n = 5;   // (the trees against the walls fork twice, the rest once)
-  for (let i = 0; i < n; i++) limb(x, top - (i % 2) * 0.6, z, h * 0.3, spread(0.35, 0.7, i), yaw + (i / n) * Math.PI * 2, r * 0.55, t.cast ? 2 : 1, i * 11);
-}
+// (The trees are grown in ./flora.js; they were placeholder ellipsoids and cones here before.)
 /**
  * A house of one storey: grey-brick walls to the eaves and a roof of grey tile, the eaves standing 0.5 m out: a gable roof (the ridge along x or z), a hip roof (four slopes, the ridge
  * shorter than the house), or a lean-to (one slope, its high side to the temple or away from it).
@@ -320,22 +315,59 @@ function tiles(M) {
  * The surround as a group for the site's root. Every mesh carries `userData.surround` ("near": what stands against the walls, real geometry that casts shadows into the sun's map, the first row of
  * houses and the trees within 14 m of a wall; "far": the rest) and `userData.walk = false`.
  * @param {*} M the level's materials @param {{ x: number, zN: number, zS: number, t: number }} C the compound's walls
+ * @param {{ bench?: boolean }} [opts] `bench`: the page has the debug panel open (#684, src/objects-debug.js): each house is then a part of its own, kept out of the static merge, and `group.userData.houses` can rebuild one. The drawn picture is the same; only the draws differ.
  */
-export function buildSurround(M, C) {
+export function buildSurround(M, C, opts = {}) {
   const PLAN = planSurround(C), group = new THREE.Group(), tone = () => TILE_TONES.map(() => []), tone2 = () => WALL_TONES.map(() => []);
-  const near = { trunk: [], crown: [], walls: tone2(), roofs: tone() }, far = { trunk: [], crown: [], walls: tone2(), roofs: tone() };
-  for (const t of PLAN.trees) { const into = t.cast ? near : far; (t.kind === "pine" ? pine : t.kind === "cypress" ? cypress : bare)(t, into.trunk, into.crown); }
-  for (const h of PLAN.houses) { const into = h.cast ? near : far; house(h, into.walls[h.wall], into.roofs[h.tone]); }
-  const wall = bricks(M), tile = tiles(M);
+  const near = { trees: [], walls: tone2(), roofs: tone() }, far = { trees: [], walls: tone2(), roofs: tone() };
+  for (const t of PLAN.trees) { const kind = growKind(t); (t.cast ? near : far).trees.push({ ...t, kind, h: growHeight(t, kind), y: ground }); }
+  for (const t of ARRIVAL_POPLARS) far.trees.push({ ...t, y: ground });
+  const wall = bricks(M), tile = tiles(M), apart = [];
+  PLAN.houses.forEach((h, i) => {
+    if (opts.bench) { apart.push({ id: String(i), h, parts: [] }); return; }
+    const into = h.cast ? near : far; house(h, into.walls[h.wall], into.roofs[h.tone]);
+  });
   const put = (list, material, name, cast, mname) => {
     if (!list.length) return;
     const m = mesh(merge(list), material, { cast }); m.userData.surround = name; m.userData.walk = false; m.name = mname; group.add(m);
   };
+  // The trees are merged by stretch of the town (east and west of the court, either side of the terrace and the way, and beyond the way's end), so that what is
+  // out of the picture is not drawn; a tree that does not cast is grown coarser, unless it stands where the visitor comes near it (beside the way and at its end).
+  const cs = C.zS + C.t / 2, region = (t) => (t.z < cs + 4 ? (t.x < 0 ? "w" : "e") : t.z < 222 ? (t.x < 0 ? "sw" : "se") : "end");
+  const coarse = (t) => !((t.z > 144 && Math.abs(t.x) < 18) || Math.hypot(t.x, t.z - 215) < 18);   // (round the arrival only the trees within 18 m of where he stands are grown whole: the rest are 18 m and more off, beyond the plain field, seen through the air)
+  const flora = [];
   const add = (set, name, cast) => {
-    for (const [key, material] of [["trunk", M.bark], ["crown", M.cedar]]) put(set[key], material, name, cast, `surround-${name}-${key}`);
+    // the trees, grown (./flora.js): the near ones whole, casting into the sun's map; the far ones coarser, casting nothing
+    const f = buildFlora(M, set.trees, { name: `surround-${name}-trees`, far: name === "near" ? false : coarse, cast, chunk: name === "near" ? () => "" : region }); flora.push(f);
+    for (const m of f.group.children.slice()) { m.userData.surround = name; group.add(m); }
     set.walls.forEach((list, i) => put(list, wall[i], name, cast, i ? `surround-${name}-${WALL_TONES[i].name}-walls` : `surround-${name}-walls`));   // (the walls, a draw to each tier)
     set.roofs.forEach((list, i) => put(list, tile[i], name, cast, `surround-${name}-${TILE_TONES[i].name}-roofs`));   // (the roofs, a draw to each tone of tile)
   };
   add(near, "near", true); add(far, "far", false);
+  group.userData.flora = { tris: flora.reduce((n, f) => n + f.tris, 0), census: flora.flatMap((f) => f.census), hash: flora.map((f) => f.hash).join(".") };
+  if (opts.bench) group.userData.houses = houseParts(group, apart, wall, tile);
   return group;
+}
+
+/**
+ * The houses as parts of their own for the debug panel (#684): one wall mesh and one roof mesh to each, made as `house()` makes them
+ * for the merged draws (the same geometry, the tier's own material, shadows cast as the near row casts them), kept out of the static
+ * merge (`userData.keep`). `rebuild(id, params)` replaces only that house's two meshes with the house drawn from `{ ...its data, ...params }`.
+ * @param {*} group @param {{ id: string, h: any, parts: any[] }[]} list @param {*[]} wall @param {*[]} tile
+ */
+function houseParts(group, list, wall, tile) {
+  const make = (e) => {
+    for (const m of e.parts) { group.remove(m); m.geometry.dispose(); }
+    const walls = [], roofs = [], h = e.h; house(h, walls, roofs);
+    e.parts = [[walls, wall[h.wall], "walls"], [roofs, tile[h.tone], "roofs"]].map(([geos, material, kind]) => {
+      const m = mesh(merge(geos), material, { cast: h.cast }); m.userData.surround = h.cast ? "near" : "far"; m.userData.walk = false; m.userData.keep = true;
+      m.userData.house = e.id; m.name = `surround-house-${e.id}-${kind}`; group.add(m); return m;
+    });
+  };
+  list.forEach(make);
+  return {
+    list,
+    /** @param {string} id @param {Record<string, any>} params the house's own fields (x, z, w, d, alongX, eave, ridge, roof, tone, wall) */
+    rebuild(id, params) { const e = list.find((x) => x.id === id); if (!e) throw new Error(`no house ${id}`); e.h = Object.freeze({ ...e.h, ...params }); make(e); },
+  };
 }

@@ -1,0 +1,198 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 214620,
+   "sha256": "6b39c6e624d8d0f39299ee7217c5d66ee3d948b918d58be524ed77c9aa432046",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/cam01.png",
+   "bytes": 1083494,
+   "sha256": "5944ee29f6ca263939820ec8413cbd1deb61287d4d273b1d6578dbed94e14320",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/cam02.png",
+   "bytes": 1101518,
+   "sha256": "011cf300cef20c0dbc9bfd6277d03c8108130d3ea71c1ebdecc61adf794ed329",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/close-beast.png",
+   "bytes": 687403,
+   "sha256": "c1665ceeaf981969da03c702ac84175bce29ea59b467a7f62ded34d90a88ae29",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/close-beastSide.png",
+   "bytes": 654956,
+   "sha256": "ffa41c81a812fb0772a4411d8e688221538996de06ddfeb513f4371c63f83290",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/close-cornerNear.png",
+   "bytes": 663769,
+   "sha256": "079302e3e591b4d2bf0f89e427ef6a3a814e56cb7b87758e7d131d0b7b8d9c14",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/close-ornFront.png",
+   "bytes": 605148,
+   "sha256": "c514df94edc9e2688d9434dd7f7471824e84d58295c973619752b6e5fc412895",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/close-tipNear.png",
+   "bytes": 692365,
+   "sha256": "fe4786e7b98197ef87018e4148f01433204de3b69306ae1fbec4483d0b1a6b35",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "shots/corner.png",
+   "bytes": 1092166,
+   "sha256": "2548b5ef45b411ba0004dc0ab2391e2eecfeefcc0e8f1a47c6a9104fe0c6474e",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/arrive-pre735.png",
+   "bytes": 2495366,
+   "sha256": "1fcca5224f8c7699bbee9934b4ec7532a9d6200c43bf5677d3e2b388307c7fa7",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/arrive.png",
+   "bytes": 2494961,
+   "sha256": "f2127f6997313218feca3797324ecbb52c5c1188827f99d901c4a09b04eeb1c0",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/cam01-pre735.png",
+   "bytes": 2446461,
+   "sha256": "c93e76c56e1871bfb9f1ab87ff8ce51b9136d05a7621e946bcb02c4269343ac1",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/cam01.png",
+   "bytes": 2440169,
+   "sha256": "fcf17c5bd939c29d1785d03f0c6c0f1b681b4383843aca12c3022748c71c6249",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/cam02.png",
+   "bytes": 2467791,
+   "sha256": "02d7374ac45201f3e00deb95396462b72c33fe34c443f94527bbb59a8e59d50b",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/cam02_winter-day.png",
+   "bytes": 2815647,
+   "sha256": "a451e59aedc9118095a5432b04f7abdbc58d367c3865ad654e480a1ba7d21969",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/cam07-pre735.png",
+   "bytes": 2411434,
+   "sha256": "f2760eba1587bb90d5a22ca3d8ef2d5eed3e3d05f321f5e8129f6f33ab2e6128",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/cam07.png",
+   "bytes": 2409713,
+   "sha256": "3c32bb9179e3547caa7c464fd139ec794e242336da2c59b801164454592a8042",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/cam07_winter-day.png",
+   "bytes": 2578285,
+   "sha256": "404dc220559edfbfc3828255e2fdcc4558070b3b510e22050bfadc9ddb6aeebf",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-corner-winter.png",
+   "bytes": 2285947,
+   "sha256": "4e39bfd5491ff85b83e4e5b4d4af0a9714f02bc70ad0e23342122fc963f68f78",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-corner.png",
+   "bytes": 2111050,
+   "sha256": "254835b95d556052d198b863717ff4df24b0a90faf4a239c989115893ad3bb36",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-cornerTip-winter.png",
+   "bytes": 2598269,
+   "sha256": "7399e9d20f98700c6f27040aa4816ac41659e4d0580a78d0c69afd0ff36d688d",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-cornerTip.png",
+   "bytes": 2271854,
+   "sha256": "cabbbf690d7a9a6791ae0e80bf8a7688baad46794455fc620dd9057d48f7d3f8",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-eave-winter.png",
+   "bytes": 2540188,
+   "sha256": "73f2912e28946e7ab4ce9b23c71bf4334c03ce44bb17274576a7717d3c351902",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-eave.png",
+   "bytes": 2173645,
+   "sha256": "678ec57aab8f4037f193283e5443079242e60aa87161c3006d1ce6b53dcd888f",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-hip-winter.png",
+   "bytes": 2382730,
+   "sha256": "f7184de04e6222ed49b7a15e8a32ef10eb6e86f5b8579fe92ec944ca5c616381",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-hip.png",
+   "bytes": 2137658,
+   "sha256": "776c37fa7d63d3db54f44874b8d01b479238282a7ce3a5d8a810052ea1c6ed69",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-ornament-winter.png",
+   "bytes": 2151295,
+   "sha256": "b10073359e66a70fd20193a484aa97f84017039bd62687babbb63ec6a8401943",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/close-ornament.png",
+   "bytes": 1980731,
+   "sha256": "da7e9ed3b6119b18fd0fca81b6ba73ffc837aa41e924397293e83a38e9972d68",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/corner.png",
+   "bytes": 2481807,
+   "sha256": "0ccf2c2ede1b3d555c6b0008eed5b63ba9fc0e56fc65769ee84e0db1645f4400",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/corner_winter-day.png",
+   "bytes": 2751212,
+   "sha256": "4351c7c26522f4b3107151cdc316120f8f505092cca6ca65cf7461404b59dafb",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/passage-pre735.png",
+   "bytes": 2663943,
+   "sha256": "bfe7862922b12743f5dbbe15b26f271df56bca8d724fdd3f3aa34838bf206706",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  },
+  {
+   "path": "t4/passage.png",
+   "bytes": 2661469,
+   "sha256": "59a8752a88b035a3d803984bda008f63beadd8109ffbdcec3a7dc3cb9473424e",
+   "rev": "e8f2bf361c5cb907dc760dad25f0fa7def6230fa"
+  }
+ ]
+}

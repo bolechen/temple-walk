@@ -239,6 +239,7 @@ export function flushFaces(soup, opt = {}) {
     const [a, b] = O[f.i] <= O[f.j] ? [O[f.i], O[f.j]] : [O[f.j], O[f.i]], pk = a * 1e6 + b;
     let rec = found.get(pk);
     if (!rec) found.set(pk, (rec = { a, b, area: 0, tris: 0, largest: 0, at: f.at, normal: f.normal, facing: f.facing, gap: 0 }));
+    if (opt.detail) (rec.fights ||= []).push(f);
     rec.area += f.area; rec.tris++; if (f.worst > rec.gap) rec.gap = f.worst;
     if (f.area > rec.largest + 1e-9 || (Math.abs(f.area - rec.largest) <= 1e-9 && f.at.join() < rec.at.join())) { rec.largest = f.area; rec.at = f.at; rec.normal = f.normal; rec.facing = f.facing; }
   }
@@ -247,6 +248,7 @@ export function flushFaces(soup, opt = {}) {
     parts: [parts[r.a].ref, parts[r.b].ref].sort(), facing: r.facing,
     area: Math.round(r.area * 1e4) / 1e4, trianglePairs: r.tris, gap: Math.round(r.gap * 1e5) / 1e5,
     normal: r.normal.map((x) => Math.round(x * 1000) / 1000), at: r.at.map(r2),
+    ...(opt.detail ? { boxes: r.fights.map((f) => [f.i, f.j].map((t) => [0, 1, 2].map((k) => [B[t * 6 + k], B[t * 6 + 3 + k]].map(r2)))) } : {}),
   })).sort((p, q) => q.area - p.area || (label(p) < label(q) ? -1 : 1));
   return { triangles: count, tests, pairs, hidden: Math.round(hidden * 100) / 100 };
 }
@@ -266,5 +268,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const t0 = Date.now(), { scene } = await drawnScene(lv), soup = gatherTriangles(scene), t1 = Date.now(), r = flushFaces(soup), t2 = Date.now();
   console.log(`${soup.count} triangles in ${soup.parts.length} parts gathered in ${t1 - t0} ms, ${r.tests} triangle pairs measured in ${t2 - t1} ms`);
   console.log(`${r.pairs.length} pairs of parts fight; left out: ${r.hidden} m² buried against a face pointing the other way`);
-  for (const p of r.pairs) console.log(`${p.area.toFixed(4).padStart(9)} m²  ${p.facing === "opposite" ? "[双面相背] " : ""}${label(p)}  n=${p.normal.join(",")}  gap=${p.gap * 1000}mm  ${p.trianglePairs} 对三角形`);
+  const only = process.argv.find((a) => a.startsWith("--detail="))?.slice(9), full = only && flushFaces(soup, { detail: true });
+  for (const p of r.pairs) {
+    console.log(`${p.area.toFixed(4).padStart(9)} m²  ${p.facing === "opposite" ? "[双面相背] " : ""}${label(p)}  n=${p.normal.join(",")}  gap=${p.gap * 1000}mm  ${p.trianglePairs} 对三角形`);
+    if (only && label(p).includes(only)) for (const b of full.pairs.find((q) => label(q) === label(p)).boxes) console.log(`      ${b.map((t) => t.map((r) => r.join("..")).join(" ")).join("   |   ")}`);
+  }
 }

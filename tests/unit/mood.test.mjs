@@ -77,3 +77,13 @@ test("the hour chosen by hand is kept only in memory", async () => {
   const { readFileSync } = await import("node:fs");
   for (const f of ["app/yard.js", "app/src/mood.js"]) assert.ok(!/localStorage[^\n]*(follow|hour)/i.test(readFileSync(f, "utf8")), f + " must not store the hour");
 });
+
+test("the hour turns to the visitor's own once the book is shut after the close, unless an address or a hand chose one (#726)", async () => {
+  const { takeClock } = await import("../../app/src/mood.js");
+  const night = new Date(2026, 6, 15, 22, 30), q = (s) => new URLSearchParams(s);
+  const s = { hand: false, follow: false, time: "day" };
+  assert.equal(takeClock(s, q(""), night), "night"); assert.equal(s.follow, true, "the hour follows the clock from then on");
+  const a = { hand: false, follow: false, time: "day" };
+  for (const k of ["time=day", "shot=1", "show=gate", "cam=0,30,0,0"]) { a.follow = false; assert.equal(takeClock(a, q(k), night), null, k); assert.equal(a.follow, false, k); }
+  const h = { hand: true, follow: false, time: "dusk" }; assert.equal(takeClock(h, q(""), night), null, "a hand's choice stays"); assert.equal(h.follow, false);
+});

@@ -1,0 +1,187 @@
+{
+ "errors": [],
+ "shots": [
+  {
+   "file": "stroke-1-取纸.png",
+   "secs": 0.5,
+   "name": "取纸",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 16.432,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.055,
+     0.675,
+     26.815
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "p1b",
+    "w": 0.081,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "stroke-2-抬头看檐.png",
+   "secs": 1.9,
+   "name": "抬头看檐",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 16.363,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.03,
+     0.8,
+     26.75
+    ]
+   },
+   "director": {
+    "phase": "in",
+    "id": "p1b",
+    "w": 0.98,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "stroke-3-落笔.png",
+   "secs": 3,
+   "name": "落笔",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 16.356,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.03,
+     0.8,
+     26.75
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "stroke-4-横墨.png",
+   "secs": 3.9,
+   "name": "横墨",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 1,
+    "nearest": 16.344,
+    "copied": "",
+    "stroked": 1,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.03,
+     0.8,
+     26.75
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "stroke-5-写下那句.png",
+   "secs": 6,
+   "name": "写下那句",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 2,
+    "nearest": 16.344,
+    "copied": "",
+    "stroked": 1,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.03,
+     0.8,
+     26.75
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "stroke-6-停笔.png",
+   "secs": 8.6,
+   "name": "停笔",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 4,
+    "nearest": 16.344,
+    "copied": "",
+    "stroked": 1,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.03,
+     0.8,
+     26.75
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "stroke-7-收起.png",
+   "secs": 9.6,
+   "name": "收起",
+   "writing": {
+    "held": 1,
+    "writing": false,
+    "marks": 4,
+    "nearest": 16.344,
+    "copied": "",
+    "stroked": 1,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.03,
+     0.8,
+     26.75
+    ]
+   },
+   "director": {
+    "phase": "out",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  }
+ ]
+}

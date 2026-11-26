@@ -1,0 +1,304 @@
+{
+  "started": "2026-11-25T09:45:16.995Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "cam01",
+      "q": "high",
+      "size": [
+        1280,
+        720
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "fps": 134.9,
+      "ms": 7.41,
+      "cost": 3.75,
+      "loadMs": 9134,
+      "tris": 99766,
+      "calls": 73,
+      "buffer": [
+        1280,
+        720
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 532,
+        "decodeMs": 141,
+        "prepareMs": 895,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 1.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 4985.3,
+        "spikes": [
+          4985
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        44
+      ]
+    },
+    {
+      "view": "cam07",
+      "q": "high",
+      "size": [
+        1280,
+        720
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "fps": 107.9,
+      "ms": 9.27,
+      "cost": 4.94,
+      "loadMs": 8118,
+      "tris": 328438,
+      "calls": 133,
+      "buffer": [
+        1280,
+        720
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 521,
+        "decodeMs": 142,
+        "prepareMs": 860,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 1,
+        "eye": 2.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 4265.7,
+        "spikes": [
+          4266
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        141
+      ]
+    },
+    {
+      "cam": "0,215,3.1416,0.03",
+      "q": "high",
+      "size": [
+        1280,
+        720
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "fps": 132.1,
+      "ms": 7.57,
+      "cost": 4.08,
+      "loadMs": 4393,
+      "tris": 61100,
+      "calls": 56,
+      "buffer": [
+        1280,
+        720
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 559,
+        "decodeMs": 136,
+        "prepareMs": 870,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 622.4,
+        "spikes": [
+          622
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    },
+    {
+      "cam": "0,215,3.927,0.03",
+      "q": "high",
+      "size": [
+        1280,
+        720
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "fps": 120.1,
+      "ms": 8.33,
+      "cost": 4.35,
+      "loadMs": 4590,
+      "tris": 64108,
+      "calls": 58,
+      "buffer": [
+        1280,
+        720
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 118594,
+        "inflated": 29150000,
+        "fetchMs": 554,
+        "decodeMs": 138,
+        "prepareMs": 973,
+        "memory": 25896000,
+        "ledges": 10,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 10,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 0.01,
+        "eye": 1.31,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 653.3,
+        "spikes": [
+          653
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        215
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "cam01@winter-day@first",
+      "file": "cam01_winter-day_first.png",
+      "tris": 99766,
+      "calls": 73
+    },
+    {
+      "name": "cam07@winter-day@first",
+      "file": "cam07_winter-day_first.png",
+      "tris": 328438,
+      "calls": 133
+    },
+    {
+      "name": "south",
+      "file": "south.png",
+      "tris": 61100,
+      "calls": 56
+    },
+    {
+      "name": "sw",
+      "file": "sw.png",
+      "tris": 64108,
+      "calls": 58
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "8888f95c5f09e26972d22cd87bad03a9be1b4316",
+    "entry": "assets/index-byXeMYA3.js",
+    "files": 195,
+    "sha256": "212cab2d076516c6a6590b001c1cb0393b5db6962ded5763e9aea9f71ba23671"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-25T09:47:00.408Z"
+}

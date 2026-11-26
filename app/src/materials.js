@@ -126,14 +126,18 @@ export function createMaterials() {
 
     // vUv2 = (metres along the eave, metres up the slope). Rows of half-round cover tiles over pan tiles.
     tile: procMat("tile", { roughness: 0.6, envMapIntensity: 0.3, side: THREE.DoubleSide }, `
-      float u=vUv2.x/.25, r=fract(u)-.5, row=floor(u), seg=floor(vUv2.y/.33), fw=fwidth(u);
-      float cover=sqrt(max(0.,1.-pow(abs(r/.3),2.)))*step(abs(r),.3);
-      float pan=(1.-cos(clamp((abs(r)-.3)/.2,0.,1.)*3.14159))*.5;
-      float lap=smoothstep(.0,.06,fract(vUv2.y/.33));               // each course laps the one below
+      float u=vUv2.x/.25, r=fract(u)-.5, row=floor(u), seg=floor(vUv2.y/.33), fw=fwidth(u), fv=fwidth(vUv2.y/.33);
+      // The rows' profile is averaged over what one pixel covers (four looks across it), so that a roof a few pixels to a
+      // row shows each row's mean rather than whichever sliver falls on the pixel, which crawls as the eye moves (#731).
+      float cover=0., pan=0., gutter=0.;
+      for(int k=0;k<4;k++){ float rk=fract(u+(float(k)-1.5)*.25*fw)-.5, ak=abs(rk);
+        cover+=sqrt(max(0.,1.-ak*ak/.09))*step(ak,.3); pan+=(1.-cos(clamp((ak-.3)/.2,0.,1.)*3.14159))*.5; gutter+=1.-smoothstep(.0,.16,abs(ak-.5)+.02); }
+      cover*=.25; pan*=.25; gutter*=.25;
+      float lap=smoothstep(.0,.06+fv,fract(vUv2.y/.33));            // each course laps the one below (its edge as soft as a pixel is wide)
       float detail=1.-smoothstep(.1,.45,fw);                        // relief folds into roughness with distance
-      bump_=(cover*.06+pan*.012-(1.-lap)*.012)*detail;
-      float tone=h21(vec2(row,seg)); col=mix(vec3(.05,.054,.058),vec3(.125,.13,.13),tone*.55+fbm2(vWP.xz*.7)*.45);
-      float gutter=1.-smoothstep(.0,.16,abs(abs(r)-.5)+.02);
+      bump_=(cover*.06+pan*.012-(1.-lap)*.012)*(1.-smoothstep(.08,.3,fw));   // (the relief bends the light by screen slopes: gone before a row is four pixels, where it only shimmers)
+      // Each tile's own shade, until tiles are smaller than a pixel: then their mean, not a different tile each frame.
+      float tone=mix(h21(vec2(row,seg)),.5,smoothstep(.2,.6,max(fw,fv))); col=mix(vec3(.05,.054,.058),vec3(.125,.13,.13),tone*.55+fbm2(vWP.xz*.7)*.45);
       float moss=smoothstep(.5,.75,fbm2(vWP.xz*.9+4.))*gutter; col=mix(col,vec3(.1,.14,.06),moss*.7);
       col*=mix(1.,mix(.5,1.,cover*.6+.4),detail);                   // gutters sit in shade
       rough_=mix(.5,.72,tone)-.1*cover*detail;
@@ -424,6 +428,12 @@ export function createMaterials() {
     monolith: procMat("monolith", { roughness: 0.8, envMapIntensity: 0.4 }, `
       vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
       col=vec3(.3,.3,.28)*A; col=mix(col,vec3(.16,.2,.1),smoothstep(.5,.75,fbm3(vWP*1.3+4.))*.45);
+      rough_=Nr.w; nd_=Nr.xyz*1.2;`, { tex: ["stone"] }),
+    // T05's monument stele (shaft and head cut from one block), the monolith's grain at about half its value so that it is no brighter than the coursed stone
+    // of the pavilion's plinth and the terrace round it (the art review of #716: the plain monolith read as a pale slab against them).
+    steleMono: procMat("steleMono", { roughness: 0.8, envMapIntensity: 0.4 }, `
+      vec3 q=vWP*.9, w=triW(vWN); vec3 A=triA(tStoneA,q,w)/mStone; vec4 Nr=triN(tStoneN,q,w);
+      col=vec3(.3,.3,.28)*A*.52; col=mix(col,vec3(.12,.15,.08),smoothstep(.5,.75,fbm3(vWP*1.3+4.))*.45);
       rough_=Nr.w; nd_=Nr.xyz*1.2;`, { tex: ["stone"] }),
     // The imperial stele in the stele pavilion (#520): blue-grey stone, cooler and darker than the pavilion's platform, damp at the foot, worn bright where a hand
     // passes the front arrises, mossy on the shaded side low down, its writing weathered into traces and its title still cut. Everything is read from the

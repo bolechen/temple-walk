@@ -13,6 +13,9 @@ const AUTUMN_DUSK_SUN = [-0.8619, 0.309, -0.4019], AUTUMN_DUSK_SUN_K = 0.8, AUTU
 /** @type {import("../../src/level.js").Level} */
 export default {
   id: "t00",
+  name: "云径禅寺",
+  seal: "云径",
+  book: true,
   build: buildSite,
   createWalker,
   land: terrain,

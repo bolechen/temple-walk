@@ -88,7 +88,9 @@ export function targetsOf({ level, site, rooms }) {
   for (const [n, s] of [...site.seats, ...rooms.seats].entries()) t.push({ kind: "seat", id: `${s.room || "outdoors"}#${n} ${s.kind}`, grid: gridFor(s.room), at: s.at, r: 1.5 });
   for (const h of site.halls) t.push({ kind: "door", id: h.id, grid: "outdoors", at: h.out, r: 0.5 });
   const up = new Set(Object.keys(site.viewUp || {}));
-  for (const [id, v] of Object.entries(site.views)) if (Array.isArray(v)) t.push({ kind: "view", id, grid: up.has(id) ? `loft:${site.viewUp[id]}` : "outdoors", at: [v[0], v[1]], r: 0.5 });
+  // (a level may name views it cannot offer for now, `site.closedViews`: T05's, inside the great hall while its doors are shut)
+  const shutViews = new Set(site.closedViews || []);
+  for (const [id, v] of Object.entries(site.views)) if (Array.isArray(v) && !shutViews.has(id)) t.push({ kind: "view", id, grid: up.has(id) ? `loft:${site.viewUp[id]}` : "outdoors", at: [v[0], v[1]], r: 0.5 });
   // Since the rooms and the balcony are walked on the baked floor too (#274): what hangs or stands in a room to be read or
   // used (each frame, the offering box: within its own ring), the foot of the stair up, where each indoor camera stands
   // (on open floor, as tests/unit/hall-views.test.mjs has it), and the balcony's door.

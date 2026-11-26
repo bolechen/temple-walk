@@ -11,10 +11,10 @@ const NAMED = ["cam", "show", "shot", "in", "tour", "enter"], BENCH_NAMED = ["at
  * Whether this page reads and keeps where he was. Only a level that says it keeps a place does (the prologue: the key
  * is the prologue's, and another level's ground would be read as the prologue's, #385); and never an address that names
  * its own place. No level given is the prologue, as every page was before levels.
- * @param {URLSearchParams} params @param {boolean} bench the workbench (dev server, a pull request's preview) @param {{ keepsPlace?: boolean } | null} [level]
+ * @param {URLSearchParams} params @param {boolean} bench the workbench (dev server, a pull request's preview) @param {{ keepsPlace?: boolean, keepsOwnPlace?: boolean } | null} [level]
  */
 export function placeKept(params, bench, level = null) {
-  if (level && !level.keepsPlace) return false;
+  if (level && !level.keepsPlace && !level.keepsOwnPlace) return false;   // a level with a place of its own keeps it apart (levelsave.js, S4)
   return !(NAMED.some((k) => params.has(k)) || (bench && BENCH_NAMED.some((k) => params.has(k))));
 }
 

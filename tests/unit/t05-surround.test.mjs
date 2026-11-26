@@ -15,14 +15,16 @@ import "./dom-stub.mjs"; import * as THREE from "three";
 const { buildSite, createWalker, COMPOUND } = await import("../../app/levels/t05/site.js");
 const { planSurround, withinWalls, LIMITS, EAVE_EYES, eaveCap, TILE_TONES, ROOF_SHARE, SHED_RISE, WALL_TONES, WALL_AT_ARRIVAL, house } = await import("../../app/levels/t05/surround.js");
 const { HALL_HALF, LANE, SECOND } = await import("../../app/levels/t05/axis.js");
-const { HALL } = await import("../../app/levels/t05/hall.js");
+const { HALL, HALL_DOORS } = await import("../../app/levels/t05/hall.js");
+const SHUT = HALL_DOORS.shut;   // (the great hall's doors are shut in the first release: station F, inside it, cannot be judged, DECISIONS.md 先行版关殿门)
 const { default: checks } = await import("../../app/levels/t05/checks.js");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
 const site = buildSite(M); site.root.updateMatrixWorld(true);
 const plan = planSurround(COMPOUND), C = COMPOUND, cx = C.x + C.t / 2, cs = C.zS + C.t / 2;
 const meshes = []; site.root.traverse((o) => { if (o.isMesh && o.visible) meshes.push(o); });
-const outside = (o) => !!o.userData.surround, rad = (d) => (d * Math.PI) / 180;
+// (the middle town and the far layers, ./distance.js, are the town too)
+const outside = (o) => !!(o.userData.surround || o.userData.distance), rad = (d) => (d * Math.PI) / 180;
 const ray = new THREE.Raycaster();
 
 // The walls a visitor sees the top of, as plan segments with the top's height over the court's paving: the court's, the terrace's, the way's.
@@ -53,7 +55,7 @@ function share(place, bearing, span = 30) {
   const n = out + sky + own; return { out, sky, own, free: (out + sky) / n, fill: out / Math.max(1, out + sky) };
 }
 const PLACES = Object.fromEntries(checks.horizon.places.map((p) => [p[0].replace(/^station /, ""), p]));   // (the table is the level's own, from PLAN.md item 11: the arrival, the axis's three passages and the six stations, each 1.6 m over its floor)
-const JUDGED = { arrival: ["east", "south", "west"], A: ["east", "west"], B: ["east", "west"], C: ["east", "south", "west"], F: ["south"] };   // (what the issue asks for: the arrival east, south and west, A and B east and west, C and F south)
+const JUDGED = { arrival: ["east", "south", "west"], A: ["east", "west"], B: ["east", "west"], C: ["east", "south", "west"], F: SHUT ? [] : ["south"] };   // (what the issue asks for: the arrival east, south and west, A and B east and west, C and F south)
 const BEARING = { east: 90, south: 180, west: 270 };
 
 test("over the wall tops, 0.5° to 3° up, 40% to 80% of what is not the temple's own is the town's: from the arrival east, south and west, A and B east and west, C and F south", () => {
@@ -66,7 +68,7 @@ test("over the wall tops, 0.5° to 3° up, 40% to 80% of what is not the temple'
     assert.ok(s.fill >= 0.4, `${name} ${dir}: ${(s.fill * 100).toFixed(0)}% of the band over the wall is the town's, under the 40% the art director set`);
     assert.ok(s.fill <= 0.8, `${name} ${dir}: ${(s.fill * 100).toFixed(0)}% is the town's, over the 80% (a hedge, not a band of trees)`);
   }
-  assert.equal(table.length, 11, table.join("\n"));
+  assert.equal(table.length, SHUT ? 10 : 11, table.join("\n"));
 });
 
 test("the great hall's eave line is kept where the roof stands (all of cam01's picture, within 12° of the axis in cam07's), no tree is over 13 m, and the trees beside the hall (z < +15) stand no higher than 10 m", () => {
@@ -78,7 +80,7 @@ test("the great hall's eave line is kept where the roof stands (all of cam01's p
     for (const [x, y, z, what] of tops) {
       const p = new THREE.Vector3(x, y, z), n = p.clone().project(cam); if (Math.abs(n.x) > 1.05 || n.y < -1 || n.y > 1.05) continue;
       const az = Math.atan2(x - e.x, e.z - z); if (Math.abs(az) > rad(e.within)) continue;   // (beyond `within` of the axis the eave line is not asked of it: the art director, 2nd round)
-      const d = p.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L - 0.3; if (ray.intersectObjects(meshes, false).find((h) => !outside(h.object))) continue;   // hidden behind the temple's own
+      const d = p.clone().sub(eye), L = d.length(); ray.set(eye, d.normalize()); ray.far = L - 0.3; if (ray.intersectObjects(meshes, false).find((h) => !outside(h.object) && !/^trees-/.test(h.object.name))) continue;   // hidden behind the temple's own (not its trees: the eave line is asked of what stands behind a court tree too)
       const el = Math.atan2(y - e.y, Math.hypot(x - e.x, z - e.z)), eaveEl = Math.atan2(HALL.eave - e.y, (e.z - HALL.overhang) / Math.cos(az));
       seen.push(el - eaveEl); if (el > eaveEl) assert.fail(`${e.id}: a ${what} at (${x}, ${z}), ${y.toFixed(1)} m, stands ${(((el - eaveEl) * 180) / Math.PI).toFixed(2)}° over the eave line`);
     }
@@ -115,7 +117,8 @@ test("from A and B, east and west, four or more roof slopes show a degree or mor
     for (let az = BEARING[dir] - 30; az <= BEARING[dir] + 30 + 1e-9; az += 0.25) {
       const a = rad(az), d = [Math.sin(a), -Math.cos(a)], th = wallTop([x, z], y, d), el = th + rad(1);
       ray.set(new THREE.Vector3(x, y, z), new THREE.Vector3(d[0] * Math.cos(el), Math.sin(el), d[1] * Math.cos(el))); ray.far = 4000;
-      const h = ray.intersectObjects(meshes, false)[0], isRoof = !!h && roof(h.object), isHouse = !!h && house(h.object);
+      // (a winter tree's wood, trunks and bare twigs, is looked through: the grown trees' twigs are an open lace a house is seen through, which a ray that grazes one would count as solid; needles are not looked through)
+      const h = ray.intersectObjects(meshes, false).find((q) => !/-trees(-[a-z]+)?-(bark|pale)(-trunks)?$/.test(q.object.name)), isRoof = !!h && roof(h.object), isHouse = !!h && house(h.object);
       n++; if (isHouse) houseAt++;
       if (isRoof && !inRun) runs++; inRun = isRoof;
     }
@@ -164,7 +167,10 @@ test("it stands outside the walls, none of it walked on or in (left out of the b
     if (o.userData.surround === "near") { near++; assert.ok(o.castShadow, `${o.name} casts shadows`); } else { far++; if (!o.castShadow) shadowless++; }
   });
   assert.ok(brick >= 4 && brick <= 6 && near >= 3 && far >= 3 && shadowless === far, `the near meshes cast shadows (${near}), the far ones do not (${far}); ${brick} wall meshes`);
-  assert.ok(tris > 5000 && tris < 45000, `${tris} triangles outside the walls`);
+  // (the houses as before, a few thousand; the trees since they are grown, ./flora.js, under 220 000 more, merged by stretch so that only what is in view is drawn)
+  let trees = 0; site.root.traverse((o) => { if (o.userData.surround && /-trees(-|$)/.test(o.name)) trees += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; });
+  assert.ok(tris - trees > 2000 && tris - trees < 45000, `${tris - trees} triangles of houses outside the walls`);
+  assert.ok(trees > 50000 && trees < 220000, `${trees} triangles of trees outside the walls`);
   assert.ok(plan.houses.filter((h) => h.row === 0 && h.cast).length >= 30 && plan.trees.filter((t) => t.cast).length >= 5, "the first row of houses and the trees by the walls are the real, shadow-casting geometry");
 });
 

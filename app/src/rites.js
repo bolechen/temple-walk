@@ -9,6 +9,8 @@ import * as THREE from "three";
 import { carry, over, fallen, FINGERS, PALM } from "./coin.js";
 import { mesh, merge } from "./geo.js";
 import { INCENSE_HALLS, SEALED_HALL, incenseId, burnt } from "./incense.js";
+import { createWriting } from "./writing.js";
+import { brushSound } from "./audio.js";
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z), UP = V(0, 1, 0);
 const ease = (u) => u * u * (3 - 2 * u), mix = (a, b, u) => a + (b - a) * u;
@@ -432,17 +434,23 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     Lh.at.copy(to(tip.set(0.07, 0.5, 0.11))); Lh.fingers.copy(way(tip.set(0, -0.3, 1))); Lh.palm.copy(way(tip.set(0, 1, 0))); Lh.w = 1; act.bow = 0.55;
   }
 
+  // ================= Writing on a temple's own page =================
+  // T05's observation and the copy of the stele (src/writing.js): the leaf and the brush, on this same clock and into this same `act`.
+  const copyPlace = Object.values(places).find((p) => p.stele);
+  const writing = createWriting({ act, play, homeward, at, dir, scene, G, head: B.head, each: (f) => always.push(f), sound: (s) => { if (typeof window !== "undefined") brushSound(s); },
+    stele: copyPlace?.stele, handR: () => B.rightHand.getWorldPosition(tC), handL: () => B.leftHand.getWorldPosition(V()) });
+
   // ---- Between observances: his hands are his own again, and what was in them goes back where it belongs ----
   function rest() {
     act.bow = act.twist = act.nod = act.look = 0; act.breath = null; act.hands.left.w = act.hands.right.w = 0;
     bell.held = false; bell.grip = 0; peal.busy = false; coin.visible = false;
     if (home) { tea.held = 0; cup.position.copy(home); cup.rotation.set(0, T.face, 0); steam.show(true); }
     for (const h of Object.values(stands)) { if (h.inc.planted) { h.stand(); h.smoke.show(true); } else if (h.inc.burnt) h.burntOut(); else { h.sticks.visible = h.inc.shown = false; } }
-    ring.visible = false;
+    ring.visible = false; writing.rest();
   }
   const incenseState = (hall) => { const h = stands[hall]; if (!h) return null; const { inc, smoke, sticks } = h; return { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) }; };
   return {
-    act, rest, dropCoin, poseCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
+    act, rest, dropCoin, poseCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close, writing,
     // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
     // burning if less than `burn` seconds have passed, and are cold stubs after.
     // `has.incense`: `{ hall: when its sticks were set }` (incense.js); each hall's are as far burnt as its own time says.
@@ -457,6 +465,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       sit: { breaths: sit.breaths, ring: ring.visible, fill: +sit.fill.toFixed(3), radius: +ring.scale.x / RING_PLANE },
       coin: { visible: coin.visible, y: coinState.y === null ? null : +coinState.y.toFixed(3), released: coinState.released, passedAt: coinState.passedAt, began: coinState.began },
       close: { on: END.on, u: +END.u.toFixed(3), aim: END.aim },
+      writing: writing.state(),
     }),
   };
 }

@@ -1,0 +1,66 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 133075,
+   "sha256": "262bcaa8abe53b07c714b4a70f59541d58f51b1404be738b9383dcc7e8564f81",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-cam03-winter.png",
+   "bytes": 1149531,
+   "sha256": "e6fe2a9c83322d0ffd8f9f910050d5639807ab00e57ba30113157e44d5390a30",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-front4-kanakamuni.png",
+   "bytes": 687008,
+   "sha256": "8d194232f1c07847e1aa98956dcef9e340fc474dd0ddc02f8dd511584012a4e2",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-front4-krakucchanda.png",
+   "bytes": 599719,
+   "sha256": "906e3413e1116703676c87e5c03aed1d13cfa41e0ef086619c5854c85c65114b",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-front4-vipasyin.png",
+   "bytes": 683244,
+   "sha256": "38c3e1c1297d6e9145d827759121db242dacfafa38331c84644fdb3929fca6de",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-front4-visvabhu.png",
+   "bytes": 620675,
+   "sha256": "9305ebea0d8531ea79ebca3d3fbf52490d216c72ade27f34316dc86a66cfe0a2",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-mid10-kanakamuni.png",
+   "bytes": 852672,
+   "sha256": "9558b0ff16f48e6f825abe12af95f43381091f90dd45dedc4f8f0577b2ffc409",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-mid10-krakucchanda.png",
+   "bytes": 795182,
+   "sha256": "15f525538ebc4da26b4de54139bc1adddf5abbcbde0df483b60c70669ab94854",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-mid10-vipasyin.png",
+   "bytes": 898469,
+   "sha256": "ebcb562284f6c2c73dc5b1810e76b45d9b6be0bcc96d18f5f70448791ef20a0f",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  },
+  {
+   "path": "lips-mid10-visvabhu.png",
+   "bytes": 864332,
+   "sha256": "783753ffec0db23662e16ff5ebfacfbd0221322545c38c4021c5be5578222473",
+   "rev": "3019fe7e11167f9ed16cc67d471fee573093dfe8"
+  }
+ ]
+}

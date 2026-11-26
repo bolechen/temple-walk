@@ -51,7 +51,7 @@ def used(skip=()):
 
 TABLES = {l: f"app/locales/{l}.js" for l in ("ja", "en", "ko")}
 # The works' cards in each language (levels/t00/locales/*.js) are written in the same faces.
-WORK_TABLES = {l: f"app/levels/t00/locales/{l}.js" for l in ("ja", "en", "ko")}
+WORK_TABLES = {l: sorted(glob.glob(f"{ROOT}/app/levels/*/locales/{l}.js")) for l in ("ja", "en", "ko")}   # every level's own (T00's works, T05's name)
 # The language buttons are each written in their own language, so each language's cut holds its own name.
 OWN_NAME = {"ja": "日本語", "en": "English", "ko": "한국어"}
 
@@ -68,12 +68,13 @@ def table_chars(lang, works=True):
     (works=False) leave them out; the page's title, which is drawn in the brush, is not among the credits' own lines."""
     import re
     skip = set() if works else credits_keys()
-    src = "".join(open(f"{ROOT}/{t[lang]}", encoding="utf-8").read() for t in ((TABLES, WORK_TABLES) if works else (TABLES,)))
+    src = open(f"{ROOT}/{TABLES[lang]}", encoding="utf-8").read() + ("".join(open(q, encoding="utf-8").read() for q in WORK_TABLES[lang]) if works else "")
     values = "".join(json.loads(f'"{v}"') for k, v in re.findall(r'^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,?\s*$', src, re.M) if json.loads(f'"{k}"') not in skip)
     return "".join(sorted(set(ALWAYS + "‘’“”–—…·「」『』" + values + OWN_NAME[lang])))
 
 def main_lang(lang, src):
-    out = f"{ROOT}/app/shared/fonts"; text = table_chars(lang); few = table_chars(lang, works=False)
+    out = f"{ROOT}/app/shared/fonts"; text = table_chars(lang) + level_chars("text", lang) + level_chars("all", lang); few = table_chars(lang, works=False) + level_chars("all", lang)
+    text = "".join(sorted(set(text))); few = "".join(sorted(set(few)))
     if lang == "ja":
         cut(TTFont(f"{src}/KleeOne-Regular.ttf"), text, f"{out}/kai-ja.woff2")
         cut(TTFont(f"{src}/YujiBoku-Regular.ttf"), few, f"{out}/brush-ja.woff2")
@@ -97,6 +98,16 @@ def main_lang(lang, src):
     open(f"{out}/chars-{lang}.txt", "w", encoding="utf-8").write(text)
     print(len(text), "characters")
 
+def level_chars(tier, key):
+    """What a level lists in its own app/levels/<id>/font-chars.json for characters it has not written down yet (T05's temple name,
+    its terms): tier "all" (drawn large: every face of the language), "text" (read: the kai and the serif only) or "bang" (the name
+    boards; key ignored). Empty when no level has the file."""
+    out = ""
+    for path in sorted(glob.glob(f"{ROOT}/app/levels/*/font-chars.json")):
+        part = json.load(open(path, encoding="utf-8")).get(tier, "")
+        out += part if isinstance(part, str) else part.get(key, "")
+    return out
+
 def boards():
     """The characters that are written on name boards: every string given to the board painter, old forms included,
     and the lettering cast on the censer."""
@@ -106,6 +117,7 @@ def boards():
     text += "".join(re.findall(r'export const CAST = Object\.freeze\(\{[^}]*\}', src))   # what is cast on the censer (censer.js), in the same hand
     old = dict(re.findall(r'(\S): "(\S)"', re.search(r'const OLD = \{([^}]*)\}', src).group(1)))
     text += "".join(old.values()) + "佛鑑正法雲徑禪寺"
+    text += level_chars("bang", None)   # a level's boards not yet drawn in code (font-chars.json)
     return "".join(sorted({c for c in text if ord(c) > 0x2E80}))
 
 # The two originals that declare a Reserved Font Name (LXGW WenKai: '霞鹜', '霞鶩', '落霞孤鹜', '落霞孤鶩', 'LXGW'; Nanum Brush Script:
@@ -142,8 +154,9 @@ def cut(font, text, out):
     print(f"{os.path.basename(out):12s} {os.path.getsize(out) // 1024:4d} KB")
 
 def main():
-    src, out = sys.argv[1], f"{ROOT}/app/shared/fonts"; os.makedirs(out, exist_ok=True); text = used()
-    few = used(skip=("works.js", "credits.js"))   # the encyclopedia notes and the page of thanks are set in the kai and the serif only
+    src, out = sys.argv[1], f"{ROOT}/app/shared/fonts"; os.makedirs(out, exist_ok=True)
+    text = "".join(sorted(set(used() + level_chars("text", "zh") + level_chars("all", "zh"))))
+    few = "".join(sorted(set(used(skip=("works.js", "credits.js")) + level_chars("all", "zh"))))   # the encyclopedia notes and the page of thanks are set in the kai and the serif only
     cut(TTFont(f"{src}/mashanzheng_MaShanZheng-Regular.ttf"), few, f"{out}/brush.woff2")
     cut(TTFont(f"{src}/lxgwwenkai_LXGWWenKai-Regular.ttf"), text, f"{out}/kai.woff2")
     cut(TTFont(f"{src}/zhimangxing_ZhiMangXing-Regular.ttf"), few, f"{out}/xing.woff2")

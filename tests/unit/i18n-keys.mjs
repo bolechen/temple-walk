@@ -15,13 +15,13 @@ export const OWN_NAMES = ["中文", "日本語", "English", "한국어"];
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 const unquote = (q, s) => (q === "`" ? s : JSON.parse(`"${s.replace(/\\'/g, "'")}"`));
 
-/** The first argument of every t("…") / tr("…") call whose text is written out. */
+/** The first argument of every t("…") / tr("…") / saidNow("…") call whose text is written out. */
 export function calledKeys() {
   const files = ["yard.js", "loading.js", ...fs.readdirSync(path.join(ROOT, "src")).filter((f) => f.endsWith(".js")).map((f) => `src/${f}`)].filter((f) => !SKIP.includes(f));
   const keys = new Map();
   for (const f of files) {
     const src = read(f);
-    for (const m of src.matchAll(/(?<![\w.$])(?:t|tr)\(\s*(["'`])((?:\\.|(?!\1)[^\\])*?)\1\s*[,)]/g)) {
+    for (const m of src.matchAll(/(?<![\w.$])(?:t|tr|saidNow)\(\s*(["'`])((?:\\.|(?!\1)[^\\])*?)\1\s*[,)]/g)) {
       if (m[1] === "`" && m[2].includes("${")) continue;
       const k = unquote(m[1], m[2]); if (CJK.test(k)) keys.set(k, f);
     }

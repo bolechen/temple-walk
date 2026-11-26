@@ -11,11 +11,13 @@ const { loadLevel } = await import("../../app/src/level.js");
 const { createGridWalker, gridsByPlace } = await import("../../app/src/gridwalker.js");
 const { decode } = await import("../../app/src/walkgrid.js");
 const { stairProfile, STAIR } = await import("../../app/src/geo.js");
-const { BAYS, HALL, FRONT, XS, ZS, OUTER, buildHall } = await import("../../app/levels/t05/hall.js");
+const { BAYS, HALL, FRONT, XS, ZS, OUTER, buildHall, HALL_DOORS } = await import("../../app/levels/t05/hall.js");
+// While the great hall's doors are shut (the first release, DECISIONS.md 先行版关殿门) the views inside it cannot be walked to: `site.closedViews`. One constant, hall.js `HALL_DOORS.shut`, brings them back.
+const SHUT = HALL_DOORS.shut;
 const { prepare, ensure } = await import("../../tools/bake-walk.mjs");
 
 const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
-const level = await loadLevel("t05"), site = buildSite(M);
+const level = await loadLevel("t05"), site = buildSite(M), CLOSED = new Set(site.closedViews);
 const file = ensure(prepare(level)), decoded = decode(file.bytes, (b) => inflateRawSync(b));
 const old = createWalker(site), walker = createGridWalker(createWalker(site), gridsByPlace(decoded), { doors: site.halls });
 
@@ -34,7 +36,8 @@ test("the platform, the terrace and the flight are SITE.md's sizes, the court's 
 test("he arrives at the outer gate's place, and every named view stands where he can walk", () => {
   assert.deepEqual(site.start.slice(0, 2), ARRIVE); assert.deepEqual(ARRIVE, [0, 215]);
   assert.ok(ARRIVE[1] < WAY.zS && ARRIVE[1] > COMPOUND.zS);
-  for (const [id, v] of Object.entries(site.views)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
+  for (const [id, v] of Object.entries(site.views)) if (!CLOSED.has(id)) assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open floor`);
+  assert.deepEqual([...CLOSED].sort(), SHUT ? ["cam04", "cam05", "cam06", "d", "e", "f", "sakya"] : [], "the views closed are the ones inside the hall, and none once it is open");
 });
 
 test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the baked floor, are reached from where he arrives, and the manifest says what the plan says", async () => {
@@ -44,6 +47,8 @@ test("the seven fixed views of the handoff (PRD.md §3, §9 item 4) stand on the
   assert.deepEqual(Object.keys(checks.cameras.what), ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"]);
   for (const [i, id] of ["cam01", "cam02", "cam03", "cam04", "cam05", "cam06", "cam07"].entries()) {
     const v = site.views[id]; assert.ok(v, id);
+    const c0 = manifest.cameras[i]; assert.equal(!!c0.closed, CLOSED.has(id), `${id}: the manifest says closed exactly when the plan does`);
+    if (CLOSED.has(id)) { assert.ok(!targets.some((x) => x.kind === "view" && x.id === id), `${id}: a closed view is not asked to be walked to`); assert.deepEqual([c0.position.length, c0.view], [3, id]); continue; }
     assert.ok(!walker.blocked(v[0], v[1]), `${id} (${v[0]}, ${v[1]}) is open on the baked floor`);
     const t = targets.find((x) => x.kind === "view" && x.id === id);
     assert.ok(t && t.new, `${id}: reached from the arrival on the floor baked from what is drawn`);
@@ -132,7 +137,7 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
   for (const [, z] of h.inner.filter(([x]) => Math.abs(x) < 15)) assert.equal(z, ZS[4], "in front of the altar the inner columns are left out");
   const xs = new Set(h.parts.frame.map((g) => (g.computeBoundingBox(), g.boundingBox.getCenter(new THREE.Vector3()).x.toFixed(2))));
   assert.deepEqual([...xs].sort((a, b) => a - b), XS.slice(1, -1).map((x) => x.toFixed(2)).sort((a, b) => a - b), "a frame on each of the eight inner column lines");
-  const { EF, EB, EX, slope } = h.roof, under = (x, z) => Math.min(HALL.ridge, HALL.eave + slope * Math.min(EF - z, z - EB, EX - Math.abs(x))) - HALL.roof;
+  const { EF, EB, EX } = h.roof, under = h.roof.underAt;   // (the folded roof's underside, roof.js)
   for (const g of h.parts.frame) { const b = g.boundingBox; for (const z of [b.min.z, b.max.z]) assert.ok(b.max.y <= under(b.min.x, z) + 0.05, `a beam at x ${b.min.x.toFixed(1)} rises through the roof at z ${z.toFixed(1)}: ${b.max.y.toFixed(2)} > ${under(b.min.x, z).toFixed(2)}`); }
   assert.ok(h.fill.length > 0, "a neutral fill under the roof");
   // The murals' ground stands off the wall's inner face, never on it: on it, the two faces fought for the same pixels and
@@ -169,27 +174,34 @@ test("inside, the open roof: eight frames on the inner column lines, each tier u
 
 test("he walks into the hall across the threshold, to stations C, D, E and F, all on the hall's floor, and nowhere through its walls (#422)", () => {
   const targets = file.header.targets;
-  for (const id of ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
+  for (const id of SHUT ? ["c"] : ["c", "d", "e", "f"]) { const t = targets.find((x) => x.kind === "view" && x.id === id); assert.ok(t && t.new && t.old, `${id} reached on both floors`); }
   for (const k of ["C", "D", "E", "F"]) assert.ok(Math.abs(walker.heightAt(...STATION[k]) - 3) < 0.03, `${k} is on the hall's floor`);
   // (the sill lies under the frame, in the wall's outer third: hall.js)
   const zWall = ZS[0] + HALL.front - HALL.wall / 2, zSill = ZS[0] + HALL.front - HALL.wall / 6, mid = (i) => (XS[i] + XS[i + 1]) / 2;
   FRONT.forEach((kind, i) => {
-    if (kind === "door") { assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zSill) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
+    if (kind === "door" && SHUT) assert.ok(walker.blocked(mid(i), zWall) && old.blocked(mid(i), zWall), `door ${i} is shut: on both floors`);
+    if (kind === "door") { if (!SHUT) assert.ok(!walker.blocked(mid(i), zWall), `door ${i} is open`); assert.ok(Math.abs(walker.heightAt(mid(i), zSill) - (3 + HALL.door.sill)) < 0.03, `door ${i}'s sill`); }
     else assert.ok(walker.blocked(mid(i), zWall), `the ${kind} in bay ${i} is not walked through`);
   });
   for (const [x, z] of [[XS[0] + HALL.out - HALL.wall / 2 - 0.3, -12], [0, ZS[ZS.length - 1]], [XS[3], 0]]) assert.ok(walker.blocked(x, z), `wall or column at (${x}, ${z})`);
 });
 
-test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil", () => {
+test("T05 builds no censer, no trees, no bell and no seat of its own yet, and its hall is no room under the court: he walks in, with no veil; its one place of its own is the stele's (stele.js)", () => {
   assert.equal(site.censer, null); assert.deepEqual(site.trees, []); assert.deepEqual(site.halls, []); assert.deepEqual(site.strikers, []);
-  assert.deepEqual(site.places, {}); assert.deepEqual(site.seats, []);
-  assert.equal(level.backdrop, null); assert.equal(level.grove, null); assert.equal(level.zones, null);
+  assert.deepEqual(Object.keys(site.places), ["copy"]); assert.deepEqual(site.seats, []);
+  assert.equal(level.backdrop, null); assert.equal(level.grove, null);
+  assert.deepEqual(Object.keys(level.zones), ["layers"], "sound layers only, no music zones: it has no melody yet (t05-sound.test.mjs)");
 });
 
 test("the hall's fill is out while the eye is in the court and comes up as he walks in, over seconds, never at a jump (#481)", async () => {
   const { FILL } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), s = buildSite(M), eye = (x, z, y = 4.6) => ({ x, y, z });
   for (const [x, z] of [STATION.A, STATION.B, [0, 9.5]]) assert.equal(h.within(x, 4.6, z), 0, `no fill seen from (${x}, ${z})`);
+  if (SHUT) {   // the doors are shut (HALL_DOORS): the hall's light stays out wherever the eye is, a window's bars included (the art director's call on the first pictures), and comes back with `shut: false`
+    for (const [x, z] of [STATION.C, [0, 1], [-16.4, 1], STATION.F, STATION.E]) assert.equal(h.within(x, 4.6, z), 0, `no fill at (${x}, ${z}) while the doors are shut`);
+    for (let i = 0; i < 20; i++) assert.equal(s.tick(0.05, eye(-16.4, 1), false), 0);
+    return;
+  }
   for (const k of ["E", "D"]) assert.equal(h.within(STATION[k][0], 4.6, STATION[k][1]), 1, `the whole fill at ${k}`);
   assert.ok(h.within(...[STATION.F[0], 4.6, STATION.F[1]]) > 0.9, "nearly all of it at F, 2 m in");
   // from 9 m out to 3 m in it rises without a step: never more than 2% of it over 5 cm walked
@@ -206,17 +218,19 @@ test("the hall's fill is out while the eye is in the court and comes up as he wa
   assert.ok(FILL.door > 0 && FILL.up > 0 && FILL.depth > 0 && frames > 0);
 });
 
-test("the fill comes from the doors and from under the floor: none of it hung before the front wall, none in the air under the roof (#493, #549)", async () => {
-  const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR } = await import("../../app/levels/t05/altar.js");
+test("the fill comes from the doors and from under the floor: the openings' light from before the hall and above, none in the air under the roof (#493, #549, #754)", async () => {
+  const { FILL } = await import("../../app/levels/t05/hall.js"), { ALTAR, FIGURES, SEAT } = await import("../../app/levels/t05/altar.js");
   const h = buildHall(M), y0 = HALL.floor, zf = ZS[0] + HALL.front - HALL.wall, zb = ZS[ZS.length - 1] - HALL.out + HALL.wall, X = XS[XS.length - 1] + HALL.out - HALL.wall;
   assert.ok(h.fill.length <= 5, "no more lights than the five of #549 (each is in every shader, outdoors too)");
   assert.ok(h.fill.every((f) => f[6]), "every one a spot, turned somewhere: no lamp lights the whole room");
   const doors = h.fill.filter((f) => f[1] > y0), up = h.fill.filter((f) => f[1] < y0);
   assert.equal(doors.length, 2, "two wide spots for the openings' light (four cost 1.4 ms more on a T4's high tier, #493)");
+  // The openings' light (#754): it stands for the daylight the doors and windows let in, so it comes from before the hall and a little above
+  // the faces (y0 + 10.5 to 11.5 m), turned down onto the figures; from inside the hall the front wall's inner face looks away from it.
   for (const [x, y, z, , , , aim] of doors) {
-    assert.ok(z < zf && z > zf - 1 && Math.abs(x) < X, `a door's light stands just inside the front wall (${x}, ${z.toFixed(2)})`);
-    assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar and the back wall, so the front wall takes none of it");
-    assert.ok(y > y0 + 3 && y < y0 + 8, "at about the height of the doors' middle");
+    assert.ok(z > zf && z < zf + 12 && Math.abs(x) < X, `a door's light stands before the hall (${x}, ${z.toFixed(2)})`);
+    assert.ok(aim[2] < ALTAR.zF && aim[2] > zb, "and is turned to the altar");
+    assert.ok(y > aim[1] && y > y0 + 11, "above the faces and turned down at them, so the light comes from in front and above, not from below");
   }
   // The timber's light comes from under the floor over the worship band, narrow and turned up: a light hung in the air under this roof is close to
   // the beams (9–10 m) or the boards (15–19 m) wherever it hangs, and laid a bright spot on one of them (#549: 30 L* at 13 m, the beams at 9 m).
@@ -225,6 +239,12 @@ test("the fill comes from the doors and from under the floor: none of it hung be
     assert.ok(y < y0 && y > y0 - 1 && z > ALTAR.zF + 3 && z < zf - 3 && Math.abs(x) < X - 3, `under the floor, over the worship band (${x}, ${z})`);
     assert.ok(aim[1] > y0 + 10 && Math.hypot(aim[0] - x, aim[2] - z) < 0.3 * (aim[1] - y), "turned up into the roof, leaning no more than a few degrees");
     assert.ok(angle <= 1, "a narrow spot, so that the walls stand outside it");
+    // and the seven stand outside it (#754): lit from under the floor their faces read upside down, chin and nose bright, and the lotus glared
+    const axis = [aim[0] - x, aim[1] - y, aim[2] - z], n = Math.hypot(...axis);
+    for (const f of FIGURES) for (const fy of [y0 + ALTAR.h + 2.5, y0 + 10.5]) {
+      const v = [f.x - x, fy - y, SEAT.z - z], c = (v[0] * axis[0] + v[1] * axis[1] + v[2] * axis[2]) / (n * Math.hypot(...v));
+      assert.ok(Math.acos(c) > angle, `the figure at x ${f.x} stands outside the timber's light from (${x}, ${z})`);
+    }
   }
   for (const [, , , i, d] of h.fill) assert.ok(i > 0 && d > 0);
   assert.ok(FILL.door > 0 && FILL.up > 0);
@@ -242,7 +262,8 @@ test("the timber overhead takes more of the inside's light than the walls, from 
 test("the wall ring's timber (frames, tie-beams, brackets) keeps the walls' share while the roof's timber rises: the roof's beams and purlins above it, its boards below (#608)", async () => {
   const { TIMBER } = await import("../../app/levels/t05/hall.js");
   const h = buildHall(M), y0 = HALL.floor, at = [0, y0 + 9, -10];
-  assert.ok(h.parts.ring.size > 100, "the ring's boxes are recorded");
+  // (the bracket sets, their beams and the eave purlin are the ring's too, in lists of their own that the page keeps out of the floor's mirror: #741)
+  assert.ok(h.parts.ring.size > 20 && h.parts.bracketsX.length + h.parts.bracketsZ.length > 60, "the ring's boxes and the bracket sets are recorded");
   const brackets = h.parts.wood.filter((g) => h.parts.ring.has(g)), purlins = h.parts.wood.filter((g) => !h.parts.ring.has(g));
   assert.ok(brackets.length > 0 && purlins.length > 0 && purlins.length < 30, "the purlins stand apart from the ring");
   assert.ok(Math.abs(h.ringShut(...at) - Math.min(3, HALL.inside * TIMBER.ring)) < 1e-9, "the ring takes TIMBER.ring times the walls'");
@@ -260,4 +281,11 @@ test("a wall's inner face is inside all the way to its corners, its outer face o
   assert.equal(h.shut(X + HALL.out, 6, -10, 1, 0, 0), 1); assert.equal(h.shut(0, 6, ZS[0] + HALL.front, 0, 0, 1), 1);
   assert.equal(h.shut(xi + 0.4, 6, -0.5, 0, 0, 1), 1, "the end of a wall seen from the court");
   for (const g of h.parts.mural) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(Math.max(-b.min.x, b.max.x) <= xi + 1e-6 && b.max.z <= zf + 1e-6 && b.min.z >= zb - 1e-6, "a mural's ground within the inner faces"); }
+});
+
+test("while the doors are shut each of the four windows has an unseen sheet that casts the sun's shadow, so that no striped patch of sun lies on the floor inside (the first review, winter day)", () => {
+  const h = buildHall(M), windows = FRONT.filter((k) => k === "window").length;
+  assert.equal(windows, 4);
+  assert.equal(h.parts.windowShade.length, SHUT ? windows : 0, SHUT ? "one sheet to each window" : "no sheet once the hall is open");
+  for (const g of h.parts.windowShade) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(b.max.x - b.min.x > 4 && b.max.y - b.min.y > 3.5 && b.max.z - b.min.z < 0.05, "a thin sheet over the window's opening"); }
 });

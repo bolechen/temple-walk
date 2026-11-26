@@ -188,6 +188,16 @@ body.photo #bookBtn, body.bare #bookBtn, body:not(.entered) #bookBtn { display: 
 body:not(.seasons) .need-seasons { display: none !important; }
 /* What shows once a temple has been closed, and there is another to go to (行脚图, #449; game.js sets body.pilgrim). */
 body:not(.pilgrim) .need-pilgrim { display: none !important; }
+/* A temple's own page (T05: src/levelpage.js), in the pause menu once something is on it; game.js sets body.page. */
+body:not(.page) .need-page { display: none !important; }
+/* Shown on the slip, a temple's own page carries no seal: the vermilion seal is the prologue's (docs/t05/CHECKPOINTS.md §4.2). */
+#slip.own-page .seal-mark { display: none; }
+#slip.own-page #slipText, #slip.own-page #slipFrom { white-space: pre-line; }
+#slip.own-page.cut #slipText { font-family: "Yunjing Kai", serif; }
+#slip .page-stroke { display: none; }
+#slip.own-page.stroke .page-stroke { display: block; position: absolute; left: 14%; width: 72%; top: 16px; height: auto; aspect-ratio: 10 / 1; pointer-events: none; }
+/* A level without the book of seals (Level.book; T05's first release): its button, the goal line, the way to the next place and the key card's B. */
+body.nobook :is(#bookBtn, #goal, #way, .need-book) { display: none !important; }
 #goal span { display: grid; gap: 4px; font: 400 21px/1 var(--kai); letter-spacing: var(--track); }
 #goal small { font-size: var(--t-xs); letter-spacing: .2em; color: var(--on-2); }
 /* The way there: the same small seal on the picture where it lies, or at the edge toward it, with how far. */
@@ -309,7 +319,7 @@ html.crossing.crossing-open::before, html.crossing.crossing-open::after { animat
 }
 /* The shutter: two leaves of ink close over the view and open again, and behind them the view has stopped. */
 #curtain { position: absolute; inset: 0; pointer-events: none; display: none; }
-#curtain i { position: absolute; left: 0; right: 0; height: 50%; background: var(--ink); transform: scaleY(0); }
+#curtain i { position: absolute; left: 0; right: 0; height: calc(50% + 1px); background: var(--ink); transform: scaleY(0); }   /* (a pixel past the middle: where the two leaves meet, fully shut, no thin line of the picture shows between them, #726) */
 #curtain i:first-child { top: 0; transform-origin: top; } #curtain i:last-child { bottom: 0; transform-origin: bottom; }
 #curtain.shut { display: block; } #curtain.shut i { animation: leaf .2s var(--ease) both; }
 @keyframes leaf { 0% { transform: scaleY(0); } 35% { transform: scaleY(1); } 100% { transform: scaleY(0); } }
@@ -716,6 +726,8 @@ body.photo #keys, body.photo #stick, body.photo #jumpBtn, body.bare #jumpBtn, bo
 
 /* The close of the chapter (game.js `finale`): nothing on the picture but the words. */
 body.ending .rail, body.ending #jumpBtn, body.ending #bookBtn, body.ending #goal, body.ending #way, body.ending #act, body.ending #hint, body.ending #say, body.ending #moodTag, body.ending #breathWord, body.ending #stick, body.ending #cross { opacity: 0 !important; pointer-events: none; }
+/* While the ink is shut over the picture after the book (yard.js followHour, #726): what floats over the picture steps aside, so that nothing sits on the black. The line at the foot says why, and stays. */
+body.veiled .rail, body.veiled #jumpBtn, body.veiled #turnBtn, body.veiled #bookBtn, body.veiled #goal, body.veiled #way, body.veiled #act, body.veiled #say, body.veiled #moodTag, body.veiled #breathWord, body.veiled #stick, body.veiled #cross { opacity: 0 !important; pointer-events: none; }
 #ending { position: absolute; inset: 0; z-index: 6; display: grid; place-items: end center; cursor: pointer; background: linear-gradient(to top, rgba(0,0,0,.42), rgba(0,0,0,0) 46%); }
 #ending[hidden] { display: none !important; }
 #endingLine { margin: 0 24px calc(15vh + env(safe-area-inset-bottom, 0px)); max-width: 30em; text-align: center; font: 400 clamp(21px, 3.6vmin, 32px)/1.7 var(--kai, serif); letter-spacing: .12em; color: var(--paper, #f3ecdc); text-shadow: 0 2px 14px rgba(0,0,0,.75), 0 0 2px rgba(0,0,0,.6); opacity: 0; transform: translateY(8px); transition: opacity 1.1s ease, transform 1.1s ease; }

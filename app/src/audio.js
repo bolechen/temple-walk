@@ -6,7 +6,21 @@ import { createPlayer, createVoices, reverb, bell, hillEcho } from "./instrument
 import { joyaZone, createZoneKeeper, moodMusic, sealNote, hz, THEME, endingPhrase, titlePhrase, rng } from "./score.js";
 import { stepSound, LEVEL } from "./steps.js";
 import { gust as windGust } from "./wind.js";
-let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, steps = null;
+let ctx = null, master = null, comp = null, outVerb = null, inVerb = null, longVerb = null, steps = null;
+// The three rooms' impulses (instruments.js `reverb`: seconds long, an envelope of (1 - t/seconds)^power, `dark` darkening the tail).
+// The court and the timber hall are the prologue's and are the numbers they have always been. The great hall's is T05's (a level whose
+// `zones.layers` names one), built only there: RT60 about 5 s (7 s of impulse; measured on the generated impulse itself, 5.1 s to fall 60 dB and 5.05 s by T20; the court's own is 2.9 s and 4.2 s, the timber hall's 1.6 s and 1.7 s), inside docs/t05/SOUND.md §1.1's 4-6 s, which that paper gives as a proposal
+// to be measured on the spot (our own proposal, no measurement; SOURCES.md), from the hall's 48 x 25 x 16 m of hard floor, timber and thick walls; dark like the timber hall's.
+export const COURT_VERB = Object.freeze({ seconds: 3.2, power: 2.6, dark: 0 });
+export const TIMBER_VERB = Object.freeze({ seconds: 2.0, power: 3.2, dark: 0.9 });
+export const HALL_VERB = Object.freeze({ seconds: 7, power: 3.86, dark: 0.9 });
+// T05's Z1 floor of sound (docs/t05/SOUND.md §1, §3: the county town's low murmur, "院外是底，不是事件"): the brown noise already made for the wind,
+// low-passed at 220 Hz (SOUND.md's 150-300 Hz) and swelled very slowly by a sine on the clock, so that nothing in it is chosen at random and nothing
+// comes by in turn (the traffic sweeps and sparrows of §3 are not made). It goes through the air stage like every sound of the place, so in the
+// hall it is the 16 dB-under, far-off floor SOUND.md §1.1 asks for ("外院声变成一层很远的底"). Made only where a level names layers.
+// Every number is our own, set by ear against the wind (the owner judges it), not measured anywhere.
+export const BED = Object.freeze({ cutoff: 220, gain: 0.04, lfo: 23, depth: 0.3 });
+export const bedGain = (t) => BED.gain * (1 - BED.depth + BED.depth * (0.5 + 0.5 * Math.sin((2 * Math.PI * t) / BED.lfo)));
 // What the mountain's own sounds (wind, drips, eave bells, culms, birds, the well) pass through on their way to the place
 // bus: the air between them and the listener. Out of doors it is open. In a hall the walls and the shut leaves stand in
 // it (#331: the owner heard no difference between the court and the room): the whole level falls 16 dB and the top is
@@ -60,7 +74,7 @@ function start() {
   comp = ctx.createDynamicsCompressor();   // the defaults, as the bell and drum have always been heard through
   master = ctx.createGain(); master.gain.value = levels.volume; comp.connect(master); master.connect(ctx.destination);   // the visitor's own volume, last in the chain
   bus.all = ctx.createAnalyser(); bus.all.fftSize = 8192; bus.all.smoothingTimeConstant = 0; comp.connect(bus.all);
-  outVerb = reverb(ctx, 3.2, 2.6); inVerb = reverb(ctx, 2.0, 3.2, 0.9); outVerb.connect(comp); inVerb.connect(comp);
+  outVerb = reverb(ctx, COURT_VERB.seconds, COURT_VERB.power, COURT_VERB.dark); inVerb = reverb(ctx, TIMBER_VERB.seconds, TIMBER_VERB.power, TIMBER_VERB.dark); outVerb.connect(comp); inVerb.connect(comp);
   // Each bus: what goes in, the visitor's level for it, a duck (the music steps back for the bell), then dry and
   // reverb. The level comes before the reverb send, so a muted bus leaves no echo behind.
   for (const [k, dry, wet] of [["music", 0.7, 0.55], ["ambience", 0.8, 0.45], ["effects", 0.8, 0.45]]) {
@@ -85,13 +99,25 @@ function start() {
   return ctx;
 }
 export function wake() { if (ctx && ctx.state !== "running" && !document.hidden) ctx.resume().catch(() => {}); }
-// Indoors or out: the reverb follows, over a couple of seconds.
-let roomNow = null;
-function room(inside) {
-  if (inside === roomNow) return; roomNow = inside;
-  const t = ctx.currentTime;
-  for (const k of ["music", "ambience", "effects"]) { const b = bus[k]; b.sendOut.gain.setTargetAtTime(inside ? 0 : b.wet, t, 0.7); b.sendIn.gain.setTargetAtTime(inside ? b.wet * 1.1 : 0, t, 0.7); }
-  steps.sendOut.gain.setTargetAtTime(inside ? 0 : STEP_WET.out, t, 0.7); steps.sendIn.gain.setTargetAtTime(inside ? STEP_WET.in : 0, t, 0.7);
+// Indoors or out: the reverb follows, over a couple of seconds. `long` (T05's great hall, score.js `layerOf`) sends to the hall's own
+// long reverb instead of the timber hall's; it is made the first time it is asked for, so the prologue never builds it.
+let roomNow = null, longNow = false;
+function longRoom() {
+  if (longVerb) return;
+  longVerb = reverb(ctx, HALL_VERB.seconds, HALL_VERB.power, HALL_VERB.dark); longVerb.connect(comp);
+  for (const k of ["music", "ambience", "effects"]) { const b = bus[k]; b.sendLong = ctx.createGain(); b.sendLong.gain.value = 0; b.duck.connect(b.sendLong); b.sendLong.connect(longVerb); }
+  steps.sendLong = ctx.createGain(); steps.sendLong.gain.value = 0; steps.level.connect(steps.sendLong); steps.sendLong.connect(longVerb);
+}
+function room(inside, long = false) {
+  if (inside === roomNow && long === longNow) return; roomNow = inside; longNow = long;
+  if (long) longRoom();
+  const t = ctx.currentTime, inK = inside && !long;
+  for (const k of ["music", "ambience", "effects"]) {
+    const b = bus[k]; b.sendOut.gain.setTargetAtTime(inside ? 0 : b.wet, t, 0.7); b.sendIn.gain.setTargetAtTime(inK ? b.wet * 1.1 : 0, t, 0.7);
+    if (b.sendLong) b.sendLong.gain.setTargetAtTime(inside && long ? b.wet * 1.1 : 0, t, 0.7);
+  }
+  steps.sendOut.gain.setTargetAtTime(inside ? 0 : STEP_WET.out, t, 0.7); steps.sendIn.gain.setTargetAtTime(inK ? STEP_WET.in : 0, t, 0.7);
+  if (steps.sendLong) steps.sendLong.gain.setTargetAtTime(inside && long ? STEP_WET.in : 0, t, 0.7);
   setAir(air, inside, t);
 }
 // The music steps back while the bell or the drum speaks, and comes back of itself. A lighter step back that comes inside a
@@ -278,7 +304,7 @@ export function bird(level = 1) {
 // own count of quarter seconds is only for a page that gives no clock. There is no clock of the sound's own: when the
 // page comes back from the background both pick up where performance.now() has got to, together.
 export const gustHeard = (p, own) => windGust(Number.isFinite(p.t) ? p.t : own);
-export const ambienceState = () => ({ knocks, birds, running: !!ambient, gust: ambient && ambient.gust != null ? +ambient.gust.toFixed(4) : null, gustT: ambient && ambient.gustT != null ? +ambient.gustT.toFixed(3) : null });
+export const ambienceState = () => ({ knocks, birds, bed: ambient && ambient.bedAsk ? +ambient.bedAsk.toFixed(4) : 0,   /* the floor of T05's court as last asked of its gain */ running: !!ambient, gust: ambient && ambient.gust != null ? +ambient.gust.toFixed(4) : null, gustT: ambient && ambient.gustT != null ? +ambient.gustT.toFixed(3) : null });
 
 // ---- Two cues of the story ----
 // Wings: a dozen small birds going up at once from a tree, a rattle of quick wingbeats that thins as they climb away,
@@ -353,7 +379,7 @@ export const cueState = () => ({ ...cues, musicHeld });
 // The shutter: a small leaf shutter in a wooden body, two soft clicks thirty milliseconds apart (the blades closing and
 // opening) over a faint knock of the case; nothing electronic. And when the print comes, the seal pressed on it: a dull
 // pad of a stamp on paper, and the paper giving a little under it. Both on the effects bus; the music steps aside briefly.
-const shots = { shutter: 0, stamp: 0 };
+const shots = { shutter: 0, stamp: 0, brush: 0 };
 function crack(t, centre, q, gain, secs, to = null) {
   const n = Math.floor(ctx.sampleRate * secs), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6);
@@ -378,6 +404,20 @@ export function stampSound() {
   crack(t + 0.01, 3600, 0.5, 0.06, 0.22);        // the paper gives a little under it
   shots.stamp++;
 }
+// A brush on paper (T05's own page: the observation's stroke and the copied line, src/writing.js): the hairs drawn over the
+// fibres, a soft dry hiss that swells as the brush is pressed and thins as it lifts, high and narrow, under the effects bus
+// and quieter than the stamp; and the faint tap of the tip as it first comes down. Our own, made by common sense (no
+// recording of a brush was measured): docs/t00/SOURCES.md.
+export function brushSound(secs = 0.4) {
+  if (!start()) return; wake();
+  const t = ctx.currentTime + 0.01, d = Math.max(0.12, Math.min(1.6, secs)), n = Math.floor(ctx.sampleRate * d), b = ctx.createBuffer(1, n, ctx.sampleRate), x = b.getChannelData(0);
+  for (let i = 0; i < n; i++) { const u = i / n, env = Math.sin(Math.PI * Math.min(1, u * 1.15)) * (0.75 + 0.25 * Math.sin(u * 31)); x[i] = (Math.random() * 2 - 1) * env; }
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.9; hp.type = "highpass"; hp.frequency.value = 900; g.gain.value = 0.05;
+  s.connect(f); f.connect(hp); hp.connect(g); g.connect(bus.effects.in); s.start(t);
+  crack(t, 1600, 1.1, 0.04, 0.03);              // the tip comes down
+  shots.brush++;
+}
 // The place's whole sound, taken after the visitor's own volume (a film is heard as it was heard), for a recording
 // (clip.js, #342). Null where nothing has sounded yet or the browser has no stream destination: the film is silent then.
 export function recordTap() {
@@ -400,9 +440,9 @@ export function startAmbience(place) {
   const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
   let last = 0; for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }   // brown noise
   for (let i = 0; i < 2000; i++) { const k = i / 2000; d[i] = d[i] * k + d[len - 2000 + i] * (1 - k); }                   // no click at the loop
-  const layer = (type, freq, q) => {
+  const layer = (type, freq, q, rate = 0.8 + Math.random() * 0.5) => {
     const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-    s.buffer = buf; s.loop = true; s.playbackRate.value = 0.8 + Math.random() * 0.5; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = 0;
+    s.buffer = buf; s.loop = true; s.playbackRate.value = rate; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = 0;
     s.connect(f); f.connect(g); g.connect(air.in); s.start();
     return g;
   };
@@ -412,12 +452,14 @@ export function startAmbience(place) {
   const tick = () => {
     if (ctx.state !== "running") return;   // suspended (in the background): nothing piles up to sound all at once on return
     const p = place(), now = ctx.currentTime, g = p.grove, a = ambient; a.t += 0.25;
-    room(p.zone === "hall");
+    const inHall = (p.layer ?? p.zone) === "hall";   // `layer`: T05's (score.js layerOf), absent in the prologue, which goes by its zone as ever
+    room(inHall, p.layer === "hall");
     // Gusts: the same two slow waves, on the same clock, as the leaves the trees let go and the censer's smoke (wind.js).
     const gust = gustHeard(p, a.t); a.gust = gust; a.gustT = Number.isFinite(p.t) ? p.t : a.t;
     // Deep in the bamboo the wind is the floor of the sound, not its loudest part: about 5 dB under what it was, so
     // that the music and his steps are heard over it there (2026-11-16); in the first court (g 0.12) it is unchanged.
-    const w = windGains(gust, g, p.zone === "hall");
+    const w = windGains(gust, g, inHall);
+    if (p.layer) { a.bed ||= layer("lowpass", BED.cutoff, 0.5, 0.6); a.bedAsk = bedGain(Number.isFinite(p.t) ? p.t : a.t); a.bed.gain.setTargetAtTime(a.bedAsk, now, 1.2); }   // T05's floor (BED); the prologue gives no layer
     low.gain.setTargetAtTime(w.low, now, 0.8);
     leaves.gain.setTargetAtTime(w.leaves, now, 0.6);
     // Water dripping from the eaves after rain: often in summer, less in spring; none once the stone has dried
@@ -433,7 +475,7 @@ export function startAmbience(place) {
     }
     const gap = birdGap(p.zone, p.time, p.season);
     if ((a.nextBird -= 0.25) <= 0) { a.nextBird = gap ? gap * (0.5 + Math.random()) : 4; if (gap) bird(0.6 + 0.4 * g); }
-    if ((a.nextKnock -= 0.25) <= 0 && p.zone !== "hall" && knockReady(gust, g)) { a.nextKnock = 6 + Math.random() * 16; knock(0.5 + 0.5 * g); }
+    if ((a.nextKnock -= 0.25) <= 0 && !inHall && knockReady(gust, g)) { a.nextKnock = 6 + Math.random() * 16; knock(0.5 + 0.5 * g); }
     if ((a.nextChime -= 0.25) <= 0 && gust > 0.62) {   // an eave bell, only when the wind is up
       a.nextChime = 18 + Math.random() * 30;
       const f0 = [hz(86), hz(89), hz(91), hz(94)][Math.floor(Math.random() * 4)];   // D F G Bb: tuned to the music's mode
@@ -479,5 +521,5 @@ export function musicState() {
   return { state: ctx.state, clock: now, started: true, starts, players, zone: music.keeper.stable, candidate: music.keeper.candidate, section: c.section,
     place: c.place, phrases: music.player.phrases, cuts: c.cuts, playing: now < c.notesEnd, resting: now >= c.notesEnd && now < c.restEnd, pending: music.player.pending,
     sounding: music.player.voices.sounding, seals, hushed: rest < 1, duck: +bus.music.duck.gain.value.toFixed(3), ducked: now < ducked.until, level: +bus.music.level.gain.value.toFixed(3),
-    placeLevel: +music.player.level.gain.value.toFixed(3), room: roomNow ? "hall" : "court", levels: { ...levels }, sig: music.player.last && music.player.last.sig };
+    placeLevel: +music.player.level.gain.value.toFixed(3), room: roomNow ? "hall" : "court", long: longNow, verb: roomNow ? (longNow ? "hall" : "timber") : "court", levels: { ...levels }, sig: music.player.last && music.player.last.sig };
 }

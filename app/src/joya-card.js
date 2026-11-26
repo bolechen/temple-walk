@@ -4,6 +4,7 @@
 // at the foot the temple's seal, and the code that brings whoever reads it to the main site (the look of the page of
 // seals' code, #319, with its own source mark, utm_source=joya).
 import { t as tr, glyphs, lang, FONT, FACE } from "./i18n.js";
+import { templeNow, sealNow } from "./temple.js";
 import { qrMatrix, qrSide, paintQrLook, SEAL_LOOK } from "./qr.js";
 import { sealStamp, dateLine, MAIN } from "./goshuin.js";
 import { countText } from "./joya.js";
@@ -46,7 +47,7 @@ function enso(x, cx, cy, r, rnd) {
  * as last known (null if the counter never answered: the line is then left out).
  * @param {{ when: number, mine: number, total: number | null, l?: string }} o */
 export async function drawJoyaCard({ when, mine, total, l = lang }) {
-  const title = tr("除夕撞钟"), temple = tr("云径禅寺"), sealText = glyphs("云径"), L = joyaLayout(l);
+  const title = tr("除夕撞钟"), temple = templeNow(), sealText = sealNow(), L = joyaLayout(l);
   const mineLine = tr("今夜你撞了 {n} 声", { n: countText(mine, l) }), allLine = total == null ? "" : tr("这一夜，山中同撞 {n} 声", { n: countText(total, l) });
   const sub = `${temple} · ${cardDate(when, l)}`;
   try { await Promise.all([document.fonts.load(`150px ${FACE.brush}`, title), document.fonts.load(`40px ${FACE.serif}`, sub + mineLine + allLine + String(mine)), document.fonts.load(`80px ${FACE.seal}`, sealText)]); } catch {}

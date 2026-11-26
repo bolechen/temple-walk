@@ -6,6 +6,7 @@
 // temple's own characters, as a seal book from a temple abroad would; only the names under the seals and the line at
 // the foot are in the visitor's language.
 import { t as tr, glyphs, lang, FONT, FACE } from "./i18n.js";
+import { nameNow } from "./temple.js";
 import { qrMatrix, qrSide, paintQrLook, SEAL_LOOK } from "./qr.js";
 const BRUSH = FONT.brush, SERIF = FONT.serif, SEAL = FONT.seal;
 const NUM = "〇一二三四五六七八九";
@@ -64,7 +65,7 @@ export function sealBoxes(n) {
   return Array.from({ length: n }, (_, i) => [(row.left + i * pitch - gap / 2) / W, (row.top - 14) / H, pitch / W, (row.size + 62) / H]);
 }
 
-export async function drawGoshuin({ seals, verse, when, label, temple = glyphs("云径禅寺") }) {
+export async function drawGoshuin({ seals, verse, when, label, temple = glyphs(nameNow()) }) {
   const homage = glyphs("奉拜"), names = seals.map((sl) => tr(sl.place));
   if (verse) verse = { text: glyphs(verse.text), from: glyphs(verse.from) };
   try { await Promise.all([document.fonts.load(`200px ${FACE.brush}`, temple + homage + (verse ? verse.text : "")), document.fonts.load(`40px ${FACE.serif}`, homage + names.join("") + label), document.fonts.load(`80px ${FACE.seal}`, temple + SANBAO.text + seals.map((sl) => glyphs(sl.seal)).join(""))]); } catch {}

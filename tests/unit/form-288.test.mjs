@@ -35,7 +35,7 @@ test("every end of the summit's low wall shows a tile face to the stair head, no
   let seen = 0;
   for (const sx of [-1, 1]) {
     const pts = [];
-    roof.geometry.attributes.position.array.forEach((v, i, a) => { if (i % 3 === 0 && Math.abs(Math.abs(v) - 2.5) < 1e-3 && a[i + 2] < -110 && a[i + 2] > -125) pts.push([v, a[i + 1], a[i + 2]]); });
+    roof.geometry.attributes.position.array.forEach((v, i, a) => { if (i % 3 === 0 && Math.abs(Math.abs(v) - 2.5) < 5e-3 && a[i + 2] < -110 && a[i + 2] > -125) pts.push([v, a[i + 1], a[i + 2]]); });
     if (!pts.length) continue;
     const [x, , z] = pts.find((q) => Math.sign(q[0]) === sx) || [];
     if (x === undefined) continue;

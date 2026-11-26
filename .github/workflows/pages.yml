@@ -168,7 +168,7 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
-  # The unit tests (the plan, the walker, the building generator, the seasons) shared among three machines (#442): every
+  # The unit tests (the plan, the walker, the building generator, the seasons) shared among four machines (#442, #697): every
   # tests/unit/*.test.mjs on exactly one of them, by the seconds in tests/unit/durations.json (tools/ci/unit-shard.cjs;
   # tests/unit/ci-changes.test.mjs holds that none is left out or run twice). Together they are what `pnpm test` runs.
   tests:
@@ -179,7 +179,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -192,7 +192,7 @@ jobs:
           name: floor-${{ github.run_id }}
           path: app/shared/walk
       - name: Unit tests, this machine's share
-        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/3
+        run: node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5
 
   # The same unit tests on the walker over the baked floor (#265), beside the first set, not after it, shared the same way.
   grid:
@@ -203,7 +203,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare
@@ -216,7 +216,7 @@ jobs:
           name: floor-${{ github.run_id }}
           path: app/shared/walk
       - name: The same unit tests on the walker over the baked floor (#265), this machine's share
-        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/3 --import ./tools/walk/swap.mjs
+        run: WALKER=mesh node tools/ci/unit-shard.cjs run ${{ matrix.shard }}/5 --import ./tools/walk/swap.mjs
 
   # The site as the browser gets it: built once, and the very same dist/ driven through by `quick` and handed on for publication
   # or the preview.

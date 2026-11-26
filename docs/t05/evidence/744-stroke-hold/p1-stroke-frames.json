@@ -1,0 +1,109 @@
+{
+ "errors": [],
+ "shots": [
+  {
+   "file": "strip-1-2.6s.png",
+   "secs": 2.6,
+   "name": "2.6s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 16.317,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.08,
+     0.72,
+     26.7
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-2-3.1s.png",
+   "secs": 3.15,
+   "name": "3.1s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 16.308,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.08,
+     0.72,
+     26.7
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-3-3.7s.png",
+   "secs": 3.7,
+   "name": "3.7s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 0,
+    "nearest": 16.308,
+    "copied": "",
+    "stroked": 0,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.08,
+     0.72,
+     26.7
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  },
+  {
+   "file": "strip-4-4.0s.png",
+   "secs": 4,
+   "name": "4.0s",
+   "writing": {
+    "held": 1,
+    "writing": true,
+    "marks": 1,
+    "nearest": 16.308,
+    "copied": "",
+    "stroked": 1,
+    "leaf": true,
+    "brush": true,
+    "at": [
+     -0.08,
+     0.72,
+     26.7
+    ]
+   },
+   "director": {
+    "phase": "hold",
+    "id": "p1b",
+    "w": 1,
+    "cuts": 0
+   }
+  }
+ ]
+}

@@ -2,6 +2,7 @@
 // hour it was lit in, and a code that opens the same lamp (the page of seals' own seal-like code, #319). Everything on it
 // is a line from the list or from the page's own words; there is nowhere a name or a sentence of anyone's could be written.
 import { t as tr, FONT, FACE } from "./i18n.js";
+import { templeNow } from "./temple.js";
 import { qrMatrix, qrSide, paintQrLook, SEAL_LOOK } from "./qr.js";
 import { MAIN } from "./goshuin.js";
 
@@ -20,7 +21,7 @@ export function fitLines(x, text, max, fontOf, from, least) {
 
 /** @param {{ wish: string, label: string, url: string }} what `wish` and `label` already in the visitor's language; `url` is the link the code holds. */
 export async function drawLampCard({ wish, label, url }) {
-  const BRUSH = FONT.brush, XING = FONT.xing, SERIF = FONT.serif, temple = tr("云径禅寺"), line = tr("有人在此为你点了一盏灯。"), note = tr("扫码入山");
+  const BRUSH = FONT.brush, XING = FONT.xing, SERIF = FONT.serif, temple = templeNow(), line = tr("有人在此为你点了一盏灯。"), note = tr("扫码入山");
   try { await Promise.all([document.fonts.load(`60px ${FACE.brush}`, temple), document.fonts.load(`60px ${FACE.xing}`, wish), document.fonts.load(`30px ${FACE.serif}`, label + line + note)]); } catch {}
   const W = 1080, H = 1350, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
   let s = 17; const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
