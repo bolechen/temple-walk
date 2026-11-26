@@ -1,0 +1,60 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "T4-d80a3a6/seal776_desk_bamboo_zh.png",
+   "bytes": 3064175,
+   "sha256": "a21fe3f9dce9a6a7fb00aeeed8dd15d7662ff80a11675880d123c266344d22b7",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "T4-d80a3a6/seal776_desk_summer-day_zh.png",
+   "bytes": 1874568,
+   "sha256": "18fdab55282a6e8f2c5e3ab63cda9a1e133898eeb204fb807ce44f23ddc18fe4",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "T4-d80a3a6/seal776_desk_winter-day_zh.png",
+   "bytes": 1991007,
+   "sha256": "93a170974d3bb8dfbc47ffee0cc154facb7b7569057fb50b79b533e6e34ad088",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "T4-d80a3a6/seal776_phone_summer-day_en.png",
+   "bytes": 327811,
+   "sha256": "63a90d8e57d5cbb885df7828c9657a5988a16d65f7a36b1b34ca13f67e92162c",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "T4-d80a3a6/seal776_phone_summer-day_zh.png",
+   "bytes": 329013,
+   "sha256": "e79e566450db383fb103ff3529844f1f5d50318d397af51e850bb4716a2d3360",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "T4-d80a3a6/seal776_phone_winter-day_en.png",
+   "bytes": 345517,
+   "sha256": "4ca427c2eef12758847829f2a2bbdb64fd608ff5b462ebb18022f2b25f286fa1",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "T4-d80a3a6/seal776_phone_winter-day_zh.png",
+   "bytes": 347605,
+   "sha256": "c3f48e95c176462c184c4c918a2d68fcc29a10e7818c6a0c10447450f534fad6",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "T4-d80a3a6/topleft-crops.png",
+   "bytes": 406344,
+   "sha256": "201d2ede3245b491eefc5567f8a4865a8a7648c275c4d26dbc8eb241523b4d1f",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 107235,
+   "sha256": "1db44eca85285234546949dca3385eeb6a568ef5afb604226b350a4dd6c7f2f9",
+   "rev": "4f8197bc9b26ad23c5d44e4df568ae7a5cb3ea1e"
+  }
+ ]
+}
