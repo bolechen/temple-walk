@@ -26,13 +26,13 @@
 
 **每晚复盘也看 skill**（所有者 2026-11-19：「每天复盘的时候，可以评审有没有需要整理成 skill 复用的，或者有没有 skill 需要迭代的」）：当天有没有一件事被不同会话照同样的步骤做了两次以上（例如在预览里按真实按键复现、T4 同 Job 交替测帧耗、改形体的三向图、推证据、写交接文档、清 issue），值得写成 `skills/<名字>/SKILL.md` 让以后的会话直接照做；已有的 skill（如 `skills/temple-review/`）有没有因为当天的教训要改。一晚最多新建或改一个，写清它取代了哪段手工做法；改了独立评审读的那份，告诉所有者新的提交号（定时任务的提示里钉着提交）。
 
-`skills/` 不由宿主自动发现，接到下面这些活先自己读对应的一页：审画面读 `skills/art-gate/SKILL.md`，做独立评审读 `skills/temple-review/SKILL.md`，写或修端到端场景读 `skills/e2e-waits/SKILL.md`，合并前判断旧绿灯还算不算数读 `skills/merge-green/SKILL.md`，出对外宣传片或短视频读 `skills/video-production/SKILL.md`（交付门禁指向 social-promotion 的 `docs/VIDEO-DELIVERY.md`）。
-
 ## Site 联动与交付
 
 每轮交付更新 [docs/t00/delivery.json](docs/t00/delivery.json)，记录变更、已知问题和证据；遵守 [docs/SITE-SYNC.md](docs/SITE-SYNC.md)。CI 和部署状态由工作流生成，不手写成功。Claude 等开发者不得自行把独立验收改为通过；独立报告绑定完整提交 SHA。`site-status` 是持久数据分支，不按临时分支清理。
 
 **出对外宣传片或短视频**：先读 [skills/video-production/SKILL.md](skills/video-production/SKILL.md)，照它做。本仓库的 `skills/` 不会按 description 自动触发，只能靠这里点名。
+
+**写或修端到端场景**：先读 [skills/e2e-waits/SKILL.md](skills/e2e-waits/SKILL.md)。**合并已经绿了、但 main 又往前走了的 PR 之前**：先读 [skills/merge-green/SKILL.md](skills/merge-green/SKILL.md)。
 
 ## 与研究 Site 的关系
 
