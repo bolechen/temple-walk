@@ -92,9 +92,10 @@ function inscription(w, h, again = true) {
     // with the stone's own text, by a fixed seed, so that no heading or column of it, nor any name, can be made out however the contrast is lifted.
     // Only one faint pale patch of flaked stone is added, no more (soft dark patches read as water stains).
     const ch = REMNANT[Math.floor(wr() * REMNANT.length)];
+    if (wr() < Math.min(0.75, 0.25 + 0.6 * (c.y / ph))) continue;   // some cells are worn clean through, more of them lower down the face
     g.save(); g.beginPath();
     for (let k = 0; k < 3; k++) { const w = c.size * (0.2 + 0.2 * wr()), h = c.size * (0.22 + 0.22 * wr()); g.rect(c.x - c.size / 2 + wr() * (c.size - w), c.y - c.size / 2 + wr() * (c.size - h), w, h); }
-    g.clip(); draw(ch, c.x, c.y, c.size, 0.36 + 0.12 * wr()); g.restore();
+    g.clip(); draw(ch, c.x, c.y, c.size, 0.2 + 0.1 * wr()); g.restore();
     { const rx = c.size * (0.4 + 0.3 * wr()), ry = rx * 0.7;
       g.save(); g.translate(c.x + (wr() - 0.5) * c.size, c.y + (wr() - 0.5) * c.size); g.rotate(wr() * 3); g.scale(1, ry / rx);
       const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, "rgba(206,200,188,0.07)"); gr.addColorStop(1, "rgba(206,200,188,0)");
