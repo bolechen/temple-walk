@@ -80,3 +80,29 @@ test("a figure that arrives hides the white box's seated mass and its two attend
   assert.ok(src.indexOf("attend.visible = false") > src.indexOf("await Promise.all") && src.indexOf("attend.visible = false") < src.indexOf("catch (err)"));
   assert.ok(!/halo\.visible\s*=\s*false/.test(src), "the halo stays");
 });
+
+test("the seven sit on one course of stone as long as the altar, every lotus wholly on it and it wholly on the altar: no lotus hangs over the altar's edge, and no slot stands open between two slabs (the black band and stub under the seats on the T4 of 2026-11-26)", { skip }, async () => {
+  const { tierMesh, TIER } = await import("../../app/levels/t05/figures/plinth.js"), { PIVOT_DZ } = await import("../../app/levels/t05/figures/registry.js");
+  const { ALTAR, SEAT } = await import("../../app/levels/t05/altar.js"), { loadFigure } = await import("../../tools/t05-paint-eval.mjs");
+  const stone = new THREE.MeshBasicMaterial(), top = 3.87, m = tierMesh(stone, top), g = m.geometry, ao = g.attributes.ao;
+  // the hall's stone reads the light a surface takes from a number in every corner: a box without it is black wherever no lamp reaches
+  assert.ok(ao, "the course has an `ao` attribute"); assert.equal(ao.count, g.attributes.position.count); assert.ok([...ao.array].every((v) => v === 1), "open to the hall on every side");
+  assert.equal(m.material, stone); assert.ok(m.castShadow && m.receiveShadow); assert.equal(m.userData.keep, true); assert.equal(m.userData.bake, false);
+  g.computeBoundingBox(); const b = new THREE.Box3().copy(g.boundingBox).applyMatrix4(m.matrixWorld.identity().compose(m.position, m.quaternion, m.scale));
+  assert.ok(Math.abs(b.min.y - top) < 1e-5 && Math.abs(b.max.y - (top + PLINTH.h)) < 1e-5, "it stands on the altar's top and is as high as the slab the figures were made for");
+  // on the altar: inside its cap (0.15 m out from the altar all round) on every side
+  const cap = { x: ALTAR.w / 2 + 0.15, zF: ALTAR.zF + 0.15, zB: ALTAR.zB - 0.15 };
+  assert.ok(b.max.x <= cap.x + 1e-5 && b.min.x >= -cap.x - 1e-5 && b.max.z <= cap.zF + 1e-5 && b.min.z >= cap.zB - 1e-5, "the course keeps within the altar's cap");
+  assert.equal(TIER.h, PLINTH.h);
+  // every lotus: the lowest 0.3 m of the file, as load.js stands it (scaled to the game's height, turned, its middle at the figure's place)
+  for (const d of FIGURE_FILES) {
+    const f = FIGURES.find((x) => x.id === d.id), fig = await loadFigure(d.id), p = fig.pos, s = (f.h - PLINTH.h) / (d.stageH - PLINTH.h), c = Math.cos(f.yaw ?? 0), sn = Math.sin(f.yaw ?? 0);
+    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for (let i = 0; i < p.length; i += 3) if (p[i + 1] < 0.3) { const x = f.x + (p[i] * c + p[i + 2] * sn) * s, z = SEAT.z + PIVOT_DZ + (-p[i] * sn + p[i + 2] * c) * s; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+    assert.ok(x1 - x0 > 4 && z1 - z0 > 4, `${d.id}: the lotus's foot was found`);
+    assert.ok(x0 >= b.min.x - 0.005 && x1 <= b.max.x + 0.005 && z0 >= b.min.z - 0.005 && z1 <= b.max.z + 0.005, `${d.id}'s lotus reaches off the course: x ${x0.toFixed(2)}..${x1.toFixed(2)}, z ${z0.toFixed(2)}..${z1.toFixed(2)} against x ±${b.max.x.toFixed(2)}, z ${b.min.z.toFixed(2)}..${b.max.z.toFixed(2)}`);
+  }
+  // and the loader lays that one course, once, drawing nothing of its own with the hall's materials
+  const src = readFileSync(new URL("../../app/levels/t05/figures/load.js", import.meta.url), "utf8");
+  assert.match(src, /if \(!tier\) root\.add\(\(tier = tierMesh\(M\.stone, top\)\)\)/); assert.ok(!/new THREE\.Mesh\([^;]*\bM\.\w/.test(src), "no bare mesh on one of the hall's materials");
+});

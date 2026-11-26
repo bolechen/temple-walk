@@ -19,6 +19,7 @@ import { asset } from "../../../src/assets.js";
 import { HALL } from "../hall.js";
 import { ALTAR, SEAT, FIGURES } from "../altar.js";
 import { paintMaterial } from "./paint.js";
+import { tierMesh } from "./plinth.js";
 import recipe from "./recipe.json";
 import { FIGURE_FILES, LOAD_ORDER, NEAR, PLINTH, DOOR, PIVOT_DZ, ENV_INTENSITY, HALO_COLOR } from "./registry.js";
 
@@ -66,7 +67,7 @@ export function createFigures({ root, fg, M, sh }) {
     for (const o of hidden) o.visible = true; pm.dispose(); return rt.texture;
   };
 
-  const plinths = new Map();
+  let tier = /** @type {THREE.Mesh | null} */ (null);
   const load = async (id) => {
     const rec = /** @type {NonNullable<ReturnType<typeof figs.get>>} */ (figs.get(id)), d = rec.d, e = entry(id);
     if (!e) { rec.status = "failed"; return; }
@@ -99,9 +100,8 @@ export function createFigures({ root, fg, M, sh }) {
         m.userData.keep = true; m.userData.eye = false; m.userData.walk = false; m.userData.bake = false; m.frustumCulled = true;
       });
       root.add(pivot); pivot.updateMatrixWorld(true); for (const p of paints.values()) p.userData.update();
-      // its plinth, and the white box's seated mass out of the way (the attendants and the halo stay, the halo in the painted colour)
-      const pl = new THREE.Mesh(new THREE.BoxGeometry(PLINTH.w, PLINTH.h, PLINTH.d), M.stone); pl.position.set(f.x, top + PLINTH.h / 2, SEAT.z + PIVOT_DZ); pl.castShadow = pl.receiveShadow = true; pl.userData.keep = true; pl.userData.bake = false; pl.name = `plinth-${id}`;
-      root.add(pl); plinths.set(id, pl);
+      // the course of stone under the seven's lotuses, laid when the first of them arrives, and the white box's seated mass out of the way (the attendants and the halo stay, the halo in the painted colour)
+      if (!tier) root.add((tier = tierMesh(M.stone, top)));
       // (the attendants' white placeholders, two grey plaster columns to a figure, go with the seated mass: the art director's hard condition, 2026-11-26, until real attendants stand there; a figure that did not arrive keeps all three)
       const [body, attend, halo] = e.parts; body.visible = false; attend.visible = false;
       const hm = new THREE.MeshStandardMaterial({ color: HALO_COLOR, roughness: 0.72, metalness: 0.08, side: THREE.DoubleSide }); if (d.halo) hm.color.multiplyScalar(d.halo);

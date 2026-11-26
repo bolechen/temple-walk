@@ -129,9 +129,11 @@
   },
   {
    "name": "座",
-   "color": "#483F35",
+   "color": "#604B36",
    "rough": 0.9,
    "metal": 0,
+   "roughJitter": 0.1,
+   "wear": 0.16,
    "where": {
     "box": {
      "min": [
@@ -154,9 +156,11 @@
   },
   {
    "name": "座上",
-   "color": "#483D32",
+   "color": "#614933",
    "rough": 0.86,
    "metal": 0,
+   "roughJitter": 0.1,
+   "wear": 0.16,
    "where": {
     "box": {
      "min": [
@@ -512,7 +516,7 @@
   },
   {
    "name": "螺发",
-   "color": "#23394F",
+   "color": "#283D4D",
    "rough": 0.62,
    "metal": 0,
    "roughJitter": 0.1,
