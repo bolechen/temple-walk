@@ -1,8 +1,8 @@
 ---
 name: video-production
-description: 从 temple-walk 实机渲染制作 Steam 横屏宣传片与视频号/小红书 9:16 竖屏成片的完整工作流：先声后画、共享素材池、全字库强校验、SSD 直出、仪轨动画逐帧捕获、18 项门禁与 social-promotion 入库规范。适用于为 T00/T05 或后续关卡出宣传片、系列短视频与封面，不用于游戏内普通截图审图（审图用 art-gate）。
+description: 从 temple-walk 实机渲染制作 Steam 横屏宣传片与视频号/小红书 9:16 竖屏成片的完整工作流：先声后画、共享素材池、全字库强校验、SSD 直出、仪轨动画逐帧捕获、交付门禁与 social-promotion 入库规范。适用于为 T00/T05 或后续关卡出宣传片、系列短视频与封面，不用于游戏内普通截图审图（审图用 art-gate）。
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   project: "山门之外 / temple-walk"
 ---
 
@@ -82,8 +82,8 @@ metadata:
    - 严禁在 `about:blank` 跨源请求本地字体文件；起一个带 `Access-Control-Allow-Origin: *` 的本地 HTTP 静态服务提供 `.ttf`。
    - 每个渲染页（尾卡、字幕/标签、封面）均通过 `new FontFace(...).load()` + `document.fonts.add()` 注册，并以 `document.fonts.check()` 强断言（失败直接抛错中止）；切换文本后等两帧 `requestAnimationFrame` 再截 PNG。
 2. **安全区与官方尾卡（9:16 · 1080×1920）**
-   - 字幕框与官方尾卡所有元素均须在 **`y ≤ 1620`**（底部留足 300px 避开视频号/小红书交互栏）。
-   - 尾卡使用官方 logo `/Volumes/Dev/buddhist-say/promo-out/assets/icon512.png`（200×200，`y1 ≤ 1620`）与「如是我闻」品牌名（字号 ≥ 78px，OCR 实测 ≥ 60px，`y1 ≤ 1620`）。
+   - 字幕框与官方尾卡所有元素均须在 **`y ≤ 1620`**（底部留足 `creative_constraints()["safe_bottom_px"]`，避开视频号/小红书交互栏）。
+   - 尾卡使用官方 logo `/Volumes/Dev/buddhist-say/promo-out/assets/icon512.png`（200×200，`y1 ≤ 1620`）与「如是我闻」品牌名（字号 ≥ 78px，且不低于 `creative_constraints()["brand_px"]`，OCR 实测才算数，`y1 ≤ 1620`）。
 3. **混音与双版本输出**
    - 人声（48kHz）驱动背景配乐做 `sidechaincompress` 避让，成片最终响度 **`-14.5 LUFS`**（门禁范围以 `video_qc()` 为准）、真峰值 **`≤ -1.5 dBFS`**（上限以 `video_qc()` 为准）。
    - 每条同时产出：`*-配音.mp4`（主版）、`*.mp4`（等长纯配乐备选）、`*-封面-3x4.png`（`1080×1440`）、`小红书文案.md`、`manifest.json`。
@@ -92,9 +92,11 @@ metadata:
 
 ## 五、交付门禁（缺一不可）
 
-### A. `social-promotion` 的 `video_qc`（硬项全过）
+### A. `social-promotion` 的 `video_qc`（硬项、软项都要过）
 
 跑法、检查项和全部阈值以 `/Users/avenger/social-promotion/docs/VIDEO-DELIVERY.md` 第四节和 `scripts/ops.py` 的 `creative_constraints()` / `video_qc()` 为准，这里不复述，免得那边改了这里过时。
+
+`video_qc` 的 `ok` 只看硬项，软项（响度、真峰值、封面尺寸、文案违禁词等）不过它照样返回真。所以**软项不是可选项**：软项任何一项不过，写明原因和实际读数再请主人定，主人点头前不得把片子交成「待审」。
 
 ### B. 本 skill 另加的 4 项硬检（补 `video_qc` 查不到的）
 1. **全字库 `cmap` 覆盖 = 100%**：`check-fonts.py --fonts ... --text-file ...` 报告 0 缺字。
@@ -109,7 +111,11 @@ metadata:
 落盘、目录内文件、进台账「待审」、绑定素材包、刷新看板，全部按 `/Users/avenger/social-promotion/docs/VIDEO-DELIVERY.md` 第一、二、五节做；制作方只新增「待审」。本项目另加两条：
 
 - 文案注明「云径禅寺为原创虚构山寺，全部为实机渲染」，不写宗教布道口径，不放 Steam 导流、外链、二维码。
+- 文案零违禁词。清单与机检在 `VIDEO-DELIVERY.md`，不过就改文案，不算软项例外。
+- 画面、封面不署配音者姓名；配音信息只写发布文案。
 - 小红书在暂停网页端发布期间只入台账「待审」囤稿，**严禁操作小红书网页创作平台**。
+
+`VIDEO-DELIVERY.md` 第六节「不做的事」与本节同效，先读那一页。
 
 ## 出处与踩坑记录
 
