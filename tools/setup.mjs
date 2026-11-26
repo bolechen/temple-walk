@@ -58,8 +58,7 @@ async function models() {
 
 // ---- the seven Buddhas of level T05 (#701) ----
 // Not in git (20 MB of binaries): fetched from the dataset the registry names, each file checked against its SHA-256 (docs/t05/asset-register.csv), into app/shared/models/t05/.
-// The page keeps the hall's doors shut and never asks for them (app/levels/t05/hall.js), so a clone that cannot fetch them still runs; a fetch that is tried and fails stops the install,
-// and says which hash was expected.
+// The page keeps the hall's doors shut and never asks for them (app/levels/t05/hall.js), so a clone that cannot fetch them still runs; a file fetched that is not the registered one stops the install and says which hash was expected; one that cannot be fetched is a warning unless FIGURES=require.
 async function figures() {
   const { FIGURE_FILES, MASK_FILES, SOURCE } = await import("../app/levels/t05/figures/registry.js");
   if (!SOURCE.base) { say("T05's seven figures: no public source yet (app/levels/t05/figures/registry.js SOURCE), skipped"); return; }
@@ -81,7 +80,10 @@ async function figures() {
       }
       catch (e) { why = e.message; await new Promise((r) => setTimeout(r, 1500 * 2 ** k)); }
     }
-    if (!got) throw new Error(`could not fetch ${m.rel} from ${url}: ${why}`);
+    // A file that arrived and is not the one registered is an error always; one that could not be fetched (the host is out of reach) is a warning, so that no install stops on it
+    // (the page keeps the doors shut and never asks for the figures), unless FIGURES=require asks for them (a job that measures them).
+    if (!got && /not the one expected/.test(why)) throw new Error(`${m.rel} from ${url}: ${why}`);
+    if (!got) { const msg = `could not fetch ${m.rel} from ${url}: ${why}`; if (process.env.FIGURES === "require") throw new Error(msg); say(`warning: ${msg} (the figures are skipped; FIGURES=require makes this an error)`); return; }
     fs.writeFileSync(to, got);
   }
   say(`T05's seven figures in app/shared/models/t05 (${list.length} files, checked)`);
