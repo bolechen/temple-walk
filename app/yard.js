@@ -1572,7 +1572,7 @@ window.__nearest = (x, yy, z, r = 1.5) => {
   const rc = new THREE.Raycaster(), from = new THREE.Vector3(x, yy, z); rc.far = r; let best = null;
   for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) {
     if (!i && !j && !k) continue; rc.set(from, new THREE.Vector3(i, j, k).normalize());
-    const hits = []; scene.traverse((o) => { if (o.visible && (o.isMesh || o.isPoints || o.isLine) && o.userData.part !== "monk") { try { rc.intersectObject(o, false, hits); } catch {} } });   // (a part that cannot be asked is passed)
+    const hits = []; scene.traverse((/** @type {any} */ o) => { if (o.visible && (o.isMesh || o.isPoints || o.isLine) && o.userData.part !== "monk") { try { rc.intersectObject(o, false, hits); } catch {} } });   // (a part that cannot be asked is passed)
     const h = hits.sort((p, q) => p.distance - q.distance)[0];
     if (h && (!best || h.distance < best.distance)) best = { distance: +h.distance.toFixed(2), part: (() => { let o = h.object, part = null; while (o && !part) { part = o.userData.part; o = o.parent; } return part; })(), at: h.point.toArray().map((v) => +v.toFixed(2)) };
   }
