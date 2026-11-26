@@ -81,7 +81,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
       const g = new THREE.PlaneGeometry(w, hh); g.translate(0, hh * 0.46, 0);
       q.setFromEuler(e.set((rnd() - 0.5) * 0.5, turn + k * 1.57, 0)); g.applyMatrix4(m4.compose(v.set(x, y - 0.03, z), q, one));
       const P = g.attributes.position, Nn = g.attributes.normal, col = new Float32Array(P.count * 3);
-      for (let i2 = 0; i2 < P.count; i2++) { const up2 = (P.getY(i2) - y) / hh, c = tint * (0.45 + 0.55 * up2) * 0.8; Nn.setXYZ(i2, (P.getX(i2) - x) * 0.4, 0.9, (P.getZ(i2) - z) * 0.4); col[i2 * 3] = c * 0.9; col[i2 * 3 + 1] = c; col[i2 * 3 + 2] = c * 0.8; }
+      for (let i2 = 0; i2 < P.count; i2++) { const up2 = (P.getY(i2) - y) / hh, c = tint * (0.45 + 0.55 * up2); Nn.setXYZ(i2, (P.getX(i2) - x) * 0.4, 0.9, (P.getZ(i2) - z) * 0.4); col[i2 * 3] = c * 0.9; col[i2 * 3 + 1] = c; col[i2 * 3 + 2] = c * 0.8; }
       g.setAttribute("color", new THREE.BufferAttribute(col, 3));
       g.setAttribute("thru", new THREE.BufferAttribute(new Float32Array(P.count), 1)); leaves.push(g);   // (in the canopy's shade: no sky comes through)
     }
@@ -95,7 +95,7 @@ export function createBamboo(scene, areas, heightAt, keep, opts = {}) {
   // Bamboo leaves are thin: under the overcast sky of J01 the grove is lit as much through its leaves as on them, which is why the
   // reference picture's bamboo is a fresh grey-green (L* 46) where ours, lit only on the leaves' faces, was 17 (#758). Six tenths of the sky's
   // light comes through to a spray open to it, less to one inside the plume (`open`), none to the knee-high clumps under the culms,
-  // which in the canopy's shade also take a fifth less of everything.
+  // in the canopy's shade (they stay as they were before #758).
   const lm = new THREE.Mesh(mergeGeometries(leaves), crownMaterial(leafTexture(), { a2c: opts.a2c, sway: 0.05, snow: 0.75, skyThru: SKY_THRU }));
   // The sprays cast their leaves' shadows, holes and all (three cuts the shadow at the material's alpha test): the
   // dappled light on the steps and on the ground under the grove. Drawn once an hour, like every shadow.
