@@ -36,3 +36,21 @@ test("in the built hall, the hall's timber stands within the walls, but for the 
   const out = 3.5;   // the tie-beams run out through the walls to the bracket sets under the eave, about 3 m
   assert.ok(box.min.x > f.x0 - out && box.max.x < f.x1 + out && box.min.z > f.z0 - out && box.max.z < f.z1 + out, `the hall's timber reaches ${JSON.stringify(box)} past the inside ${JSON.stringify(f)}`);
 });
+
+// The slabs inside the hall's end and back walls that only cast the sun's shadow (site.js, wallShade; #762): the back wall's last
+// centimetres at each back corner took the sun through the wall, a bright seam, because the walls cast from their inner faces.
+test("the walls' shadow slabs stand inside the walls' depth, cast, and draw and stop nothing", async () => {
+  const { wallShade } = await import("../../app/levels/t05/site.js");
+  const { HALL, buildHall } = await import("../../app/levels/t05/hall.js");
+  const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+  const b = buildHall(M).fogShut, w = HALL.wall, s = wallShade(b, w, HALL.floor + HALL.column);
+  assert.ok(s.castShadow && !s.receiveShadow && s.material.colorWrite === false && s.material.depthWrite === false);
+  assert.equal(s.userData.walk, false); assert.equal(s.userData.bake, false); assert.equal(s.userData.keep, true);
+  const P = s.geometry.attributes.position;
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), z = P.getZ(i), inX = x > b.x0 + 1e-6 && x < b.x1 - 1e-6, inZ = z > b.z0 + 1e-6;
+    assert.ok(!(inX && inZ), `a corner of the shade at ${x.toFixed(2)}, ${z.toFixed(2)} stands inside the hall`);
+    assert.ok(x >= b.x0 - w + w / 4 - 1e-6 && x <= b.x1 + w - w / 4 + 1e-6 && z >= b.z0 - w + w / 4 - 1e-6, "and a quarter of the wall in from its outer face");
+    assert.ok(P.getY(i) > HALL.floor && P.getY(i) < HALL.floor + HALL.column);
+  }
+});

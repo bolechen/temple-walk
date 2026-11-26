@@ -40,13 +40,16 @@ async function prepare(page, view) {
   // wrist-w / wrist-f: Sakyamuni's right wrist (#578, #763) from the two nearest places a visitor can stand, the west aisle and before the altar,
   // in the figure's own frame as the mend's evidence has them (docs/t05/evidence/763-wrist-mend/README.md: metres, the seat's foot 0, facing +z)
   const wr = /^wrist-(w|f)$/.exec(view);
+  // The novice stays at the threshold where cam03 put him while the eye is stood elsewhere, and __pick does not see him (yard.js shows him
+  // whenever __look holds the eye, every frame, so what is hidden is what he is made of, not the group). He is not part of any of these pictures.
+  if (mid || wr) await page.evaluate(() => { for (const o of window.__t05FiguresDebug().scene.children) if (o.userData.part === "monk") for (const c of o.children) c.visible = false; });
   if (wr) await page.evaluate((w) => new Promise((done) => {
     const d = window.__t05FiguresDebug(), f = Object.values(d.figures).find((x) => x.paints[0].userData.paint.U.uFig.value === 6), V = d.camera.position.constructor;
     const eye = f.pivot.localToWorld(new V(...(w === "w" ? [-4.05, 0.2, 2.6] : [-1.95, 0.2, 3.1]))), at = f.pivot.localToWorld(new V(-1.85, 3.58, 1.38));
     window.__look(eye.toArray(), at.toArray()); requestAnimationFrame(() => requestAnimationFrame(() => done(null)));
   }), wr[1]);
-  // A column or a beam may stand on the line from the eye to the brow, or the eye itself inside a column (the fifth figure's, from 10 m, stood in
-  // one: a ray from the eye does not see a column's faces from inside). So the line is tried the other way, from a metre before the figure back
+  // A column or a beam may stand on the line from the eye to the brow, or the eye itself inside a column (a ray from the eye does not see a
+  // column's faces from inside). So the line is tried the other way, from a metre before the figure back
   // toward the eye, and the eye steps aside a little at a time, never more than 1.5 m, until nothing stands on it.
   if (mid) for (const side of [0, 0.5, -0.5, 1, -1, 1.5, -1.5]) {
     const clear = await page.evaluate(([i, d0, dx]) => new Promise((done) => {
@@ -56,8 +59,8 @@ async function prepare(page, view) {
       window.__look(from, eye);
       requestAnimationFrame(() => requestAnimationFrame(() => {
         const h = window.__pick(innerWidth / 2, innerHeight / 2, 1)[0], ok = !h || h.distance > far - 0.3;
-        window.__look(eye, [at.x, y, at.z]);
-        let k = 0; const step = () => (++k < 20 ? requestAnimationFrame(step) : done(ok)); requestAnimationFrame(step);   // twenty frames on the pose before the picture (on the T4 the fifth figure's view came out three-quarters dark)
+        window.__look(eye, [at.x, y, at.z]); window.__zonesLook = [eye, [at.x, y, at.z]];
+        let k = 0; const step = () => (++k < 20 ? requestAnimationFrame(step) : done(ok)); requestAnimationFrame(step);   // twenty frames on the pose before the picture
       }));
     }), [+mid[2], mid[1] === "mid10" ? 10 : 3.5, side]);
     if (clear) { if (side) console.log(`${view}: the eye stepped ${side} m aside to see past what stood in the way`); break; }
@@ -165,9 +168,21 @@ exports.run = async ({ open, out, log = console.log, size = [1920, 1080], views 
   fs.mkdirSync(out, { recursive: true });
   const files = [];
   for (const v of views) {
-    const { ctx, page } = await open(`level=t05&hall=open&shot=1&q=high&season=winter&time=day&${VIEWS[v] ?? (/^(mid10|head)-\d$|^wrist-[wf]$/.test(v) ? "show=cam03&view=first" : v)}${query ? "&" + query : ""}`, size, 1);
+    // a view may carry parts switched off after a ~ (mid10-4~gtao,bloom: the same view with ?off=gtao,bloom), to find which pass draws what
+    const [b, off] = v.split("~");
+    const { ctx, page } = await open(`level=t05&hall=open&shot=1&q=high&season=winter&time=day&${VIEWS[b] ?? (/^(mid10|head)-\d$|^wrist-[wf]$/.test(b) ? "show=cam03&view=first" : b)}${off ? "&off=" + off : ""}${query ? "&" + query : ""}`, size, 1);
     try {
-      await prepare(page, v); await page.waitForTimeout(1500);
+      await prepare(page, b); await page.waitForTimeout(1500);
+      // A second and a half is a hundred frames on the T4 (two in software): the pose is checked again and put back just before the picture,
+      // and what moved, or anything nearer than 1.5 m on the line of sight, is logged. (The fifth figure's view came out three-quarters dark
+      // there for another reason: one pixel that was not a number, spread by the bloom; app/src/post.js, guardBloom.)
+      const held = await page.evaluate(() => new Promise((done) => {
+        const L = window.__zonesLook; if (!L) return done(null);
+        const c = window.__t05FiguresDebug().camera.position, moved = Math.hypot(c.x - L[0][0], c.y - L[0][1], c.z - L[0][2]);
+        const near = [0.25, 0.5, 0.75].map((k) => { const h = window.__pick(innerWidth * k, innerHeight / 2, 1)[0]; return h ? [h.material, +h.distance.toFixed(2)] : null; });
+        window.__look(...L); requestAnimationFrame(() => requestAnimationFrame(() => done({ moved: +moved.toFixed(3), at: c.toArray().map((x) => +x.toFixed(2)), near })));
+      })).catch(() => null);
+      if (held && (held.moved > 0.02 || held.near.some((h) => h && h[1] < 1.5))) log("zones held", v, JSON.stringify(held));
       await page.screenshot({ path: path.join(out, `${v}.png`) });
       const mask = await page.evaluate(idPass);
       // what lies under every 12th pixel that is not a figure (the back wall, the timber, the floor): the page's own __pick

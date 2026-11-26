@@ -209,6 +209,12 @@ export function buildSite(M) {
   // Their faces that look into the hall take the mural ground (./mural.js, splitInward): above the column heads the lime
   // between the bracket sets read as a cold grey band over the seven.
   { const [inward, lime] = splitInward(hp.plaster, hall.fogShut, HALL.wall); root.add(mesh(merge(lime), M.plaster(), sh)); if (inward.length) root.add(mesh(merge(inward), muralMaterial(M), sh)); }
+  // The sun's shadow takes a wall's faces that look away from it (three's default for a one-sided material), so the end
+  // and back walls cast from their inner faces: where the back wall meets the east end wall the back wall's last few
+  // centimetres stood within the shadow's bias of that face and took the sun through the wall, a bright seam floor to
+  // eaves (#762; gone with the shadows off). A slab inside each of the three walls' depth, a quarter of the wall in from
+  // either face, casts and draws nothing: what lies just inside the room is now shut from the sun by most of a wall.
+  root.add(wallShade(hall.fogShut, HALL.wall, HALL.floor + HALL.column));
   // The altar, the seven on it with their attendants, and the two kings at its ends (./altar.js), all in the hall's shut-out sky.
   const altar = buildAltar(), ap = altar.parts;
   walk.posts.push(...altar.walk.posts);
@@ -310,3 +316,14 @@ export function buildSite(M) {
 
 /** The walker of the written plan: the one that knows no level, over this plan's rectangles (app/src/plan-walker.js). */
 export const createWalker = createPlanWalker;
+
+/** Slabs within the hall's two end walls and its back wall that only cast the sun's shadow (see buildSite: the seam at the back corners). */
+export function wallShade(b, wall, top) {
+  // (every face of it a quarter wall or a couple of centimetres from any face drawn, so that nothing lies flat on it)
+  const q = wall / 4, y0 = b.y0 + 0.02, h = top - 0.02 - y0, slab = (x0, x1, z0, z1) => { const g = new THREE.BoxGeometry(x1 - x0, h, z1 - z0); g.translate((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2); return g; };
+  const shade = new THREE.Mesh(merge([slab(b.x0 - wall + q, b.x0 - q, b.z0 - wall + q, b.z1 - q), slab(b.x1 + q, b.x1 + wall - q, b.z0 - wall + q, b.z1 - q), slab(b.x0 - wall + q, b.x1 + wall - q, b.z0 - wall + q, b.z0 - q)]),
+    new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  shade.castShadow = true; shade.receiveShadow = false; shade.name = "hallWallShade";
+  Object.assign(shade.userData, { keep: true, walk: false, bake: false, eye: false });
+  return shade;
+}
