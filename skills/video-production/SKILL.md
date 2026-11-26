@@ -2,7 +2,7 @@
 name: video-production
 description: 从 temple-walk 实机渲染制作 Steam 横屏宣传片与视频号/小红书 9:16 竖屏成片的完整工作流：先声后画、共享素材池、全字库强校验、SSD 直出、仪轨动画逐帧捕获、18 项门禁与 social-promotion 入库规范。适用于为 T00/T05 或后续关卡出宣传片、系列短视频与封面，不用于游戏内普通截图审图（审图用 art-gate）。
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   project: "山门之外 / temple-walk"
 ---
 
@@ -44,7 +44,7 @@ metadata:
      /Users/avenger/social-promotion/ops/checks/make_voice.py \
      --lines <pack>/vo/lines.json --out <pack>/vo
    ```
-   - 每句须双过：拼音含声调 `CER ≤ 2%`、音高偏差 `±8%`；`vo/report.json` 中 `ok` 全为 `true`。
+   - 每句须过双门禁（拼音含声调、音高，阈值以 social-promotion 的 `voice_spec()` 为准）；`vo/report.json` 中 `ok` 全为 `true`。
    - **异体字防误读**：`lines.json` 口播稿写通用字（如「吃茶去」），渲染画面字幕时再替换为典雅字形（如「喫茶去」）。
    - 成片目录需留 `voice_ref.py` 引用 `kang` 参考音路径，供 `ops qc` 校验音色来源。
 3. **由真实音频时长反算分镜**：用 `ffprobe` 读出 `vo/00.wav ..` 精确秒数，算出 `bodyEnd` 与每个镜头需要的秒数（再加 `0.5s` 转场余量），再进入录屏阶段——彻底杜绝盲录浪费、末尾冻帧或同一段素材回跳。
@@ -85,30 +85,18 @@ metadata:
    - 字幕框与官方尾卡所有元素均须在 **`y ≤ 1620`**（底部留足 300px 避开视频号/小红书交互栏）。
    - 尾卡使用官方 logo `/Volumes/Dev/buddhist-say/promo-out/assets/icon512.png`（200×200，`y1 ≤ 1620`）与「如是我闻」品牌名（字号 ≥ 78px，OCR 实测 ≥ 60px，`y1 ≤ 1620`）。
 3. **混音与双版本输出**
-   - 人声（48kHz）驱动背景配乐做 `sidechaincompress` 避让，成片最终响度 **`-14.5 LUFS`**（门禁范围 `-17 ~ -13 LUFS`）、真峰值 **`≤ -1.5 dBFS`**（上限 `-1.0 dBFS`）。
+   - 人声（48kHz）驱动背景配乐做 `sidechaincompress` 避让，成片最终响度 **`-14.5 LUFS`**（门禁范围以 `video_qc()` 为准）、真峰值 **`≤ -1.5 dBFS`**（上限以 `video_qc()` 为准）。
    - 每条同时产出：`*-配音.mp4`（主版）、`*.mp4`（等长纯配乐备选）、`*-封面-3x4.png`（`1080×1440`）、`小红书文案.md`、`manifest.json`。
 
 ---
 
-## 五、18 项交付门禁（缺一不可）
+## 五、交付门禁（缺一不可）
 
-### A. `social-promotion` 官方 `ops qc`（14/14 全过）
-使用含 `numpy` 的 venv Python 调用 `/Users/avenger/social-promotion/scripts/ops.py` 的 `video_qc()`（勿用系统 `python3`）：
-```bash
-/Volumes/SSD/buddhist-say/promo-out/tts-eval/.venv/bin/python - <<'EOF'
-import sys
-from pathlib import Path
-sys.path.insert(0, "/Users/avenger/social-promotion/scripts")
-import ops
-d = Path("<pack_dir>")
-res = ops.video_qc(d / "<video>-配音.mp4", d, {"notes": ""})
-print(ops.qc_summary(res))
-assert res["ok"], "ops qc failed"
-EOF
-```
-覆盖：1080×1920、音轨、时长 ≤60s、响度 −17～−13 LUFS、真峰值 ≤−1 dBFS、尾卡 logo 尺寸与安全区、品牌名「如是我闻」字高与安全区、`kang 老师` 门禁与参考音、1080×1440 封面、文案零违禁词（`佛经 / 网站 / 免费 / 先收藏 / 浏览器搜 / 私信`）。
+### A. `social-promotion` 的 `video_qc`（硬项全过）
 
-### B. 新增 4 项硬检（补齐 `ops qc` 盲区）
+跑法、检查项和全部阈值以 `/Users/avenger/social-promotion/docs/VIDEO-DELIVERY.md` 第四节和 `scripts/ops.py` 的 `creative_constraints()` / `video_qc()` 为准，这里不复述，免得那边改了这里过时。
+
+### B. 本 skill 另加的 4 项硬检（补 `video_qc` 查不到的）
 1. **全字库 `cmap` 覆盖 = 100%**：`check-fonts.py --fonts ... --text-file ...` 报告 0 缺字。
 2. **标签与字幕 PNG 非空墨迹检测**：`check-fonts.py --png <pack>/gfx/top-hook.png <pack>/gfx/sub-*.png` 全部通过（杜绝 FOIT 空白灰条）。
 3. **人工必看 3 张复核图**：① 批次 `3条封面总览`；② 全部顶部标签与字幕逐行拼接的字体全检图；③ 每条成片的 `qc/sheet.png` 与 `qc/last.png`。
@@ -116,15 +104,12 @@ EOF
 
 ---
 
-## 六、入库 `social-promotion` 发稿纪律
+## 六、入库 `social-promotion`
 
-- **文案合规**：零违禁词、零外链/Steam 导流/二维码、不写宗教布道口径，注明「云径禅寺为原创虚构山寺，全部为实机渲染」。
-- **台账流转**：通过 `/Users/avenger/social-promotion/scripts/ledger_store.py`（`mutate_rows` + `set_package`）写入 `ops/ops.db` 并绑定 `video_file / cover_file / caption_file`（物理路径须在 `MEDIA_ROOTS` 内）。
-  - 制作方**只能新增「待审」**；「待审 → 待发」由所有者审片后拍板。
-  - 入库后运行 `python3 scripts/board.py` 刷新本地看板，并运行 `python3 scripts/ops.py ledger check` 确认 `integrity: ok` 且新增条目零媒体缺失。
-  - 小红书在暂停网页端发布期间只入台账「待审」囤稿，**严禁操作小红书网页创作平台**。
+落盘、目录内文件、进台账「待审」、绑定素材包、刷新看板，全部按 `/Users/avenger/social-promotion/docs/VIDEO-DELIVERY.md` 第一、二、五节做；制作方只新增「待审」。本项目另加两条：
 
----
+- 文案注明「云径禅寺为原创虚构山寺，全部为实机渲染」，不写宗教布道口径，不放 Steam 导流、外链、二维码。
+- 小红书在暂停网页端发布期间只入台账「待审」囤稿，**严禁操作小红书网页创作平台**。
 
 ## 出处与踩坑记录
 
