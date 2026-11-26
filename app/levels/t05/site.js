@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
-import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
+import { buildHall, OUTER, FILL, HALL, HALL_DOORS } from "./hall.js";
 import { buildAltar, benchFigures } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE, AXIS_TREES } from "./axis.js";
 import { buildTower } from "./tower.js";
@@ -19,6 +19,7 @@ import { buildSurround, eaveCap } from "./surround.js";
 import { buildFlora, buildTreeGround } from "./flora.js";
 import { dryMaterials } from "./dry.js";
 import { ridgeMaterials } from "./ridge.js";
+import { muralMaterial, MURAL_LIT, splitInward } from "./mural.js";
 import { debugGate } from "../../src/debuggate.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
@@ -191,19 +192,21 @@ export function buildSite(M) {
   root.add(mesh(merge([...hp.fascia, ...hp.step]), M.fascia, { ao: () => 0.8 }), mesh(merge([...hp.rafters, ...hp.flyers]), M.woodZ, eaveAo), mesh(merge(hp.beams), M.woodX, eaveAo),
     mesh(merge([...hp.ends, ...hp.drips]), ridgeMaterials(M).ends, eaveAo));
   shade[0].push(hall.box);
-  // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
-  // walls are painted (ART.md, phase two).
+  // The murals' ground inside the walls: an earth ground (mural.js), darkened by the hall's shut-out sky like everything
+  // inside, until the walls are painted (ART.md, phase two).
   // The shut doors' leaves face the court: they take the open air's light, not the inside's (hall.js, HALL_DOORS).
   if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodV, { ao: () => 1 }), mesh(merge(hp.ledges), M.woodX, { ao: () => 1 }), mesh(merge(hp.iron), M.iron, { ao: () => 1, cast: false }));   // (the planks' vertical grain, the ledges across, the iron of the ring and the studs: as the prologue's shut doors, building.js)
   if (hp.windowShade.length) {   // (the windows of a shut hall: a sheet that casts the sun's shadow and draws nothing; hall.js)
     const veil = mesh(merge(hp.windowShade), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }), { receive: false });
     veil.userData.keep = true; veil.userData.bake = false; root.add(veil);
   }
-  root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
+  root.add(mesh(merge(hp.mural), muralMaterial(M), sh), mesh(merge(hp.floor), M.stone, sh));   // (an earth ground of its own, darker and warm: mural.js)
   // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
   // faces read eight to ten times the back wall, the art review of #481); their outer faces lie outside the shut box.
-  root.add(mesh(merge(hp.plaster), M.plaster(), sh));
+  // Their faces that look into the hall take the mural ground (./mural.js, splitInward): above the column heads the lime
+  // between the bracket sets read as a cold grey band over the seven.
+  { const [inward, lime] = splitInward(hp.plaster, hall.fogShut, HALL.wall); root.add(mesh(merge(lime), M.plaster(), sh)); if (inward.length) root.add(mesh(merge(inward), muralMaterial(M), sh)); }
   // The altar, the seven on it with their attendants, and the two kings at its ends (./altar.js), all in the hall's shut-out sky.
   const altar = buildAltar(), ap = altar.parts;
   walk.posts.push(...altar.walk.posts);
@@ -233,6 +236,7 @@ export function buildSite(M) {
     lit.k = still || cut ? want : lit.k + (want - lit.k) * (1 - Math.exp(-dt / FILL.ease));
     if (Math.abs(lit.k - want) < 1e-3) lit.k = want;
     for (const l of fills) l.intensity = l.userData.full * lit.k;
+    MURAL_LIT.value = lit.k;   // (the mural ground's warm bounce comes up with the fill: ./mural.js)
     return lit.k;
   };
 
@@ -277,7 +281,7 @@ export function buildSite(M) {
     b: [STATION.B[0], STATION.B[1], 0, 0.244],         // cam02: out from the flight's foot, raised 14°: the steps, the platform over his head, the eave columns and the doors' dark
     c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3). Its still is taken in third person (&view=third): the following eye, a few steps behind him, has the door's jambs at the picture's edges; from his own eyes in the doorway they are beside him (DECISIONS.md, 2026-11-21)
     d: [STATION.D[0], STATION.D[1], -0.96, 0.09],      // down the east side, looking west across the hall (cam04's 305°)
-    e: [STATION.E[0], STATION.E[1], 0, 1.40],          // under the roof, raised 80° (cam05): the frame alone, no face cut (the art director, 2026-11-26, b2′ of #762; before, 1.15 from #549 looked at three faces from under the chin)
+    e: [STATION.E[0], STATION.E[1], 0, 1.40],          // under the roof, raised 80° (cam05): the frame alone, no face cut (the art director, 2026-11-26, the b2p shot of #762; before, 1.15 from #549 looked at three faces from under the chin)
     f: [STATION.F[0], STATION.F[1], 0, 0.17],
     ...ax.views,
     ...st.views,

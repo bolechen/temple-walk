@@ -56,8 +56,8 @@ export const HALL = Object.freeze({
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
 export const TIMBER = Object.freeze({ ring: 2.2, lift: 10.5, beam: 9.5, board: 1.0, from: 3.0, to: 4.5 });
 export const FILL = Object.freeze({
-  door: 360, doorX: [-8, 8], doorY: 14, doorZ: 8, doorAimX: [-11, 11], doorAimY: 11.5, doorAimZ: -16.9, doorDist: 42, doorAngle: 0.6, doorSoft: 0.3, doorCol: 0xfff4e8,
-  up: 105, upDist: 26, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-6, -8, -6], upAngle: 0.6, upSoft: 0.5, upCol: 0xffc890, out: 9, depth: 3, ease: 0.5,
+  door: 1030, doorX: [-8, 8], doorY: 14, doorZ: 8, doorAimX: [-11, 11], doorAimY: 11.5, doorAimZ: -16.9, doorDist: 31, doorAngle: 0.6, doorSoft: 0.3, doorCol: 0xfff4e8,
+  up: 50, upDist: 26, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-6, -8, -6], upAngle: 0.6, upSoft: 0.5, upCol: 0xffe0c0, out: 9, depth: 3, ease: 0.5,
 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
 export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
@@ -228,7 +228,7 @@ export function buildHall(M) {
     // (along an end wall it runs from the front wall's inner face to the back wall's, not on into the front wall)
     if (off > 0) {
       const g0 = ax ? -(X + H.out - H.wall) : zB - H.out + H.wall, g1 = ax ? X + H.out - H.wall : ZS[0] + H.front - H.wall;
-      put(mural, g1 - g0, wallUp - y0, 0.04, (g0 + g1) / 2, (y0 + wallUp) / 2, at - out * (H.wall - off + 0.05));
+      put(mural, g1 - g0, top - y0, 0.04, (g0 + g1) / 2, (y0 + top) / 2, at - out * (H.wall - off + 0.05));   // (up to the column heads: above them the bracket sets' inner arms come through the wall, and a ground laid over them cut them into dark blocks)
     }
     // The sets: one on every column head but the corners' (their own sets, below) and one in the middle of every bay, each
     // turned out from the wall; along the wall over them, the column-head beams that tie them in a row, a beam to each tier

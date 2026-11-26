@@ -181,6 +181,7 @@ if (require.main === module) (async () => {
   const br = await chromium.launch({ args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", `--host-resolver-rules=MAP ${BENCH_HOST} 127.0.0.1`] });
   const open = async (q, [W, H]) => { const ctx = await br.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1, locale: "zh-CN" }), page = await ctx.newPage();
     page.on("pageerror", (e) => console.log("pageerror", e.message));
+    page.on("console", (m) => { if (m.type() === "error") console.log("console", m.text().slice(0, 400)); });   // (a shader that does not compile says so only here)
     await page.goto(`http://${BENCH_HOST}:${port}/?${q}&debug=0`, { waitUntil: "commit", timeout: 120000 }); await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 600000 }); return { ctx, page }; };
   await exports.run({ open, out, size: [w, h], views: arg("views", "cam03,cam06,mid10-0,mid10-3,mid10-6").split(","), query: arg("query", "") });
   await br.close(); srv.close();
