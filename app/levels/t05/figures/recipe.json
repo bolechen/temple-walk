@@ -219,7 +219,7 @@
   },
   {
    "name": "面与手（肤色）",
-   "color": "#8F7656",
+   "color": "#8D765A",
    "rough": 0.78,
    "metal": 0,
    "roughJitter": 0.08,
@@ -512,7 +512,7 @@
   },
   {
    "name": "螺发",
-   "color": "#2A3A45",
+   "color": "#2F4052",
    "rough": 0.62,
    "metal": 0,
    "roughJitter": 0.1,
