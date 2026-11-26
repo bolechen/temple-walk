@@ -35,3 +35,14 @@ test('the prologue sets its own timber; a page that built T05 keeps the old one'
   assert.deepEqual(read(N), [[1, 1, 2.2], [1, 1, 2.2], [1, 1, 2.2]], 'T05 sets nothing and its wood is as it was');
   assert.deepEqual(read(createMaterials()), [[1, 1, 2.2], [1, 1, 2.2], [1, 1, 2.2]], 'one page\'s style is not another\'s');
 });
+
+test('the rooms inside the halls keep the wood as it was, whatever the level does to its outdoor timber', async () => {
+  const T00 = await import('../../app/levels/t00/site.js');
+  const { buildInteriors } = await import('../../app/src/interior.js');
+  const M = createMaterials(), site = T00.buildSite(M), { group } = buildInteriors(M, site.halls);
+  const styled = new Set([M.woodV, M.woodX, M.woodZ]), inside = new Set(Object.values(M.woodIn));
+  let own = 0;
+  group.traverse((o) => { if (!o.isMesh) return; for (const m of [o.material].flat()) { assert.ok(!styled.has(m), `${o.name || 'a mesh'} in a room wears the outdoor timber`); if (inside.has(m)) own++; } });
+  assert.ok(own > 0, 'the rooms do wear the indoor timber');
+  for (const m of inside) { const sh = compiled(m); assert.equal(sh.uniforms.uWoodGain, undefined); assert.match(sh.fragmentShader, /smoothstep\(2\.2,\.9,/); }
+});

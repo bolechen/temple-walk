@@ -128,6 +128,9 @@ export function createMaterials() {
   return {
     interior,
     woodV: wood("woodV", "9.,1.1,9.", "xyz", undefined, true), woodX: wood("woodX", "1.1,9.,9.", "yxz", undefined, true), woodZ: wood("woodZ", "9.,9.,1.1", "xzy", undefined, true), woodStyle,
+    // The same timber for what stands inside the halls (the altar tables, the cases, the frames on the walls: interior.js), which a
+    // level's outdoor style does not reach: the rooms are lit by their own lamps and were drawn for this wood as it is (#758).
+    woodIn: { woodV: wood("woodVIn", "9.,1.1,9.", "xyz"), woodX: wood("woodXIn", "1.1,9.,9.", "yxz"), woodZ: wood("woodZIn", "9.,9.,1.1", "xzy") },
     // Indoors (framing.js): the beams, ribs and purlins in the deep, reddish-grey timber of the palette's timber under the
     // eaves, and the columns in vermilion faded almost to brown, as the palette asks for posts (docs/ART-SPEC.md).
     beamX: wood("beamX", "1.1,9.,9.", "yxz", ".07,.058,.047"), beamZ: wood("beamZ", "9.,9.,1.1", "xzy", ".07,.058,.047"), pillar: wood("pillar", "9.,1.1,9.", "xyz", ".17,.06,.04"),
