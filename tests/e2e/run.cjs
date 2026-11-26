@@ -327,6 +327,11 @@ const scenarios = {
       const vw = await f.page.evaluate(() => innerWidth), vh = await f.page.evaluate(() => innerHeight);
       await f.page.mouse.click(vw / 2, vh * 0.72); await f.frames(20);
       const p3 = await pose(); expect(p3.target !== null || Math.hypot(p3.x - p2.x, p3.z - p2.z) > 0.05, "T05: a tap on the ground should walk him: " + JSON.stringify([p2, p3]));
+      // #770 items 1 and 2: the prologue's first goal (the incense in the great hall) and its line about a stamp are not said in T05, which has no seals.
+      // Walked on and waited a while so that both would have shown (the goal line within 13 s of its timer, the stamp line after 4 m): neither does.
+      await f.page.keyboard.down("w"); await f.frames(60); await f.page.keyboard.up("w"); await f.frames(60);
+      const said = await f.page.evaluate(() => ({ say: document.getElementById("say")?.textContent || "", hint: document.getElementById("hint")?.textContent || "" }));
+      expect(!/香|朱印|盖一枚|stamp|incense/i.test(said.say + said.hint), "T05 must not speak of seals or incense: " + JSON.stringify(said));
       expect(f.errors.length === 0, f.errors.join("\n")); await f.close(); }
     // Stepped in, the same key walks him.
     const t = await open(b, base, "q=low&debug=0&fast=1" + BARE, { enter: false });

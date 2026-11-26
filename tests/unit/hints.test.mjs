@@ -79,3 +79,13 @@ test("a visitor who already holds a seal is not told what they know", () => {
   assert.ok(!h.state().said.includes("stamp") || h.state().tip !== "stamp", "no line about stamps");
   assert.notEqual(h.state().tip, "stamp");
 });
+
+// #770 items 1 and 2: a level with no book of seals (T05's first edition) is told nothing about stamps or the book; the prologue still is.
+test("with no book of seals, the line about a stamp and the line about the book are never said; with one, they are", () => {
+  const h = createHints({ book: false });
+  h.say.entered(); rest(h); h.step(0.1, 5, false, true);
+  assert.ok(!h.state().said.includes("book") && page.hint.innerHTML.indexOf("朱印") < 0, "no stamp line after 5 m: " + page.hint.innerHTML);
+  h.say.seal(); assert.notEqual(h.state().tip, "book", "no line about the book");
+  const t00 = createHints(); t00.say.entered(); rest(t00); t00.step(0.1, 5, false, true);
+  assert.equal(t00.state().tip, "stamp", "the prologue says it as before"); assert.ok(page.hint.innerHTML.includes("朱印"));
+});

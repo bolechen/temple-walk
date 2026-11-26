@@ -65,7 +65,7 @@ export function createWatch(looks) {
 
 /**
  * @param {{ level: any, page: any, places: Record<string, any>, storage: Storage | null, rites: any, y: any, wait: (s: number) => Promise<void>,
- *   say: (text: string, secs?: number) => void, track?: (name: string, data?: any) => void }} o
+ *   say: (text: string, secs?: number) => void, tip?: (id: string, text: string, secs?: number) => boolean, track?: (name: string, data?: any) => void }} o
  */
 export function createLevelPage(o) {
   const { level, page: P, places, y } = o, id = level?.id;
@@ -75,8 +75,10 @@ export function createLevelPage(o) {
   const read = () => (o.storage ? readLevelPage(o.storage, id) : {});
   const marks = () => read();
   const lineOf = (lid) => P.stele.lines.find((l) => l.id === lid) || null;
+  // A free rendering of a copied line, for a reader who has no classical Chinese: the level's own words for it in the visitor's language, and nothing in Chinese (#770).
+  const glossOf = (l) => { const g = l ? say(l.text) : ""; return g && g !== l.text ? g : ""; };
   // What the page shows now: the stroke and its line once made, and the copied line (the stone's words, as cut).
-  const view = (m = marks()) => ({ stroke: m.p1 ? 1 : 0, note: m.p1 ? say(P.p1.note) : "", copy: m.stele ? lineOf(m.stele.line)?.text || "" : "", from: m.stele ? say(P.stele.from) : "" });
+  const view = (m = marks()) => ({ stroke: m.p1 ? 1 : 0, note: m.p1 ? say(P.p1.note) : "", copy: m.stele ? lineOf(m.stele.line)?.text || "" : "", from: m.stele ? say(P.stele.from) : "", gloss: m.stele ? glossOf(lineOf(m.stele.line)) : "" });
   // The line to copy: the one the stone was copied for last time comes round to the next, so that a second visit copies another.
   const nextLine = () => { const m = marks(), i = P.stele.lines.findIndex((l) => l.id === m.stele?.line); return P.stele.lines[(i + 1) % P.stele.lines.length]; };
   // Every look taken as met (a page that already has the stroke, or a tool that cannot hold a view for seconds).
@@ -107,6 +109,18 @@ export function createLevelPage(o) {
     state.last = "p1"; o.track?.("t05.page", { mark: "p1", place: placeId });
     return true;
   }
+  // The level's two lines at the foot (page.hints, #770): before a shut door, and once the first look is met and the second is not.
+  let atDoor = false, doorN = 0;
+  const nudge = (w) => {
+    const H = P.hints; if (!H || !o.tip) return;
+    const d = H.door;
+    if (d) {
+      const m = 3, inB = w.x > d.box.x0 && w.x < d.box.x1 && w.z > d.box.z0 && w.z < d.box.z1, far = w.x < d.box.x0 - m || w.x > d.box.x1 + m || w.z < d.box.z0 - m || w.z > d.box.z1 + m;
+      if (inB && !atDoor) { if (o.tip("door-" + doorN, say(d.text), 5)) { atDoor = true; doorN++; } }   // (a line refused because another is showing is tried again next frame)
+      else if (far) atDoor = false;
+    }
+    if (H.eave && !read().p1 && watch.met().includes("c01") && !watch.met().includes("c02")) o.tip("eave", say(H.eave.text), 6);
+  };
   return {
     copy, stroke, view, marks, nextLine,
     /** Whether a place is the page's own observance, offered with E, and what the button says. */
@@ -122,6 +136,7 @@ export function createLevelPage(o) {
      * (the place of the look just met). Nothing is said while a look is held: no hint, no counter (CHECKPOINTS.md §2.2).
      */
     tick(dt, w, yaw) {
+      nudge(w);
       if (read().p1 || watch.done()) return null;
       const foot = y.walker.heightAt(w.x, w.z), pitch = viewPitch(y.screenOf, { x: w.x, y: foot + 1.4, z: w.z }, yaw);
       state.pitch = pitch;

@@ -188,7 +188,7 @@ export function createGame(y) {
   // A temple's own page (T05: the observation's stroke and the copy of the stele; src/levelpage.js, app/levels/t05/page.js), kept
   // under yunjing.levels.v1 and never in the prologue's book. A page opened by a tool that names its own place keeps nothing.
   const pageStore = (() => { try { return y.level?.page && placeKept(Q, BENCH, y.level) ? localStorage : null; } catch { return null; } })();
-  const lp = y.level?.page ? createLevelPage({ level: y.level, page: y.level.page, places, storage: pageStore, rites, y, wait, say: (text, secs) => say(text, secs), track }) : null;
+  const lp = y.level?.page ? createLevelPage({ level: y.level, page: y.level.page, places, storage: pageStore, rites, y, wait, say: (text, secs) => say(text, secs), tip: (id, text, secs) => !!y.hints?.tip(id, text, secs), track }) : null;
   // ---- 同修留痕 (#340, presence.js): that others have been here today, said once at each place, and their stubs in the censer ----
   // Anything that goes wrong is silent. The visitor who has asked not to be tracked is read for but not counted.
   const presence = createPresence({ on: presenceOn(location.search), quiet: navigator.doNotTrack === "1" || /** @type {any} */ (navigator).globalPrivacyControl === true });
@@ -227,7 +227,7 @@ export function createGame(y) {
     // The line copied from the stone is written as cut, in the regular hand (the running hand has no traditional forms);
     // his own note is laid a phrase to a column, so that no word is split between two, beside the copy as on its own.
     const phrases = (/** @type {string} */ s) => s.replace(/([，。、；！？])(?=\S)/g, "$1\n");
-    const cut = last === "stele", text = cut ? v.copy : v.note, from = cut ? (v.note ? `${v.from}\n${phrases(v.note)}` : v.from) : "";
+    const cut = last === "stele", text = cut ? v.copy : v.note, from = cut ? [v.from, v.gloss, v.note && phrases(v.note)].filter(Boolean).join("\n") : "";
     if (!text) return;
     const lines = cut ? text.replace(/[，、。；]/g, "") : phrases(text);   // the stone has no stops: the copy is as cut, as on the leaf
     // The stroke of ink across the top of the page, as on the leaf he held: there once the observation has put it there.
@@ -768,7 +768,8 @@ export function createGame(y) {
       if (arrival) { arrive(); return; }   // a lamp lit for him: that is where he is taken first
       let waited = 0;
       const filledAtEntry = journey.opened();   // (a book filled on this walk is told of when it is shut, with the hour, not by this timer, #726)
-      const go = () => { const n = journey.next(); if (n) say(t(n.hint), 8); setTimeout(() => filledAtEntry && announce(), 14000 * fast); };
+      const go = () => { const n = !y.level || y.level.book ? journey.next() : null; if (n) say(t(n.hint), 8);   // (a level with no book of seals has no next place to name: its own first line is `intro`)
+      setTimeout(() => filledAtEntry && announce(), 14000 * fast); };
       const until = setInterval(() => { waited += 0.25; if (waited > 0.5 && (y.hints?.state().tip !== "walk" || waited > 13)) { clearInterval(until); go(); } }, 250 * fast);
     };
     // A friend's shared link names a scene (?from=, src/sharelink.js, #344): a first visit is shown the mountain as ever,

@@ -7,8 +7,9 @@ import { t } from "./i18n.js";
 const $ = (id) => document.getElementById(id);
 const K = (...k) => k.map((x) => `<kbd>${x}</kbd>`).join("");
 
-export function createHints({ off = false, ui = null, strafeAD = () => false } = {}) {
-  const coarse = matchMedia("(pointer: coarse)").matches, line = $("hint"), said = new Set(), timers = {};
+/** `book`: the level keeps a book of seals; one that does not (T05's first edition) is told nothing of seals, and the line about stamping and the one about the book are never said there. */
+export function createHints({ off = false, ui = null, strafeAD = () => false, book = true } = {}) {
+  const coarse = matchMedia("(pointer: coarse)").matches, line = $("hint"), said = new Set(book ? [] : ["stamp"]), timers = {};
   let now = null, lineT = 0, walked = 0, ran = false, stillFor = 0, calmT = 0, dragged = false, pinched = false;
 
   // One line at the foot of the view. `id` is said only once in a visit; a later line replaces an earlier one.
@@ -84,7 +85,7 @@ export function createHints({ off = false, ui = null, strafeAD = () => false } =
     upView() { tip("upView", t("楼上用自己的眼睛看，下楼再换视角。"), 6); },
     // The visitor has a seal already: the line that says a walk can earn one is not for them (#445).
     stamped() { said.add("stamp"); },
-    seal() { said.add("stamp"); tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
+    seal() { said.add("stamp"); if (!book) return; tip("book", coarse ? t("点左上角的小印，翻看朱印帐") : t("{b}或左上角的小印，翻看朱印帐", { b: K("B") }), 7); },
     // Said once, the first time the visitor is on the mountain after filling the book (game.js keeps that it was said).
     // (#726: when the hour has just turned to the visitor's own, the same line says so: one sentence, not two)
     seasons(clock) { if (clock) return tip("seasons", coarse ? t("山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换") : t("山中时辰已随你此刻　·　季节与时辰，留影与歇脚里可换　·　{t}时节", { t: K("T") }), 9); return tip("seasons", coarse ? t("时节已开：留影与歇脚里可选") : t("时节已开：留影与歇脚里可选　·　{t}时节", { t: K("T") }), 9); },
