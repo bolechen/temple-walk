@@ -163,3 +163,45 @@ test("the mended Sakyamuni stands as the first did: the page stands a figure by 
   const was = [-2.40505, 0, -2.31716, 2.40505, 8.2, 2.31716];   // the figure's frame, as packed from sakyamuni-V14b (ship-701)
   [...lo, ...hi].forEach((v, k) => assert.ok(Math.abs(v - was[k]) < 1e-3, `bound ${k}: ${v}, was ${was[k]}`));
 });
+
+// The files as shipped hold four stray triangles (one on the side of Vipasyin's head, two on Visvabhu's arm, one behind Kanakamuni's ear) whose
+// tangent, the exporter's fallback (1, 0, 0), lies along their normal (−1, 0, 0): exactly on three of them, within a step of the bytes on the fourth. three's vertex shader makes the bitangent by normalising
+// the cross of the two, which is nothing: on a graphics card that is not a number, and the one pixel the triangle covered was smeared by the bloom
+// over three quarters of the picture (the T05 lead's T4 of 2026-11-26, from 10 m before Visvabhu: pixel 1520, 519, which is Vipasyin's triangle).
+test("no point of a figure keeps a tangent that lies along its normal: load.js turns each such tangent square to the normal and touches no other", { skip }, async () => {
+  const fs = await import("node:fs"), THREE = await import("three"), { mendTangents, tangentAlong } = await import("../../app/levels/t05/figures/tangents.js");
+  const { NodeIO } = await import("@gltf-transform/core"), { ALL_EXTENSIONS } = await import("@gltf-transform/extensions"), { MeshoptDecoder } = await import("meshoptimizer");
+  const { FIGURE_FILES } = await import("../../app/levels/t05/figures/registry.js");
+  await MeshoptDecoder.ready; const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.decoder": MeshoptDecoder });
+  const found = {};
+  for (const d of FIGURE_FILES) {
+    const doc = await io.read(new URL(d.file, bin).pathname);
+    for (const mesh of doc.getRoot().listMeshes()) for (const prim of mesh.listPrimitives()) {
+      const N = prim.getAttribute("NORMAL"), T = prim.getAttribute("TANGENT");
+      const nor = new THREE.BufferAttribute(N.getArray().slice(), 3, N.getNormalized()), tan = new THREE.BufferAttribute(T.getArray().slice(), 4, T.getNormalized()), was = tan.array.slice();
+      const bad = []; for (let i = 0; i < tan.count; i++) if (tangentAlong(nor, tan, i)) bad.push(i);
+      assert.equal(mendTangents(nor, tan), bad.length);
+      if (bad.length) found[d.id] = (found[d.id] ?? 0) + bad.length;
+      for (let i = 0; i < tan.count; i++) {
+        assert.ok(!tangentAlong(nor, tan, i), `${d.id}: point ${i} still has a tangent along its normal`);
+        if (bad.includes(i)) {
+          const n = new THREE.Vector3().fromBufferAttribute(nor, i).normalize(), t = new THREE.Vector3(tan.getX(i), tan.getY(i), tan.getZ(i));
+          assert.ok(Math.abs(t.length() - 1) < 0.02 && Math.abs(t.dot(n)) < 0.02, `${d.id}: point ${i}'s new tangent is a unit vector square to the normal`); assert.equal(tan.array[i * 4 + 3], was[i * 4 + 3], "the handedness is kept");
+        } else for (let k = 0; k < 4; k++) assert.equal(tan.array[i * 4 + k], was[i * 4 + k], `${d.id}: point ${i} was sound and is not touched`);
+      }
+    }
+  }
+  assert.deepEqual(found, { vipasyin: 3, visvabhu: 6, kanakamuni: 3 }, "the shipped files' strays, a triangle each and two on Visvabhu (when the files are published without them, say so here)");
+  assert.match(fs.readFileSync(new URL("../../app/levels/t05/figures/load.js", import.meta.url), "utf8"), /mendTangents\(g\.attributes\.normal, g\.attributes\.tangent\)/, "load.js mends every part as it arrives");
+});
+
+test("a tangent of no length, or one along the normal whichever axis that is, is mended; the handedness left at nought becomes 1", async () => {
+  const THREE = await import("three"), { mendTangents, tangentAlong } = await import("../../app/levels/t05/figures/tangents.js");
+  const q = (v) => Int8Array.from(v.map((x) => Math.round(x * 127)));
+  const nor = new THREE.BufferAttribute(q([1, 0, 0, 0, 1, 0, 0, 0, -1, 0.6, 0.8, 0, 0, 1, 0]), 3, true);
+  const tan = new THREE.BufferAttribute(q([-1, 0, 0, 1, 0, 1, 0, -1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1]), 4, true), was = tan.array.slice();
+  assert.equal(mendTangents(nor, tan), 4);
+  for (let i = 0; i < 4; i++) { assert.ok(!tangentAlong(nor, tan, i)); const n = new THREE.Vector3().fromBufferAttribute(nor, i).normalize(), t = new THREE.Vector3(tan.getX(i), tan.getY(i), tan.getZ(i)); assert.ok(Math.abs(t.length() - 1) < 0.02 && Math.abs(t.dot(n)) < 0.02); }
+  assert.equal(tan.getW(0), 1); assert.equal(tan.getW(1), -1); assert.equal(tan.getW(2), 1, "nought became 1");
+  assert.deepEqual([...tan.array.slice(16)], [...was.slice(16)], "the sound one is as it was");
+});

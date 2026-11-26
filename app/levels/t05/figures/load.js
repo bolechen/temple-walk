@@ -21,6 +21,7 @@ import { ALTAR, SEAT, FIGURES } from "../altar.js";
 import { paintMaterial } from "./paint.js";
 import { tierMesh } from "./plinth.js";
 import recipe from "./recipe.json";
+import { mendTangents } from "./tangents.js";
 import { FIGURE_FILES, lotusGain, LOAD_ORDER, NEAR, PLINTH, DOOR, PIVOT_DZ, ENV_INTENSITY, HALO_COLOR } from "./registry.js";
 
 // `?skin=1.25` (this file runs only where the doors are open, the workbench's `?hall=open`): the skin zone's pigment lifted by that factor in linear light, hue unchanged, for the T4 that sets the lamps
@@ -89,6 +90,8 @@ export function createFigures({ root, fg, M, sh }) {
       const paints = new Map(); rec.paints = paints;
       obj.traverse((o) => {
         const m = /** @type {THREE.Mesh} */ (o); if (!m.isMesh) return;
+        // a tangent that lies along its normal draws its triangle as not-a-number on a graphics card (tangents.js)
+        const g = /** @type {any} */ (m.geometry); if (g.attributes.tangent && g.attributes.normal) mendTangents(g.attributes.normal, g.attributes.tangent);
         const nmap = /** @type {any} */ (m.material).normalMap ?? null, key = nmap ? nmap.uuid : "none";
         if (!paints.has(key)) {
           const p = paintMaterial(paintRecipe, anchors, pivot, { masks: { front, hair }, fig: FIGURE_FILES.indexOf(d), normalMap: nmap, envMap: state.probe, envIntensity: ENV_INTENSITY });
