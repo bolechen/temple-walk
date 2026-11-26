@@ -60,8 +60,9 @@ export const MASK_FILES = Object.freeze({
   "sakyamuni-hair.webp": "276a82d317f82a16c5a32715c2def34141b1b26b16019f4741a33e33eef13eb3",
 });
 /**
- * Where tools/setup.mjs fetches the files from (`<base><path>`), or null while they are not published (a clone then draws the hall's doors shut, as
- * production does, and the figures tests that need the files are skipped). Pinned by commit, never overwritten. `private`: the dataset is private, and setup sends
+
+ * Where tools/setup.mjs fetches the files from (`<base><path>`): the public dataset the owner published on 2026-11-26 (bolechen/temple-walk-t05-figures, the commit pinned, files never overwritten),
+ * or null where there is none (a clone then draws the hall's doors shut, as production does, and the figures tests that need the files are skipped). Pinned by commit, never overwritten. `private`: the dataset is private, and setup sends
  * the HF_TOKEN of the machine as a bearer token (a machine without one cannot fetch, and says so). Whether the files may be published at all is the owner's call (docs/t05/asset-register.csv).
  */
-export const SOURCE = Object.freeze({ base: /** @type {string | null} */ (null), private: false });
+export const SOURCE = Object.freeze({ base: /** @type {string | null} */ ("https://huggingface.co/datasets/bolechen/temple-walk-t05-figures/resolve/0b835c7ad6f21ab6d0165c4cbd7911d31f58cd35/ship-701/"), private: false });
