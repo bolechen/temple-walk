@@ -727,6 +727,11 @@ const governor = createGovernor(quality, () => { if (!quality.gtao) post.off("gt
 new ResizeObserver(resize).observe(canvas); resize();
 
 let prev = performance.now(), frames = 0, tour = null, devpose = null, eyeY = footY, mirrorOn = true, monkHidden = false;
+// Whether the paving's mirror is drawn this frame: by the tier, out of doors, where he stands and in this mood (set in the
+// frame below). Every pass that draws the frame again (the measured cost, the probe, the censer's reading) asks this one
+// question, so that what is timed is the frame a visitor sees; until #749 `__cost` drew the mirror wherever the tier had one,
+// on T05's dry stone and in its hall as well, where the frame itself never draws it.
+const mirrorDrawn = () => quality.planar > 0 && mirrorOn && !inside;
 // What the eye is kept out of (#295, eyespace.js): the place's own triangles, gathered a few milliseconds a frame once the
 // walk is the visitor's, sorted into a hierarchy by a worker, then asked with a sphere as big as the near plane's corners.
 // Until then (and with ?off=eyebvh) the eye asks the written plan, as it did.
@@ -998,7 +1003,7 @@ function frame(now) {
   ground.mirror?.(mirrorOn && !inside);
   if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);
   if (live && !inside && arrived) live.frame(camera, camera.position, post.size());   // #320's trial: the near room drawn live into the door's own pixels   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
-  if (quality.planar > 0 && !inside && mirrorOn) ground.render(renderer, camera);
+  if (mirrorDrawn()) ground.render(renderer, camera);
   post.focus(photo.on && settings.get().blur ? focusAt() : 0);   // depth of field only with the camera raised and 虚化 switched on: never walking, never ?shot (the picture a visitor sees is the picture a tool takes)
   if (clipView) {   // a film: the framed part of the view drawn at the film's own size, the signature laid over it as it rises
     const keep = camera.fov; camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(keep) / 2) * (clipView.f.h / clipView.h))); camera.updateProjectionMatrix();
@@ -1106,7 +1111,7 @@ function freeze(on) {
   frozen = on; document.body.classList.toggle("frozen", on); pauseRites(on);
   if (!on) { prev = performance.now(); return null; }
   const t = still ? 0 : performance.now() / 1000, c = $("still");
-  if (quality.planar > 0 && mirrorOn && !inside) ground.render(renderer, camera);
+  if (mirrorDrawn()) ground.render(renderer, camera);
   post.render(t);
   c.width = canvas.width; c.height = canvas.height; c.getContext("2d").drawImage(canvas, 0, 0);   // in the same task as the drawing: the buffer is not kept after it
   return t;
@@ -1405,7 +1410,7 @@ window.__part = (name, on) => {
 // has really finished it. Unlike frames-per-second this leaves out the browser's own work of presenting the picture.
 window.__cost = (n = 40) => {
   const gl = renderer.getContext(), px = new Uint8Array(4);
-  const one = () => { renderer.info.reset(); if (live && !inside) live.frame(camera, camera.position, post.size()); if (quality.planar > 0) ground.render(renderer, camera); post.render(0); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
+  const one = () => { renderer.info.reset(); if (live && !inside) live.frame(camera, camera.position, post.size()); if (mirrorDrawn()) ground.render(renderer, camera); post.render(0); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
   for (let i = 0; i < 6; i++) one();
   const t0 = performance.now(); for (let i = 0; i < n; i++) one();
   return +((performance.now() - t0) / n).toFixed(2);
@@ -1439,7 +1444,7 @@ const monkBox = () => {
 // `points` ([[x, y], …] in the page's pixels) also asks for the colour at each of them, read from the same frame at full size.
 window.__probe = (points) => {
   const t = still ? 0 : performance.now() / 1000;
-  if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
+  if (mirrorDrawn()) ground.render(renderer, camera); post.render(t);
   let at = null;
   if (Array.isArray(points)) {
     const r = canvas.getBoundingClientRect(), f = document.createElement("canvas"); f.width = canvas.width; f.height = canvas.height;
@@ -1456,7 +1461,7 @@ window.__probe = (points) => {
 // each point given (metres from the censer's foot), how bright the picture is where that point is drawn, 0..255.
 window.__censer = (points = []) => {
   const t = still ? 0 : performance.now() / 1000;
-  if (quality.planar > 0) ground.render(renderer, camera); post.render(t);
+  if (mirrorDrawn()) ground.render(renderer, camera); post.render(t);
   const c = document.createElement("canvas"), w = canvas.width, h = canvas.height; c.width = w; c.height = h; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0);
   if (!site.censer) return { none: true };   // a level with no censer (#409)
   const lum = points.map(([px, py, pz]) => { const v = new THREE.Vector3(site.censer.x + px, site.censer.y + py, site.censer.z + pz).project(camera);

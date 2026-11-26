@@ -1,0 +1,315 @@
+{
+  "started": "2026-11-26T06:32:41.338Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [
+    {
+      "name": "court@spring-dawn@first",
+      "file": "court_spring-dawn_first.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@spring-dawn@first",
+      "file": "court_spring-dawn_first_base.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@spring-day@first",
+      "file": "court_spring-day_first.png",
+      "tris": 1952288,
+      "calls": 352
+    },
+    {
+      "name": "court@spring-day@first",
+      "file": "court_spring-day_first_base.png",
+      "tris": 1952288,
+      "calls": 352
+    },
+    {
+      "name": "court@spring-dusk@first",
+      "file": "court_spring-dusk_first.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@spring-dusk@first",
+      "file": "court_spring-dusk_first_base.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@spring-night@first",
+      "file": "court_spring-night_first.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@spring-night@first",
+      "file": "court_spring-night_first_base.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@summer-dawn@first",
+      "file": "court_summer-dawn_first.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@summer-dawn@first",
+      "file": "court_summer-dawn_first_base.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@summer-dusk@first",
+      "file": "court_summer-dusk_first.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@summer-dusk@first",
+      "file": "court_summer-dusk_first_base.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@summer-night@first",
+      "file": "court_summer-night_first.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@summer-night@first",
+      "file": "court_summer-night_first_base.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@autumn-dawn@first",
+      "file": "court_autumn-dawn_first.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@autumn-dawn@first",
+      "file": "court_autumn-dawn_first_base.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@autumn-day@first",
+      "file": "court_autumn-day_first.png",
+      "tris": 1952288,
+      "calls": 352
+    },
+    {
+      "name": "court@autumn-day@first",
+      "file": "court_autumn-day_first_base.png",
+      "tris": 1952288,
+      "calls": 352
+    },
+    {
+      "name": "court@autumn-dusk@first",
+      "file": "court_autumn-dusk_first.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@autumn-dusk@first",
+      "file": "court_autumn-dusk_first_base.png",
+      "tris": 1952328,
+      "calls": 374
+    },
+    {
+      "name": "court@autumn-night@first",
+      "file": "court_autumn-night_first.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@autumn-night@first",
+      "file": "court_autumn-night_first_base.png",
+      "tris": 1952288,
+      "calls": 354
+    },
+    {
+      "name": "court@winter-dawn@first",
+      "file": "court_winter-dawn_first.png",
+      "tris": 1908456,
+      "calls": 368
+    },
+    {
+      "name": "court@winter-dawn@first",
+      "file": "court_winter-dawn_first_base.png",
+      "tris": 1908456,
+      "calls": 368
+    },
+    {
+      "name": "court@winter-day@first",
+      "file": "court_winter-day_first.png",
+      "tris": 1908416,
+      "calls": 346
+    },
+    {
+      "name": "court@winter-day@first",
+      "file": "court_winter-day_first_base.png",
+      "tris": 1908416,
+      "calls": 346
+    },
+    {
+      "name": "court@winter-dusk@first",
+      "file": "court_winter-dusk_first.png",
+      "tris": 1908416,
+      "calls": 348
+    },
+    {
+      "name": "court@winter-dusk@first",
+      "file": "court_winter-dusk_first_base.png",
+      "tris": 1908416,
+      "calls": 348
+    },
+    {
+      "name": "court@winter-night@first",
+      "file": "court_winter-night_first.png",
+      "tris": 1908416,
+      "calls": 348
+    },
+    {
+      "name": "court@winter-night@first",
+      "file": "court_winter-night_first_base.png",
+      "tris": 1908416,
+      "calls": 348
+    },
+    {
+      "name": "art1@summer-dawn@first",
+      "file": "art1_summer-dawn_first.png",
+      "tris": 608777,
+      "calls": 97
+    },
+    {
+      "name": "art1@summer-dawn@first",
+      "file": "art1_summer-dawn_first_base.png",
+      "tris": 608777,
+      "calls": 97
+    },
+    {
+      "name": "art2@autumn-day@first",
+      "file": "art2_autumn-day_first.png",
+      "tris": 1959202,
+      "calls": 395
+    },
+    {
+      "name": "art2@autumn-day@first",
+      "file": "art2_autumn-day_first_base.png",
+      "tris": 1959202,
+      "calls": 395
+    },
+    {
+      "name": "art3@autumn-dusk@third",
+      "file": "art3_autumn-dusk_third.png",
+      "tris": 2024560,
+      "calls": 418
+    },
+    {
+      "name": "art3@autumn-dusk@third",
+      "file": "art3_autumn-dusk_third_base.png",
+      "tris": 2024560,
+      "calls": 418
+    },
+    {
+      "name": "art4@autumn-dusk@first",
+      "file": "art4_autumn-dusk_first.png",
+      "tris": 1661962,
+      "calls": 298
+    },
+    {
+      "name": "art4@autumn-dusk@first",
+      "file": "art4_autumn-dusk_first_base.png",
+      "tris": 1661962,
+      "calls": 298
+    },
+    {
+      "name": "art5@summer-dusk@first",
+      "file": "art5_summer-dusk_first.png",
+      "tris": 666137,
+      "calls": 115
+    },
+    {
+      "name": "art5@summer-dusk@first",
+      "file": "art5_summer-dusk_first_base.png",
+      "tris": 666137,
+      "calls": 115
+    },
+    {
+      "name": "art6@autumn-dawn@first",
+      "file": "art6_autumn-dawn_first.png",
+      "tris": 980967,
+      "calls": 235
+    },
+    {
+      "name": "art6@autumn-dawn@first",
+      "file": "art6_autumn-dawn_first_base.png",
+      "tris": 980967,
+      "calls": 235
+    },
+    {
+      "name": "court@autumn-dusk@third",
+      "file": "court_autumn-dusk_third.png",
+      "tris": 2022768,
+      "calls": 398
+    },
+    {
+      "name": "court@autumn-dusk@third",
+      "file": "court_autumn-dusk_third_base.png",
+      "tris": 2022768,
+      "calls": 398
+    },
+    {
+      "name": "lookback@autumn-dusk@first",
+      "file": "lookback_autumn-dusk_first.png",
+      "tris": 980967,
+      "calls": 235
+    },
+    {
+      "name": "lookback@autumn-dusk@first",
+      "file": "lookback_autumn-dusk_first_base.png",
+      "tris": 980967,
+      "calls": 235
+    },
+    {
+      "name": "front@summer-day@first",
+      "file": "front_summer-day_first.png",
+      "tris": 1961948,
+      "calls": 415
+    },
+    {
+      "name": "front@summer-day@first",
+      "file": "front_summer-day_first_base.png",
+      "tris": 1961948,
+      "calls": 415
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "c0ea23391fa9ebaee3e831c491b01a9e02f63788+dirty",
+    "entry": "assets/index-Cwps5SLR.js",
+    "files": 400,
+    "sha256": "3daaf57ca489c47dce44292bac46f1c25b4409c152d7ba32c355a1d9d89724c6"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-26T06:45:54.641Z"
+}
