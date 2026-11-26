@@ -37,3 +37,30 @@ export const LOAD_ORDER = Object.freeze(["vipasyin", "sikhin", "visvabhu", "krak
 export const ENV_INTENSITY = 0.6;
 /** The boat-shaped halo's colour, the stage's (the painted halo, ../altar.js keeps the shape). */
 export const HALO_COLOR = 0x6c5641;
+
+/**
+ * The masks the paint reads (`masks/<name>` beside the files in app/shared/models/t05/), with their SHA-256. The files are not in git: tools/setup.mjs fetches
+ * them with the seven GLBs from the dataset named in `SOURCE` and checks each against these hashes.
+ * @type {Readonly<Record<string, string>>}
+ */
+export const MASK_FILES = Object.freeze({
+  "kasyapa-front.webp": "fcaf6f26df76988cb054f40d977871b45594b8fbdcfa5cca09bb12ea693eca63",
+  "kasyapa-hair.webp": "e4d1c2c5875da8aad9068ee04416cd9be382aab4255a40c082793e18840be959",
+  "krakucchanda-front.webp": "133417ad066017aa563f6d5f85d0d9a96f41fc7de1b228e4189cda8f4c9befa6",
+  "krakucchanda-hair.webp": "be39d41e5d711f0d7f430fb6e5c8ae4177a3205f054f0a7aafe2c80edce9b4e4",
+  "sikhin-front.webp": "98c5b71335005d57c261e2e6805eeb208adaac8cc90f441bf987bbd8d382f0f7",
+  "sikhin-hair.webp": "3284f75c7eee4cfdfd63552e495f16d2b36ea45bb0f9115b98536652ca85e875",
+  "vipasyin-front.webp": "b2a005b6ab14a6a2b4dc557ef3f5b08771154313f5af8dcc5e11ee8d025de529",
+  "vipasyin-hair.webp": "34fe44fa4859a1fa76e63f674a7aae5c03cc8bae29595a45d48e36ed1791df37",
+  "visvabhu-front.webp": "83e620a8599b5225cf15078b299f226c214734e252721230a00b19f08a077928",
+  "visvabhu-hair.webp": "9ea3e885624e88e737e84eec9f4b8756cad6b4ac972e888ec8d41d24db401536",
+  "kanakamuni-front.webp": "7ea80a71dffbc60880c5ef356ce143076b2159f42b58d3c2008f0588c476d479",
+  "kanakamuni-hair.webp": "863bba6bbe21727e76d7c8acc0db235f1a808acaeebaa6c98ade58c0026aec9d",
+  "sakyamuni-front.webp": "06dda194df4cc671073f5f911de05069e1f558e29d92e1ab1d61dc9165373d06",
+  "sakyamuni-hair.webp": "276a82d317f82a16c5a32715c2def34141b1b26b16019f4741a33e33eef13eb3",
+});
+/**
+ * Where tools/setup.mjs fetches the files from (`<base><path>`), or null while they are not published (a clone then draws the hall's doors shut, as
+ * production does, and the figures tests say what is missing). Pinned by commit, never overwritten.
+ */
+export const SOURCE = Object.freeze({ base: /** @type {string | null} */ (null) });

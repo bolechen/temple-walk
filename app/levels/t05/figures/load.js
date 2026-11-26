@@ -49,7 +49,7 @@ export function createFigures({ root, fg, M, sh }) {
   })());
   const mask = async (t, file) => {
     if (!file) return undefined;
-    if (!t.masks.has(file)) t.masks.set(file, new THREE.TextureLoader().loadAsync(asset(`levels/t05/figures/masks/${file}`)).then((x) => { x.colorSpace = THREE.NoColorSpace; x.generateMipmaps = false; x.minFilter = x.magFilter = THREE.LinearFilter; return x; }));
+    if (!t.masks.has(file)) t.masks.set(file, new THREE.TextureLoader().loadAsync(asset(`shared/models/t05/masks/${file}`)).then((x) => { x.colorSpace = THREE.NoColorSpace; x.generateMipmaps = false; x.minFilter = x.magFilter = THREE.LinearFilter; return x; }));
     return t.masks.get(file);
   };
 
@@ -67,7 +67,7 @@ export function createFigures({ root, fg, M, sh }) {
     if (!e) { rec.status = "failed"; return; }
     rec.status = "loading"; const t0 = performance.now();
     try {
-      const t = await getTools(), url = asset(`levels/t05/figures/${d.file}`);
+      const t = await getTools(), url = asset(`shared/models/t05/${d.file}`);
       const anchors = anchorsOf(id);
       const [gltf, front, hair] = await Promise.all([t.loader.loadAsync(url), mask(t, anchors.maskFront?.file), mask(t, anchors.maskHair?.file)]);
       state.probe ||= captureProbe();

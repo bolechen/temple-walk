@@ -29,3 +29,6 @@ tools/app-keys/
 # #183's spike: the heightmap cut from a real DEM of a Chinese region is drawn locally only and never committed
 # (a DEM finer than 15 m over more than 25 km² is a state secret there; docs/t00/refactor/terrain-spike.md)
 app/shared/terrain/dem.*
+
+# T05 seven Buddhas (#701): fetched by tools/setup.mjs from the public dataset, checked by SHA-256 (docs/t05/asset-register.csv)
+app/shared/models/t05/

@@ -56,4 +56,33 @@ async function models() {
   }
 }
 
-vendor(); await models();
+// ---- the seven Buddhas of level T05 (#701) ----
+// Not in git (20 MB of binaries): fetched from the dataset the registry names, each file checked against its SHA-256 (docs/t05/asset-register.csv), into app/shared/models/t05/.
+// The page keeps the hall's doors shut and never asks for them (app/levels/t05/hall.js), so a clone that cannot fetch them still runs; a fetch that is tried and fails stops the install,
+// and says which hash was expected.
+async function figures() {
+  const { FIGURE_FILES, MASK_FILES, SOURCE } = await import("../app/levels/t05/figures/registry.js");
+  if (!SOURCE.base) { say("T05's seven figures: no public source yet (app/levels/t05/figures/registry.js SOURCE), skipped"); return; }
+  const out = path.join(ROOT, "app/shared/models/t05"); fs.mkdirSync(path.join(out, "masks"), { recursive: true });
+  const sum = (b) => crypto.createHash("sha256").update(b).digest("hex");
+  const list = [...FIGURE_FILES.map((f) => ({ rel: f.file, sha256: f.sha256 })), ...Object.entries(MASK_FILES).map(([n, h]) => ({ rel: "masks/" + n, sha256: h }))];
+  for (const m of list) {
+    const to = path.join(out, m.rel), url = SOURCE.base + m.rel;
+    if (!FORCE && fs.existsSync(to) && sum(fs.readFileSync(to)) === m.sha256) continue;
+    let got = null, why = "";
+    for (let k = 0; k < 4 && !got; k++) {
+      try {
+        let b;
+        try { const r = await fetch(url); if (!r.ok) throw new Error("HTTP " + r.status); b = Buffer.from(await r.arrayBuffer()); }
+        catch (e) { b = execFileSync("curl", ["-fsSL", "--max-time", "180", url], { maxBuffer: 64e6 }); }
+        if (sum(b) !== m.sha256) throw new Error("the file fetched is not the one expected (sha256 " + sum(b).slice(0, 12) + "…, expected " + m.sha256.slice(0, 12) + "…)"); got = b;
+      }
+      catch (e) { why = e.message; await new Promise((r) => setTimeout(r, 1500 * 2 ** k)); }
+    }
+    if (!got) throw new Error(`could not fetch ${m.rel} from ${url}: ${why}`);
+    fs.writeFileSync(to, got);
+  }
+  say(`T05's seven figures in app/shared/models/t05 (${list.length} files, checked)`);
+}
+
+vendor(); await models(); await figures();
