@@ -1,0 +1,70 @@
+{
+ "normals": "tools/out/t05/seven/chestb/kanakamuni-normals.png",
+ "depth": "tools/out/t05/seven/chestb/kanakamuni-depth.png",
+ "rect": [
+  -1.5,
+  3.7,
+  1.5,
+  6.7
+ ],
+ "z": -0.6,
+ "out": "tools/t05-hall/paint/masks/kanakamuni-front-b.png",
+ "preview": "tools/out/t05/seven/chestb/kanakamuni-mask-preview.png",
+ "channels": [
+  {
+   "zone": "\u5185\u8863",
+   "ch": 2,
+   "seeds": [
+    [
+     0,
+     5.12
+    ],
+    [
+     -0.3,
+     5.1
+    ],
+    [
+     0.3,
+     5.1
+    ],
+    [
+     0,
+     5.8
+    ],
+    [
+     0,
+     5.5
+    ],
+    [
+     -0.1,
+     6.0
+    ]
+   ],
+   "box": [
+    -0.72,
+    4.88,
+    0.68,
+    6.04
+   ],
+   "tol": 0.03,
+   "close": 0.03,
+   "blur": 0.012
+  },
+  {
+   "zone": "\u8863\u7f18\u63cf\u91d1",
+   "ch": 1,
+   "ring_of": [
+    0
+   ],
+   "width": 0.06,
+   "box": [
+    -0.85,
+    5.36,
+    0.85,
+    6.04
+   ],
+   "blur": 0.006,
+   "open": "below"
+  }
+ ]
+}

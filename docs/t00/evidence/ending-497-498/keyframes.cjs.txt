@@ -1,0 +1,26 @@
+// Key frames of the close of the chapter (#498): four seasons held upright and autumn wide, the high tier, the close begun as the workbench's ?play=ending begins it
+// (he travels to the summit mat and sits, the following eye behind him), the observances' clock held and stepped to each second asked for.
+const { serve, launch, open } = require("/home/user/temple-walk/tests/e2e/lib.cjs");
+(async () => {
+  const srv = await serve(), base = srv.base || srv, b = await launch();
+  const CASES = [["autumn", "upright", 390, 844, [0.5, 8, 9, 12, 13.5, 20, 29.5]], ["autumn", "wide", 1280, 720, [0.5, 9, 12, 13.5, 29.5]], ["spring", "upright", 390, 844, [0.5, 13.5, 29.5]], ["summer", "upright", 390, 844, [0.5, 13.5, 29.5]], ["winter", "upright", 390, 844, [0.5, 13.5, 29.5]]];
+  for (const [season, shape, w, h, times] of CASES) {
+    const t = await open(b, base, `q=high&view=third&season=${season}&time=day&off=reflect,bloom,drift`, { viewport: { width: w, height: h } });
+    await t.until(async () => (await t.page.evaluate(() => window.__eyeSpace().state)) === "ready", 240000, "bvh");
+    await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, Math.PI - p.face, 0); }); await t.frames(3);
+    await t.page.evaluate(() => { window.__riteClock(null); const p = window.__places.sit, i = window.__seats.findIndex((k) => k.room === null && Math.hypot(k.at[0] - p.at[0], k.at[1] - p.at[1]) < 0.3); window.__sit(i); });
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().sat)) > 0, 120000, "sat"); await t.frames(30);
+    await t.page.evaluate(() => { void window.__ending(); });
+    await t.until(async () => (await t.page.evaluate(() => window.__rites().closing)) === true, 60000, "closing");
+    await t.page.evaluate(() => window.__riteClock(0)); await t.frames(3);
+    let cur = await t.page.evaluate(() => window.__rites().close.u * 30);
+    for (const T of times) {
+      await t.page.evaluate((ms) => window.__riteClock(ms), Math.max(0, T - cur) * 1000); cur = Math.max(cur, T); await t.frames(3); await t.page.waitForTimeout(1500);
+      const near = await t.page.evaluate(() => { const w = innerWidth, h = innerHeight; const d = [[.5,.5],[.02,.02],[.98,.02],[.02,.98],[.98,.98],[.5,.05],[.5,.95],[.05,.5],[.95,.5]].map(([x,y]) => window.__pick(w*x,h*y,4).filter((q) => q.part !== "monk")[0]).filter(Boolean).sort((p,q) => p.distance-q.distance)[0]; return d ? [+d.distance.toFixed(2), d.part, d.material] : null; });
+      await t.page.screenshot({ path: `/home/user/temple-walk/tools/out/ending-kf/${season}-${shape}-${String(T).replace(".", "_")}s.png` });
+      console.log(season, shape, T, JSON.stringify(near));
+    }
+    await t.close();
+  }
+  await b.close(); process.exit(0);
+})();

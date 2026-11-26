@@ -1,0 +1,162 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 261143,
+   "sha256": "2fff6125b9f84dffdb90ded5b5701b4985f3e4d8a4845cb3cb7569291d0353e7",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/cam03-mouths.jpg",
+   "bytes": 57912,
+   "sha256": "46a6811edac97763b7ef7c041bdd439e37586fa5546bb5229eff0773ee4952b4",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/eyes-grey-vs-paint.jpg",
+   "bytes": 150612,
+   "sha256": "2b497e77061999ac8741f0908df13bdd9af7db8c5f3772ce491408610e6f57b5",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/mid10-paint-vs-grey.jpg",
+   "bytes": 242896,
+   "sha256": "5db897c05273e9d3e662be8c03b37b15feca89fb024513f166134ee631b846ac",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-aisle55-kanakamuni.png",
+   "bytes": 1084091,
+   "sha256": "17147aa2a69315f2a789087b9dea460eb968ba8720beb180a4fb05a74a23c6b5",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-aisle55-krakucchanda.png",
+   "bytes": 1117960,
+   "sha256": "a5c36dd5ac646159ee55a2e840776cd124fea72211fb24656d7dfa1b2f33fabd",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-aisle55-visvabhu.png",
+   "bytes": 1132317,
+   "sha256": "074c3c37afafbccbf33099420eafde0488f4895727115174352056f257c5f166",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-cam03-winter.png",
+   "bytes": 1379346,
+   "sha256": "da4e7e150a91ee9a5a04458d92dc74d0ca0ae66527d93c1e62aa69cbdd377d1c",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front10-kanakamuni.png",
+   "bytes": 1593319,
+   "sha256": "dad19c89656cc6e4d41c775614adc57ce40861d1518b4861cbf8c1371de110ad",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front10-krakucchanda.png",
+   "bytes": 1585080,
+   "sha256": "62108bcd5154e584366d77f0ee9f20313b6bd003eaa824c2c6221bf79c5a0078",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front10-visvabhu.png",
+   "bytes": 1609994,
+   "sha256": "233c211611bcc5069a36a37387ba370daa40e3ae75509c209aa76a54023c5f61",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front4-clay-kanakamuni.png",
+   "bytes": 986081,
+   "sha256": "363861c756111bca22c1b612679e4fb95ff113cf2ac477a3934c397e27b4130c",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front4-clay-krakucchanda.png",
+   "bytes": 873282,
+   "sha256": "2cd1dd6252a766ffea4e55ebf15dbd0f822c848309dfa438a50ad0eabb9775f0",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front4-clay-visvabhu.png",
+   "bytes": 878916,
+   "sha256": "b3b507be99d4e8f34d9f8e69847de220c028af7945b6ce2dfadd3c081a38e0be",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front4-kanakamuni.png",
+   "bytes": 1070143,
+   "sha256": "6c84bb402a6ba9e9fcbb8e2122dd5053275bf5c78e2735a35962d6e76f239ba5",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front4-krakucchanda.png",
+   "bytes": 962036,
+   "sha256": "ba1cb3f5a5ec8e2a672cf70c46f26f49f14d18ff445255b6195c2e49c157c8eb",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-front4-visvabhu.png",
+   "bytes": 975545,
+   "sha256": "9e5a61f5c695ec79154c24369160083ad61413d9252113054e2dab9f0ff99339",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-join-kanakamuni.png",
+   "bytes": 1416361,
+   "sha256": "945ab58c4fc7deda6f2809ebc45d395b65cb7704307bf8358df53a3434bbd7d2",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-join-krakucchanda.png",
+   "bytes": 1356796,
+   "sha256": "f18439d09038803ee8c437aa2be41bdee896ba43e4bddf50a9706da03b38b3f3",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-join-visvabhu.png",
+   "bytes": 1476686,
+   "sha256": "237eff94399673ca654a45f2494fdba84bf8ee79170e9294ed8ac33197488040",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-mid10-clay-kanakamuni.png",
+   "bytes": 1161639,
+   "sha256": "33c181694cbe91a24a8d88c47e05ba7c8f8cdf62056b75f48bdb00495db7ad84",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-mid10-clay-krakucchanda.png",
+   "bytes": 1129085,
+   "sha256": "fc5cef1e4032724f59bfd02895e39599732d65dc07774434cba5bf4b44d02f9e",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-mid10-clay-visvabhu.png",
+   "bytes": 1134558,
+   "sha256": "ef119f72b5574c6a62ee45b2ab4080a10e6fd483c192e10437618529cbbffd5c",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-mid10-kanakamuni.png",
+   "bytes": 1111173,
+   "sha256": "1b90641ed357534bca0f03ca88fe0660b360838080d150f46cd87948cfeca43a",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-mid10-krakucchanda.png",
+   "bytes": 1074263,
+   "sha256": "c42b6e44b661176e0c2d4ed2ca70e3f3f6486ae07b5ac12849ab56e09633b7c8",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  },
+  {
+   "path": "png/ship-mid10-visvabhu.png",
+   "bytes": 1077200,
+   "sha256": "5fc757b20a2a923e4855d28c190791dd0b66aedb9adce0031bada5758fc73d8b",
+   "rev": "dabe501d5c15ad555c8549922b6b8fbfc7752a4b"
+  }
+ ]
+}

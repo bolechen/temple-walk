@@ -1,0 +1,36 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 249099,
+   "sha256": "ba5c48b0bf72a2b800c5e1f6e89ea95512b77e3ca140cbd94f6509673dd477f3",
+   "rev": "6b34c3cdcf46a0dbdfb26fec80c31f403a220b27"
+  },
+  {
+   "path": "png/joins-after.jpg",
+   "bytes": 148256,
+   "sha256": "960faaeda70bcf3096c719efb3bbe05b359b7c84b26d0ffdca9f1489a2663be9",
+   "rev": "6b34c3cdcf46a0dbdfb26fec80c31f403a220b27"
+  },
+  {
+   "path": "png/mid10-paint-vs-grey.jpg",
+   "bytes": 243069,
+   "sha256": "12cdaa03b3268b05bbf1040aa4b2852c5b3cc995de2d2b370bb09f8b5e7041c8",
+   "rev": "6b34c3cdcf46a0dbdfb26fec80c31f403a220b27"
+  },
+  {
+   "path": "png/raised-hand-krakucchanda-wrist-after.png",
+   "bytes": 350347,
+   "sha256": "57935ed4d0f2dda81137a8d1e43cb2b9039e88588ec30830d70e25c473d83165",
+   "rev": "0a34feb0856a3fb1a00cf281b0319a4d7e79d460"
+  },
+  {
+   "path": "png/raised-hands-before-after.jpg",
+   "bytes": 154004,
+   "sha256": "51de8d14a8325d2f664bc0b8f76830e25648ad2e1dccc06e9bb33dab1823bd3e",
+   "rev": "6b34c3cdcf46a0dbdfb26fec80c31f403a220b27"
+  }
+ ]
+}

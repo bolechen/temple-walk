@@ -2,7 +2,7 @@
 # the face on the original, reduce, then bake, so that what the reduced mesh lost comes back from the repaired surface
 # and not the generated one). Headless Blender (pip install bpy):
 #
-#   python3 tools/t05-statue/bake.py <high.glb> <low.glb> <out.glb> [--size=2048] [--cage=0.0035] [--ray=0.007] [--uv=xatlas] [--head=<z>]
+#   python3 tools/t05-statue/bake.py <high.glb> <low.glb> <out.glb> [--size=2048] [--cage=0.0035] [--ray=0.007] [--uv=xatlas] [--head=<z>] [--face=<zoned.glb.face.json>]
 #
 # The low mesh is unwrapped (Smart UV Project, one atlas), the high mesh's tangent-space normals baked onto it with
 # Cycles' Selected to Active, extruded by `cage` and casting no farther than `ray` (file units: 1 is the figure's
@@ -63,6 +63,23 @@ for L in Ls:
   L.data.materials.clear(); L.data.materials.append(mat); nt.nodes.active = tex
   bpy.ops.object.select_all(action="DESELECT"); H.select_set(True); L.select_set(True); bpy.context.view_layer.objects.active = L
   bpy.ops.object.bake(type="NORMAL")
+  if "face" in opt:
+    # the face tier's triangles (zoned.mjs's <out>.face.json: its points, glTF frame -> Blender's x, -z, y) take no normal map: their texels are made neutral, so the face is lit by the
+    # geometry's own smooth normals, which at full density are the high mesh's. Each triangle is rasterised in the map a pixel wider than it is, so no baked noise is left at its edge.
+    import numpy as np
+    from scipy.spatial import cKDTree
+    fp = np.array(json.load(open(opt["face"]))["points"], float).reshape(-1, 3); fp = np.stack([fp[:, 0], -fp[:, 2], fp[:, 1]], 1); kd = cKDTree(fp)
+    me = L.data; co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get("co", co); co = co.reshape(-1, 3); inface = kd.query(co)[0] < 2e-6
+    uvl = me.uv_layers.active.data; px = np.array(img.pixels[:], dtype=np.float32).reshape(size, size, 4); nflat = 0
+    for pl in me.polygons:
+      if not all(inface[v] for v in pl.vertices): continue
+      uv = np.array([uvl[i].uv[:] for i in pl.loop_indices]) * size; lo_, hi_ = np.floor(uv.min(0)).astype(int) - 1, np.ceil(uv.max(0)).astype(int) + 1
+      a, b, c = uv[0], uv[1], uv[2]; d = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])
+      if abs(d) < 1e-12: continue
+      xs, ys = np.meshgrid(np.arange(max(lo_[0], 0), min(hi_[0], size - 1) + 1), np.arange(max(lo_[1], 0), min(hi_[1], size - 1) + 1)); X, Y = xs + 0.5, ys + 0.5
+      l1 = ((b[1] - c[1]) * (X - c[0]) + (c[0] - b[0]) * (Y - c[1])) / d; l2 = ((c[1] - a[1]) * (X - c[0]) + (a[0] - c[0]) * (Y - c[1])) / d; l3 = 1 - l1 - l2; e = 1.0 / max(np.abs(d) ** 0.5, 1)
+      m_ = (l1 >= -e) & (l2 >= -e) & (l3 >= -e); px[ys[m_], xs[m_]] = (0.5, 0.5, 1.0, 1.0); nflat += 1
+    img.pixels[:] = px.ravel(); print(json.dumps({"face_triangles_flattened": nflat, "part": nm_, "face_points": int(len(fp))}))
   img.filepath_raw = f"{out}.{nm_}.normal.png"; img.file_format = "PNG"; img.save()
 bpy.ops.object.select_all(action="DESELECT")
 for L in Ls: L.select_set(True)

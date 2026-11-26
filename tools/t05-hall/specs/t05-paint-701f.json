@@ -1,0 +1,1116 @@
+{
+ "out": "tools/out/t05/paint701f/run",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/r3c2/kasyapa-r3c.60000.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "kasyapa-t05",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.97,
+    1.0,
+    1.03
+   ]
+  },
+  {
+   "url": "tools/out/t05/L2n/krakucchanda-L2.60000.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-L2"
+  },
+  {
+   "url": "tools/out/t05/r3c2/sikhin-r3c.60000.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-t05"
+  },
+  {
+   "url": "tools/out/t05/r3c2/vipasyin-r3c.60000.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-t05"
+  },
+  {
+   "url": "tools/out/t05/L2n/visvabhu-L2.60000.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-L2"
+  },
+  {
+   "url": "tools/out/t05/L2n/kanakamuni-L2.60000.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-L2"
+  },
+  {
+   "url": "tools/out/t05/tripo-370/sakyamuni-r1.60000.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-370",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.96,
+    1.0,
+    1.05
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "cam03-winter",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "zones": true
+  },
+  {
+   "name": "cam04-winter",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam04"
+   }
+  },
+  {
+   "name": "cam06-winter",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam06"
+   },
+   "zones": true
+  },
+  {
+   "name": "face10-kasyapa",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 0,
+    "pts": {
+     "cheekL": [
+      0.365125,
+      6.72425,
+      0.426
+     ],
+     "cheekR": [
+      -0.365125,
+      6.72425,
+      0.426
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-kasyapa",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      16.45,
+      11.15,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 0,
+    "pts": {
+     "cheekL": [
+      0.365125,
+      6.72425,
+      0.426
+     ],
+     "cheekR": [
+      -0.365125,
+      6.72425,
+      0.426
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10-krakucchanda",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 1,
+    "pts": {
+     "cheekL": [
+      0.33177499999999993,
+      6.752,
+      0.286
+     ],
+     "cheekR": [
+      -0.33177499999999993,
+      6.752,
+      0.286
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-krakucchanda",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      11.33,
+      11.2,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 1,
+    "pts": {
+     "cheekL": [
+      0.33177499999999993,
+      6.752,
+      0.286
+     ],
+     "cheekR": [
+      -0.33177499999999993,
+      6.752,
+      0.286
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10-sikhin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.28,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 2,
+    "pts": {
+     "cheekL": [
+      0.363975,
+      6.856,
+      0.466
+     ],
+     "cheekR": [
+      -0.363975,
+      6.856,
+      0.466
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-sikhin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.28,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 2,
+    "pts": {
+     "cheekL": [
+      0.363975,
+      6.856,
+      0.466
+     ],
+     "cheekR": [
+      -0.363975,
+      6.856,
+      0.466
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10-vipasyin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      0,
+      11.48,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 3,
+    "pts": {
+     "cheekL": [
+      0.35995,
+      7.0655,
+      0.366
+     ],
+     "cheekR": [
+      -0.35995,
+      7.0655,
+      0.366
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-vipasyin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      0,
+      11.48,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 3,
+    "pts": {
+     "cheekL": [
+      0.35995,
+      7.0655,
+      0.366
+     ],
+     "cheekR": [
+      -0.35995,
+      7.0655,
+      0.366
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10-visvabhu",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.38,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 4,
+    "pts": {
+     "cheekL": [
+      0.34615,
+      6.936,
+      0.39
+     ],
+     "cheekR": [
+      -0.34615,
+      6.936,
+      0.39
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-visvabhu",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -5.8,
+      11.38,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 4,
+    "pts": {
+     "cheekL": [
+      0.34615,
+      6.936,
+      0.39
+     ],
+     "cheekR": [
+      -0.34615,
+      6.936,
+      0.39
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10-kanakamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.17,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 5,
+    "pts": {
+     "cheekL": [
+      0.36224999999999996,
+      6.72,
+      0.23
+     ],
+     "cheekR": [
+      -0.36224999999999996,
+      6.72,
+      0.23
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-kanakamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -11.33,
+      11.17,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 5,
+    "pts": {
+     "cheekL": [
+      0.36224999999999996,
+      6.72,
+      0.23
+     ],
+     "cheekR": [
+      -0.36224999999999996,
+      6.72,
+      0.23
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10-sakyamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.22,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    }
+   },
+   "zones": true,
+   "probe": {
+    "i": 6,
+    "pts": {
+     "cheekL": [
+      0.33809999999999996,
+      6.946,
+      0.046
+     ],
+     "cheekR": [
+      -0.33809999999999996,
+      6.946,
+      0.046
+     ]
+    }
+   }
+  },
+  {
+   "name": "face10d-sakyamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -16.45,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      -16.45,
+      11.22,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 4.5
+    },
+    "light": "diffuse"
+   },
+   "zones": true,
+   "probe": {
+    "i": 6,
+    "pts": {
+     "cheekL": [
+      0.33809999999999996,
+      6.946,
+      0.046
+     ],
+     "cheekR": [
+      -0.33809999999999996,
+      6.946,
+      0.046
+     ]
+    }
+   }
+  },
+  {
+   "name": "hands-kasyapa",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "handsClose",
+    "over": {
+     "at": [
+      16.45,
+      8.6,
+      -13.1
+     ],
+     "look": [
+      16.45,
+      8.8,
+      -17.6
+     ],
+     "fov": 40,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hands-krakucchanda",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "handsClose",
+    "over": {
+     "at": [
+      11.33,
+      8.6,
+      -13.1
+     ],
+     "look": [
+      11.33,
+      8.8,
+      -17.6
+     ],
+     "fov": 40,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hands-sikhin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "handsClose",
+    "over": {
+     "at": [
+      5.8,
+      8.6,
+      -13.1
+     ],
+     "look": [
+      5.8,
+      8.8,
+      -17.6
+     ],
+     "fov": 40,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hands-vipasyin",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "handsClose",
+    "over": {
+     "at": [
+      0,
+      8.6,
+      -13.1
+     ],
+     "look": [
+      0,
+      8.8,
+      -17.6
+     ],
+     "fov": 40,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hands-visvabhu",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "handsClose",
+    "over": {
+     "at": [
+      -5.8,
+      8.6,
+      -13.1
+     ],
+     "look": [
+      -5.8,
+      8.8,
+      -17.6
+     ],
+     "fov": 40,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hands-kanakamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "handsClose",
+    "over": {
+     "at": [
+      -11.33,
+      8.6,
+      -13.1
+     ],
+     "look": [
+      -11.33,
+      8.8,
+      -17.6
+     ],
+     "fov": 40,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "hands-sakyamuni",
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "handsClose",
+    "over": {
+     "at": [
+      -16.45,
+      8.6,
+      -13.1
+     ],
+     "look": [
+      -16.45,
+      8.8,
+      -17.6
+     ],
+     "fov": 40,
+     "exp": 4.5
+    }
+   }
+  },
+  {
+   "name": "front-kasyapa",
+   "ortho": {
+    "i": 0,
+    "side": "front",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 4.5,
+    "square": true,
+    "grid": false,
+    "lit": true,
+    "exp": 4.2
+   },
+   "paint": true
+  },
+  {
+   "name": "front-krakucchanda",
+   "ortho": {
+    "i": 1,
+    "side": "front",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 4.5,
+    "square": true,
+    "grid": false,
+    "lit": true,
+    "exp": 4.2
+   },
+   "paint": true
+  },
+  {
+   "name": "front-sikhin",
+   "ortho": {
+    "i": 2,
+    "side": "front",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 4.5,
+    "square": true,
+    "grid": false,
+    "lit": true,
+    "exp": 4.2
+   },
+   "paint": true
+  },
+  {
+   "name": "front-vipasyin",
+   "ortho": {
+    "i": 3,
+    "side": "front",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 4.5,
+    "square": true,
+    "grid": false,
+    "lit": true,
+    "exp": 4.2
+   },
+   "paint": true
+  },
+  {
+   "name": "front-visvabhu",
+   "ortho": {
+    "i": 4,
+    "side": "front",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 4.5,
+    "square": true,
+    "grid": false,
+    "lit": true,
+    "exp": 4.2
+   },
+   "paint": true
+  },
+  {
+   "name": "front-kanakamuni",
+   "ortho": {
+    "i": 5,
+    "side": "front",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 4.5,
+    "square": true,
+    "grid": false,
+    "lit": true,
+    "exp": 4.2
+   },
+   "paint": true
+  },
+  {
+   "name": "front-sakyamuni",
+   "ortho": {
+    "i": 6,
+    "side": "front",
+    "cx": 0,
+    "cy": 4.9,
+    "half": 4.5,
+    "square": true,
+    "grid": false,
+    "lit": true,
+    "exp": 4.2
+   },
+   "paint": true
+  },
+  {
+   "name": "cam03-lip-kasyapa",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 0,
+    "pts": {
+     "lip": [
+      -0.002,
+      6.495,
+      0.375
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-krakucchanda",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 1,
+    "pts": {
+     "lip": [
+      0.008,
+      6.685,
+      0.098
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-sikhin",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 2,
+    "pts": {
+     "lip": [
+      -0.066,
+      6.615,
+      0.412
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-vipasyin",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 3,
+    "pts": {
+     "lip": [
+      -0.002,
+      6.827,
+      0.31
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-visvabhu",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 4,
+    "pts": {
+     "lip": [
+      0.015,
+      6.832,
+      0.208
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-kanakamuni",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 5,
+    "pts": {
+     "lip": [
+      0.0,
+      6.634,
+      0.077
+     ]
+    }
+   }
+  },
+  {
+   "name": "cam03-lip-sakyamuni",
+   "size": [
+    1920,
+    1080
+   ],
+   "shoot": {
+    "paint": true,
+    "mood": "winter",
+    "view": "cam03"
+   },
+   "probe": {
+    "i": 6,
+    "pts": {
+     "lip": [
+      0.0,
+      6.74,
+      0.067
+     ]
+    }
+   }
+  }
+ ]
+}

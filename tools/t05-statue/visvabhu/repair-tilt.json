@@ -1,0 +1,66 @@
+{
+ "turn": -90,
+ "source": "visvabhu.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.908,
+   "band": 0.03
+  },
+  {
+   "op": "headscale",
+   "note": "a face of its own among the seven (3D review risk 1): head width, depth and height scaled about its centre",
+   "c": [
+    0,
+    0.0505,
+    0.8937
+   ],
+   "s": [
+    0.97,
+    1.0,
+    0.99
+   ],
+   "z0": 0.7887,
+   "fade": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.47,
+   "k": 0.931,
+   "band": 0.05
+  },
+  {
+   "op": "tilt",
+   "note": "head bowed 10.0° about the neck (#463, the 3D review: the face seen from 10 m below reads frowning and pouting when made for the level)",
+   "c": [
+    0,
+    0.0513,
+    0.7226
+   ],
+   "deg": 10.0,
+   "z0": 0.7326,
+   "fade": 0.0353,
+   "rx": 0.1122,
+   "fx": 0.0202
+  }
+ ],
+ "about": "the r3 ops and the head's 10° bow, nothing else: the baseline for what the face ops of L2 add (#701)"
+}
