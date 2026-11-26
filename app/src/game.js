@@ -659,7 +659,7 @@ export function createGame(y) {
   $("bookMoreBtn")?.addEventListener("click", () => ui.open("bookMore", { onClose: () => { const b = $("bookReset"); b.dataset.asked = ""; b.textContent = t("重新朝山"); } }));
   $("bookMoreClose")?.addEventListener("click", () => ui.close("bookMore"));
   $("bookReplay")?.addEventListener("click", () => { ui.close("bookMore"); track("demo.ending.replay", { phase: "start" }); replayEnding(); });
-  window.__replayEnding = () => replayEnding(); window.__endingPass = () => passState();
+  window.__replayEnding = () => replayEnding(); window.__endingPass = () => passState(); window.__closeRoute = (step) => rites.closeRoute(step); window.__closeFrame = () => rites.closeFrame();
   $("bookReset")?.addEventListener("click", (e) => { const b = /** @type {HTMLElement} */ (e.currentTarget); if (b.dataset.asked !== "1") { b.dataset.asked = "1"; b.textContent = t("再点一次，清空朱印"); return; } track("demo.restart", { from: "book", seals: journey.count() }); journey.reset(); forgetTitle(); visit.metres = visit.seconds = 0; keep(); refresh(); ui.close("book"); });
 
   // ---- The prologue's title, at the gate ----
