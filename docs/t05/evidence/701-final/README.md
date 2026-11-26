@@ -11,7 +11,7 @@
 | 拘那含 kanakamuni | `kanakamuni-K1L` | 26,404 / 8,500 / ~9.0k / 31,000 = 74,882 | 16/16 | 身 4° + 头 10° | 同上 + `--corners=0.5 --mar=0.1 --ridge=0.15` + mouthlift 24 mm（`--lift` 默认）；chinBehind 6.5 mm | r22、r25、r26、r27 |
 | 迦叶 kasyapa | `kasyapa-B4H10` | 30,945 / 8,499 / 9,000 / 31,000 = 79,430 | 16/16 | 身 4° + 头 10° | `--tilt=10 --lean=4 --chin-shift=0.015 --no-furrows --no-lift`；chinBehind 8 mm | r28 |
 | 毗婆尸 vipasyin | `vipasyin-B4H10` | 31,146 / 8,500 / 8,999 / 30,999 = 79,624 | 14/16（全分辨率版 3 非流形边 + 2 碎片，手臂 (1.67, 5.27, 0.06)；上桶的减面版 topology 全 0；主创已接受） | 身 4° + 头 10° | 同迦叶（从 r3c 起手，不带 r5 旧脸操作）；chinBehind 8 mm；总监取「改前」，r32–r35 的试做不用 | r29（r32、r33、r35 是没采用的试做） |
-| 尸弃 sikhin | `sikhin-M40` | 28,449 / 8,499 / 8,999 / 30,999 = 76,930 | 16/16 | 身 4° + 头 10° | `--fill=1 --bell=1.25 --lift=0.04 --corners=0.5 --mar=0.1 --ridge=0.1 --ridge-dz=-0.36 --ridge-r=0.03 --unfold`；chinBehind 8 mm | r30（取代）、r32、r34 |
+| 尸弃 sikhin | `sikhin-M40v` | 28,449 / 8,499 / 8,999 / 30,999 = 76,928 | 16/16 | 身 4° + 头 10° | `--fill=1 --bell=1.25 --lift=0.04 --corners=0.5 --mar=0.1 --ridge=0.1 --ridge-dz=-0.36 --ridge-r=0.03 --unfold`；chinBehind 8 mm | r30、r34（取代）、r36（颏面抹平，现用） |
 | 释迦牟尼 sakyamuni | `sakyamuni-V14` | 38,847 / 8,499 / 9,000 / 31,000 = 86,634（上限放宽到 90,000） | 11/16（绕向一致：嫁接版本身如此 #578；六机位背面射线四处各多 1–5 条；头线以下没点动 > 1 mm） | **只头 14°（先 10° 再 4°），不倾身** | `ship-fig.py sakyamuni V14 06 --from=sakyamuni-varada0.glb --anchors=sakyamuni-v2 --tilt=4 --prebow=10 --lean=0 --no-base --fill=1 --bell=1.25 --corners=0.5 --unfold`；不做 mouthlift；chinBehind 8 mm | r31 |
 
 脸盒内不减面、不带法线；耳 8,500、颈·手约 9.0k、其余约 31k；每尊上限 80,000（释迦牟尼 90,000）。`topology.py`：六个减面版与释迦牟尼的减面版边界 0（释迦牟尼的嫁接版本身有几千开放边，#578）。gate = `closed/face-gate.py`（r3c → 各版；「elsewhere」一行对身倾不适用，阈值放宽，其余行照看）。
@@ -45,11 +45,11 @@
 | `vipasyin-B4H10b.glb` | `a4048531dca18b45b9298185cdb92cc049465ee25ef830a89647e1ace2728428` |
 | `vipasyin-B4H10b.png-meshopt.glb` | `848001cba1d17bc05b9f8618a8f7bafd6cabdd1abc88bdec3c065b7dc166c1c3` |
 | `vipasyin-B4H10b.webp-meshopt.glb` | `1af68a5600189ca89a53b1b68b1a61a81f45076f7073b569fdc67086577be005` |
-| `sikhin-M40.glb` | `502acec5dee3f98e709ae72caaf19b465245864204a9bc87bf9eb8caa9a6617a` |
-| `sikhin-M40z.glb` | `1a20f6e7ad2dbe17a2846a6394b0262755f63631d4675d5fa2ca61bde31e6fd4` |
-| `sikhin-M40b.glb` | `94c28215aa9ac10a2eba6704f018169089ae3c5735745d2a007534d6f2d91b1f` |
-| `sikhin-M40b.png-meshopt.glb` | `2c6fe413e639a5e0b1bfc4a2d3c1f39c3dc08f76cf590fd93dfaa2378c8db75c` |
-| `sikhin-M40b.webp-meshopt.glb` | `8b5356f286f9a347871259806e59560dd2d29c8918b5afca4bd7f222fc63014d` |
+| `sikhin-M40v.glb` | `9bf328cb43a94f15d7b1795ac995d0fef958404769fe92e5af492d156789ddd4` |
+| `sikhin-M40vz.glb` | `2e5d0ae3a4254f725c0f53d98043eff2ba78cc60637304c0e642cc908ad34379` |
+| `sikhin-M40vb.glb` | `b28819eb37afca19c52dad54809399770ba22f29ee69a533e75fa8e793bfe299` |
+| `sikhin-M40vb.png-meshopt.glb` | `ae06e1ce7191946ae39408332a3b48ba8358a12a9d8645197f9217dd884ebcb4` |
+| `sikhin-M40vb.webp-meshopt.glb` | `7bbff120de6ad5d8ef993a05c1beb6f22ba26f80a4663d0aa013134b5af2acab` |
 | `sakyamuni-V14.glb` | `62a1427ebd856a7935709606d7e1b850bde0446579aba66526c055a011492358` |
 | `sakyamuni-V14z.glb` | `888e4030eab8ec6577a68eaf7a561053914d1431a851b0af7b7e39442719914b` |
 | `sakyamuni-V14b.glb` | `df2bc9ef57641860c92602eb0b607bbe72e9704bd47254ab5f9fade396a1a229` |
