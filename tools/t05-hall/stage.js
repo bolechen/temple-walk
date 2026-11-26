@@ -286,6 +286,10 @@ const floorFill = new THREE.RectAreaLight(0xd8ccb8, 0, 30, 12); floorFill.positi
 const bounce = new THREE.RectAreaLight(0xffe2c0, 0, 3.6, 6); bounce.rotation.x = -Math.PI / 2; scene.add(bounce);   // sunlit floor inside the door
 const hemi = new THREE.HemisphereLight(0xf2ece2, 0x6f6152, 2.2); hemi.visible = false; scene.add(hemi);   // for { light: "diffuse" } only
 const altarLamp = new THREE.PointLight(0xffa860, 0, 14, 2); altarLamp.position.set(0, AT + 0.9, ALTAR.z + 3.2); scene.add(altarLamp);
+// The hall's main light as the sky and light session set it (#754): the light that comes in from the doors and windows high and
+// before the figures, two wide spots at (±8, F+14, +8) aimed at (±6, F+10.5, ALTAR.z+0.3), half angle 0.7 and penumbra 0.6 (0.5 and 1 left the outer two figures at a third of the middle ones), no shadow; off unless a
+// shot gives `keyI` (the candela of each), so the old pictures stay as they were.
+const keyLights = [-1, 1].map((sx) => { const l = new THREE.SpotLight(0xfff4e8, 0, 42, 0.7, 0.6, 1.6); l.position.set(sx * 8, F + 14, 8); l.target.position.set(sx * 6, F + 10.5, ALTAR.z + 0.3); l.castShadow = false; scene.add(l, l.target); return l; });
 
 // Two moods. Summer by day (the T00 baseline, for comparison) and early winter, clear and cold, about 09:45 in early
 // December at 41.5° N (docs/t05/ART.md §4.2): the sun at about 17° in the south-south-east comes in low through the doors.
@@ -453,7 +457,7 @@ function studio(on) {
   const keepIn = new Set(); for (const f of figures) f.group.traverse((o) => keepIn.add(o));
   scene.traverse((o) => { if (o.isMesh && !keepIn.has(o)) { o.userData.studioHid ??= o.visible; o.visible = on ? false : o.userData.studioHid; } });
   for (const f of figures) f.group.traverse((o) => { if (o.isMesh && o.userData.halo) o.visible = !on; });
-  for (const l of studioLights) l.visible = on; sun.visible = !on; for (const l of skyLights) l.visible = !on; floorFill.visible = bounce.visible = !on;
+  for (const l of studioLights) l.visible = on; sun.visible = !on; for (const l of skyLights) l.visible = !on; floorFill.visible = bounce.visible = !on; for (const l of keyLights) l.visible = !on;
   scene.background = on ? new THREE.Color(0x2a2622) : null; sky.visible = !on;
   for (const f of figures) for (const m of Object.values(f.painted || {})) { m.userData.envKeep ??= m.envMap; m.envMap = on ? studioEnv : m.userData.envKeep; m.envMapIntensity = on ? 1.0 : 1.6; m.needsUpdate = true; }
   renderer.shadowMap.needsUpdate = true;
@@ -472,12 +476,12 @@ function shoot(s) {
     key.position.copy(at).add(W3([-9, 10, 12])); key.target.position.copy(at); fill.position.copy(at).add(W3([12, 3, 8])); fill.target.position.copy(at);
     rim.position.copy(at).add(W3([4, 9, -14])); rim.target.position.copy(at);
     renderer.toneMappingExposure = (o.exp ?? 1.0) * exposureScale;
-  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
+  } else { studio(false); view(s.view || "front10", s.over || {}); altarLamp.intensity = s.lamp ?? 0; altarLamp.distance = s.lampDist ?? 14; keyLights.forEach((l, j) => { l.intensity = s.keyI ?? 0; l.target.position.x = (j ? 1 : -1) * (s.keyAim ?? 6); }); floorFill.intensity = s.noFloor ? 0 : MOODS[mood].floor; if (s.lampAt) altarLamp.position.set(...s.lampAt); altarLamp.color.set(s.lampColor ?? 0xffa860); }
   // { light: "diffuse" }: the same view lit only by a hemisphere light, the sun, the doors' light, the floor's fill and the
   // lamp put out, so a form can be told from the shadows the hall's light throws on it (#463, the 3D review's third round)
   const diffuse = s.light === "diffuse", keep = []; lastShot = s;
   if (diffuse) {
-    for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { keep.push([l, l.visible]); l.visible = false; }
+    for (const l of [sun, floorFill, bounce, altarLamp, ...keyLights, ...skyLights]) { keep.push([l, l.visible]); l.visible = false; }
     hemi.intensity = s.hemi ?? 2.2; hemi.visible = true;
   }
   render(); const tris = renderer.info.render.triangles;
@@ -488,7 +492,7 @@ function shoot(s) {
 let composer = null, useAO = Q.get("ao") !== "0";
 function buildComposer() {
   composer = new EffectComposer(renderer); composer.setSize(W, H); composer.addPass(new RenderPass(scene, camera));
-  const ao = new GTAOPass(scene, camera, W, H); ao.output = GTAOPass.OUTPUT.Default; ao.blendIntensity = 0.85;
+  const ao = new GTAOPass(scene, camera, W, H); ao.output = GTAOPass.OUTPUT.Default; ao.blendIntensity = +(Q.get("aoi") ?? 0.85);   // how much the occlusion darkens: `aoi` in the address, a spec's or a set's `aoi`
   ao.updateGtaoMaterial({ radius: 0.6, distanceExponent: 1.5, thickness: 2, scale: 1, samples: 12 }); composer.addPass(ao); composer.addPass(new OutputPass());
 }
 function render() { if (useAO) { if (!composer) buildComposer(); composer.render(); } else renderer.render(scene, camera); }
@@ -519,13 +523,19 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
     // masks cost a frame (#370 round 6)
-    const key = (o.env === false ? "noenv" : "env") + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "");
+    const key = (o.env === false ? "noenv" : "env" + (o.envIntensity ?? "")) + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "") + (o.hair ? "-hair" + o.hair : "") + (o.flat ? "-flat" : "");
     let rec = o.folds === false ? { ...recipe, folds: { ...recipe.folds, hollow: 0, edge: 0 } } : recipe;
     // { skin: "#00ff00" }: the zone of face and hands in a flat colour, to see where its edge lies on a hand (a tool's view, not a look)
     if (o.skin) rec = { ...rec, debugKey: "skin" + o.skin, zones: rec.zones.map((z) => z.name === rec.face.zone ? { ...z, color: o.skin, metal: 0, rough: 1, wear: 0 } : z) };
+    // { flat: true }: every zone the director judges the edges of in one flat colour: skin green, curls magenta, the inner garment blue,
+    // the robe orange, gilt edging yellow (draw it under { light: "diffuse" } to read them as they are)
+    if (o.flat) { const FL = { "面与手（肤色）": "#00ff00", "螺发": "#ff00ff", "内衣": "#0080ff", "胸衣": "#0080ff", "袈裟": "#ff8000", "衣缘描金": "#ffff00" };
+      rec = { ...rec, debugKey: (rec.debugKey ?? "") + "flat", zones: rec.zones.map((z) => FL[z.name] ? { ...z, color: FL[z.name], metal: 0, rough: 1, wear: 0, tint: false, gain: undefined } : z) }; }
+    // { hair: "#ff00ff" }: the zone of the curls in a flat colour, the same kind of tool view
+    if (o.hair) rec = { ...rec, debugKey: (rec.debugKey ?? "") + "hair" + o.hair, zones: rec.zones.map((z) => z.name === "螺发" ? { ...z, color: o.hair, metal: 0, rough: 1, wear: 0 } : z) };
     f.painted ??= {};
     const anchors = o.masks === false ? Object.fromEntries(Object.entries(A.anchors).filter(([k]) => !/^mask/.test(k))) : A.anchors;
-    const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file] };
+    const masks = o.masks === false ? {} : { front: MASKS[A.anchors.maskFront?.file], back: MASKS[A.anchors.maskBack?.file], right: MASKS[A.anchors.maskRight?.file], hair: MASKS[A.anchors.maskHair?.file] };
     // one material for each normal map the file carries (a head baked on a map of its own is its own primitive, #463)
     for (const mesh of f.meshes) {
       const nmap = mesh.userData.normalMap ?? null, k2 = key + (nmap ? ":" + nmap.uuid : "");
@@ -585,7 +595,7 @@ function ortho(i, side = "front", z = {}) {
 function zoneIds() {
   const gl = renderer.getContext(), Wd = gl.drawingBufferWidth, Hd = gl.drawingBufferHeight, shown = new Uint8Array(Wd * Hd * 4), id = new Uint8Array(Wd * Hd * 4);
   const dif = lastShot.light === "diffuse", kept0 = [];
-  if (dif) { for (const l of [sun, floorFill, bounce, altarLamp, ...skyLights]) { kept0.push([l, l.visible]); l.visible = false; } hemi.intensity = lastShot.hemi ?? 2.2; hemi.visible = true; }
+  if (dif) { for (const l of [sun, floorFill, bounce, altarLamp, ...keyLights, ...skyLights]) { kept0.push([l, l.visible]); l.visible = false; } hemi.intensity = lastShot.hemi ?? 2.2; hemi.visible = true; }
   render(); gl.readPixels(0, 0, Wd, Hd, gl.RGBA, gl.UNSIGNED_BYTE, shown);
   const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), kept = new Map(), mats = [];
   const haloMat = (i, c = 15) => new THREE.ShaderMaterial({ vertexShader: "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }", fragmentShader: `void main() { gl_FragColor = vec4(${c}. / 16., ${(i + 1).toFixed(1)} / 16., 0., 1.); }`, side: THREE.DoubleSide });
@@ -623,7 +633,7 @@ function zoneIds() {
 function isIn(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 
 setMood(Q.get("mood") || "summer"); view(Q.get("view") || "door");
-window.hall = { ready: true, pixelPoint, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
+window.hall = { ready: true, keyLights, pixelPoint, zoneIds, ortho, pick, shoot, studio, walkPath, figurePoint, occlusion, paint, figures, recipe, ANCHORS, setMood, setStatues, view, walk, render, stats, cost, VIEWS, SEATS, F, AT, ALTAR, scene, renderer, camera,
   set ao(v) { useAO = v; }, set exposure(v) { exposureScale = v; }, info() { return { gl: renderer.getContext().getParameter(renderer.getContext().VERSION), renderer: (() => { const gl = renderer.getContext(), e = gl.getExtension("WEBGL_debug_renderer_info"); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : "?"; })() }; } };
 if (Q.get("live")) { const loop = () => { render(); requestAnimationFrame(loop); }; loop(); }
 document.body.dataset.ready = "1";   // tools/gpu/job.cjs waits for this, as it does on the site
