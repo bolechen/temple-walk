@@ -138,7 +138,7 @@ export function createGame(y) {
     const word = next ? `下一处 · ${next.place}` : "七印圆满", mark = glyphs(next ? next.place : "圆")[0], b = $("bookBtn");
     // Under it, small, in ink: how many seals are held out of seven ("三 / 七", #651). The visible line is hidden from a screen
     // reader; the button's name says the same once, in words, with the book's name (a static aria-label would cover it, so it is written here, through t()).
-    if (b && b.dataset.word !== `${mark}${n}${lang}`) { b.dataset.word = `${mark}${n}${lang}`; b.innerHTML = `<i class="seal-mark">${mark}</i><span class="seal-count" aria-hidden="true">${sealCount(n, SEALS.length)}</span>`; b.setAttribute("aria-label", t("朱印帐，{count}", { count: t("朱印 {n}枚，共{total}枚", { n: numeral(n), total: numeral(SEALS.length) }) })); }
+    if (b && b.dataset.word !== `${mark}${n}${lang}`) { b.dataset.word = `${mark}${n}${lang}`; b.innerHTML = `<i class="seal-mark">${mark}</i><span class="seal-count" aria-hidden="true">${sealCount(n, SEALS.length).replace("〇", '<span class="zero">〇</span>')}</span>`; b.setAttribute("aria-label", t("朱印帐，{count}", { count: t("朱印 {n}枚，共{total}枚", { n: numeral(n), total: numeral(SEALS.length) }) })); }
     // The next place: 下一处 above its name, beside that seal.
     const g = $("goal");
     if (g && g.dataset.word !== word) { if (g.dataset.word) y.hints?.say.goal(); g.dataset.word = word; g.innerHTML = next ? `<span><small>${t("下一处")}</small>${t(next.place)}</span>` : `<span>${t("七印圆满")}</span>`; }

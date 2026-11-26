@@ -183,6 +183,8 @@ body.far #hint.on::after { content: ""; position: absolute; left: 0; right: 0; t
 /* How many are held, written small under the seal like a note in the margin: no box, only shade so that it reads on a bright court and on dark bamboo.
    Under, not beside: the next place's name lies to the seal's right (#goal, 58 px in, so that the two stay 16 px apart). The note is no part of the 44 px target (pointer-events: none): a tap on it is a tap on the ground. */
 #bookBtn .seal-count { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap; font: 400 13px/1 var(--kai); letter-spacing: .04em; text-indent: .04em; color: var(--on); text-shadow: var(--lift), 0 0 3px rgba(0,0,0,.85), 0 0 1px rgba(0,0,0,.9); pointer-events: none; }
+/* The empty ring, 〇, is the one hollow numeral: the wide shade above fills its middle and at a phone's single pixel it reads as a ring within a ring. Its shade is held close to the stroke, so the middle stays the court's. */
+#bookBtn .seal-count .zero { text-shadow: var(--lift), 0 0 1.5px rgba(0,0,0,.85), 0 0 1px rgba(0,0,0,.9); }
 #bookBtn:hover .seal-mark { transform: rotate(-6deg) scale(1.08); }
 body.photo #bookBtn, body.bare #bookBtn, body:not(.entered) #bookBtn { display: none; }
 /* Said to a screen reader, not shown. */
