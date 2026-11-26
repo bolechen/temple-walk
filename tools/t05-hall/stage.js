@@ -523,10 +523,14 @@ function paint(on = true) {
     if (!o.on || !A) { f.meshes.forEach((m, i) => (m.material = f.clay[i])); continue; }
     // { masks: false }: the zones drawn from masks left out (their leaves get no anchors and are off), to measure what the
     // masks cost a frame (#370 round 6)
-    const key = (o.env === false ? "noenv" : "env" + (o.envIntensity ?? "")) + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "") + (o.hair ? "-hair" + o.hair : "");
+    const key = (o.env === false ? "noenv" : "env" + (o.envIntensity ?? "")) + (o.masks === false ? "-nomask" : "") + (o.folds === false ? "-nofolds" : "") + (o.skin ? "-skin" : "") + (o.hair ? "-hair" + o.hair : "") + (o.flat ? "-flat" : "");
     let rec = o.folds === false ? { ...recipe, folds: { ...recipe.folds, hollow: 0, edge: 0 } } : recipe;
     // { skin: "#00ff00" }: the zone of face and hands in a flat colour, to see where its edge lies on a hand (a tool's view, not a look)
     if (o.skin) rec = { ...rec, debugKey: "skin" + o.skin, zones: rec.zones.map((z) => z.name === rec.face.zone ? { ...z, color: o.skin, metal: 0, rough: 1, wear: 0 } : z) };
+    // { flat: true }: every zone the director judges the edges of in one flat colour: skin green, curls magenta, the inner garment blue,
+    // the robe orange, gilt edging yellow (draw it under { light: "diffuse" } to read them as they are)
+    if (o.flat) { const FL = { "面与手（肤色）": "#00ff00", "螺发": "#ff00ff", "内衣": "#0080ff", "胸衣": "#0080ff", "袈裟": "#ff8000", "衣缘描金": "#ffff00" };
+      rec = { ...rec, debugKey: (rec.debugKey ?? "") + "flat", zones: rec.zones.map((z) => FL[z.name] ? { ...z, color: FL[z.name], metal: 0, rough: 1, wear: 0, tint: false, gain: undefined } : z) }; }
     // { hair: "#ff00ff" }: the zone of the curls in a flat colour, the same kind of tool view
     if (o.hair) rec = { ...rec, debugKey: (rec.debugKey ?? "") + "hair" + o.hair, zones: rec.zones.map((z) => z.name === "螺发" ? { ...z, color: o.hair, metal: 0, rough: 1, wear: 0 } : z) };
     f.painted ??= {};
