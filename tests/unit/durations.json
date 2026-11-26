@@ -187,6 +187,8 @@
   "windows.test.mjs": 6.2,
   "wishes.test.mjs": 0.1,
   "works.test.mjs": 3.6,
-  "t05-sound.test.mjs": 0.4
+  "t05-sound.test.mjs": 0.4,
+  "t05-figures-build.test.mjs": 15,
+  "t05-figures.test.mjs": 2
  }
 }
