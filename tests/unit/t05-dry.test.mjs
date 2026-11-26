@@ -5,6 +5,7 @@ import "./dom-stub.mjs"; import * as THREE from "three";
 const { createMaterials } = await import("../../app/src/materials.js");
 const { moodOf, SEASONS, TIMES } = await import("../../app/src/mood.js");
 const { dryMaterials } = await import("../../app/levels/t05/dry.js");
+const { floraMaterials } = await import("../../app/levels/t05/flora.js");
 const t05 = (await import("../../app/levels/t05/level.js")).default, { buildSite } = await import("../../app/levels/t05/site.js");
 
 test("T05 has its own earth and crown materials, made once, named with letters only, leaving the shared ones alone", () => {
@@ -30,7 +31,10 @@ test("T05's site draws its ground and crowns with those copies, so no draw is ad
   const M = createMaterials(), site = buildSite(M), used = new Set();
   site.root.traverse((o) => { if (o.isMesh) used.add(o.material); });
   assert.ok(!used.has(M.earth) && !used.has(M.cedar), "none of T05's meshes keeps the shared earth or cedar");
-  const d = dryMaterials(M); assert.ok(used.has(d.earth) && used.has(d.cedar), "they use the dry-day copies instead");
+  const d = dryMaterials(M), needles = floraMaterials(M).needles; assert.ok(used.has(d.earth) && (used.has(d.cedar) || used.has(needles)), "they use the dry-day copies instead");
+  // the grown trees' needles (./flora.js) are the dry cedar itself with a breeze in it: same colour code, same cache family
+  const sc = { uniforms: {}, vertexShader: "#include <common>\n#include <begin_vertex>", fragmentShader: "#include <common>\ndiffuseColor.rgb=col;\n#include <lights_fragment_end>" };
+  needles.onBeforeCompile(sc, {}); assert.ok(/vec3 t_ = vec3\(1\.200, 1\.000, 0\.640\)/.test(sc.fragmentShader) && /uWindN/.test(sc.vertexShader), "the needles keep the dry cedar's olive and stir in the wind");
 });
 
 test("only J01 says what the leaf colour is; every other season and hour keeps the leaf it had", () => {

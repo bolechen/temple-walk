@@ -1,6 +1,7 @@
 // 奉明寺 (T05), as the engine asks for a level (app/src/level.js; #409). Its plan is ./site.js, a white box for now: the
 // court, the great hall's platform, the terrace and the flight, and the way in from the outer gate's place. The
-// county is flat (docs/t05/SITE.md §4.1): no far hills, no bamboo, no censer. It keeps no place, plays no opening and
+// county is flat (docs/t05/SITE.md §4.1): no bamboo, no censer, and no backdrop of mountains (the one low hill line far to the north and the town beyond the
+// walls are the level's own, ./distance.js, revised 2026-11-25). It keeps no place, plays no opening and
 // raises no title of its own yet, and the prologue's music is not played here (score.js zoneOf with no zones).
 import { buildSite, createWalker, COMPOUND, WAY } from "./site.js";
 import { PAGE } from "./page.js";
@@ -18,12 +19,14 @@ import { XS, HALL } from "./hall.js";
 // reference, not shipped): a blue zenith over a horizon still pale, the far roofs clear, and the sun a little warmer and stronger on
 // the walls than the sky's light, so the shadows read. The zenith, the haze (0.5) and the fog are the art director's numbers (#740):
 // a dry early-winter clear day, between the T05 lead's research (a cold county, often a little haze) and the photograph's deep blue.
+// The shade under the eaves keeps a little of the sky's cold: the sun is only a touch warm, the light thrown up from the court is
+// cool, and the thin air left over the far roofs is a darker blue than the horizon, so the hall through the arch is not lifted by it.
 const J01_ELEV = (17 * Math.PI) / 180, J01_AZ = (152 * Math.PI) / 180;
 const J01 = {
   sun: [Math.cos(J01_ELEV) * Math.sin(J01_AZ), Math.sin(J01_ELEV), -Math.cos(J01_ELEV) * Math.cos(J01_AZ)],
-  sunCol: [1, 0.965, 0.9], sunI: 3.2, cloud: 0.12, snow: 0, wet: 0,
-  hemiS: [0.66, 0.79, 1], hemiG: [0.3, 0.31, 0.3], hemiI: 1.0,
-  fog: [0.62, 0.7, 0.8], fogD: 0.0036, zen: [0.14, 0.28, 0.62], hor: [0.78, 0.85, 0.92], haze: 0.5,
+  sunCol: [1, 0.975, 0.93], sunI: 3.2, cloud: 0.12, snow: 0, wet: 0,
+  hemiS: [0.66, 0.79, 1], hemiG: [0.22, 0.26, 0.34], hemiI: 1.0,
+  fog: [0.52, 0.61, 0.78], fogD: 0.0034, zen: [0.14, 0.28, 0.62], hor: [0.78, 0.85, 0.92], haze: 0.5,
   exp: 1.1, bloom: 0.16, glow: 0.35, hal: 0.12, mist: 0.35, fogLayer: [0.06, -6, 20, 2],
   sh: [0.93, 1, 1.035], hi: [1.01, 1, 0.97], sat: 1,
   lut: { lift: [0, 0.002, 0.006], gamma: [1, 1, 1.01], gain: [1, 1, 1], sat: 1.02, shadow: [0, 0, 0.005], light: [0.004, 0.002, -0.003] },
@@ -40,6 +43,9 @@ export default {
   ownVerse: true,    // the card prints J01's own line in early winter by day, and no verse at any other hour (the art review, 2026-11-25)
   build: buildSite,
   createWalker,
+  // The paving's mirror only where the stone is wet: on J01's dry stone it shows nothing (cam07 0.07/255, cam01 0.36/255 between drawn and not, SwiftShader)
+  // and its pass costs 1.0 to 1.2 ms on a T4 (#722's breakdown; the T05 lead's rule of 2026-11-25: any view over 12 ms and it goes with #722)
+  mirror: (m) => (m.wet || 0) > 0,
   // Its written plan (site.walk) is not kept up to what is drawn (docs/t05/DECISIONS.md, 2026-11-21): it is walked on the baked floor
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
   keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4)

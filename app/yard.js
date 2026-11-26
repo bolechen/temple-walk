@@ -994,7 +994,7 @@ function frame(now) {
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   // The mirror lies in the forecourt and the first court: not indoors, not on the terraces above, not down the
   // approach where the eye is under it. A jump does not change which of these he is in.
-  if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
+  if (!aloft) mirrorOn = mirrorAt(footY) && (!L.mirror || L.mirror(mood));   // the court, the forecourt, and the platforms that stand in them; and in this mood, if the level says (T05: only wet paving shows it)
   ground.mirror?.(mirrorOn && !inside);
   if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);
   if (live && !inside && arrived) live.frame(camera, camera.position, post.size());   // #320's trial: the near room drawn live into the door's own pixels   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
@@ -1504,6 +1504,7 @@ window.__music = (begin) => { if (begin) hear(); return musicState(); };
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
+window.__hintSet = (html) => hints.set(html);   // (the line set to some words, to see how it breaks)
 window.__eventLog = () => (globalThis.__events || []).slice();   // what the page has named since it opened (src/analytics.js), the last 100
 window.__ui = () => ({ stack: ui.state(), modal: ui.modal(), focus: document.activeElement?.id || document.activeElement?.tagName || null });
 // ---- The pause menu: what the visitor may set, a way back to the start, the keys ----

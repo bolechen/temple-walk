@@ -1,0 +1,90 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 169780,
+   "sha256": "7057710c604077aebea5aad3447654b0354f757b9c9fb4df521a0186e76e7144",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/cam01.png",
+   "bytes": 2439322,
+   "sha256": "3dcf443c2192ed15638e939acfa83f3be5bad2fea98ff4c74eaf3c7f6635f63d",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/cam02_winter-day.png",
+   "bytes": 2814779,
+   "sha256": "7bacd40190f9d129a6aa02648dd6a7169999661bb8c514f3c1a826c4f0608b8e",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/cam07_winter-day.png",
+   "bytes": 2577827,
+   "sha256": "c072168bc0a82eb137ac5e979aab3a63c9d43079b41b3386d1373a44ba73dc5d",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-cornerTip-winter.png",
+   "bytes": 2592800,
+   "sha256": "d84c1782c62cf7a3bd20690309b7082fe5af8d9d4cccc570d36c75d76668e673",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-cornerTip.png",
+   "bytes": 2269897,
+   "sha256": "78346500f522c73fdc78379c1a50b27acd724f5870a94f280d8a2e55ab9b4299",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-eave-winter.png",
+   "bytes": 2532747,
+   "sha256": "07f75e7105902adaf28956b027fe58f6671e3c05c987c054121a0e38df3aead3",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-eave.png",
+   "bytes": 2170883,
+   "sha256": "a13882ad38c85b78bb55637c99422b7021107f197b6160f69e88c21c90071598",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-hip-winter.png",
+   "bytes": 2374351,
+   "sha256": "21d93cfed96916ca6402fe01945ec302d330aa17e3ff5544d6c95565cd4d0007",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-hip.png",
+   "bytes": 2137129,
+   "sha256": "8d44517f0b333857fed891aadcbe1840a552262b500c1092af9f7d34bba272d5",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-ornament-winter.png",
+   "bytes": 2141661,
+   "sha256": "12249a6f74006e97934751b12aa162771de7951c860ee908784c7b81020a4c4a",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/close-ornament.png",
+   "bytes": 1974655,
+   "sha256": "cd9897371f7a5fbba0b48e9082c0f3db1f26370da3869c921f3c5d557e170ba1",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/corner.png",
+   "bytes": 2481757,
+   "sha256": "4f525cccd7b5e502781c3a15a5c43fe57fc3b6e7697b0155b5fdad32f66ae652",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  },
+  {
+   "path": "t4/corner_winter-day.png",
+   "bytes": 2751644,
+   "sha256": "5ff0aeb5086801f74e6d244606c65e767abb68fc6df64084dbf02a86cd2a7976",
+   "rev": "72791ca2bf503f3a1ff2f8d6e41ac7caf0255d3a"
+  }
+ ]
+}

@@ -1,5 +1,5 @@
 {
- "measured": "the nightly run 44940518213 (2026-11-21, schedule) for the scenarios that passed in it, and the earlier times of those that failed in it (keywalk): seconds per scenario, software rendering on GitHub's free machines. One scenario takes 10 to 60 % longer or shorter from one run to the next, so the times are what was seen once, refreshed from the next full run (node tests/e2e/shards.cjs update <e2e-report.json>...)",
+ "measured": "the nightly run 44940518213 (2026-11-21, schedule) for the scenarios that passed in it, and the earlier times of those that failed in it (keywalk): seconds per scenario, software rendering on GitHub's free machines. One scenario takes 10 to 60 % longer or shorter from one run to the next, so the times are what was seen once, refreshed from the next full run (node tests/e2e/shards.cjs update <e2e-report.json>...); hint-break, hint-break-sweep and hour-after-book: measured locally on 2026-11-25 (software rendering, one run each, #747 and #739), not yet by a nightly run",
  "extra": {},
  "scenarios": {
   "bench": 51,
@@ -35,8 +35,11 @@
   "goshuin": 170,
   "hallexit": 954,
   "halls": 334,
+  "hint-break": 103,
+  "hint-break-sweep": 376,
   "home-cut": 119,
   "hour": 75,
+  "hour-after-book": 54,
   "incense": 97,
   "incense-halls": 71,
   "joya": 73,
@@ -90,8 +93,8 @@
   "steps": 72,
   "summit": 38,
   "t05": 36,
-  "t05-save": 90,
   "t05-page": 120,
+  "t05-save": 90,
   "t05-walk": 190,
   "tap": 35,
   "taps": 98,

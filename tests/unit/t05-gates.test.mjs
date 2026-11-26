@@ -61,7 +61,8 @@ test("the rooms either side of each passage are shut, on both floors, and the pa
 });
 
 test("the shells are light: the three together are under 400 000 triangles", () => {
-  let tris = 0; site.root.traverse((o) => { if (o.isMesh) { const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+  // (the grown trees, inside and outside the walls, have their own budget in t05-flora.test.mjs)
+  let tris = 0; site.root.traverse((o) => { if (o.isMesh && !/(^|-)trees-/.test(o.name)) { const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
   assert.ok(tris < 400000, `${tris} triangles in the whole of T05 so far`);
   console.log(`# T05 so far: ${Math.round(tris)} triangles`);
 });
