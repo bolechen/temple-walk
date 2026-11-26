@@ -68,3 +68,15 @@ test("with the doors shut the altar's merged geometry is byte for byte what it w
   // recorded by running this same function over `git show origin/main:app/levels/t05/altar.js` (04ec3930's successor, before #763): the same three values
   assert.deepEqual({ stone: h(a.parts.stone), clay: h(a.parts.clay), halo: h(a.parts.halo) }, { stone: "7fae4025ccf3d207:144", clay: "d3443d268f744394:15480", halo: "cfeb2e85f6eee9d4:4032" });
 });
+
+test("a figure that arrives hides the white box's seated mass and its two attendant columns, and keeps the halo; one that does not arrive hides nothing (the art director, 2026-11-26)", async () => {
+  const { buildAltar, benchFigures } = await import("../../app/levels/t05/altar.js");
+  const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
+  const fg = benchFigures(M, buildAltar(), {});
+  for (const e of fg.list) { assert.deepEqual(e.parts.map((m) => m.name), [`altar-${e.id}-clay`, `altar-${e.id}-attend`, `altar-${e.id}-halo`]); assert.ok(e.parts.every((m) => m.visible), "all three stand until the figure arrives"); }
+  const src = readFileSync(new URL("../../app/levels/t05/figures/load.js", import.meta.url), "utf8");
+  assert.match(src, /const \[body, attend, halo\] = e\.parts; body\.visible = false; attend\.visible = false;/);
+  // that line is reached only after the figure loaded and was painted: it follows the loader's await and sits in the try whose catch leaves the boxes as they are
+  assert.ok(src.indexOf("attend.visible = false") > src.indexOf("await Promise.all") && src.indexOf("attend.visible = false") < src.indexOf("catch (err)"));
+  assert.ok(!/halo\.visible\s*=\s*false/.test(src), "the halo stays");
+});

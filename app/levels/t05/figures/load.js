@@ -97,7 +97,8 @@ export function createFigures({ root, fg, M, sh }) {
       // its plinth, and the white box's seated mass out of the way (the attendants and the halo stay, the halo in the painted colour)
       const pl = new THREE.Mesh(new THREE.BoxGeometry(PLINTH.w, PLINTH.h, PLINTH.d), M.stone); pl.position.set(f.x, top + PLINTH.h / 2, SEAT.z + PIVOT_DZ); pl.castShadow = pl.receiveShadow = true; pl.userData.keep = true; pl.userData.bake = false; pl.name = `plinth-${id}`;
       root.add(pl); plinths.set(id, pl);
-      const [body, , halo] = e.parts; body.visible = false;
+      // (the attendants' white placeholders, two grey plaster columns to a figure, go with the seated mass: the art director's hard condition, 2026-11-26, until real attendants stand there; a figure that did not arrive keeps all three)
+      const [body, attend, halo] = e.parts; body.visible = false; attend.visible = false;
       const hm = new THREE.MeshStandardMaterial({ color: HALO_COLOR, roughness: 0.72, metalness: 0.08, side: THREE.DoubleSide }); if (d.halo) hm.color.multiplyScalar(d.halo);
       halo.material = hm;
       rec.pivot = pivot; rec.status = "ready"; rec.ms = performance.now() - t0; state.loaded++;
