@@ -20,6 +20,7 @@ import { buildFlora, buildTreeGround } from "./flora.js";
 import { dryMaterials } from "./dry.js";
 import { ridgeMaterials } from "./ridge.js";
 import { muralMaterial, MURAL_LIT, splitInward } from "./mural.js";
+import { hallTimber } from "./timber.js";
 import { debugGate } from "../../src/debuggate.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
@@ -167,12 +168,13 @@ export function buildSite(M) {
   const hall = buildHall(M), hp = hall.parts;
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   // The wall ring's timber (hall.js, `ring`) in meshes of their own beside the roof's timber: the brackets keep the walls' share of the sky, the purlins and beams rise above it.
-  const splitRing = (/** @type {any[]} */ list, /** @type {any} */ mat, /** @type {any} */ own, /** @type {any} */ ringAo) => [[list.filter((g) => !hp.ring.has(g)), own], [list.filter((g) => hp.ring.has(g)), ringAo]].filter(([l]) => l.length).map(([l, o]) => mesh(merge(l), mat, o));
   // While the doors are shut nothing inside is to be read from outside, the bars of a window included (the art director's call on the first pictures): what is inside takes a seventh of the share it would, a deep dark behind the bars (HALL_DOORS; open, as it was).
   const inside = HALL_DOORS.shut ? (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, nx = 0, ny = 1, nz = 0) => { const v = hall.shut(x, y, z, nx, ny, nz); return v < 0.999 ? v * 0.15 : v; } : hall.shut;
   const sh = { ao: inside };   // inside the walls the sky's light is mostly shut out (hall.js)
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
-  root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
+  // The inside's own timber (./timber.js) for what stands within the walls; the wall ring's timber, seen from the court under the eaves too, keeps the court's wood.
+  const HT = hallTimber(M), ownRing = (/** @type {any[]} */ list, /** @type {any} */ inner, /** @type {any} */ ring) => [[list.filter((g) => !hp.ring.has(g)), inner, shT], [list.filter((g) => hp.ring.has(g)), ring, shRing]].filter(([l]) => l.length).map(([l, m, o]) => mesh(merge(l), m, o));
+  root.add(...ownRing(hp.wood, HT.x, M.woodX), ...ownRing(hp.woodZ, HT.z, M.woodZ), mesh(merge(hp.frame), HT.z, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
     mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, { ...shBoard, cast: false }), mesh(merge(hp.ridge), ridgeMaterials(M).ridge));   // (the eave's underside casts nothing the tiles over it do not: #742)   // (T05's own ridge clay, ./ridge.js)
   // The bracket sets (./dougong.js), the column-head beams over them and the eave purlin, in the ring's shade as the wall's own
   // timber is, each grain along its side. They stand in the eave's shadow over the wall, where the floor's mirror would show

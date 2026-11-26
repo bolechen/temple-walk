@@ -37,6 +37,14 @@ async function prepare(page, view) {
   await page.waitForFunction(() => { const f = window.__t05Figures?.(); return f && f.figures.length && f.figures.every((x) => x.status === "ready" || x.status === "failed"); }, null, { timeout: 600000, polling: 1000 });
   // mid10-<i>: 10 m before the figure at the height of its brow; head-<i>: 3.5 m before it, its head filling the picture (the hairline)
   const mid = /^(mid10|head)-(\d)$/.exec(view);
+  // wrist-w / wrist-f: Sakyamuni's right wrist (#578, #763) from the two nearest places a visitor can stand, the west aisle and before the altar,
+  // in the figure's own frame as the mend's evidence has them (docs/t05/evidence/763-wrist-mend/README.md: metres, the seat's foot 0, facing +z)
+  const wr = /^wrist-(w|f)$/.exec(view);
+  if (wr) await page.evaluate((w) => new Promise((done) => {
+    const d = window.__t05FiguresDebug(), f = Object.values(d.figures).find((x) => x.paints[0].userData.paint.U.uFig.value === 6), V = d.camera.position.constructor;
+    const eye = f.pivot.localToWorld(new V(...(w === "w" ? [-4.05, 0.2, 2.6] : [-1.95, 0.2, 3.1]))), at = f.pivot.localToWorld(new V(-1.85, 3.58, 1.38));
+    window.__look(eye.toArray(), at.toArray()); requestAnimationFrame(() => requestAnimationFrame(() => done(null)));
+  }), wr[1]);
   // A column or a beam may stand on the line from the eye to the brow, or the eye itself inside a column (the fifth figure's, from 10 m, stood in
   // one: a ray from the eye does not see a column's faces from inside). So the line is tried the other way, from a metre before the figure back
   // toward the eye, and the eye steps aside a little at a time, never more than 1.5 m, until nothing stands on it.
@@ -155,7 +163,7 @@ exports.run = async ({ open, out, log = console.log, size = [1920, 1080], views 
   fs.mkdirSync(out, { recursive: true });
   const files = [];
   for (const v of views) {
-    const { ctx, page } = await open(`level=t05&hall=open&shot=1&q=high&season=winter&time=day&${VIEWS[v] ?? (/^(mid10|head)-\d$/.test(v) ? "show=cam03&view=first" : v)}${query ? "&" + query : ""}`, size, 1);
+    const { ctx, page } = await open(`level=t05&hall=open&shot=1&q=high&season=winter&time=day&${VIEWS[v] ?? (/^(mid10|head)-\d$|^wrist-[wf]$/.test(v) ? "show=cam03&view=first" : v)}${query ? "&" + query : ""}`, size, 1);
     try {
       await prepare(page, v); await page.waitForTimeout(1500);
       await page.screenshot({ path: path.join(out, `${v}.png`) });

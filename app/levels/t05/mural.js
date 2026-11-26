@@ -14,7 +14,7 @@ import * as THREE from "three";
 import { procMat } from "../../src/materials.js";
 
 /** The earth colour of the ground and how far it varies; the foot of the wall and the smoke near the top are darker. */
-export const MURAL = Object.freeze({ base: [0.74, 0.6, 0.44], vary: 0.12, foot: 0.8, smoke: 0.82, sky: 0.6, bounce: 0.2, warm: [1, 0.8, 0.55] });
+export const MURAL = Object.freeze({ base: [0.77, 0.624, 0.458], vary: 0.12, foot: 0.8, smoke: 0.82, sky: 0.6, bounce: 0.2, warm: [1, 0.8, 0.55] });
 
 /** How much of the hall's own light is up (site.js's tick sets it with the fill, 0 from the court, 1 well inside). */
 export const MURAL_LIT = { value: 0 };
