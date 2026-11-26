@@ -3,12 +3,13 @@
 // prologue stay as they are in the locale tables, written with that temple's name, and are turned into another temple's
 // here, so a level needs one entry for its name in each language and not one for every line that holds it (#703, S3a).
 import { t, lang } from "./i18n.js";
+import { levelSay } from "./levelsay.js";
 
 /** The prologue's own name and seal: the words the locale tables' lines are written with. */
 export const T00_NAME = "云径禅寺", T00_SEAL = "云径";
-/** @typedef {{ name?: string, seal?: string, names?: Record<string, string> }} Named */
+/** @typedef {{ name?: string, seal?: string, tr?: Record<string, Record<string, string>> }} Named */
 /** The level's name in a language: its own, or the locale tables' line for it. @param {Named} level @param {string} [to] */
-const nameIn = (level, to = lang) => level.names?.[to] ?? t(/** @type {string} */ (level.name), undefined, to);
+const nameIn = (level, to = lang) => levelSay(level, /** @type {string} */ (level.name), to);
 
 let current = /** @type {Named | null} */ (null);
 /** The page says which level it walks, once, after loading it. @param {Named | null | undefined} level */
@@ -46,6 +47,12 @@ export const templeNow = () => templeOf(current);
 export const sealNow = () => sealOf(current);
 export const stemNow = () => stemOf(current);
 /** The temple's name in Chinese, for what is drawn as calligraphy (the book's page): `glyphs` then writes it in the forms the language uses. */
+/**
+ * The verse a photograph prints: the hours' own for a level that says nothing, or only what the level itself gives this
+ * season and hour (none, when it gives none). @param {{ ownVerse?: boolean, moodFor?: (s: string, t: string, m: any) => any } | null | undefined} level
+ * @param {string} season @param {string} time @param {string} line the hours' own verse
+ */
+export const verseOf = (level, season, time, line) => (level?.ownVerse ? level.moodFor?.(season, time, {})?.line || "" : line);
 export const nameNow = () => current?.name || T00_NAME;
 
 /**

@@ -1,0 +1,78 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "collage.jpg",
+   "bytes": 90034,
+   "sha256": "5c5095a17297174605cae2dedbca033d44999b3e2b2a76ebb01d888fa76037b5",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/hands-join-kanakamuni.png",
+   "bytes": 600179,
+   "sha256": "ac1c769ebb81439497e0acbaf01dc6c25518b8efa142ad8218c0e2028b580915",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/hands-join-kasyapa.png",
+   "bytes": 524943,
+   "sha256": "83e957ff865ca7f233a64929a5010a0287acf117db13a74376084c9adb64f54d",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/hands-join-krakucchanda.png",
+   "bytes": 548528,
+   "sha256": "63ff455c4f0ca06dbff6c662071bddf29d992f2e3cba0a6e34348112c42d8c61",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/hands-join-sakyamuni.png",
+   "bytes": 525719,
+   "sha256": "86adac3fb234a9d71048c667d84578959703b75659cc9d8e1b75e2dc9e488b64",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/hands-join-sikhin.png",
+   "bytes": 548521,
+   "sha256": "24bda3f808f5f699f21f464f525233fc6978d776da45808e212e08361c7689f1",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/hands-join-vipasyin.png",
+   "bytes": 494484,
+   "sha256": "60d7caa85b3eba659fb1ccfa54f5e2d381c276fff7e7bf9f23592042b0189dc8",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/hands-join-visvabhu.png",
+   "bytes": 508781,
+   "sha256": "416202a3bf74673f44a1d546947456b7e139c616593766db02bb6de249317dc1",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/kana-knee-hand.png",
+   "bytes": 419597,
+   "sha256": "08fd70597e4134fcd60dcea624bfe1ded3f8f8f25f3ceb0abc565cc8f3a546d6",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/kana-raised-hand.png",
+   "bytes": 308698,
+   "sha256": "21c97543e533e475d4b8ed12f4e4f698f0ceffca99466499189c4161396dd765",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/krak-lap-hand.png",
+   "bytes": 512823,
+   "sha256": "801e5fd48b63ed683f73bf68b9760971835c4d6759aed5698e0a9030cb47dfdb",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  },
+  {
+   "path": "png/vip-knee-hand.png",
+   "bytes": 412107,
+   "sha256": "af56439880d8f2b1bed035eeaab526b269ae89d32a8302cfe1078bb99c32f399",
+   "rev": "0b19b68250cb49fdb71c63eee13af8f19e279f4a"
+  }
+ ]
+}

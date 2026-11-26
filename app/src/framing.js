@@ -140,12 +140,14 @@ function flatCeiling(M, add, { wx, wz }, H, kind, cell, focus, inX, bw, lowAO) {
   for (const [x0, x1, z0, z1] of pieces) if (x1 - x0 > 0.01 && z1 - z0 > 0.01) panels.push(ceilingQuad(x0, x1, z0, z1, H, cell, gx, gz, kind === "plain"));
   // The ribs, on the lines of the grid, broken round the opening.
   for (let x = gx + Math.ceil((-wx - gx) / cell) * cell; x < wx - 0.05; x += cell) {
+    if (x < -wx + 0.05) continue;   // (a rib on the wall's own line is inside the frame, and only shared the wall's top, #688)
     if (hole && x > hole.x0 - 1e-6 && x < hole.x1 + 1e-6) { rib.push(box(ribW, ribD, hole.z0 + wz, x, H - ribD / 2, (hole.z0 - wz) / 2), box(ribW, ribD, wz - hole.z1, x, H - ribD / 2, (hole.z1 + wz) / 2)); }
-    else rib.push(box(ribW, ribD, 2 * wz, x, H - ribD / 2, 0));
+    else rib.push(box(ribW, ribD, 2 * wz - 0.006, x, H - ribD / 2, 0));   // (stopping a hair short of the walls, whose plane their ends shared, #688)
   }
   for (let z = gz + Math.ceil((-wz - gz) / cell) * cell; z < wz - 0.05; z += cell) {
+    if (z < -wz + 0.05) continue;
     if (hole && z > hole.z0 - 1e-6 && z < hole.z1 + 1e-6) { rib.push(box(hole.x0 + wx, ribD, ribW, (hole.x0 - wx) / 2, H - ribD / 2, z), box(wx - hole.x1, ribD, ribW, (hole.x1 + wx) / 2, H - ribD / 2, z)); }
-    else rib.push(box(2 * wx, ribD, ribW, 0, H - ribD / 2, z));
+    else rib.push(box(2 * wx - 0.006, ribD, ribW, 0, H - ribD / 2, z));
   }
   // The frame round the edge of the ceiling, where it meets the walls (suantingfang).
   frame.push(box(2 * wx, 0.14, 0.22, 0, H - 0.07, wz - 0.11), box(2 * wx, 0.14, 0.22, 0, H - 0.07, -wz + 0.11), box(0.22, 0.14, 2 * wz, wx - 0.11, H - 0.07, 0), box(0.22, 0.14, 2 * wz, -wx + 0.11, H - 0.07, 0));

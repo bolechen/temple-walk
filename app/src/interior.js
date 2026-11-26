@@ -277,9 +277,10 @@ function buildRoom(M, hall, ox, figures) {
   g.add(out);
   // The opening itself: jambs and a lintel of dark timber the thickness of the wall, a stone sill, and the two
   // leaves of the door folded back against the wall inside, so that the daylight has an edge to come round.
-  add(merge([box(0.22, 3.3, 0.42, -1.5, Y + 1.65, zs + 0.15), box(0.22, 3.3, 0.42, 1.5, Y + 1.65, zs + 0.15), box(3.3, 0.24, 0.42, 0, Y + 3.3, zs + 0.15),
+  add(merge([box(0.22, 3.306, 0.42, -1.5, Y + 1.647, zs + 0.15), box(0.22, 3.306, 0.42, 1.5, Y + 1.647, zs + 0.15), box(3.3, 0.24, 0.42, 0, Y + 3.3, zs + 0.15),
     box(1.3, 3.0, 0.07, -2.3, Y + 1.56, zs - 0.06), box(1.3, 3.0, 0.07, 2.3, Y + 1.56, zs - 0.06)]), M.woodX);
-  add(box(3.0, 0.12, 0.5, 0, Y + 0.06, zs + 0.15), M.stone, () => 0.7);
+  // (The jambs go 6 mm into the floor and the sill 3 mm, so that their feet and the wall's are not three faces on one plane, #688.)
+  add(box(3.0, 0.123, 0.5, 0, Y + 0.0585, zs + 0.15), M.stone, () => 0.7);
   // What the opening is to the eye that follows him: a wall, from the jambs' inner face out. Beyond it there is no porch,
   // only the picture of one, and the eye backing out through the door saw the dark under the courts with the two lamps
   // (27c9458). Never drawn, not stood on; eyegather.js takes it as it takes the walls. Sheets a hand apart through more

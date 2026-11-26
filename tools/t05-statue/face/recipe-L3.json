@@ -1,0 +1,120 @@
+{
+ "about": "The face's reshaping for every figure (#463, the 3D review's second round), laid on each figure's own landmarks by face-ops.py. Radii in mouth widths; s = across, up, depth; back in face widths; drop: how far below the slit, in mouth widths, the chin's pad is centred. Tuned on Vipasyin against the concept's ratios (face-ratios.py). fill: the hollow under the lower lip filled by k of its depth, radius r mouth widths. 2026-11-21 r6: mouth across 1.08 → 1.12 (the art director: about 1.2 times the nose's wings; both reviewers and the T05 lead asked for wider). r6 (the 3D review's third round): the mouth's depth moves with its own radius rd (2.3 w) and fades in from the base of the nose to the upper lip; across back to 1.08 (1.12 made the mouth 0.38 of the face); the chin's pad narrowed 0.9 across, its depth not pressed further; jaw: the jaw's line lifted d face widths either side, x mouth widths out, drop below the slit, radius r. Across 1.03: with the wider depth move the mouth measured 1.25–1.28 times the nose's wings at 1.08; 1.03 aims at about 1.2 (the art director, the T05 lead). r7 (the 3D review's fourth round): flatten — the lips' volume kept to k, radius r w, smoothed over sr w; philtrumPad — the pad between the nose and the lip likewise; facex — the lower face ×k across below the cheekbones (cheek: their height, as a share of the slit-to-brow span, above the slit), easing over fade of that span, out again by neck spans below the slit; groove — a groove depth w deep and width w wide along the slit as it was, dimples at the corners d w deep within r w. r7, revised the same day (the 3D review withdrew 'a real figure's lips are thin', which had no source, once the T05 lead described the photograph of the real figure): the aim is a calm face, not thinner lips — flatten k 0.6 takes down the frame of hollow round the lips but keeps their fullness and the slit; no groove; the lower face no narrower than 0.95. r7 with the art director's r6 review: mouth across 1.0 (back to the concept's proportion: the art director withdrew 'about 1.2 times the nose's wings'); the ridge under the nose pressed further (philtrum pad k 0.2, r 0.45 w); the fold under the lip half filled; the chin's pad wider (1.0 w across) so it runs into the cheeks. The lips' volume follows the 3D review (kept full, k 0.6, no groove): shape is the 3D review's to judge (skills/art-gate/SKILL.md §6). r8 (the 3D review's fifth round, the art director's r7 review): the upper lip stood 0.23 w behind the base of the nose (the concept, Sakyamuni's side drawing, 0.043), so mouth back -0.01 with depth 1.0 and lipsFwd — the lips forward d metres at the upper lip's foremost point, nothing at the base of the nose, after everything that smooths; two variants by d alone: A (this file, d 0.033) about -0.07, B (d 0.024, measured -0.116) between r7 and A; d 0.047 measured +0.001, level with the base of the nose (the 3D review: the art director chooses by the pictures); underJaw — the flesh under the jaw ×k in depth toward the head's upright axis; frame — the trench beside the upper lip filled k of its depth, only where shallower than maxDepth (not the nose's wing); chinFold — the crease along the chin's lower edge softened to k in a band band w wide; lids — a lid's edge standing off the face kept within cap metres of the smoothed face. The cheeks' ×0.9 (depthk about the mouth) was tried and dropped: it took the nose back with it, and the cheeks already stood 0.21 w behind the lips. Final (the 3D review and the art director, after r8): variant A, closed eyes; the lids are no longer pressed on the full mesh (it broke the painted lid line): lidClamp and lids removed here, and the lid's edge is pressed on the thinned levels only (tools/t05-statue/lowclamp.py), the normals still baked from this unpressed mesh. #701: lowerback — the lower face (lip, chin, jaw as one mass) pressed back d metres, whole within x0 metres of the middle and easing out by x1, from `below` (file units under the bowed slit) down `span` and out by `fz` more, in front of the neck's axis, then relaxed `iter` passes of `lam` (variant L2: d 0.018, 12 passes; L1 was 0.03, 30; the 3D review and the art director took L2). hold: the upper face (from the nose's tip up, eased down to the nose's base) is given back as the bow left it, so the eyes, brows and nose are exactly r3c's, tilted (#701). L3 (#701, the art director on 701-r7): the lower face is rebuilt by `chinshape` instead of pushed back by `lowerback`: a soft groove (0.55 of r3c's depth), a round chin (1.5 of r3c's bulge) behind the lip; holdEarly: the fade of the upper face ends 0.008 (file units) below the nose's tip.",
+ "mouth": {
+  "r": [
+   1.3,
+   0.6,
+   1.3
+  ],
+  "s": [
+   1.0,
+   0.8,
+   1.0
+  ],
+  "back": -0.01,
+  "rd": [
+   2.3,
+   2.3,
+   2.3
+  ]
+ },
+ "chin": {
+  "r": [
+   1.0,
+   0.9,
+   1.0
+  ],
+  "s": [
+   0.9,
+   1.0,
+   0.68
+  ],
+  "drop": 0.45
+ },
+ "fill": {
+  "k": 0.5,
+  "r": 0.5
+ },
+ "jaw": {
+  "x": 1.1,
+  "drop": 0.9,
+  "r": 0.8,
+  "d": 0.01
+ },
+ "flatten": {
+  "k": 0.6,
+  "r": 1.1,
+  "sr": 1.6,
+  "iter": 800
+ },
+ "philtrumPad": {
+  "k": 0.2,
+  "r": 0.45,
+  "sr": 0.8,
+  "iter": 500
+ },
+ "facex": {
+  "k": 0.95,
+  "cheek": 0.55,
+  "fade": 0.35,
+  "neck": 0.9
+ },
+ "frame": {
+  "k": 0.5,
+  "r": 0.22,
+  "ys": [
+   0.2
+  ],
+  "maxDepth": 0.03
+ },
+ "underJaw": {
+  "k": 0.9,
+  "dy": -1.8,
+  "r": [
+   2.5,
+   1.4
+  ],
+  "top": -0.3,
+  "bottom": -1.0,
+  "xmax": 0.9,
+  "axis": -0.15,
+  "fade": 0.3
+ },
+ "lipsFwd": {
+  "d": 0.033,
+  "r": [
+   1.0,
+   0.7,
+   1.0
+  ]
+ },
+ "chinFold": {
+  "k": 0.3,
+  "band": 0.1,
+  "half": 0.6,
+  "n": 7
+ },
+ "hold": true,
+ "chinshape": {
+  "k_groove": 0.55,
+  "k_chin": 1.5,
+  "lip0": 0.012,
+  "lip1": 0.065,
+  "gr0": 0.012,
+  "gr1": 0.09,
+  "chin0": 0.012,
+  "chin1": 0.16,
+  "jaw": 0.07,
+  "bin": 0.004,
+  "span": 0.36,
+  "xm": 0.03,
+  "x0": 0.19,
+  "x1": 0.42,
+  "ffront": 0.012,
+  "iter": 20,
+  "lam": 0.5,
+  "dsmooth": 9,
+  "ramp": 0.25
+ },
+ "holdEarly": 0.008
+}

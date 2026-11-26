@@ -3,6 +3,12 @@
  "files": {
   "analytics.test.mjs": 0.1,
   "app.test.mjs": 2.1,
+  "temple-name.test.mjs": 0.3,
+  "level-say.test.mjs": 0.2,
+  "save-levels.test.mjs": 0.2,
+  "t05-director.test.mjs": 1.4,
+  "t05-writing.test.mjs": 4.3,
+  "t05-page.test.mjs": 0.2,
   "asset-register.test.mjs": 0.2,
   "atmosphere.test.mjs": 0.4,
   "awake.test.mjs": 0.1,
@@ -89,9 +95,9 @@
   "loading.test.mjs": 0.1,
   "loft-zone.test.mjs": 3.8,
   "loft.test.mjs": 9.9,
-  "monk-sit-sitdown-60.test.mjs": 139,
-  "monk-sit-sitdown.test.mjs": 116,
-  "monk-sit.test.mjs": 10,
+  "monk-sit-sitdown-60.test.mjs": 1.5,
+  "monk-sit-sitdown.test.mjs": 1.5,
+  "monk-sit.test.mjs": 12.8,
   "monk-skirt.test.mjs": 60.8,
   "monk.test.mjs": 5.9,
   "mood-488.test.mjs": 0.2,
@@ -181,6 +187,7 @@
   "windows.test.mjs": 6.2,
   "wishes.test.mjs": 0.1,
   "works.test.mjs": 3.6,
-  "t05-sound.test.mjs": 0.4
+  "t05-sound.test.mjs": 0.4,
+  "face-gate.test.mjs": 0.3
  }
 }

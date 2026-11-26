@@ -1,0 +1,256 @@
+{
+  "started": "2026-11-25T23:47:35.979Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [],
+  "errors": [],
+  "site": {
+    "commit": "3522c21c6f1be37231df8155128442c2f7f53aa5",
+    "entry": "assets/index-DbiRkXbB.js",
+    "files": 39,
+    "sha256": "0a06bcadc22f3da5205d85276022a41b908a4f645812b0ea4a7f8fbc47e2a0d5"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "script": {
+    "name": "t05-hall-gpu.cjs",
+    "timeline": [
+      {
+        "set": "ship",
+        "view": "cam03-winter",
+        "file": "ship-cam03-winter.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "aisle55-kasyapa",
+        "file": "ship-aisle55-kasyapa.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "join-kasyapa",
+        "file": "ship-join-kasyapa.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-kasyapa",
+        "file": "ship-mid10-kasyapa.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-clay-kasyapa",
+        "file": "ship-mid10-clay-kasyapa.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "aisle55-krakucchanda",
+        "file": "ship-aisle55-krakucchanda.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "join-krakucchanda",
+        "file": "ship-join-krakucchanda.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-krakucchanda",
+        "file": "ship-mid10-krakucchanda.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-clay-krakucchanda",
+        "file": "ship-mid10-clay-krakucchanda.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "aisle55-vipasyin",
+        "file": "ship-aisle55-vipasyin.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "join-vipasyin",
+        "file": "ship-join-vipasyin.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-vipasyin",
+        "file": "ship-mid10-vipasyin.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-clay-vipasyin",
+        "file": "ship-mid10-clay-vipasyin.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "aisle55-visvabhu",
+        "file": "ship-aisle55-visvabhu.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "join-visvabhu",
+        "file": "ship-join-visvabhu.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-visvabhu",
+        "file": "ship-mid10-visvabhu.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-clay-visvabhu",
+        "file": "ship-mid10-clay-visvabhu.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "aisle55-kanakamuni",
+        "file": "ship-aisle55-kanakamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "join-kanakamuni",
+        "file": "ship-join-kanakamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-kanakamuni",
+        "file": "ship-mid10-kanakamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-clay-kanakamuni",
+        "file": "ship-mid10-clay-kanakamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "aisle55-sakyamuni",
+        "file": "ship-aisle55-sakyamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "join-sakyamuni",
+        "file": "ship-join-sakyamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-sakyamuni",
+        "file": "ship-mid10-sakyamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      },
+      {
+        "set": "ship",
+        "view": "mid10-clay-sakyamuni",
+        "file": "ship-mid10-clay-sakyamuni.png",
+        "ms": 0,
+        "tris": 0,
+        "calls": 0,
+        "shot": true
+      }
+    ]
+  },
+  "finished": "2026-11-25T23:48:03.677Z"
+}

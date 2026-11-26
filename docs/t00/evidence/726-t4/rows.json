@@ -1,0 +1,68 @@
+[
+  {
+    "label": "this",
+    "feature": true,
+    "start": {
+      "time": "day",
+      "follow": false,
+      "lamp": 0
+    },
+    "beforeShut": {
+      "time": "day",
+      "follow": false,
+      "lamp": 0
+    },
+    "inkShut": "scaleY(1)",
+    "afterShut": {
+      "time": "night",
+      "follow": true,
+      "lamp": 1.5
+    },
+    "inkHalf": "scaleY(0.5)",
+    "inkOpen": "",
+    "after": {
+      "time": "night",
+      "follow": true,
+      "lamp": 1.5
+    },
+    "hint": {
+      "text": "The mountain's hour now follows yours · seasons and hours can be changed in Photo and Rest",
+      "on": true
+    },
+    "framesAfterBook": 221,
+    "framesWithOldHour": 0
+  },
+  {
+    "label": "base",
+    "feature": false,
+    "start": {
+      "time": "day",
+      "follow": null,
+      "lamp": 0
+    },
+    "beforeShut": {
+      "time": "day",
+      "follow": null,
+      "lamp": 0
+    },
+    "inkShut": "",
+    "afterShut": {
+      "time": "night",
+      "follow": null,
+      "lamp": 1.5
+    },
+    "inkHalf": "",
+    "inkOpen": "",
+    "after": {
+      "time": "night",
+      "follow": null,
+      "lamp": 1.5
+    },
+    "hint": {
+      "text": "Tap this line to open the seal book",
+      "on": true
+    },
+    "framesAfterBook": 322,
+    "framesWithOldHour": 1
+  }
+]

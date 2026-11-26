@@ -1,0 +1,504 @@
+{
+ "out": "tools/out/t05/df5/run",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/ship701c/kasyapa-B4H10b.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "kasyapa-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.97,
+    1.0,
+    1.03
+   ]
+  },
+  {
+   "url": "tools/out/t05/ship701b/krakucchanda-B4H10b.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701d/sikhin-M40b.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-B"
+  },
+  {
+   "url": "tools/out/t05/ship701d/vipasyin-B4H10b.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-B"
+  },
+  {
+   "url": "tools/out/t05/ship701b/visvabhu-V3b.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701b/kanakamuni-K1Lb.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701c/sakyamuni-V14b.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.96,
+    1.0,
+    1.05
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "pk-kasyapa",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      16.45,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      16.45,
+      10.35,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   },
+   "pixels": {
+    "i": 0,
+    "pts": [
+     [
+      800,
+      202
+     ],
+     [
+      800,
+      222
+     ],
+     [
+      800,
+      242
+     ],
+     [
+      800,
+      262
+     ],
+     [
+      800,
+      282
+     ],
+     [
+      800,
+      302
+     ],
+     [
+      800,
+      322
+     ]
+    ]
+   }
+  },
+  {
+   "name": "pk-krakucchanda",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      11.33,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      11.33,
+      10.399999999999999,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   },
+   "pixels": {
+    "i": 1,
+    "pts": [
+     [
+      800,
+      308
+     ],
+     [
+      800,
+      328
+     ],
+     [
+      800,
+      348
+     ],
+     [
+      800,
+      368
+     ],
+     [
+      800,
+      388
+     ],
+     [
+      800,
+      408
+     ],
+     [
+      800,
+      428
+     ]
+    ]
+   }
+  },
+  {
+   "name": "pk-sikhin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      5.8,
+      10.479999999999999,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   },
+   "pixels": {
+    "i": 2,
+    "pts": [
+     [
+      800,
+      220
+     ],
+     [
+      800,
+      240
+     ],
+     [
+      800,
+      260
+     ],
+     [
+      800,
+      280
+     ],
+     [
+      800,
+      300
+     ],
+     [
+      800,
+      320
+     ],
+     [
+      800,
+      340
+     ]
+    ]
+   }
+  },
+  {
+   "name": "pk-vipasyin",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      0,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      0,
+      10.68,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   },
+   "pixels": {
+    "i": 3,
+    "pts": [
+     [
+      800,
+      250
+     ],
+     [
+      800,
+      270
+     ],
+     [
+      800,
+      290
+     ],
+     [
+      800,
+      310
+     ],
+     [
+      800,
+      330
+     ],
+     [
+      800,
+      350
+     ],
+     [
+      800,
+      370
+     ]
+    ]
+   }
+  },
+  {
+   "name": "pk-visvabhu",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -5.8,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -5.8,
+      10.58,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   },
+   "pixels": {
+    "i": 4,
+    "pts": [
+     [
+      800,
+      260
+     ],
+     [
+      800,
+      280
+     ],
+     [
+      800,
+      300
+     ],
+     [
+      800,
+      320
+     ],
+     [
+      800,
+      340
+     ],
+     [
+      800,
+      360
+     ],
+     [
+      800,
+      380
+     ]
+    ]
+   }
+  },
+  {
+   "name": "pk-kanakamuni",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      -11.33,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      -11.33,
+      10.37,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   },
+   "pixels": {
+    "i": 5,
+    "pts": [
+     [
+      800,
+      292
+     ],
+     [
+      800,
+      312
+     ],
+     [
+      800,
+      332
+     ],
+     [
+      800,
+      352
+     ],
+     [
+      800,
+      372
+     ],
+     [
+      800,
+      392
+     ],
+     [
+      800,
+      412
+     ]
+    ]
+   }
+  }
+ ]
+}

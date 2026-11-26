@@ -31,7 +31,7 @@ test("no line T05 says of its temple holds the prologue's name, in any language"
   }
   assert.equal(templeOf(t05, "en"), "Fengming Temple"); assert.equal(said(t05, "云径禅寺-点灯.jpg", undefined, "en"), "fengming-temple-lamp.jpg");
   assert.equal(templeOf(t05, "zh"), "奉明寺"); assert.equal(said(t05, "云径禅寺-{mood}.jpg", vars, "zh"), "奉明寺-x.jpg");
-  assert.equal(templeOf(t05, "ja"), "奉明寺"); assert.equal(templeOf(t05, "ko"), "奉明寺");
+  assert.equal(templeOf(t05, "ja"), "奉明寺"); assert.equal(templeOf(t05, "ko"), "봉명사");
 });
 
 test("the prologue's lines are exactly the tables' own", async () => {
@@ -55,4 +55,20 @@ test("only the prologue keeps the book of seals; a level that says nothing hides
   assert.equal((await loadLevel("t05")).book, undefined);
   const css = fs.readFileSync(new URL("../../app/src/ui.css", import.meta.url), "utf8");
   for (const sel of ["#bookBtn", "#goal", "#way", ".need-book"]) assert.ok(new RegExp(`body\\.nobook :is\\([^)]*${sel.replace(".", "\\.")}`).test(css), sel);
+});
+
+test("T05's card prints its own verse or none, carries no address or code; the prologue's card is as it was", async () => {
+  const { verseOf } = await import("../../app/src/temple.js");
+  const { moodOf } = await import("../../app/src/mood.js");
+  const t00 = await loadLevel("t00"), t05 = await loadLevel("t05");
+  assert.equal(t05.cardLink, false); assert.equal(t05.ownVerse, true);
+  assert.equal(t00.cardLink, undefined); assert.equal(t00.ownVerse, undefined);
+  for (const s of ["spring", "summer", "autumn", "winter"]) for (const h of ["dawn", "day", "dusk", "night"]) {
+    const line = moodOf(s, h, t00.moodFor).line;
+    assert.equal(verseOf(t00, s, h, line), line, `${s}-${h}: the prologue's verse is the hours' own`);
+    const own = verseOf(t05, s, h, moodOf(s, h).line);
+    if (s === "winter" && h === "day") assert.equal(own, "寒霜清晨，钟声独远");
+    else assert.equal(own, "", `${s}-${h}: T05 has no verse of its own here, so it prints none`);
+  }
+  assert.equal(verseOf(null, "summer", "day", "雨过竹声凉"), "雨过竹声凉");
 });

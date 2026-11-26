@@ -9,13 +9,16 @@
 //   --shapes names the screens to measure, so that several machines can share them (upright, side, small, large); with none, all four, on one machine.
 //   --drawn opens every page with the scene drawn, as it was before.)
 //   (--only=title,menu audits only those surfaces, the others being opened on the way but not measured;
-//   --lang audits the page in Japanese or English, into tools/out/mobile-ja/ or mobile-en/ unless an out dir is named)
+//   --lang audits the page in Japanese or English, into tools/out/mobile-ja/ or mobile-en/ unless an out dir is named;
+//   --level=<id> audits another temple's page (`?level=<id>`), into mobile-<id>[-<lang>]/: only the surfaces that temple has (LEVEL_SURFACES),
+//   with its own page seeded so that what is shown of it can be measured; the prologue's surfaces when left out, as before)
 const { chromium } = require("playwright");
 const fs = require("fs"), path = require("path");
 const ARGS = process.argv.slice(2), LANG = ((ARGS.find((a) => a.startsWith("--lang=")) || "").slice(7) || "zh");
 const ONLY = (ARGS.find((a) => a.startsWith("--only=")) || "").slice(7).split(",").filter(Boolean).length ? (ARGS.find((a) => a.startsWith("--only="))).slice(7).split(",") : null;
 const SHAPE_ARG = (ARGS.find((a) => a.startsWith("--shapes=")) || "").slice(9).split(",").filter(Boolean), DRAWN = ARGS.includes("--drawn");
-const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", LANG === "zh" ? "mobile" : `mobile-${LANG}`);
+const LEVEL = (ARGS.find((a) => a.startsWith("--level=")) || "").slice(8) || null;
+const root = require("./site.cjs").site(), out = ARGS.find((a) => !a.startsWith("--")) || path.join(__dirname, "out", (LANG === "zh" ? "mobile" : `mobile-${LANG}`).replace(/^mobile/, LEVEL ? `mobile-${LEVEL}` : "mobile"));   // (another temple's into mobile-<id>[-<lang>])
 const { serve } = require("./site.cjs");
 let srv;
 // The place built but not drawn (tests/e2e/run.cjs, BARE): `?off=` hides parts and unbuilds none, so everything the interface asks of the walk is there.
@@ -157,6 +160,18 @@ const READY = {
   book: () => { const i = document.getElementById("bookImg"); return i && i.complete && i.naturalWidth > 0; },
 };
 // (`closing`: the surface has just been put away; the next one must not open under a sheet still on its way out, which would hear its keys, ui.js `key`)
+// Another temple's surfaces (--level): T05 has no book, seals, lamp or close yet; what it shows of its own is its page (src/levelpage.js):
+// the slip it is shown on and the pause menu's 这一页, with a page seeded in yunjing.levels.v1 (the stroke and the copied line).
+const LEVEL_SURFACES = {
+  t05: [
+    ["title", null, null],
+    ["walk", "document.getElementById('enterBtn').click(); __auditFrames(10)", null],
+    ["menu", "window.__menu(true)", "window.__menu(false)"],
+    ["pageSlip", "window.__page({ show: true })", "document.getElementById('slipTake').click()"],
+  ],
+};
+const LEVEL_SEED = { t05: { "yunjing.levels.v1": JSON.stringify({ v: 1, last: null, place: {}, page: { t05: { p1: { at: 1795300000000 }, stele: { at: 1795300100000, line: "qifo" } } } }) } };
+if (LEVEL && LEVEL !== "t00") { if (!LEVEL_SURFACES[LEVEL]) { console.error(`--level=${LEVEL}: no surfaces are listed for it (LEVEL_SURFACES)`); process.exit(2); } SURFACES.splice(0, SURFACES.length, ...LEVEL_SURFACES[LEVEL]); }
 const CLOSED = () => !window.__ui().modal;
 const settle = (p, name, closing) => p.evaluate(async ([name, ready, cap]) => {
   const frames = () => (window.__yard ? window.__yard().frames : 0), step = () => new Promise((r) => requestAnimationFrame(() => r()));
@@ -174,7 +189,8 @@ const badOf = (m, vw) => m.small.length + m.tiny.length + m.off.length + m.bare.
 async function pass(b, [shape, vw, vh], names, bare, tag, report) {
   const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" });
   const p = await ctx.newPage(), errs = []; await p.addInitScript(HELPERS); p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
-  await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
+  if (LEVEL && LEVEL_SEED[LEVEL]) await p.addInitScript((seed) => { for (const k in seed) if (localStorage.getItem(k) === null) localStorage.setItem(k, seed[k]); }, LEVEL_SEED[LEVEL]);
+  await p.goto(`http://127.0.0.1:${srv.address().port}/?q=low&season=summer&time=day&lang=${LANG}${LEVEL ? `&level=${LEVEL}` : ""}${bare ? BARE : ""}`, { waitUntil: "commit", timeout: 180000 });
   await p.waitForFunction(() => document.body.dataset.ready === "1" && !document.getElementById("enterBtn").disabled, null, { timeout: 300000 });
   let bad = 0, seen = 0;
   for (const [name, open, close] of SURFACES.filter(([n]) => names.includes(n))) {

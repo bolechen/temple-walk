@@ -1,0 +1,132 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "before-j01-shot-copy-t4.png",
+   "bytes": 3137358,
+   "sha256": "7558d23970950f085330afc03eab87b3900eff4fe5a093286cd1e50102be47c7",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 126403,
+   "sha256": "553b5ea129748f69c4bbd4f1e2367bcd809989e4d23c2ab4c46946efa8a450d3",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  },
+  {
+   "path": "crop-copy-hand-after.png",
+   "bytes": 397338,
+   "sha256": "1d3a18ab328a1dd4a32609da0dbf2d30a688e3a2e5c3a4459cf5194bed87fa71",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
+   "path": "crop-copy-hand-before.png",
+   "bytes": 761086,
+   "sha256": "cd7d4caf7efb2d78ce5051274abbd6c7a80bb74537796d2e9f8352d1447507bc",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
+   "path": "crop-p1b-hand.png",
+   "bytes": 608545,
+   "sha256": "18fc1157e78b2178997345c39c828ab0de648a2d48c85867930d6db5847d3f11",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
+   "path": "crop-slip-stroke-390x844.png",
+   "bytes": 560243,
+   "sha256": "910f4022ab34d5dbc4682ea0b818b56614595a25c38ec905b9b29e00a543ef29",
+   "rev": "2203e239b54fda5c0fc5ba97414ae595a22a99a6"
+  },
+  {
+   "path": "j01-shot-copy-t4.png",
+   "bytes": 3137513,
+   "sha256": "b46ed4268eb2d898e4292d037a71f884953d2600de4f48bec852252e4170c3d5",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  },
+  {
+   "path": "j01-shot-p1b-t4.png",
+   "bytes": 2945165,
+   "sha256": "df5968ed03ae0985a84bafd4db79af746a3750077989fb19931e2a1daafb0f62",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  },
+  {
+   "path": "leaf-canvas-stroke.png",
+   "bytes": 104387,
+   "sha256": "51fe06f9cccaa16dff6756aa93bd6010235fe3225fe7f5ea87853e83828ac2aa",
+   "rev": "f9aaedee0af7d6676874822b6bf0030b34fe1060"
+  },
+  {
+   "path": "p1-stroke-1-2.6s.png",
+   "bytes": 1196271,
+   "sha256": "d69e79cddbf4b5480075fa1b1d86e7ce11a578a35f9402170e186e098ba9aa12",
+   "rev": "f9aaedee0af7d6676874822b6bf0030b34fe1060"
+  },
+  {
+   "path": "p1-stroke-2-3.1s.png",
+   "bytes": 1196460,
+   "sha256": "5adf9bcdf65c73a5ed58aef271fb35b181974a4a4419d0cba4cc0e47a229fd27",
+   "rev": "f9aaedee0af7d6676874822b6bf0030b34fe1060"
+  },
+  {
+   "path": "p1-stroke-3-3.7s.png",
+   "bytes": 1195847,
+   "sha256": "0b933a74f969a7fb484980cabd6f02aa0b0fa95d4bdbe658bb645086151717cd",
+   "rev": "f9aaedee0af7d6676874822b6bf0030b34fe1060"
+  },
+  {
+   "path": "p1-stroke-4-4.0s.png",
+   "bytes": 1194622,
+   "sha256": "ec90ed84224d539599eefe5b18055d77fcf2458b222e67dca968234369146edb",
+   "rev": "f9aaedee0af7d6676874822b6bf0030b34fe1060"
+  },
+  {
+   "path": "r2-leaf-canvas-stroke.png",
+   "bytes": 102640,
+   "sha256": "881800c95fd6b668dc27b2756c72f868ef1e6900c59ce6a14a8d0d7b1de2bf33",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
+   "path": "r2-slip-note-390x844.png",
+   "bytes": 2900869,
+   "sha256": "8922be67928b84cbf0a115c89d1c51ee73e68f28c4e337327109c377c3da8e84",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
+   "path": "r2-slip-whole-390x844.png",
+   "bytes": 3183627,
+   "sha256": "b1ae2a0cb6baaecc8fe6eb26a6fcfeada8959d2f461ea931c22719c2ba0f1def",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
+   "path": "r2-stroke-390x844-pixels.png",
+   "bytes": 80234,
+   "sha256": "ef743c51ce0204119e8cbd90563b830f92ea95c424c35c98e827864342b4f059",
+   "rev": "cceb6779d4ff6f4120ed00bd78e877c792cf4f0a"
+  },
+  {
+   "path": "slip-note-360x640.png",
+   "bytes": 1040291,
+   "sha256": "fe93fcf5565230f700a808960537bc8076f0dce2df15e4beab89436b959089b4",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  },
+  {
+   "path": "slip-note-390x844.png",
+   "bytes": 2907724,
+   "sha256": "4da6e140f84abc5306410d746b6d1822b878e0281f26de612321a398c813155a",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  },
+  {
+   "path": "slip-whole-360x640.png",
+   "bytes": 1138832,
+   "sha256": "55f584807c92dbd324edf8c489b89852fffa42f1f15347e68dbbe5c3ecf8caea",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  },
+  {
+   "path": "slip-whole-390x844.png",
+   "bytes": 3191960,
+   "sha256": "e4da3381e697a8bc706a64a0a651ccfced49722f3f82d2d25ad04622a4edc36e",
+   "rev": "adbc73c71676b8a1f7a41c698b66e03c0144dc42"
+  }
+ ]
+}

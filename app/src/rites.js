@@ -9,6 +9,8 @@ import * as THREE from "three";
 import { carry, over, fallen, FINGERS, PALM } from "./coin.js";
 import { mesh, merge } from "./geo.js";
 import { INCENSE_HALLS, SEALED_HALL, incenseId, burnt } from "./incense.js";
+import { createWriting } from "./writing.js";
+import { brushSound } from "./audio.js";
 
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z), UP = V(0, 1, 0);
 const ease = (u) => u * u * (3 - 2 * u), mix = (a, b, u) => a + (b - a) * u;
@@ -344,24 +346,40 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
   // When the seventh seal is earned he is sitting on the summit. The eye leaves his shoulder: it comes round before
   // him, draws back down the steps and rises until the pavilion stands whole on its mountain, while he goes on
   // breathing and the closing words are said (game.js says them, on `cue`). `secs` is the whole of it.
-  const END = { secs: 30, on: false, u: 0, aim: 0 };
+  const END = { secs: 30, on: false, u: 0, aim: 0, route: /** @type {null | ((t: number) => number[])} */ (null), frame: /** @type {null | { o: number[], f: number[], l: number[] }} */ (null) };
   /** @param {() => boolean} on @param {(seconds: number) => void} [cue] */
   async function close(on, cue = () => {}) {
     const eye = { p: V(), q: new THREE.Quaternion(), fov: 50 };   // where the eye stood on the last frame: the far view is made of it
-    const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = dir(0, 0, 1).clone(), l = dir(1, 0, 0).clone();
+    // Which way is ahead: the way the mat faces, not the way he happens to be turned on the frame the close begins (the turn onto the mat is not
+    // finished a second after he sits on a slow page, and the whole route was laid from it).
+    const turned = places.sit && typeof places.sit.face === "number" ? new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), places.sit.face) : G.quaternion;
+    const cam0 = V(), look0 = V(), look = V(), o = G.position.clone(), f = V(0, 0, 1).applyQuaternion(turned), l = V(1, 0, 0).applyQuaternion(turned);
     const P = (a, b, c) => o.clone().addScaledVector(l, a).addScaledVector(f, c).setY(o.y + b);
-    let path = null, aim = null;
-    END.on = true; END.u = 0;
+    END.frame = { o: o.toArray(), f: f.toArray(), l: l.toArray() };
+    let path = null, aim = null, off = null;
+    // The eye's place `u` of the way through the close (0 to 1), and where it looks. The route itself is laid from where he sits, not from where
+    // the eye happened to be when the close began (the eye behind him may be anywhere, drawn in by whatever stands there): it goes from a
+    // point just before him up and out over the court, kept 1 m clear of everything drawn there, the porch's balusters and the ginkgoes'
+    // crowns included (#498; the clear corridor was found in the eye's own hierarchy, `tests/e2e` `ending-eye` holds it); the eye's own
+    // starting place is carried along as an offset that is gone by the fifth second, so that the picture still starts where it was.
+    const at = (u, eyeOut, lookOut) => {
+      const k = ease(Math.min(1, u * 1.04)), fade = 1 - ease(Math.min(1, u / 0.15));
+      path.getPoint(k, eyeOut).addScaledVector(off, fade); aim.getPoint(k, lookOut);
+    };
+    END.on = true; END.u = 0; END.route = null;
     y.cine((camera) => {
       if (!path) { y.undirect?.(); cam0.copy(camera.position);   // from wherever the eye was, the sitting's own shot included
+        if (typeof window === "object" && window.__closeEye0) cam0.fromArray(window.__closeEye0);   // (a test begins the close from another place: `__closeEye0 = [x, y, z]`)
         camera.getWorldDirection(look0).multiplyScalar(6).add(cam0);
         // The last look is raised, if need be, until the pavilion's ridge ornaments stand clear of the picture's top.
         const far = P(9, 17, 34), roofs = site.walk.roofs.filter((r) => Math.hypot((r.x0 + r.x1) / 2 - o.x, (r.z0 + r.z1) / 2 - o.z) < 16), tall = roofs.sort((p, q) => q.top - p.top)[0];
-        path = new THREE.CatmullRomCurve3([cam0.clone(), P(1.5, 0.75, 3.1), P(3.6, 2.6, 8.5), P(7, 9, 19), far], false, "centripetal");
+        path = new THREE.CatmullRomCurve3([P(0, 1.3, 1.0), P(1.7, 2.65, 4.1), P(4.7, 3.5, 8.3), P(7.1, 7.7, 19.5), far], false, "centripetal");
+        off = cam0.clone().sub(path.getPoint(0));
         const tops = [new THREE.Vector3((tall?.x0 + tall?.x1) / 2, tall?.top + 1.6, (tall?.z0 + tall?.z1) / 2), ...(tall?.crest || []).map(([x, cy, z]) => new THREE.Vector3(x, cy, z))];
         const last = tall ? aimToFrame(far, P(0, 5, -6), tops, camera.fov, camera.aspect) : P(0, 5, -6);
-        aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2); }
-      const k = ease(Math.min(1, END.u * 1.04)); path.getPoint(k, camera.position); aim.getPoint(k, look); camera.lookAt(look);
+        aim = new THREE.CatmullRomCurve3([look0.clone(), P(0, 0.45, 0), P(0, 0.9, -1), P(0, 3.2, -4), last], false, "centripetal"); END.aim = +last.y.toFixed(2);
+        END.route = (t, eyeOut = V(), lookOut = V()) => { at(Math.min(1, t / END.secs), eyeOut, lookOut); return [...eyeOut.toArray(), ...lookOut.toArray()]; }; }
+      at(END.u, camera.position, look); camera.lookAt(look);
       eye.p.copy(camera.position); eye.q.copy(camera.quaternion); eye.fov = camera.fov;
     });
     const ok = await play(END.secs, (u) => {
@@ -432,21 +450,31 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
     Lh.at.copy(to(tip.set(0.07, 0.5, 0.11))); Lh.fingers.copy(way(tip.set(0, -0.3, 1))); Lh.palm.copy(way(tip.set(0, 1, 0))); Lh.w = 1; act.bow = 0.55;
   }
 
+  // ================= Writing on a temple's own page =================
+  // T05's observation and the copy of the stele (src/writing.js): the leaf and the brush, on this same clock and into this same `act`.
+  const copyPlace = Object.values(places).find((p) => p.stele);
+  const writing = createWriting({ act, play, homeward, at, dir, scene, G, head: B.head, each: (f) => always.push(f), sound: (s) => { if (typeof window !== "undefined") brushSound(s); },
+    stele: copyPlace?.stele, handR: () => B.rightHand.getWorldPosition(tC), handL: () => B.leftHand.getWorldPosition(V()) });
+
   // ---- Between observances: his hands are his own again, and what was in them goes back where it belongs ----
   function rest() {
     act.bow = act.twist = act.nod = act.look = 0; act.breath = null; act.hands.left.w = act.hands.right.w = 0;
     bell.held = false; bell.grip = 0; peal.busy = false; coin.visible = false;
     if (home) { tea.held = 0; cup.position.copy(home); cup.rotation.set(0, T.face, 0); steam.show(true); }
     for (const h of Object.values(stands)) { if (h.inc.planted) { h.stand(); h.smoke.show(true); } else if (h.inc.burnt) h.burntOut(); else { h.sticks.visible = h.inc.shown = false; } }
-    ring.visible = false;
+    ring.visible = false; writing.rest();
   }
   const incenseState = (hall) => { const h = stands[hall]; if (!h) return null; const { inc, smoke, sticks } = h; return { shown: inc.shown, planted: inc.planted, burnt: inc.burnt, left: inc.planted ? Math.max(0, Math.round(burn - (Date.now() - inc.at) / 1000)) : 0, burn, smoke: smoke.group.visible, at: sticks.position.toArray().map((v) => +v.toFixed(3)) }; };
   return {
-    act, rest, dropCoin, poseCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close,
+    act, rest, dropCoin, poseCoin, takeRope, pull, letGo, ready, linger, drinkTea, offerIncense, breathe, watchWell, lightLamp, close, writing,
     // What was done on an earlier visit stays done for as long as it would have lasted: sticks set in the ash at `at` are still
     // burning if less than `burn` seconds have passed, and are cold stubs after.
     // `has.incense`: `{ hall: when its sticks were set }` (incense.js); each hall's are as far burnt as its own time says.
     restore(has) { for (const [hall, at] of Object.entries(has.incense || {})) { const h = stands[hall]; if (!h || !at) continue; if (Date.now() - at < burn * 1000) h.plant(at); else h.burntOut(); } },
+    /** where the eye stands along the close, every `step` seconds (null before the close has begun): a test asks the eye's hierarchy of each */
+    /** where he sits and which way is ahead and to his left, as the close lays its route from them (a test lays its own points the same way) */
+    closeFrame: () => END.frame,
+    closeRoute: (step = 0.1) => (END.route ? Array.from({ length: Math.round(END.secs / step) + 1 }, (_, i) => END.route(i * step)) : null),
     incenseLit: (hall = SEALED_HALL) => !!stands[hall]?.inc.planted,
     state: () => ({
       passages: jobs.length, bow: +act.bow.toFixed(3), nod: +act.nod.toFixed(3), breath: act.breath === null ? null : +act.breath.toFixed(3), hands: +Math.max(act.hands.left.w, act.hands.right.w).toFixed(3),
@@ -457,6 +485,7 @@ export function createRites(y, fast = 1, { burn = 300, onPlant = (/** @type {num
       sit: { breaths: sit.breaths, ring: ring.visible, fill: +sit.fill.toFixed(3), radius: +ring.scale.x / RING_PLANE },
       coin: { visible: coin.visible, y: coinState.y === null ? null : +coinState.y.toFixed(3), released: coinState.released, passedAt: coinState.passedAt, began: coinState.began },
       close: { on: END.on, u: +END.u.toFixed(3), aim: END.aim },
+      writing: writing.state(),
     }),
   };
 }

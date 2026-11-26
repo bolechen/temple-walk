@@ -480,6 +480,27 @@
      },
      {
       "cap": {
+       "a": "@handR4a",
+       "b": "@handR4b",
+       "r": "@handR4r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handL4a",
+       "b": "@handL4b",
+       "r": "@handL4r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handR5a",
+       "b": "@handR5b",
+       "r": "@handR5r"
+      }
+     },
+     {
+      "cap": {
        "a": "@handL3a",
        "b": "@handL3b",
        "r": "@handL3r"
@@ -496,49 +517,79 @@
    "metal": 0,
    "roughJitter": 0.1,
    "where": {
-    "and": [
+    "or": [
      {
       "and": [
        {
-        "box": {
-         "min": "@skinMin",
-         "max": "@skinMax"
-        }
+        "and": [
+         {
+          "box": {
+           "min": "@skinMin",
+           "max": "@skinMax"
+          }
+         },
+         {
+          "half": {
+           "through": [
+            "@neckFront",
+            "@neckBack"
+           ]
+          }
+         }
+        ]
        },
        {
-        "half": {
-         "through": [
-          "@neckFront",
-          "@neckBack"
+        "or": [
+         {
+          "half": {
+           "through": [
+            "@hairFront",
+            "@hairBack"
+           ]
+          }
+         },
+         {
+          "and": [
+           {
+            "half": {
+             "p": "@napeP",
+             "n": "@napeN"
+            }
+           },
+           {
+            "half": {
+             "p": "@napeFloorP",
+             "n": "@napeFloorN"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "not": {
+         "or": [
+          {
+           "ell": {
+            "c": "@earHL",
+            "r": "@earH_"
+           }
+          },
+          {
+           "ell": {
+            "c": "@earHR",
+            "r": "@earH_"
+           }
+          }
          ]
         }
        }
       ]
      },
      {
-      "half": {
-       "through": [
-        "@hairFront",
-        "@hairBack"
-       ]
-      }
-     },
-     {
-      "not": {
-       "or": [
-        {
-         "ell": {
-          "c": "@earL",
-          "r": "@earR_"
-         }
-        },
-        {
-         "ell": {
-          "c": "@earR",
-          "r": "@earR_"
-         }
-        }
-       ]
+      "map": {
+       "m": "hair",
+       "ch": 0
       }
      }
     ]

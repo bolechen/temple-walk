@@ -1,0 +1,42 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam04-branch.jpg",
+   "bytes": 146820,
+   "sha256": "5bed1481535bc326470baea890e1da8280e55930902a7d5330772bd6df6c15c3",
+   "rev": "b9b2fec0fdce984810df2ab63f2cabb97f6276f6"
+  },
+  {
+   "path": "cam04-main.jpg",
+   "bytes": 146902,
+   "sha256": "cf02790b60b17a67201654a1136f9a7613a3ccdad1e1ac89713ecdc6293e2368",
+   "rev": "b9b2fec0fdce984810df2ab63f2cabb97f6276f6"
+  },
+  {
+   "path": "cam06-branch.jpg",
+   "bytes": 192553,
+   "sha256": "520e8c5cf881b9c84ab83c4d78d769ecab95789121d109e33643c2e23455ea3c",
+   "rev": "b9b2fec0fdce984810df2ab63f2cabb97f6276f6"
+  },
+  {
+   "path": "cam06-main.jpg",
+   "bytes": 194231,
+   "sha256": "d26882acb5a114ed5e0edeaf1c6976f2c7ad0661b32f5e2d56a0ed2b44d67204",
+   "rev": "b9b2fec0fdce984810df2ab63f2cabb97f6276f6"
+  },
+  {
+   "path": "court_autumn-dusk_third-branch.jpg",
+   "bytes": 197078,
+   "sha256": "03dae9a106d8454dd7096a87cf87edbae34b16c026ead81226a56bdef5b1e5e5",
+   "rev": "b9b2fec0fdce984810df2ab63f2cabb97f6276f6"
+  },
+  {
+   "path": "court_autumn-dusk_third-main.jpg",
+   "bytes": 197911,
+   "sha256": "2139bdcbbeb49a0e86c0ff8499b449a61a2f3c5a67fb00e8501abc400ad15b6f",
+   "rev": "b9b2fec0fdce984810df2ab63f2cabb97f6276f6"
+  }
+ ]
+}

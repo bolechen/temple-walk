@@ -92,11 +92,12 @@ test("from where he arrives, the outer gate's, the inner gate's, the archway's, 
   assert.ok(site.views.mouth[1] < FOOT.hall.z0 - stairProfile(SECOND.y).run, "the court's mouth is beyond the foot of the hall's back steps");
 });
 
-test("the middle way across the terrace before the great hall is 20 m wide and open, and the monument pavilion's place is held at its west edge", () => {
+test("the middle way across the terrace before the great hall is 20 m wide and open, and the monument pavilion stands at its west edge: its stele, plinth and columns in the way, the place before the stele open (stele.js)", () => {
   for (const [name, w] of both) {
     for (let x = -10; x <= 10; x += 0.5) for (let z = 1; z <= 14; z += 0.5) assert.ok(!w.blocked(x, z), `${name}: (${x}, ${z}) of the middle way is open`);
-    const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2;
-    for (const [x, z] of [[mx, mz], [M0.x0 + 0.3, M0.z0 + 0.3], [M0.x1 - 0.3, M0.z1 - 0.3]]) assert.ok(w.blocked(x, z), `${name}: the pavilion's block, (${x}, ${z})`);
+    const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, c = AX.MONUMENT_FORM.span / 2;
+    for (const [x, z] of [[mx, mz], [mx - 0.7, mz + 0.4], [mx + 0.7, mz - 0.4], ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => [mx + a * c, mz + b * c])]) assert.ok(w.blocked(x, z), `${name}: the stele, its plinth or a column, (${x}, ${z})`);
+    assert.ok(!w.blocked(site.places.copy.at[0], site.places.copy.at[1]), `${name}: the place before the stele is open`);
   }
   // 4–5 m square (ARCHITECTURE.md §3.2), clear of the 20 m middle way, against the west parapet (SITE.md §6.1: pavilions stand to either side of the way).
   assert.ok(MONUMENT.x1 - MONUMENT.x0 >= 4 && MONUMENT.x1 - MONUMENT.x0 <= 5 && MONUMENT.z1 - MONUMENT.z0 >= 4 && MONUMENT.z1 - MONUMENT.z0 <= 5);
@@ -144,29 +145,41 @@ test("only a path of about 6 m is paved down the way and the terrace; earth eith
   for (const [name, w] of both) { assert.ok(near(w.heightAt(6.8, 150), 0, 0.02), name); assert.ok(near(w.heightAt(6.8, 95), SECOND.y, 0.02), name); }
   // Trunks keep clear of the archway and of both platforms, and the crowns of the gate's eave.
   const onTerrace = TRUNKS.list.filter((t) => t.y > 0), onLane = TRUNKS.list.filter((t) => t.y === 0);
-  assert.ok(onTerrace.every((t) => (t.z <= AXIS.paifangZ - 9.5 || t.z > AXIS.paifangZ + 7) && t.z > FOOT.hall.z1 + 4 && t.z + t.rx < FOOT.inner.z0 - 4), `the terrace's trunks and their crowns keep to the stretches between the hall's steps, the archway and the gate's eave`);
+  // (the art director's lines of 2026-11-25 and #573 comment 7166589253: old arborvitae in rows only between the inner gate and the archway, eight a side in two
+  // staggered lines, crown against crown; north of the archway broad pines, scattered, none of them a cypress; nothing at the Wuliang hall's steps)
+  const rows = onTerrace.filter((t) => t.kind === "cypress"), pines = onTerrace.filter((t) => t.kind === "pine");
+  assert.ok(rows.every((t) => t.z > AXIS.paifangZ + 4 && t.z < FOOT.inner.z0 - 0.8), `the rows keep between the archway and the gate: ${rows.map((t) => t.z)}`);
+  // eight on the west, crown against crown; four on the east, the rest left out for the archway's sun (AX.SUNWARD_GAP; the sun test below)
+  assert.equal(rows.filter((t) => t.x < 0).length, 8, "eight on the west (six the least, seven or eight better)"); assert.equal(rows.filter((t) => t.x > 0).length, 8 - AX.SUNWARD_GAP.length);
+  { const zs = rows.filter((t) => t.x < 0).map((t) => t.z).sort((a, b) => a - b); assert.ok(zs.every((z, i) => i === 0 || z - zs[i - 1] <= 3.2), `the west, crown against crown: ${zs}`); }
+  assert.ok(pines.length >= 5 && pines.every((t) => t.z < AXIS.paifangZ - 5 && t.z > FOOT.hall.z1 + 4) && onTerrace.length === rows.length + pines.length, "north of the archway broad pines only");
+  assert.ok(pines.every((t) => t.rx >= 3.3) && new Set(pines.map((t) => Math.round(t.h))).size >= 4, "broad crowns, of uneven heights");
   assert.ok(onLane.every((t) => t.z > FOOT.inner.z1 + 4 && t.z < FOOT.outer.z0 - 4));
   // Scattered, not a row of poles (the art director's reviews of #464, #482): radii 0.25–0.5 m, a crown on each; the stretch between the hall and the archway (42 m) is not laid in pairs at even gaps.
-  assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && t.rx > 2.5 && t.ry > 2 && Math.abs(t.x) >= 4.9 && Math.abs(t.x) <= 11.5));
+  assert.ok(TRUNKS.list.every((t) => t.r >= 0.25 && t.r <= 0.5 && (t.rx > 2.5 || (t.x > 0 && t.rx >= 1.4)) && t.ry > 2 && Math.abs(t.x) >= 4.9 && Math.abs(t.x) <= 12.5))   // (an east tree by the wall may narrow its crown to keep the archway in the sun);
   assert.ok(new Set(TRUNKS.list.map((t) => t.r)).size > 6, "radii differ");
   const behind = onTerrace.filter((t) => t.z < AXIS.paifangZ), gaps = (side) => { const zs = behind.filter((t) => Math.sign(t.x) === side).map((t) => t.z).sort((p, q) => p - q); return zs.slice(1).map((z, i) => z - zs[i]); };
   for (const side of [-1, 1]) { const g = gaps(side); assert.ok(g.length >= 2 && Math.max(...g) - Math.min(...g) > 1.5, `uneven gaps on side ${side}: ${g.map((v) => v.toFixed(1))}`); }
   assert.ok(behind.some((l) => behind.every((r) => Math.sign(r.x) === Math.sign(l.x) || Math.abs(r.z - l.z) > 1.5)), "not every tree has a partner across the way");
-  assert.ok(TRUNKS.list.every((t) => t.y + TRUNKS.canopyBase > 6), "a crown's underside is over six metres up, over his head and the eye's");
+  assert.ok(onLane.every((t) => t.y + TRUNKS.canopyBase > 6), "the way's data: a crown's underside over six metres up (the way's arborvitae are drawn as low columns behind cam07, AXIS_TREES)");
+  assert.ok(onTerrace.filter((t) => t.kind === "cypress").every((t) => t.base >= 3.5 && t.base <= 4.5 && t.h >= 14 && t.h <= 18 && t.r >= 0.3 && t.r <= 0.45 && ((t.rx >= 2.5 && t.rx <= 3) || (t.x > 0 && t.rx >= 1.4 && t.rx < 2.5))), "the terrace's old arborvitae: crown from 3.5 to 4.5 m, 14 to 18 m tall, a trunk 0.6 to 0.9 m through, a crown 5 to 6 m across");
 });
 
-test("from cam07, no trunk or crown stands in the lines to the Great Hall's ridge and its ornaments, nor in the archway's middle bay (#482)", () => {
-  const blocked = []; for (const l of SIGHTS.lines) for (const t of TRUNKS.list) if (treeBlocks(SIGHTS.eye, l.to, t)) blocked.push(`${l.kind} line to (${l.to.map((n) => n.toFixed(1))}) is stopped by the tree at (${t.x}, ${t.z})`);
-  assert.deepEqual(blocked, [], "every line of sight is clear of trees");
+test("from cam07, the archway's middle bay shows the hall and the middle 60% of its ridge is clear of trees (the art director, 2026-11-25; #482's whole ridge and ornaments set aside for the terrace's rows)", () => {
+  const { KEPT_SIGHTS } = AX;
+  const blocked = []; for (const l of KEPT_SIGHTS) for (const t of TRUNKS.list) if (treeBlocks(SIGHTS.eye, l.to, t)) blocked.push(`${l.kind} line to (${l.to.map((n) => n.toFixed(1))}) is stopped by the tree at (${t.x}, ${t.z})`);
+  assert.deepEqual(blocked, [], "every kept line of sight is clear of trees");
+  const ridge = SIGHTS.lines.filter((l) => l.kind === "ridge"), stopped = ridge.filter((l) => TRUNKS.list.some((t) => treeBlocks(SIGHTS.eye, l.to, t)));
+  console.log(`# cam07: ${stopped.length} of ${ridge.length} lines to the ridge and its ornaments are stopped by a tree (${((stopped.length / ridge.length) * 100).toFixed(0)}%), all at its ends`);
   assert.ok(SIGHTS.lines.filter((l) => l.kind === "ridge").length >= 45 && SIGHTS.lines.filter((l) => l.kind === "door").length >= 60, "the lines are many enough to mean something");
 });
 
-test("no tree crown stands in cam07's view of the Great Hall's ridge, along its whole length and to both ornaments' tips (#482)", async () => {
+test("no tree crown stands in cam07's view of the middle 60% of the Great Hall's ridge (#482, as the art director set it on 2026-11-25)", async () => {
   const { buildHall } = await import("../../app/levels/t05/hall.js"), { roof } = buildHall(M), [ex, ez] = [0, AXIS.innerZ + 1], ey = SECOND.y + 1.6;
-  const pts = []; for (let x = -roof.rx; x <= roof.rx + 1e-9; x += 0.5) pts.push([x, roof.ridge + 0.4, roof.zm]); for (const s of [-1, 1]) pts.push([s * roof.rx, roof.ridge + 2.3, roof.zm]);
+  const pts = []; for (let x = -0.6 * roof.rx; x <= 0.6 * roof.rx + 1e-9; x += 0.5) pts.push([x, roof.ridge + 0.4, roof.zm]);   // (the middle 60% of the ridge: its ends and ornaments may be behind a tree's top, the art director, 2026-11-25)
   // a segment from the eye to a point against each crown, an ellipsoid with its centre over the trunk
   const hits = (p, t) => {
-    const c = [t.x, t.y + TRUNKS.canopyBase + t.ry, t.z], d = [p[0] - ex, p[1] - ey, p[2] - ez], o = [ex - c[0], ey - c[1], ez - c[2]], k = [t.rx, t.ry, t.rx];
+    const c = [t.x, t.y + (t.base ?? TRUNKS.canopyBase) + t.ry, t.z], d = [p[0] - ex, p[1] - ey, p[2] - ez], o = [ex - c[0], ey - c[1], ez - c[2]], k = [t.rx, t.ry, t.rx];
     const a = d.reduce((s, v, i) => s + (v / k[i]) ** 2, 0), b = 2 * d.reduce((s, v, i) => s + (v * o[i]) / k[i] ** 2, 0), cc = o.reduce((s, v, i) => s + (v / k[i]) ** 2, 0) - 1, disc = b * b - 4 * a * cc;
     if (disc < 0) return false; const s0 = (-b - Math.sqrt(disc)) / (2 * a), s1 = (-b + Math.sqrt(disc)) / (2 * a); return s1 > 0 && s0 < 1;
   };
@@ -174,27 +187,16 @@ test("no tree crown stands in cam07's view of the Great Hall's ridge, along its 
   assert.deepEqual(blocked, [], "no crown is in the line of sight");
 });
 
-test("no tree stands within 17 m of the archway whose crown comes within 8 m of the axis, and none shows over its roofs from cam07 or from the hall's front (#492 review)", async () => {
-  const { ARCHWAY_CLEAR, nearArchway } = AX, { buildPaifang } = await import("../../app/src/paifang.js");
-  assert.deepEqual({ ...ARCHWAY_CLEAR }, { z: 17, x: 8 });
-  assert.deepEqual(TRUNKS.list.filter(nearArchway).map((t) => [t.x, t.z]), [], "none in the archway's neighbourhood");
-  assert.ok(TRUNKS.list.every((t) => Math.abs(t.z - AXIS.paifangZ) >= ARCHWAY_CLEAR.z || Math.abs(t.x) - t.rx >= ARCHWAY_CLEAR.x), "by their own numbers");
-  // The archway's top edge, seen from the front: a ray down onto it at each x; and over that edge, in its plane, points up to 4 m above it
-  // that the eye sees the sky through. From cam07 (in the inner gate's passage) and from the hall's platform looking back, none of them
-  // may be behind a trunk or a crown: over the roofs there is sky, not a pair of ears.
-  const pf = buildPaifang(M); pf.group.position.set(0, SECOND.y, AXIS.paifangZ); pf.group.updateMatrixWorld(true);
-  const meshes = []; pf.group.traverse((o) => o.isMesh && meshes.push(o));
-  const ray = new THREE.Raycaster(), top = (x) => { ray.set(new THREE.Vector3(x, SECOND.y + 20, AXIS.paifangZ), new THREE.Vector3(0, -1, 0)); const h = ray.intersectObjects(meshes, false); return h.length ? h[0].point.y : null; };
-  // each line carried on past the archway's plane, out to the hall's side or the gate's, where the trees behind it stand
-  const along = (eye, p) => { const far = eye[2] > p[2] ? AXIS.hallZ - 25 : AXIS.innerZ, k = (far - eye[2]) / (p[2] - eye[2]); return [eye[0] + (p[0] - eye[0]) * k, eye[1] + (p[1] - eye[1]) * k, far]; };
-  const eyes = [[0, SECOND.y + 1.6, AXIS.innerZ + 1], [0, SECOND.y + 1.6, AXIS.hallZ + 11]], blocked = []; let n = 0;
-  for (let x = -7.4; x <= 7.4 + 1e-9; x += 0.4) {
-    const y0 = top(x); if (y0 === null) continue;
-    for (let y = y0 + 0.1; y <= y0 + 4; y += 0.5) for (const eye of eyes) for (const t of TRUNKS.list) { n++; if (treeBlocks(eye, [x, y, AXIS.paifangZ], t) || treeBlocks(eye, along(eye, [x, y, AXIS.paifangZ]), t)) blocked.push(`from z ${eye[2]}: (${x.toFixed(1)}, ${(y - SECOND.y).toFixed(1)}) by the tree at (${t.x}, ${t.z})`); }
-  }
-  assert.ok(n > 1000, "many lines were tried");
-  assert.deepEqual(blocked.slice(0, 6), [], `${blocked.length} lines over the archway's roofs are stopped by a tree`);
+test("the rows between the inner gate and the archway stand close beside the path, the inner line 2 to 3 m off its edge and the outer behind it; the archway's own neighbourhood rule (#492) is set aside for them (the art director, 2026-11-25)", () => {
+  const rows = TRUNKS.list.filter((t) => t.y > 0 && t.kind === "cypress"), off = (t) => Math.abs(t.x) - PATH.hw;
+  const inner = rows.filter((t) => !t.back), outer = rows.filter((t) => t.back);
+  assert.equal(inner.length + outer.length, 16 - AX.SUNWARD_GAP.length); assert.equal(inner.filter((t) => t.x < 0).length, 4); assert.equal(outer.filter((t) => t.x < 0).length, 4);
+  assert.ok(inner.filter((t) => t.x < 0).every((t) => off(t) >= 2 && off(t) <= 3.2), inner.map((t) => off(t).toFixed(2)).join(" "));
+  assert.ok(rows.filter((t) => t.x > 0).every((t) => AX.sunClear(t) || t.rx <= 1.4), "every east tree kept stops none of the sun's rays to the archway's middle bay, or has narrowed its crown as far as it may");
+  assert.ok(outer.every((t) => off(t) >= 5 && off(t) <= 9.2), outer.map((t) => off(t).toFixed(2)).join(" "));
+  assert.ok(TRUNKS.list.filter((t) => t.y === 0).every((t) => !AX.nearArchway(t)), "the way's trees keep #492's rule (none near the archway)");
 });
+
 
 test("the monument pavilion is open on all four sides: between its columns, at the height of his eye and over the stele's foot, nothing stands in the way through it", () => {
   const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, y = M0.y + 0.45 + 1.2, ray = new THREE.Raycaster();
@@ -223,4 +225,33 @@ test("the monument pavilion's roof stands clear of the great hall's eave: a clea
   assert.ok(vertical >= 1.0, `${vertical.toFixed(2)} m of the pavilion's finial under the hall's fascia: at least 1 m`);
   assert.ok(M0.x0 >= -TERRACE.w / 2 && M0.x0 - -TERRACE.w / 2 < 0.5, "and it still stands against the west parapet, as before");
   assert.ok(mx < -10 && M0.z1 <= TERRACE.zS - 1.5, "clear of the middle way, and a stride in front of the terrace's south parapet");
+});
+
+test("the winter sun reaches the archway's front: over 55% of its middle bay lit through the trees (the art director's line of 2026-11-25 for #722, A)", async () => {
+  // J01's sun (app/levels/t05/level.js: 152°, 17° up); each crown as its ellipsoid and each trunk as its post, as the views are cleared
+  const { EAST_WALL_TREES } = await import("../../app/levels/t05/site.js");
+  const el = (17 * Math.PI) / 180, az = (152 * Math.PI) / 180, s = [Math.cos(el) * Math.sin(az), Math.sin(el), -Math.cos(el) * Math.cos(az)];
+  const trees = [...TRUNKS.list.filter((t) => t.y > 0), ...EAST_WALL_TREES.map((t) => ({ ...t, ...t.env }))];
+  let lit = 0, n = 0;
+  for (let x = -2; x <= 2.001; x += 0.25) for (let y = 1.5; y <= 8.5; y += 0.25) { const P = [x, y, AXIS.paifangZ + 0.6], Q = P.map((v, i) => v + s[i] * 80); n++; if (!trees.some((t) => AX.treeBlocks(P, Q, t))) lit++; }
+  assert.ok(lit / n >= 0.55, `${((100 * lit) / n).toFixed(1)}% of the middle bay lit`);
+  assert.ok(EAST_WALL_TREES.every((t) => t.x - PATH.hw >= 7), "the east's dark ground stands 7 m and more off the path");
+});
+
+test("the monument's stele has a head: the Yingzao Fashi's proportions (chapter 3, 造赑屃鳌坐碑之制) for the shaft and the head, a head wider and thicker than the shaft, a cloud plate under it, and no tortoise", () => {
+  const M0 = MONUMENT, mx = (M0.x0 + M0.x1) / 2, mz = (M0.z0 + M0.z1) / 2, S = AX.STELE, floor = M0.y + AX.MONUMENT_FORM.base + 0.45;
+  // The shaft: 0.4 wide and 0.15 thick to every unit of its length (原文), the head 0.44 square-wide and 0.18 thick (原文), its cloud plate 0.15 of the shaft's width high (原文).
+  assert.ok(near(S.w / S.L, 0.4, 1e-6) && near(S.t / S.L, 0.15, 1e-6), "the shaft is 4/10 wide and 1.5/10 thick of its length");
+  assert.ok(near(S.headW / S.L, 0.44, 1e-6) && near(S.headT / S.L, 0.18, 1e-6) && near(S.cloud, 0.15 * S.w, 1e-6), "the head 0.44 and 0.18 of the shaft's length; the cloud plate 0.15 of its width");
+  assert.ok(S.headW > S.w && S.headT > S.t, "the head is wider and thicker than the shaft");
+  // Drawn so: a line at the head's height across its middle meets the head's full width; at the shaft's height, only the shaft's.
+  site.root.updateMatrixWorld(true);
+  const ray = new THREE.Raycaster(), widthAt = (y) => {
+    const along = (dx) => { ray.set(new THREE.Vector3(mx + dx * 3, y, mz), new THREE.Vector3(-dx, 0, 0)); const h = ray.intersectObject(site.root, true).find((q) => Math.abs(q.point.z - mz) < 1e-6 && Math.abs(q.point.x - mx) < 1.2); return h ? Math.abs(h.point.x - mx) : 0; };
+    return along(1) + along(-1);
+  };
+  assert.ok(near(widthAt(floor + S.L / 2), S.w, 0.01), `the shaft's width ${widthAt(floor + S.L / 2)}`);
+  assert.ok(near(widthAt(floor + S.L + S.cloud + 0.1), S.headW, 0.02), `the head's width ${widthAt(floor + S.L + S.cloud + 0.1)}`);
+  // It stands clear under the ceiling plate, and nothing of it is a tortoise: the plinth stays the one plain block (the owner's lead: no turtle).
+  assert.ok(floor + S.L + S.headH < M0.y + AX.MONUMENT_FORM.base + AX.MONUMENT_FORM.column + 0.3 + AX.MONUMENT_FORM.beam - 0.1, "the head clears the ceiling plate");
 });

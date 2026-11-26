@@ -379,7 +379,7 @@ export const cueState = () => ({ ...cues, musicHeld });
 // The shutter: a small leaf shutter in a wooden body, two soft clicks thirty milliseconds apart (the blades closing and
 // opening) over a faint knock of the case; nothing electronic. And when the print comes, the seal pressed on it: a dull
 // pad of a stamp on paper, and the paper giving a little under it. Both on the effects bus; the music steps aside briefly.
-const shots = { shutter: 0, stamp: 0 };
+const shots = { shutter: 0, stamp: 0, brush: 0 };
 function crack(t, centre, q, gain, secs, to = null) {
   const n = Math.floor(ctx.sampleRate * secs), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 6);
@@ -403,6 +403,20 @@ export function stampSound() {
   thud(t, 0.09, 190, 0.7);                       // the seal comes down on the paper
   crack(t + 0.01, 3600, 0.5, 0.06, 0.22);        // the paper gives a little under it
   shots.stamp++;
+}
+// A brush on paper (T05's own page: the observation's stroke and the copied line, src/writing.js): the hairs drawn over the
+// fibres, a soft dry hiss that swells as the brush is pressed and thins as it lifts, high and narrow, under the effects bus
+// and quieter than the stamp; and the faint tap of the tip as it first comes down. Our own, made by common sense (no
+// recording of a brush was measured): docs/t00/SOURCES.md.
+export function brushSound(secs = 0.4) {
+  if (!start()) return; wake();
+  const t = ctx.currentTime + 0.01, d = Math.max(0.12, Math.min(1.6, secs)), n = Math.floor(ctx.sampleRate * d), b = ctx.createBuffer(1, n, ctx.sampleRate), x = b.getChannelData(0);
+  for (let i = 0; i < n; i++) { const u = i / n, env = Math.sin(Math.PI * Math.min(1, u * 1.15)) * (0.75 + 0.25 * Math.sin(u * 31)); x[i] = (Math.random() * 2 - 1) * env; }
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.9; hp.type = "highpass"; hp.frequency.value = 900; g.gain.value = 0.05;
+  s.connect(f); f.connect(hp); hp.connect(g); g.connect(bus.effects.in); s.start(t);
+  crack(t, 1600, 1.1, 0.04, 0.03);              // the tip comes down
+  shots.brush++;
 }
 // The place's whole sound, taken after the visitor's own volume (a film is heard as it was heard), for a recording
 // (clip.js, #342). Null where nothing has sounded yet or the browser has no stream destination: the film is silent then.

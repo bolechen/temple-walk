@@ -1,0 +1,72 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam01-t4-d047e1d-sunoff.png",
+   "bytes": 2373557,
+   "sha256": "17ddcf4f526e358dfd60838953cd4917f12f083348bea600a5c6cd6f50bd5365",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "cam01-t4-d047e1d.png",
+   "bytes": 2662626,
+   "sha256": "26c34a43b31724005500ec76ef5c8157d5287d3a5207580cba77f63414c293db",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "cam01-t4-main-sunoff.png",
+   "bytes": 2387237,
+   "sha256": "a37564c9447defcf715b3640629e870419b2dc74c273177213ee3ac6e2b469af",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "cam01-t4-main.png",
+   "bytes": 2617847,
+   "sha256": "422b28abd647ef939ed6615d5eccd2a059646cbb99e10a57905b82411aadad43",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "cam03-t4-d047e1d.png",
+   "bytes": 2679893,
+   "sha256": "84ca0c66228828dbd26893ed2f7b43019091a58dbfe24ad93d650e17fb15f297",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "cam03-t4-main.png",
+   "bytes": 2671396,
+   "sha256": "e46419c19108e59dc18c13d64f914ade5cda337ba42c679ce86696110d013cea",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "cam07-t4-d047e1d.png",
+   "bytes": 2574932,
+   "sha256": "d68ef0619ad5495ccdb7468fb064903234340b7b4df673d6acb664645a6baf96",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "cam07-t4-main.png",
+   "bytes": 2581130,
+   "sha256": "42dc1b09d4270aac4a06f9e8ca58edf2c4ecc1b670d1e9585643e519ab6143c3",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 300142,
+   "sha256": "80005d677a8efb7016ea1a96d93d6329a17e951c08617c78db5e991e48b79639",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "south-t4-d047e1d.png",
+   "bytes": 2382438,
+   "sha256": "ce12895b1a976eb5a12df57c4df2516ef0724916b0f21f3ac09346dd01ac8c8a",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  },
+  {
+   "path": "south-t4-main.png",
+   "bytes": 2392099,
+   "sha256": "d7251134a55769af9a16d9367bd8b2dcf5755c0657627447d07ec780302cc065",
+   "rev": "afa1ecee16f5fb55ade2a54a289660fb9c8d0d60"
+  }
+ ]
+}

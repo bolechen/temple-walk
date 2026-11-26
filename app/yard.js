@@ -38,7 +38,7 @@ import { gatherEye, eyeBoxes } from "./src/eyegather.js";
 import EyeWorker from "./src/eyebvh.worker.js?worker";
 import { MeshBVH } from "three-mesh-bvh";
 import { clearOfCenser } from "./src/censer.js";
-import { moodOf, moodNow, hourFollow, startMood, SEASONS, TIMES, NAMES } from "./src/mood.js";
+import { moodOf, moodNow, hourFollow, takeClock, startMood, SEASONS, TIMES, NAMES } from "./src/mood.js";
 import { eventFor } from "./src/joya.js";
 import { WIND_DIR, windAt } from "./src/wind.js";
 import { KEY as JOURNEY_KEY, filledBefore } from "./src/journey.js";
@@ -46,7 +46,7 @@ import { composeCard } from "./src/card.js";
 import { createClip, markCanvas, pickMime, clipSize, clipName, saveHint, CLIP } from "./src/clip.js";
 import { loadTextures, textureState } from "./src/textures.js";
 import { createGame } from "./src/game.js";
-import { setTemple, paintTemple, templeOf, sealOf, stemOf, saidNow, T00_NAME } from "./src/temple.js";
+import { setTemple, paintTemple, templeOf, sealOf, stemOf, saidNow, verseOf, T00_NAME } from "./src/temple.js";
 import { levelSay } from "./src/levelsay.js";
 import { track } from "./src/analytics.js";
 import { createFlock } from "./src/flock.js";
@@ -994,7 +994,7 @@ function frame(now) {
   if (frames < 3) renderer.shadowMap.needsUpdate = true;
   // The mirror lies in the forecourt and the first court: not indoors, not on the terraces above, not down the
   // approach where the eye is under it. A jump does not change which of these he is in.
-  if (!aloft) mirrorOn = mirrorAt(footY);   // the court, the forecourt, and the platforms that stand in them
+  if (!aloft) mirrorOn = mirrorAt(footY) && (!L.mirror || L.mirror(mood));   // the court, the forecourt, and the platforms that stand in them; and in this mood, if the level says (T05: only wet paving shows it)
   ground.mirror?.(mirrorOn && !inside);
   if (doors && !inside && arrived) doors.tick(camera, dt, camera.position);
   if (live && !inside && arrived) live.frame(camera, camera.position, post.size());   // #320's trial: the near room drawn live into the door's own pixels   // the rooms seen through the doors (doorway.js): fetched pictures only, never a room drawn; nothing asked for until the walk is his (after 入山 and the opening), so the first screen fetches none of it
@@ -1094,7 +1094,8 @@ async function capture(at = null) {
   drift.update(t, camera.position, H); ground.render(renderer, camera); post.render(t);
   const shot = document.createElement("canvas"); shot.width = W; shot.height = H; shot.getContext("2d").drawImage(canvas, 0, 0);
   camera.fov = keepFov; resize();
-  return composeCard(shot, { line: tr(mood.line), label: moodWords(mood), temple: templeOf(L, lang), seal: sealOf(L), url: MAIN.host, qr: settings.get().qr ? photoUrl(lang) : null });
+  const link = L.cardLink !== false, verse = verseOf(L, state.season, state.time, mood.line);   // no address or code where the public page has no such temple
+  return composeCard(shot, { line: verse && tr(verse), label: moodWords(mood), temple: templeOf(L, lang), seal: sealOf(L), url: link ? MAIN.host : "", qr: link && settings.get().qr ? photoUrl(lang) : null });
 }
 let lastBlob = null;
 // The shutter. The view is drawn once more and copied onto a still that covers it, and the walk stops (the frame loop,
@@ -1131,7 +1132,7 @@ on("printBack", () => ui.close("print"));
 // Shared from wherever the page is open (src/share.js, #344): the system's sheet where it can take the picture, else a
 // sheet to press and hold it on; the address it carries names the observance he stands at, if he is at one.
 const sceneHere = () => { let best = 12, id = "photo"; for (const [k, p] of Object.entries(site.places)) { if (!FROM.includes(k) || p.room) continue; const d = Math.hypot(p.at[0] - pos.x, p.at[1] - pos.z); if (d < best && !inside) { best = d; id = k; } } return id; };
-on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: `${stemOf(L)}.jpg`, title: templeOf(L, lang), from: sceneHere(), content: "print" }));
+on("shareBtn", () => shareOrSave({ blob: lastBlob, url: $("printImg").src, name: `${stemOf(L)}.jpg`, title: templeOf(L, lang), from: sceneHere(), content: "print", link: L.cardLink !== false }));
 $("saveLink")?.addEventListener("click", () => countDownload("print", sceneHere()));
 
 // ---- A short film (#342, clip.js) ----------------------------------------------------
@@ -1151,7 +1152,7 @@ const clipEnded = () => {
 // frame (a drawImage from the WebGL canvas onto a 2D one cost 25 ms a frame on a T4). The canvas is shown at the frame's place, so what is seen is what is kept.
 async function startClip(secs, short = 0, layoutOnly = false) {
   if (!clipPick || clipRec || clipView || frozen || !photo.on) return false;
-  const info = settings.get().clipMark ? { temple: templeOf(L, lang), label: moodWords(mood), seal: sealOf(L), url: MAIN.host + "/?" + CLIP.utm } : null;
+  const info = settings.get().clipMark ? { temple: templeOf(L, lang), label: moodWords(mood), seal: sealOf(L), url: L.cardLink === false ? "" : MAIN.host + "/?" + CLIP.utm } : null;
   if (info) { try { await Promise.all([document.fonts.load(`40px ${FACE.brush}`, info.seal), document.fonts.load(`30px ${FACE.serif}`, info.temple + info.label)]); } catch {} }
   if (clipRec || clipView || !photo.on) return false;
   const cw = canvas.clientWidth, ch = canvas.clientHeight, f = frameRect(), [aw, ah] = photo.aspect === "screen" ? [cw, ch] : ASPECT[photo.aspect];
@@ -1198,7 +1199,7 @@ on("clipStop", stopClip);
 on("clipBack", () => ui.close("clip"));
 on("clipShare", async () => {
   if (!clipLast) return;
-  try { await navigator.share({ files: [clipLast.file], title: templeOf(L, lang), text: tr(mood.line) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
+  try { await navigator.share({ files: [clipLast.file], title: templeOf(L, lang), ...(verseOf(L, state.season, state.time, mood.line) ? { text: tr(verseOf(L, state.season, state.time, mood.line)) } : {}) }); track("demo.share", { from: "clip", method: "share" }); } catch {}
 });
 settings.onChange((s) => $("clipMarkToggle")?.setAttribute("aria-pressed", String(s.clipMark)));
 $("clipMarkToggle").setAttribute("aria-pressed", String(settings.get().clipMark));
@@ -1448,7 +1449,7 @@ window.__probe = (points) => {
   const c = document.createElement("canvas"); c.width = 32; c.height = 32; const x = c.getContext("2d"); x.drawImage(canvas, 0, 0, 32, 32);
   const d = x.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0, top = 0, n = d.length / 4;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; if (i < 32 * 8 * 4) top += d[i] + d[i + 1] + d[i + 2]; }
-  return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, view, photo: photo.on, monk: monk.group.visible, opacity: +faded.toFixed(3), pushing: !!push, turn: { active: !!turning, swings: turnStats.swings, rate: +turnStats.rate.toFixed(2), pitch: +turnStats.pitch.toFixed(3), move: +turnStats.move.toFixed(4), drifted: +(turnStats.drifted * 180 / Math.PI).toFixed(2), driftRate: +turnStats.driftRate.toFixed(2), heading: +heading.toFixed(4), yaw: +yaw.toFixed(4) }, push: pushed && { to: pushed.to, frames: pushed.frames, fov: +pushed.fov.toFixed(3), move: +pushed.move.toFixed(4), back: pushed.back }, cam: camera.position.toArray().map((v) => +v.toFixed(3)),
+  return { r: r / n, g: g / n, b: b / n, lum: (r + g + b) / (3 * n), sky: top / (32 * 8 * 3), season: state.season, time: state.time, follow: !!state.follow, view, photo: photo.on, monk: monk.group.visible, opacity: +faded.toFixed(3), pushing: !!push, turn: { active: !!turning, swings: turnStats.swings, rate: +turnStats.rate.toFixed(2), pitch: +turnStats.pitch.toFixed(3), move: +turnStats.move.toFixed(4), drifted: +(turnStats.drifted * 180 / Math.PI).toFixed(2), driftRate: +turnStats.driftRate.toFixed(2), heading: +heading.toFixed(4), yaw: +yaw.toFixed(4) }, push: pushed && { to: pushed.to, frames: pushed.frames, fov: +pushed.fov.toFixed(3), move: +pushed.move.toFixed(4), back: pushed.back }, cam: camera.position.toArray().map((v) => +v.toFixed(3)),
     photoSettings: !document.getElementById("photoSettings").hidden, frozen, aspect: photo.aspect, zoom: +photo.zoom.toFixed(3), camDist: +camera.position.distanceTo(new THREE.Vector3(pos.x, footY + 1, pos.z)).toFixed(2), snow: U.uSnow.value, drift: scene.children.some((o) => o.userData.part === "drift" && o.visible), prints: trail.state().stamps, lamp: U.uLamp.value, fov: camera.fov, monkBox: monkBox(), post: post.state(), layers: U.uFogLayer.value.x, soft: sky.softOn && quality.softShadow && !OFF.has("softshadow"), governed: governor.level, at };
 };
 // The censer before the great hall (#217): how much incense burns, whether it glows, the smoke and the breeze; and, for
@@ -1503,6 +1504,7 @@ window.__music = (begin) => { if (begin) hear(); return musicState(); };
 
 // ---- The visit as a pilgrimage (src/game.js): what it may ask of the walk ----
 window.__hud = () => hints.state();
+window.__hintSet = (html) => hints.set(html);   // (the line set to some words, to see how it breaks)
 window.__eventLog = () => (globalThis.__events || []).slice();   // what the page has named since it opened (src/analytics.js), the last 100
 window.__ui = () => ({ stack: ui.state(), modal: ui.modal(), focus: document.activeElement?.id || document.activeElement?.tagName || null });
 // ---- The pause menu: what the visitor may set, a way back to the start, the keys ----
@@ -1565,6 +1567,17 @@ function crossingBack() {
 window.__settings = () => settings.get(); window.__menu = (open) => openMenu(open);
 // What lies under a point of the picture, nearest first: which part of the scene, which material, how far, whether it is
 // see-through. When something in a screenshot will not be explained, ask this before guessing.
+// What stands within `r` of a point, by rays out of it in the 26 directions of a cube (a test's: the eye's hierarchy may let a crown of cut-out cards pass, so the route of the close is asked this as well).
+window.__nearest = (x, yy, z, r = 1.5) => {
+  const rc = new THREE.Raycaster(), from = new THREE.Vector3(x, yy, z); rc.far = r; let best = null;
+  for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) {
+    if (!i && !j && !k) continue; rc.set(from, new THREE.Vector3(i, j, k).normalize());
+    const hits = []; scene.traverse((/** @type {any} */ o) => { if (o.visible && (o.isMesh || o.isPoints || o.isLine) && o.userData.part !== "monk") { try { rc.intersectObject(o, false, hits); } catch {} } });   // (a part that cannot be asked is passed)
+    const h = hits.sort((p, q) => p.distance - q.distance)[0];
+    if (h && (!best || h.distance < best.distance)) best = { distance: +h.distance.toFixed(2), part: (() => { let o = h.object, part = null; while (o && !part) { part = o.userData.part; o = o.parent; } return part; })(), at: h.point.toArray().map((v) => +v.toFixed(2)) };
+  }
+  return best;
+};
 window.__pick = (px, py, n = 6) => {
   const r = canvas.getBoundingClientRect(), rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(((px - r.left) / r.width) * 2 - 1, -((py - r.top) / r.height) * 2 + 1), camera);
   return rc.intersectObjects(scene.children, true).filter((h) => h.object.visible).slice(0, n).map((h) => { const m = /** @type {any} */ (h.object).material || {}; let o = h.object, part = null; while (o && !part) { part = o.userData.part; o = o.parent; }
@@ -1640,6 +1653,16 @@ createGame({
   eventDay() { if (!beforeJoya || state.hand) { beforeJoya = null; return; } const b = beforeJoya; beforeJoya = null; state.follow = b.follow; setMood(b.season, b.follow ? moodNow().time : b.time); },
   setJoya(on) { joyaOn = !!on; },
   eventMood: () => ({ before: beforeJoya, hand: state.hand, season: state.season, time: state.time }),
+  // The book shut for the first time after the close (#726): the hour goes to the visitor's own, as the clock's own check does; false where it must stay.
+  // The book's paper goes in a single frame, so the hour is changed in that same task and the ink leaves are already shut when the picture shows: the first frame after the book is ink, the hour behind it is the visitor's own, and the ink opens on it (no cut is seen, #726).
+  followHour() {
+    const h = takeClock(state, Q); if (!h) return false;
+    const changed = h !== state.time; setMood(state.season, h);
+    if (!changed) return true;
+    inkVeil(1); document.body.classList.add("veiled"); const t0 = performance.now(), HOLD = 0.12, OPEN = 0.6;
+    const step = () => { const k = ((performance.now() - t0) / 1000 - HOLD) / OPEN; if (k >= 1) { inkVeil(0); document.body.classList.remove("veiled"); return; } const e = k <= 0 ? 0 : k * k * (3 - 2 * k); inkVeil(1 - e); requestAnimationFrame(step); };
+    requestAnimationFrame(step); return true;
+  },
   mood: () => mood, season: () => state.season, night: () => inside || mood.lamp > 0.5, busy: () => photo.on || !running || passing || !!hop || !!leap, inside: () => inside,
   gallery: rooms.spots, room: () => (inside ? hallIn.room.id : null), hallName: () => (inside && lastHall ? lastHall.name : ""),
   listen: () => hear(),

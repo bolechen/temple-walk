@@ -3,6 +3,9 @@
 import assert from "node:assert/strict";
 import "./dom-stub.mjs";
 import * as THREE from "three";
+import { MeshBVH, acceleratedRaycast } from "three-mesh-bvh";
+// Rays against the baked robe go through a bounds tree (three-mesh-bvh, as app/src/eyebvh.worker.js uses it) instead of every triangle in turn (#730).
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 const { createMonk } = await import("../../app/src/monk.js");
 
 export const TOP = 0.104, V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
@@ -12,6 +15,7 @@ export function baked(mesh, keep = () => true) {
   for (let i = 0; i < p.count; i++) { mesh.getVertexPosition(i, v).applyMatrix4(mesh.matrixWorld); pos.set([v.x, v.y, v.z], i * 3); }
   for (let k = 0; k < ix.length; k += 3) if (keep(ix[k]) && keep(ix[k + 1]) && keep(ix[k + 2])) idx.push(ix[k], ix[k + 1], ix[k + 2]);
   const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setIndex(idx); g.computeBoundingSphere(); g.computeBoundingBox();
+  g.boundsTree = new MeshBVH(g);
   const out = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })); out.updateMatrixWorld(true); return out;
 }
 
