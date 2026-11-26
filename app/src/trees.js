@@ -108,17 +108,23 @@ const COLOURS = {
 
 // A crown material: cards that take their light as parts of one round mass, let the low sun through, hold snow,
 // keep their leaves at a distance (a sheet's thin places would otherwise vanish), and stir in the air.
-export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9, glow = 0 }) {
+// `skyThru`: how much of the sky's own light a thin leaf lets through to the side the eye is on, as a share of what the sky
+// gives a face turned up to it (uAmb, set by the hour). It follows the sky, so a grove under an overcast noon glows a fresh green
+// and the same leaves at night do not. Each card says how open to the sky it is (a `thru` attribute, 0 to 1: a spray at the top of
+// the plume sees the whole sky, one deep in it or under it sees little), and what comes through is a greyer green than the leaf's
+// face (two fifths of its colour taken toward its grey: the overcast's light through a leaf, not a lit-up green). 0 (every crown
+// but the bamboo's) changes nothing.
+export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9, glow = 0, skyThru = 0 }) {
   const m = new THREE.MeshStandardMaterial({ map, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.82, envMapIntensity: 0.25, vertexColors: true, alphaToCoverage: !!a2c });
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, { uSnow: U.uSnow, uSunC: U.uSunC, uT: U.uT, uSunDir: { value: SUN_DIR } });
+    Object.assign(sh.uniforms, { uSnow: U.uSnow, uSunC: U.uSunC, uAmb: U.uAmb, uT: U.uT, uSunDir: { value: SUN_DIR } });
     sh.vertexShader = sh.vertexShader
-      .replace("#include <common>", "#include <common>\nuniform float uT; varying float vUp;")
+      .replace("#include <common>", "#include <common>\nuniform float uT; varying float vUp;" + (skyThru ? " attribute float thru; varying float vThru;" : ""))
       .replace("#include <begin_vertex>", `#include <begin_vertex>
-        vUp=normalize(mat3(modelMatrix)*objectNormal).y;
+        vUp=normalize(mat3(modelMatrix)*objectNormal).y;${skyThru ? " vThru=thru;" : ""}
         transformed.x+=sin(uT*1.1+position.x*.7+position.y*.5)*${sway.toFixed(3)}; transformed.z+=cos(uT*.83+position.z*.6+position.y*.4)*${sway.toFixed(3)};`);
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uSnow; uniform vec3 uSunC, uSunDir; varying float vUp;")
+      .replace("#include <common>", "#include <common>\nuniform float uSnow; uniform vec3 uSunC, uSunDir, uAmb; varying float vUp;" + (skyThru ? " varying float vThru;" : ""))
       .replace("#include <map_fragment>", `#include <map_fragment>
         { vec2 tx=vMapUv*1024.; float lod=max(0.,.5*log2(max(dot(dFdx(tx),dFdx(tx)),dot(dFdy(tx),dFdy(tx))))); diffuseColor.a*=1.+lod*.32; }
         diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.84,.88,.94),uSnow*smoothstep(.15,.7,vUp)*${snow.toFixed(2)});`)
@@ -126,9 +132,10 @@ export function crownMaterial(map, { a2c, sway = 0.035, snow = 0.9, glow = 0 }) 
       .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
         { vec3 Lv=normalize((viewMatrix*vec4(uSunDir,0.)).xyz); float thru=pow(max(dot(normalize(vViewPosition),-Lv),0.),2.5);
           totalEmissiveRadiance+=diffuseColor.rgb*uSunC*vec3(1.,1.,.45)*thru*1.6*(1.-uSnow*.7);
-          totalEmissiveRadiance+=diffuseColor.rgb*${glow.toFixed(2)}*(1.-uSnow*.7); }`);   // (glow: a thin leaf lets some light through even with the sun in front)
+          totalEmissiveRadiance+=diffuseColor.rgb*${glow.toFixed(2)}*(1.-uSnow*.7);${skyThru ? `
+          totalEmissiveRadiance+=mix(vec3(dot(diffuseColor.rgb,vec3(.2126,.7152,.0722))),diffuseColor.rgb,.6)*uAmb*${skyThru.toFixed(2)}*vThru*(1.-uSnow*.7);` : ""} }`);   // (glow: a thin leaf lets some light through even with the sun in front)
   };
-  m.customProgramCacheKey = () => "crown" + sway + snow + (glow ? "g" + glow : "") + (a2c ? "c" : "");
+  m.customProgramCacheKey = () => "crown" + sway + snow + (glow ? "g" + glow : "") + (skyThru ? "t" + skyThru : "") + (a2c ? "c" : "");
   return m;
 }
 

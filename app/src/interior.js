@@ -388,8 +388,10 @@ export function buildInteriors(M, halls, renderer) {
   const get = (file, h) => (scans[file] ||= plain.loadAsync(asset(`shared/models/${file}.glb`)).then((s) => s.scene)).then((src) => {
     const o = src.clone(true); o.traverse((m) => { if (m.isMesh) { m.material.envMapIntensity = 0.12; m.castShadow = false; } }); o.scale.setScalar(h); state.stood[file] = (state.stood[file] || 0) + 1; return o;
   });
+  // The rooms' timber is the wood as it was first drawn, whatever the level does to its outdoor timber (materials.js, `woodIn`).
+  const RM = M.woodIn?.woodV?.isMaterial ? Object.assign(Object.create(M), M.woodIn) : M;   // (over M, not a copy of it: a test's stand-in materials answer any name asked)
   halls.forEach((hall, i) => {
-    const r = buildRoom(M, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places); seats.push(...r.seats);
+    const r = buildRoom(RM, hall, i * 60, figures); group.add(r.group); rooms[hall.id] = r; Object.assign(spots, r.spots); Object.assign(places, r.places); seats.push(...r.seats);
     const hang = r.hang.bind(r), standUp = r.stand.bind(r); r.hang = () => hang(get); r.stand = () => standUp(get);   // `stand`: only the figures, without the works on the walls (doorway.js)
   });
   return { group, rooms, spots, places, seats, state, ready: figures };
