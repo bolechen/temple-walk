@@ -740,7 +740,7 @@ body.veiled .rail, body.veiled #jumpBtn, body.veiled #turnBtn, body.veiled #book
 #endingTitle { isolation: isolate; }
 #endingTitle::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse 42% 26% at 50% 50%, rgba(8,10,6,.34), rgba(8,10,6,0)); }   /* wide: a faint ground behind the three lines (#497) */
 @media (max-aspect-ratio: 1/1) {
-  #endingTitle { isolation: isolate; place-content: end center; padding-bottom: calc(5vh + env(safe-area-inset-bottom, 0px)); }
+  #endingTitle { isolation: isolate; place-content: end center; padding-bottom: calc(8vh + env(safe-area-inset-bottom, 0px)); }
   #endingTitle::before { inset: auto 0 0 0; height: 34%; z-index: -1; background: linear-gradient(to top, rgba(8,10,6,.74), rgba(8,10,6,.58) 50%, rgba(8,10,6,0)); }
 }
 #ending { overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
