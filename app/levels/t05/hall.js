@@ -72,7 +72,7 @@ export const FRONT = Object.freeze(["wall", "window", "window", "door", "door", 
  * (a gap narrower than his body, and the openings are solids in the walk data while shut). The one place the switch lives: the plan, the
  * baked floor, the views the checks walk and the tests all read it from here.
  */
-export const HALL_DOORS = Object.freeze({ shut: !benchOpensHall(), gap: 0 });
+export const HALL_DOORS = Object.freeze({ shut: false, gap: 0 });   // TRIAL ONLY (#754 T4), never merged
 
 /**
  * `?hall=open` on the workbench (the dev server and a pull request's preview: src/debuggate.js `onBench`, never the canary nor the public page) draws the
