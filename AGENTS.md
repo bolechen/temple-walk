@@ -30,6 +30,8 @@
 
 每轮交付更新 [docs/t00/delivery.json](docs/t00/delivery.json)，记录变更、已知问题和证据；遵守 [docs/SITE-SYNC.md](docs/SITE-SYNC.md)。CI 和部署状态由工作流生成，不手写成功。Claude 等开发者不得自行把独立验收改为通过；独立报告绑定完整提交 SHA。`site-status` 是持久数据分支，不按临时分支清理。
 
+**出对外宣传片或短视频**：先读 [skills/video-production/SKILL.md](skills/video-production/SKILL.md)，照它做。本仓库的 `skills/` 不会按 description 自动触发，只能靠这里点名。
+
 ## 与研究 Site 的关系
 
 研究 Site（<https://temple-atlas-research.floralpage64.chatgpt.site/>，下称 Site）是《山门之外》的研究图集和对外的进度、验收看板，本仓库是 T00 的实现。两边的分工：
