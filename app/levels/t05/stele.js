@@ -61,6 +61,8 @@ export function steleLayout(px, ph) {
   cols.forEach((s, k) => { put(slot++, s, false, [...s].length, fs * 0.86); const w = W.columns.find((c) => c.after === k); if (w) put(slot++, "", true, w.cells, fs * 0.86); });
   return out;
 }
+/** The common characters the worn cells keep a third of (none of them is in the stone's own text or names anything there). */
+const REMNANT = "山水人日月天心三大小上下中不有";
 function inscription(w, h, again = true) {
   if (typeof document === "undefined" || !document.createElement) return null;
   const c = document.createElement("canvas"); if (!c.getContext) return null;
@@ -70,8 +72,8 @@ function inscription(w, h, again = true) {
   // An incised character in a stone under a roof reads by its two edges: the upper wall of the cut in shadow, and the floor of
   // the cut and its lower lip catching the sky (with the pale dust that lies in old cuts). Drawn as three passes of the glyph.
   let ds = 11; const dr = () => ((ds = (ds * 16807) % 2147483647) / 2147483647);
-  const draw = (ch, x, y, size) => {
-    g.globalAlpha = 0.62 + 0.3 * dr();   // old cuts are not all as deep as each other
+  const draw = (ch, x, y, size, fade = 0) => {
+    g.globalAlpha = fade || 0.62 + 0.3 * dr();   // old cuts are not all as deep as each other (`fade`: a worn cell's remnant, a third to a half as bright as a readable one)
     g.font = `${size}px "Yunjing Kai", serif`; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "rgba(8,7,6,0.85)"; g.fillText(ch, x - size * 0.025, y - size * 0.035);       // the upper wall of the cut, in shadow
     g.fillStyle = "rgba(214,208,196,0.78)"; g.fillText(ch, x + size * 0.02, y + size * 0.03);   // the lower lip, catching the light
@@ -85,19 +87,18 @@ function inscription(w, h, again = true) {
   let ws = 3; const wr = () => ((ws = (ws * 16807) % 2147483647) / 2147483647);
   for (const c of steleLayout(px, ph)) {
     if (!c.worn) { draw(c.ch, c.x, c.y, c.size); continue; }
-    // A cell where the cut has worn away: mostly pale, flaked stone (lighter than the face, as weathering is), a few broken strokes of the old cut that cannot be
-    // read as anything, and, from the edges, no more. Soft-edged patches are a radial fade squeezed into an ellipse, so that no canvas filter is needed.
-    for (let k = 0; k < 4; k++) {
-      const rx = c.size * (0.35 + 0.5 * wr()), ry = rx * (0.5 + 0.5 * wr()), a = 0.1 + 0.1 * wr(), pale = wr() < 0.75, tone = pale ? "206,200,188" : "24,22,18";
-      g.save(); g.translate(c.x + (wr() - 0.5) * c.size * 1.2, c.y + (wr() - 0.5) * c.size * 1.2); g.rotate(wr() * 3); g.scale(1, ry / rx);
-      const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, `rgba(${tone},${a.toFixed(3)})`); gr.addColorStop(1, `rgba(${tone},0)`);
-      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 6.283); g.fill(); g.restore();
-    }
-    g.lineCap = "round";
-    for (let k = 0; k < 3; k++) {   // broken, faint strokes: short, thin, each cut off at its ends; two passes as a cut has, a shadow edge and a lit edge
-      const x0 = c.x + (wr() - 0.5) * c.size * 0.8, y0 = c.y + (wr() - 0.5) * c.size * 0.8, ang = wr() < 0.5 ? wr() * 0.5 : 1.35 + wr() * 0.4, len = c.size * (0.12 + 0.28 * wr());
-      for (const [dx, col] of /** @type {[number, string][]} */ ([[-0.012, "rgba(8,7,6,0.2)"], [0.012, "rgba(214,208,196,0.22)"]])) { g.strokeStyle = col; g.lineWidth = Math.max(1, c.size * 0.05); g.beginPath(); g.moveTo(x0 + dx * c.size, y0); g.lineTo(x0 + dx * c.size + Math.cos(ang) * len, y0 + Math.sin(ang) * len); g.stroke(); }
-    }
+    // A cell where the cut has worn away keeps remnants of the old cut: a third of the strokes of a common character, in the same face, size and
+    // line as the readable ones and a third to a half as bright (the art director, #773). The character is drawn from a fixed set that has nothing to do
+    // with the stone's own text, by a fixed seed, so that no heading or column of it, nor any name, can be made out however the contrast is lifted.
+    // Only one faint pale patch of flaked stone is added, no more (soft dark patches read as water stains).
+    const ch = REMNANT[Math.floor(wr() * REMNANT.length)];
+    g.save(); g.beginPath();
+    for (let k = 0; k < 3; k++) { const w = c.size * (0.28 + 0.2 * wr()), h = c.size * (0.34 + 0.2 * wr()); g.rect(c.x - c.size / 2 + wr() * (c.size - w), c.y - c.size / 2 + wr() * (c.size - h), w, h); }
+    g.clip(); draw(ch, c.x, c.y, c.size, 0.36 + 0.12 * wr()); g.restore();
+    { const rx = c.size * (0.4 + 0.3 * wr()), ry = rx * 0.7;
+      g.save(); g.translate(c.x + (wr() - 0.5) * c.size, c.y + (wr() - 0.5) * c.size); g.rotate(wr() * 3); g.scale(1, ry / rx);
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, "rgba(206,200,188,0.07)"); gr.addColorStop(1, "rgba(206,200,188,0)");
+      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 6.283); g.fill(); g.restore(); }
   }
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
   let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
