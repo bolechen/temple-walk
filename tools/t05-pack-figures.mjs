@@ -9,7 +9,9 @@
 import fs from "node:fs"; import path from "node:path"; import url from "node:url"; import { createRequire } from "node:module";
 const dir = process.env.PACK_DIR; if (!dir) throw new Error("PACK_DIR: where the packers are installed (see the head of this file)");
 const req = createRequire(path.resolve(dir) + "/");
-const imp = (m) => import(req.resolve(m));
+// the ES-module builds, by their own entry file: ktx2-encoder imports glTF Transform that way, and two builds (cjs and esm) keep two separate document registries
+const esm = (pkg) => import(url.pathToFileURL(path.resolve(dir, "node_modules", pkg, "dist/index.js")).href);
+const imp = (m) => (m.startsWith("@gltf-transform/") ? esm(m) : import(req.resolve(m)));
 const { NodeIO } = await imp("@gltf-transform/core"), { ALL_EXTENSIONS } = await imp("@gltf-transform/extensions");
 const { quantize, meshopt, dedup, prune } = await imp("@gltf-transform/functions"), { MeshoptEncoder, MeshoptDecoder } = await imp("meshoptimizer");
 const { ktx2 } = await import(url.pathToFileURL(path.resolve(dir, "node_modules/ktx2-encoder/dist/gltf-transform/index.js")).href);
