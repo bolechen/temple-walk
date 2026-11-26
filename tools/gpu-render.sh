@@ -38,7 +38,7 @@ SITE="$(node -e 'console.log(require("./tools/site.cjs").site())')"   # the buil
 cp -R "$SITE" "$STAGE/app"; rm -rf "$STAGE/app/plate.webp"; [ -n "${KEEP_MODELS:-}" ] || find "$STAGE/app/shared/models" -type f ! -name "novice*.glb" -delete;   # KEEP_MODELS=1: the statues go along (the walk-round survey wants the Buddha); the novice's bodies always do (#163: he wears one by default)
  cp tools/gpu/job.cjs "$STAGE/job.cjs"; cp tools/site.cjs "$STAGE/site.cjs"; for f in ${EXTRA_FILES:-}; do cp "$f" "$STAGE/"; done   # EXTRA_FILES: scripts a spec names with "script" (tools/marketing-gpu.sh)
 # BASE_SITE: another build (the base commit), served at base/ in the same job so the two can be measured turn about.
-if [ -n "${BASE_SITE:-}" ]; then cp -R "$BASE_SITE" "$STAGE/app/base"; find "$STAGE/app/base/shared/models" -type f ! -name "novice*.glb" -delete; rm -rf "$STAGE/app/base/plate.webp"; fi
+if [ -n "${BASE_SITE:-}" ]; then cp -R "$BASE_SITE" "$STAGE/app/base"; [ -n "${KEEP_MODELS:-}" ] || find "$STAGE/app/base/shared/models" -type f ! -name "novice*.glb" -delete; rm -rf "$STAGE/app/base/plate.webp"; fi   # KEEP_MODELS keeps the base's figures too, or the two would not be drawing the same hall (#749)
 # Each run stages under runs/<run>, outside in/: two sessions sharing the bucket once overwrote each other's site
 # mid-job (a sync of in/ with --delete removes everything else under it).
 hf buckets sync "$STAGE" "hf://buckets/$BUCKET/runs/$RUN" --delete >/dev/null
