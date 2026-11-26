@@ -80,7 +80,13 @@ function inscription(w, h, again = true) {
   let ws = 3; const wr = () => ((ws = (ws * 16807) % 2147483647) / 2147483647);
   for (const c of steleLayout(px, ph)) {
     if (!c.worn) { draw(c.ch, c.x, c.y, c.size); continue; }
-    for (let k = 0; k < 6; k++) { g.fillStyle = `rgba(${wr() < 0.6 ? "20,18,15" : "196,190,178"},${(0.08 + 0.12 * wr()).toFixed(3)})`; g.beginPath(); g.ellipse(c.x + (wr() - 0.5) * c.size * 0.7, c.y + (wr() - 0.5) * c.size * 0.7, c.size * (0.16 + 0.3 * wr()), c.size * (0.1 + 0.22 * wr()), wr() * 3, 0, 6.283); g.fill(); }
+    // (each scuff is a soft-edged patch: a radial fade squeezed into an ellipse, so that no canvas filter is needed)
+    for (let k = 0; k < 4; k++) {
+      const rx = c.size * (0.35 + 0.5 * wr()), ry = rx * (0.5 + 0.5 * wr()), a = 0.24 + 0.2 * wr(), dark = wr() < 0.65, tone = dark ? "20,18,15" : "196,190,178";
+      g.save(); g.translate(c.x + (wr() - 0.5) * c.size * 1.2, c.y + (wr() - 0.5) * c.size * 1.2); g.rotate(wr() * 3); g.scale(1, ry / rx);
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, `rgba(${tone},${a.toFixed(3)})`); gr.addColorStop(1, `rgba(${tone},0)`);
+      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 6.283); g.fill(); g.restore();
+    }
   }
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
   let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
