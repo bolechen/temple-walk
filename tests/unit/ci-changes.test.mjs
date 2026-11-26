@@ -219,13 +219,14 @@ test("unit tests: a share with no file runs nothing, because `node --test` with 
   assert.equal(sh.testArgs([]), null);
   assert.deepEqual(sh.testArgs(["a.test.mjs"], ["--import", "x"]), ["--import", "x", "--test", "tests/unit/a.test.mjs"]);
   assert.equal(sh.shareOf("0/5"), null); assert.equal(sh.shareOf("6/5"), null);
-  // 200 machines for 123 files: the last ones are empty, and say so rather than run everything
-  const empty = sh.plan(sh.files(), 200).parts.filter((p) => p.length === 0);
+  // more machines than there are files: the last ones are empty, and say so rather than run everything (the count follows the
+  // files: it was a fixed 200, which the 201st test file made a full house, 2026-11-26)
+  const many = sh.files().length + 5, empty = sh.plan(sh.files(), many).parts.filter((p) => p.length === 0);
   assert.ok(empty.length > 0);
   const { spawnSync } = await import("node:child_process");
   const bad = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", "0/5"], { encoding: "utf8" });
   assert.equal(bad.status, 2);
-  const none = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", "200/200"], { encoding: "utf8" });
+  const none = spawnSync(process.execPath, ["tools/ci/unit-shard.cjs", "run", `${many}/${many}`], { encoding: "utf8" });
   assert.equal(none.status, 0); assert.match(none.stdout, /holds no test file/);
 });
 
