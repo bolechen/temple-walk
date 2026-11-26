@@ -1,6 +1,7 @@
 // 奉明寺 (T05), as the engine asks for a level (app/src/level.js; #409). Its plan is ./site.js, a white box for now: the
 // court, the great hall's platform, the terrace and the flight, and the way in from the outer gate's place. The
-// county is flat (docs/t05/SITE.md §4.1): no far hills, no bamboo, no censer. It keeps no place, plays no opening and
+// county is flat (docs/t05/SITE.md §4.1): no bamboo, no censer, and no backdrop of mountains (the one low hill line far to the north and the town beyond the
+// walls are the level's own, ./distance.js, revised 2026-11-25). It keeps no place, plays no opening and
 // raises no title of its own yet, and the prologue's music is not played here (score.js zoneOf with no zones).
 import { buildSite, createWalker, COMPOUND, WAY } from "./site.js";
 import { PAGE } from "./page.js";
