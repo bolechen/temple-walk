@@ -24,20 +24,28 @@ export const PIVOT_DZ = 0;
  * East to west as the visitor sees them from the door. `stageH` is the whole height (plinth included) the figure was painted at on the stage, which is the
  * frame its anchors are written in; the page scales that frame to the game's own height for the figure (`FIGURES[].h` in ../altar.js) as a whole. `inner` and
  * `lotus` are the two per-figure gains the stage's spec carried for the end figures, where the hall's light is weaker; the middle figure's `lotus` is the hall's own
- * (2026-11-26): its seat stands in a beam's shadow under the brightest face of the seven, and without it reads under half as light as that face.
- * @type {readonly { id: string, file: string, sha256: string, stageH: number, inner?: number[], lotus?: number, halo?: number }[]}
+ * (2026-11-26): its seat stands in a beam's shadow under the brightest face of the seven, and without it reads under half as light as that face. A `lotus` of
+ * three numbers is red, green and blue: under that beam the middle seat also read grey beside its neighbours' (C* 3.0 to 3.4 from the nave on the T4 of
+ * 2026-11-26, theirs 5.2 to 5.5, the art director's line 4, his aim 5 to 7 at a hue of 54°), which a gain of one number cannot mend, so its 1.6 is tinted,
+ * the red up a sixth and the blue down an eighth. `lotusGain` hands any of them on as three. `twoSided` draws a figure's triangles from both sides: Sakyamuni's
+ * knee has no underside beside his right palm, and through that slot the page drew the dark hall behind him (a black scrap at the wrist from the nave, the
+ * final review of 18b2024); drawn from both sides, the slot shows the inside of his own knee in its own paint (tests/unit/t05-figure-mend.test.mjs).
+ * @type {readonly { id: string, file: string, sha256: string, stageH: number, inner?: number[], lotus?: number | number[], halo?: number, twoSided?: boolean }[]}
  */
 export const FIGURE_FILES = Object.freeze([
   { id: "kasyapa", file: "kasyapa.glb", sha256: "03a2cb334a9dd03c54b1026e62726840e1ae2197b4cd5a3175232fb9b47b2102", stageH: 8.6, inner: [0.97, 1, 1.03], lotus: 1.25 },
   { id: "krakucchanda", file: "krakucchanda.glb", sha256: "c92c4da2f644fbbcb6d4a24893cbdd248564a6972e7b9feb496d52eb8cc3334e", stageH: 8.75 },
   { id: "sikhin", file: "sikhin.glb", sha256: "8112799fb9c79c3fb636250c494f884f878fb6c27b93ea2f6c105bb6139b91d7", stageH: 8.9 },
-  { id: "vipasyin", file: "vipasyin.glb", sha256: "1421c0abc563ea3782a83e433687f60f419e39870f19f32003c0904784bcd97f", stageH: 9.0, lotus: 1.6 },
+  { id: "vipasyin", file: "vipasyin.glb", sha256: "1421c0abc563ea3782a83e433687f60f419e39870f19f32003c0904784bcd97f", stageH: 9.0, lotus: [1.86, 1.6, 1.41] },
   { id: "visvabhu", file: "visvabhu.glb", sha256: "011abb1a09e6d264d7ca73f6880be8f0c6e297f357cf6afddadc1a7f06aebc7d", stageH: 8.9 },
   { id: "kanakamuni", file: "kanakamuni.glb", sha256: "d05629685149e510a33295e62129e8f25769eb850f5698faccf5253592252997", stageH: 8.75 },
-  { id: "sakyamuni", file: "sakyamuni.glb", sha256: "c7b394601979c1dbcfcf1e81dc4186d9a98ab9a931b2d4793865e85844dac859", stageH: 8.6, inner: [0.96, 1, 1.05], lotus: 1.25 },
+  { id: "sakyamuni", file: "sakyamuni.glb", sha256: "c7b394601979c1dbcfcf1e81dc4186d9a98ab9a931b2d4793865e85844dac859", stageH: 8.6, inner: [0.96, 1, 1.05], lotus: 1.25, twoSided: true },
 ].map((f) => Object.freeze(f)));
 
 /** The order they are fetched in: the middle one first, then outward (east before west). */
+/** A figure's lotus gain as red, green and blue. @param {{ lotus?: number | number[] }} d @returns {number[]} */
+export const lotusGain = (d) => (Array.isArray(d.lotus) ? [...d.lotus] : [d.lotus ?? 1, d.lotus ?? 1, d.lotus ?? 1]);
+
 export const LOAD_ORDER = Object.freeze(["vipasyin", "sikhin", "visvabhu", "krakucchanda", "kanakamuni", "kasyapa", "sakyamuni"]);
 /** Paint's reflection of the hall, as the pictures were judged (`paint: { envIntensity: 0.6 }`). */
 export const ENV_INTENSITY = 0.6;

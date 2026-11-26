@@ -21,7 +21,7 @@ import { ALTAR, SEAT, FIGURES } from "../altar.js";
 import { paintMaterial } from "./paint.js";
 import { tierMesh } from "./plinth.js";
 import recipe from "./recipe.json";
-import { FIGURE_FILES, LOAD_ORDER, NEAR, PLINTH, DOOR, PIVOT_DZ, ENV_INTENSITY, HALO_COLOR } from "./registry.js";
+import { FIGURE_FILES, lotusGain, LOAD_ORDER, NEAR, PLINTH, DOOR, PIVOT_DZ, ENV_INTENSITY, HALO_COLOR } from "./registry.js";
 
 // `?skin=1.25` (this file runs only where the doors are open, the workbench's `?hall=open`): the skin zone's pigment lifted by that factor in linear light, hue unchanged, for the T4 that sets the lamps
 // alone against the lamps with a lighter skin side by side (the art director chooses; nothing is ever the default). 1 (or no parameter, or a bad one) is the recipe as it is.
@@ -92,7 +92,8 @@ export function createFigures({ root, fg, M, sh }) {
         const nmap = /** @type {any} */ (m.material).normalMap ?? null, key = nmap ? nmap.uuid : "none";
         if (!paints.has(key)) {
           const p = paintMaterial(paintRecipe, anchors, pivot, { masks: { front, hair }, fig: FIGURE_FILES.indexOf(d), normalMap: nmap, envMap: state.probe, envIntensity: ENV_INTENSITY });
-          p.userData.paint.U.uInner.value.set(...(d.inner ?? [1, 1, 1])); p.userData.paint.U.uLotus.value = d.lotus ?? 1;
+          p.userData.paint.U.uInner.value.set(...(d.inner ?? [1, 1, 1])); p.userData.paint.U.uLotus.value.set(...lotusGain(d));
+          if (d.twoSided) p.side = THREE.DoubleSide;   // a figure with a slot in its shell (registry.js)
           paints.set(key, p);
         }
         m.material = paints.get(key); m.castShadow = m.receiveShadow = true;

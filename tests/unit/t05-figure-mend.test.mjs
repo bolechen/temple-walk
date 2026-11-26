@@ -145,6 +145,18 @@ test("Sakyamuni's right wrist from the two nearest places a visitor stands: from
   assert.ok(front.air <= 100, `before the altar: ${front.air} lines of sight see the hall through the wrist`);
 });
 
+// The slot beside the palm is still open (above), and through it the page drew the dark hall behind him: a black scrap at the wrist from ten
+// metres down the nave (the final review of 18b2024). Until the knee's rim has an underside, he alone is drawn from both sides, so that what a
+// line of sight through the slot meets is the inside of his own knee and hand, in their own paint.
+test("while the slot beside Sakyamuni's palm is open he is drawn from both sides, and he alone", { skip }, async () => {
+  const E = await import("../../tools/t05-paint-eval.mjs"), fig = await E.loadFigure("sakyamuni"), { FIGURE_FILES } = await import("../../app/levels/t05/figures/registry.js");
+  const open = wristSeen(fig, [-1.95, 0.2, 3.1]).air + wristSeen(fig, [1.2, 0.2, 9.9]).air;   // before the altar, and from ten metres down the nave
+  assert.ok(open > 0, "the slot is mended: take `twoSided` off Sakyamuni and this test away");
+  assert.deepEqual(FIGURE_FILES.filter((f) => f.twoSided).map((f) => f.id), ["sakyamuni"]);
+  const load = (await import("node:fs")).readFileSync(new URL("../../app/levels/t05/figures/load.js", import.meta.url), "utf8");
+  assert.match(load, /if \(d\.twoSided\) p\.side = THREE\.DoubleSide;/, "load.js draws such a figure from both sides");
+});
+
 test("the mended Sakyamuni stands as the first did: the page stands a figure by its bounding box and the anchors are measured from it", { skip }, async () => {
   const E = await import("../../tools/t05-paint-eval.mjs"), fig = await E.loadFigure("sakyamuni"), lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < fig.pos.length; i += 3) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], fig.pos[i + k]); hi[k] = Math.max(hi[k], fig.pos[i + k]); }

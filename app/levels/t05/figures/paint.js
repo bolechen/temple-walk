@@ -23,7 +23,8 @@ uniform sampler2D uMaskB;
 uniform sampler2D uMaskS;
 uniform sampler2D uMaskH;
 uniform vec3 uTint;
-uniform float uLotus;
+uniform vec3 uLotus;
+uniform vec3 uCurl;   // the middle of the skull under the curls: which way is outward for a curl's crown
 uniform vec3 uInner;
 varying vec3 vFig;
 varying vec3 vFigN;
@@ -189,6 +190,33 @@ function faceUniforms(face, A) {
 const lin = (hex) => new THREE.Color(hex);   // sRGB hex → working (linear) colour, as three's own materials take it
 const v3 = (c) => `vec3(${c.r.toFixed(5)}, ${c.g.toFixed(5)}, ${c.b.toFixed(5)})`;
 
+// A gain as red, green and blue: one number is all three.
+const three = (g) => (Array.isArray(g) ? g : [g, g, g]);
+
+// A zone painted old (`aged` in the recipe; the curls): three things laid over its pigment, each by which way the surface faces against the
+// way outward from the middle of the skull (`out`, 1 on the crown of a curl, 0 on its side and in the gap to the next):
+//   worn   the crown rubbed toward `worn` by `wornAmount`, from apex[0] to apex[1] of `out`, broken by a grain (never under `grain` of it);
+//   dust   what turns away, from side[1] down to side[0] of `out`, toward `dust` by `sides`; a hollow (the curvature's, as the folds take it)
+//          by `hollow` if that is more;
+//   top    what faces up toward `dust` by `top`, in patches: the zone takes none of the shoulders' dust (`dust: 0`), whose colour stands
+//          next to the skin's and read as skin between the rings of curls.
+// `agedPigment` is the same sums in JavaScript, for the tests: { out, hollow, up, grain } each 0 to 1; linear red, green and blue.
+const smoothstepJS = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
+export function agedPigment(z, { out = 1, hollow = 0, up = 0, grain = 1 } = {}) {
+  const a = z.aged, mix = (p, q, t) => p.map((v, i) => v + (q[i] - v) * t), c = (hex) => lin(hex).toArray();
+  let col = mix(c(z.color), c(a.worn), a.wornAmount * smoothstepJS(a.apex[0], a.apex[1], out) * (a.grain + (1 - a.grain) * grain));
+  col = mix(col, c(a.dust), Math.max(a.hollow * hollow, a.sides * (1 - smoothstepJS(a.side[0], a.side[1], out))));
+  return mix(col, c(a.dust), a.top * up * (0.5 + 0.5 * grain));
+}
+function agedGLSL(z, col) {
+  const a = z.aged, n = (v) => v.toFixed(3);
+  return `vec3 agedD = p - uCurl; float agedO = dot(cvN, agedD / max(length(agedD), 1e-6)), agedW = ${n(a.wornAmount)} * smoothstep(${n(a.apex[0])}, ${n(a.apex[1])}, agedO) * (${n(a.grain)} + ${n(1 - a.grain)} * vnoise(vec2(p.x * 9. + p.z * 3.1, p.y * 9. - p.z * 2.3)));
+    vec3 agedC = mix(${col}, ${v3(lin(a.worn))}, agedW);
+    agedC = mix(agedC, ${v3(lin(a.dust))}, max(${n(a.hollow)} * cvHollow, ${n(a.sides)} * (1. - smoothstep(${n(a.side[0])}, ${n(a.side[1])}, agedO))));
+    agedC = mix(agedC, ${v3(lin(a.dust))}, ${n(a.top)} * smoothstep(.55, .95, cvN.y) * (.5 + .5 * vnoise(p.xz * 11.)));
+    `;
+}
+
 // One material for a figure: the recipe's shader (shared by every figure) with this figure's anchors in its uniforms.
 // `pivot` is the figure's frame (an Object3D); the material reads its matrix each frame.
 export function paintMaterial(recipe, anchors, pivot, opts = {}) {
@@ -201,7 +229,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   const m = new THREE.MeshStandardMaterial({ color: base.color, roughness: base.rough, metalness: base.metal ?? 0 });
   const none = new THREE.DataTexture(new Uint8Array(4), 1, 1); none.needsUpdate = true;
   const U = { uToFig: { value: new THREE.Matrix4() }, uL: { value: uL }, uFace: { value: uFace }, uEdge: { value: recipe.edge ?? 0.02 },
-    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uMaskH: { value: opts.masks?.hair ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) }, uLotus: { value: opts.lotusGain ?? 1 }, uInner: { value: new THREE.Vector3(...(opts.innerTint ?? [1, 1, 1])) },
+    uMaskF: { value: opts.masks?.front ?? none }, uMaskB: { value: opts.masks?.back ?? none }, uMaskS: { value: opts.masks?.right ?? none }, uMaskH: { value: opts.masks?.hair ?? none }, uTint: { value: new THREE.Vector3(...(anchors.tint ?? [1, 1, 1])) }, uLotus: { value: new THREE.Vector3(...three(opts.lotusGain ?? 1)) }, uCurl: { value: new THREE.Vector3(...(anchors.hairFront && anchors.hairBack ? anchors.hairFront.map((v, i) => (v + anchors.hairBack[i]) / 2) : [0, 0, 0])) }, uInner: { value: new THREE.Vector3(...(opts.innerTint ?? [1, 1, 1])) },
     uIdMode: { value: 0 }, uFig: { value: opts.fig ?? 0 } };
   m.userData.paint = { U, anchors, leaves: leaves.map((l, i) => ({ type: l.type, on: L[i * 8 + 3] > 0.5 })) };
   const zoneCode = zones.map((z, i) => {
@@ -215,7 +243,10 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
     if (z.edgeTint) col = `mix(${col}, ${v3(lin(z.edgeTint.color))}, ${(z.edgeTint.amount ?? 0.5).toFixed(3)} * cvEdge)`;
     // `folds: false` keeps a zone out of the fold shading (curls, the face: their small forms are lit triangle by
     // triangle by a curvature taken from screen-space derivatives, #463 round two)
-    return `  { float k = ${z.glsl}; foldW = mix(foldW, ${z.folds === false ? "0." : "1."}, k); pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5), k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
+    // a zone painted old (the curls, 2026-11-26): `agedGLSL` below; and a zone's own share of the dust that lies on what faces up (`dust`, 1 when unsaid)
+    let rough = `${(z.rough).toFixed(3)} + ${(z.roughJitter ?? 0).toFixed(3)} * (vnoise(p.xy * 23.) - .5)`, pre = "";
+    if (z.aged) { pre = agedGLSL(z, col); col = "agedC"; rough += ` - ${(z.aged.polish ?? 0).toFixed(3)} * agedW`; }
+    return `  { float k = ${z.glsl}; ${pre}foldW = mix(foldW, ${z.folds === false ? "0." : "1."}, k); dustW = mix(dustW, ${(z.dust ?? 1).toFixed(3)}, k); pCol = mix(pCol, ${col}${wear}, k); pRough = mix(pRough, ${rough}, k); pMetal = mix(pMetal, ${metal}, k); zone = mix(zone, ${(i + 1).toFixed(1)}, step(.5, k)); }`;
   }).join("\n");
   const fo = recipe.folds ?? {}, fk0 = (fo.k0 ?? 3).toFixed(2), fk1 = (fo.k1 ?? 18).toFixed(2), fh = (fo.hollow ?? 0).toFixed(3), fe = (fo.edge ?? 0).toFixed(3);
   const fc = recipe.face, ink = lin(fc.ink), browC = lin(fc.browColor ?? fc.ink), lipC = lin(fc.lip), urnaC = lin(fc.urnaColor);
@@ -231,7 +262,7 @@ export function paintMaterial(recipe, anchors, pivot, opts = {}) {
   // (a fold's hollow); a fold's ridge some 5–30 cm round reads 3–18 (issue #463: hollows darkened, ridges worn)
   vec3 cvN = normalize(vFigN), cvPx = dFdx(vFig), cvPy = dFdy(vFig);
   float cv = (dot(dFdx(cvN), cvPx) + dot(dFdy(cvN), cvPy)) / max(dot(cvPx, cvPx) + dot(cvPy, cvPy), 1e-10);
-  float cvEdge = smoothstep(${fk0}, ${fk1}, cv), cvHollow = smoothstep(${fk0}, ${fk1}, -cv), foldW = 1.;
+  float cvEdge = smoothstep(${fk0}, ${fk1}, cv), cvHollow = smoothstep(${fk0}, ${fk1}, -cv), foldW = 1., dustW = 1.;
 ${zoneCode}
   float lip_, urna_; vec2 ink2 = faceInk(p, normalize(vFigN), lip_, urna_);
   float onFace = ${zones.findIndex((z) => z.name === recipe.face.zone) + 1}.0 == zone ? 1. : 0.;
@@ -246,7 +277,7 @@ ${zoneCode}
   pCol = mix(pCol, ${v3(urnaC)}, urna_ * onFace); pMetal = mix(pMetal, .2, urna_ * onFace);
   // dust on what faces up (shoulders, forearms, knees, palms, the tops of the petals): a figure nine metres high and
   // nearly a thousand years old (#370 round 7); not on the face's lines
-  pCol = mix(pCol, ${v3(lin(recipe.dust?.color ?? "#8A7A66"))}, ${(recipe.dust?.amount ?? 0).toFixed(3)} * smoothstep(.55, .95, normalize(vFigN).y) * (1. - max(ink2.x, ink2.y) * onFace) * (1. - onFace * uFace[8].z));   // a figure with no lines on its face (noInk) takes no dust on it either: the dust lifted every upward plane toward one colour and flattened the modelling
+  pCol = mix(pCol, ${v3(lin(recipe.dust?.color ?? "#8A7A66"))}, ${(recipe.dust?.amount ?? 0).toFixed(3)} * dustW * smoothstep(.55, .95, normalize(vFigN).y) * (1. - max(ink2.x, ink2.y) * onFace) * (1. - onFace * uFace[8].z));   // a figure with no lines on its face (noInk) takes no dust on it either: the dust lifted every upward plane toward one colour and flattened the modelling
   diffuseColor.rgb = pCol;`)
       .replace("#include <roughnessmap_fragment>", "#include <roughnessmap_fragment>\n  roughnessFactor = clamp(pRough, .04, 1.);")
       .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);")
