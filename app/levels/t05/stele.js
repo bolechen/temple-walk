@@ -62,7 +62,7 @@ export function steleLayout(px, ph) {
   return out;
 }
 /** The common characters the worn cells keep a third of (strokes of the readable text's own characters, none from the heading or the temple-naming columns, and the clip keeps too little of one to read it whole). */
-const REMNANT = "鐘藏崔嵬儼僧納觀殿";
+const REMNANT = "鐘藏鑑藥續龍鳳";
 function inscription(w, h, again = true) {
   if (typeof document === "undefined" || !document.createElement) return null;
   const c = document.createElement("canvas"); if (!c.getContext) return null;
