@@ -1,0 +1,1278 @@
+{
+  "started": "2026-11-26T06:37:15.893Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "",
+      "fps": 38.1,
+      "ms": 26.25,
+      "cost": 12.65,
+      "loadMs": 21343,
+      "tris": 2022728,
+      "calls": 376,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 1794,
+        "decodeMs": 626,
+        "prepareMs": 614,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.6608428509046056,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "library": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 57.17,
+        "worstFrameMs": 8936.6,
+        "spikes": [
+          8937,
+          223,
+          113,
+          103
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        29
+      ]
+    },
+    {
+      "view": "cam01",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "",
+      "fps": 43.2,
+      "ms": 23.15,
+      "cost": 14.62,
+      "loadMs": 14377,
+      "tris": 1015899,
+      "calls": 240,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 1827,
+        "decodeMs": 571,
+        "prepareMs": 620,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": -14.5,
+        "eye": -13.839157170508475,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 14.29,
+        "worstFrameMs": 2327,
+        "spikes": [
+          2327,
+          104,
+          106
+        ],
+        "live": null
+      },
+      "at": [
+        21.3,
+        91.5
+      ]
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 36.9,
+      "ms": 27.1,
+      "cost": 13.38,
+      "loadMs": 14143,
+      "tris": 2022728,
+      "calls": 376,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 2076,
+        "decodeMs": 159,
+        "prepareMs": 615,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.6608428789275999,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "library": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 57.17,
+        "worstFrameMs": 2176.4,
+        "spikes": [
+          2176,
+          139,
+          114
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        29
+      ]
+    },
+    {
+      "view": "cam01",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 42.2,
+      "ms": 23.7,
+      "cost": 14.27,
+      "loadMs": 13711,
+      "tris": 1015899,
+      "calls": 240,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 1820,
+        "decodeMs": 604,
+        "prepareMs": 591,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": -14.5,
+        "eye": -13.839157170508475,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 14.29,
+        "worstFrameMs": 1666.7,
+        "spikes": [
+          1667,
+          108
+        ],
+        "live": null
+      },
+      "at": [
+        21.3,
+        91.5
+      ]
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "",
+      "fps": 37,
+      "ms": 27.03,
+      "cost": 13.7,
+      "loadMs": 13604,
+      "tris": 2022728,
+      "calls": 376,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 1829,
+        "decodeMs": 591,
+        "prepareMs": 644,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.6608428658500057,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "library": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 57.17,
+        "worstFrameMs": 1568.5,
+        "spikes": [
+          1569,
+          115
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        29
+      ]
+    },
+    {
+      "view": "cam01",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "",
+      "fps": 43.2,
+      "ms": 23.15,
+      "cost": 15.07,
+      "loadMs": 13770,
+      "tris": 1015899,
+      "calls": 240,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 1781,
+        "decodeMs": 595,
+        "prepareMs": 638,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": -14.5,
+        "eye": -13.839157170508475,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 14.29,
+        "worstFrameMs": 1719.1,
+        "spikes": [
+          1719,
+          107,
+          102
+        ],
+        "live": null
+      },
+      "at": [
+        21.3,
+        91.5
+      ]
+    },
+    {
+      "view": "court",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 37.8,
+      "ms": 26.46,
+      "cost": 13.45,
+      "loadMs": 13737,
+      "tris": 2022728,
+      "calls": 376,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 1960,
+        "decodeMs": 609,
+        "prepareMs": 637,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": 0,
+        "eye": 0.6608428436404462,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "main": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "library": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 57.17,
+        "worstFrameMs": 1400.3,
+        "spikes": [
+          1400,
+          118
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        29
+      ]
+    },
+    {
+      "view": "cam01",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "summer",
+      "time": "day",
+      "path": "base/",
+      "fps": 45.4,
+      "ms": 22.03,
+      "cost": 14.97,
+      "loadMs": 13631,
+      "tris": 1015899,
+      "calls": 240,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 208228,
+        "inflated": 21517225,
+        "fetchMs": 1825,
+        "decodeMs": 634,
+        "prepareMs": 627,
+        "memory": 20144526,
+        "ledges": 42,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 42,
+        "start": [
+          21.3,
+          91.5
+        ],
+        "blockedHere": false,
+        "floor": -14.5,
+        "eye": -13.839157170508475,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {
+          "chan": {
+            "want": true,
+            "taken": 1,
+            "fade": 1,
+            "hi": true,
+            "source": "baked"
+          },
+          "tea": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "main": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "library": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "yaoshi": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "dahui": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "guanyin": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          },
+          "lingxiao": {
+            "want": false,
+            "taken": 0,
+            "fade": 0,
+            "hi": false,
+            "source": null
+          }
+        },
+        "baked": [
+          "chan",
+          "tea",
+          "main",
+          "library",
+          "yaoshi",
+          "dahui",
+          "guanyin",
+          "lingxiao"
+        ],
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 14.29,
+        "worstFrameMs": 1479.1,
+        "spikes": [
+          1479,
+          121,
+          101
+        ],
+        "live": null
+      },
+      "at": [
+        21.3,
+        91.5
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "cam01@summer-day@first",
+      "file": "cam01_summer-day_first.png",
+      "tris": 981629,
+      "calls": 232
+    },
+    {
+      "name": "cam01@summer-day@first",
+      "file": "cam01_summer-day_first_base.png",
+      "tris": 981629,
+      "calls": 232
+    },
+    {
+      "name": "cam02@summer-day@first",
+      "file": "cam02_summer-day_first.png",
+      "tris": 659129,
+      "calls": 101
+    },
+    {
+      "name": "cam02@summer-day@first",
+      "file": "cam02_summer-day_first_base.png",
+      "tris": 659129,
+      "calls": 101
+    },
+    {
+      "name": "cam03@summer-day@first",
+      "file": "cam03_summer-day_first.png",
+      "tris": 1962680,
+      "calls": 422
+    },
+    {
+      "name": "cam03@summer-day@first",
+      "file": "cam03_summer-day_first_base.png",
+      "tris": 1962680,
+      "calls": 422
+    },
+    {
+      "name": "cam04@summer-day@first",
+      "file": "cam04_summer-day_first.png",
+      "tris": 1959476,
+      "calls": 394
+    },
+    {
+      "name": "cam04@summer-day@first",
+      "file": "cam04_summer-day_first_base.png",
+      "tris": 1959476,
+      "calls": 394
+    },
+    {
+      "name": "cam05@summer-day@first",
+      "file": "cam05_summer-day_first.png",
+      "tris": 994416,
+      "calls": 150
+    },
+    {
+      "name": "cam05@summer-day@first",
+      "file": "cam05_summer-day_first_base.png",
+      "tris": 994416,
+      "calls": 150
+    },
+    {
+      "name": "cam06@summer-day@first",
+      "file": "cam06_summer-day_first.png",
+      "tris": 1952288,
+      "calls": 352
+    },
+    {
+      "name": "cam06@summer-day@first",
+      "file": "cam06_summer-day_first_base.png",
+      "tris": 1952288,
+      "calls": 352
+    },
+    {
+      "name": "court@summer-day@third",
+      "file": "court_summer-day_third.png",
+      "tris": 2022728,
+      "calls": 376
+    },
+    {
+      "name": "court@summer-day@third",
+      "file": "court_summer-day_third_base.png",
+      "tris": 2022728,
+      "calls": 376
+    },
+    {
+      "name": "gate@summer-day@third",
+      "file": "gate_summer-day_third.png",
+      "tris": 2027472,
+      "calls": 409
+    },
+    {
+      "name": "gate@summer-day@third",
+      "file": "gate_summer-day_third_base.png",
+      "tris": 2027472,
+      "calls": 409
+    },
+    {
+      "name": "stair@summer-day@third",
+      "file": "stair_summer-day_third.png",
+      "tris": 1015639,
+      "calls": 235
+    },
+    {
+      "name": "stair@summer-day@third",
+      "file": "stair_summer-day_third_base.png",
+      "tris": 1015639,
+      "calls": 235
+    },
+    {
+      "name": "bell@summer-day@third",
+      "file": "bell_summer-day_third.png",
+      "tris": 1385554,
+      "calls": 192
+    },
+    {
+      "name": "bell@summer-day@third",
+      "file": "bell_summer-day_third_base.png",
+      "tris": 1385554,
+      "calls": 192
+    },
+    {
+      "name": "hall@summer-day@first",
+      "file": "hall_summer-day_first.png",
+      "tris": 1685878,
+      "calls": 315
+    },
+    {
+      "name": "hall@summer-day@first",
+      "file": "hall_summer-day_first_base.png",
+      "tris": 1685878,
+      "calls": 315
+    },
+    {
+      "name": "lookback@summer-day@first",
+      "file": "lookback_summer-day_first.png",
+      "tris": 980947,
+      "calls": 224
+    },
+    {
+      "name": "lookback@summer-day@first",
+      "file": "lookback_summer-day_first_base.png",
+      "tris": 980947,
+      "calls": 224
+    },
+    {
+      "name": "plaque@summer-day@first",
+      "file": "plaque_summer-day_first.png",
+      "tris": 1522628,
+      "calls": 238
+    },
+    {
+      "name": "plaque@summer-day@first",
+      "file": "plaque_summer-day_first_base.png",
+      "tris": 1522628,
+      "calls": 238
+    },
+    {
+      "name": "teahouse@summer-day@first",
+      "file": "teahouse_summer-day_first.png",
+      "tris": 1054610,
+      "calls": 122
+    },
+    {
+      "name": "teahouse@summer-day@first",
+      "file": "teahouse_summer-day_first_base.png",
+      "tris": 1054610,
+      "calls": 122
+    },
+    {
+      "name": "t05_cam01",
+      "file": "t05_cam01.png",
+      "tris": 506746,
+      "calls": 115
+    },
+    {
+      "name": "t05_cam01_base",
+      "file": "t05_cam01_base.png",
+      "tris": 506746,
+      "calls": 115
+    },
+    {
+      "name": "t05_cam02",
+      "file": "t05_cam02.png",
+      "tris": 497270,
+      "calls": 109
+    },
+    {
+      "name": "t05_cam02_base",
+      "file": "t05_cam02_base.png",
+      "tris": 497270,
+      "calls": 109
+    },
+    {
+      "name": "t05_cam07",
+      "file": "t05_cam07.png",
+      "tris": 1182898,
+      "calls": 195
+    },
+    {
+      "name": "t05_cam07_base",
+      "file": "t05_cam07_base.png",
+      "tris": 1182898,
+      "calls": 195
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "c0ea23391fa9ebaee3e831c491b01a9e02f63788+dirty",
+    "entry": "assets/index-Cwps5SLR.js",
+    "files": 400,
+    "sha256": "3daaf57ca489c47dce44292bac46f1c25b4409c152d7ba32c355a1d9d89724c6"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-26T06:49:13.931Z"
+}
