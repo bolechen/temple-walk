@@ -218,7 +218,7 @@ export function buildSite(M) {
   if (!offAltar && bench) { const fg = benchFigures(M, altar, sh); root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), M.plaster(), sh), fg.group); hooks.figures = fg; }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
-    const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
+    const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), /** @type {number} */ (f[8] ?? 1), 1.6) : new THREE.PointLight(c, 0, d, 1.6);   // f[8]: how soft the spot's edge is (1, all soft, unless the hall says otherwise)
     l.position.set(x, y, z); l.userData.full = i; root.add(l);
     if (l instanceof THREE.SpotLight && aim) { l.target.position.set(aim[0], aim[1], aim[2]); root.add(l.target); }
     return l;
