@@ -480,6 +480,27 @@
      },
      {
       "cap": {
+       "a": "@handR4a",
+       "b": "@handR4b",
+       "r": "@handR4r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handL4a",
+       "b": "@handL4b",
+       "r": "@handL4r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handR5a",
+       "b": "@handR5b",
+       "r": "@handR5r"
+      }
+     },
+     {
+      "cap": {
        "a": "@handL3a",
        "b": "@handL3b",
        "r": "@handL3r"
