@@ -10,7 +10,6 @@
 // line at z = 0 (docs/t05/SITE.md §1). Sizes and how far each is sourced: docs/t05/SOURCES.md §11.
 import * as THREE from "three";
 import { box, BODY, footAt, merge } from "../../src/geo.js";
-import { onBench } from "../../src/debuggate.js";
 import { buildRoof, ROOF } from "./roof.js";
 import { bracketSet, cornerSet, DOU, HEIGHT, REACH } from "./dougong.js";
 
@@ -66,24 +65,13 @@ export const INNER = Object.freeze({ back: 4, front: 1, frontAt: [1, 8] });
 export const FRONT = Object.freeze(["wall", "window", "window", "door", "door", "door", "window", "window", "wall"]);
 
 /**
- * The great hall's doors in the first release (docs/t05/DECISIONS.md, 先行版关殿门, 2026-11-25): the three middle doors are shut, the seven Buddhas' faces
- * (#701) not being ready. `shut: false` is the hall as it was and as it will be when #701 is done and the seven enter the level: the openings
- * empty, the hall walked. `gap` is the width, in metres, of the slit left between a door's two leaves (0 = none); he is never let through it
- * (a gap narrower than his body, and the openings are solids in the walk data while shut). The one place the switch lives: the plan, the
- * baked floor, the views the checks walk and the tests all read it from here.
+ * The great hall's doors. In the first release (docs/t05/DECISIONS.md, 先行版关殿门, 2026-11-25) the three middle doors were shut, the seven Buddhas' faces
+ * (#701) not being ready; since the seven entered the hall (#763, with its light #762) they stand open (DECISIONS.md, 开殿门, 2026-11-26): the openings
+ * empty, the hall walked, the seven fetched as he comes near. `shut: true` brings the first release back whole. `gap` is the width, in metres, of the slit
+ * left between a shut door's two leaves (0 = none); he is never let through it (a gap narrower than his body, and the openings are solids in the walk data
+ * while shut). The one place the switch lives: the plan, the baked floor, the views the checks walk and the tests all read it from here.
  */
-export const HALL_DOORS = Object.freeze({ shut: !benchOpensHall(), gap: 0 });
-
-/**
- * `?hall=open` on the workbench (the dev server and a pull request's preview: src/debuggate.js `onBench`, never the canary nor the public page) draws the
- * hall with its doors open, so that the figures the statue session makes (#701, ./figures/) can be seen while the first release keeps them shut. It
- * changes what is drawn and loaded and nothing else: the baked floor is the shut hall's, so he cannot be walked in through the doors, and the eye is put
- * inside with `__look` or an address. Read once when this file is loaded; Node (the tests, the baking tools) has no address and reads it shut.
- */
-function benchOpensHall() {
-  if (typeof location === "undefined") return false;
-  return onBench({ dev: !!import.meta.env?.DEV, hostname: location.hostname }) && new URLSearchParams(location.search).get("hall") === "open";
-}
+export const HALL_DOORS = Object.freeze({ shut: false, gap: 0 });
 
 /** The gongyan board between the bracket sets: its thickness (the Yingzao Fashi, chapter 7: 1.2 cun of 3.12 cm = 3.7 cm) and how far out of the column line it stands (on it, between the cross-arms along the wall: the board's place). */
 export const BOARD = Object.freeze({ t: 0.037, back: 0 });

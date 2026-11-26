@@ -924,10 +924,23 @@ const scenarios = {
       } finally { fs.rmSync(out, { recursive: true, force: true }); }
     }
   } },
-  // The seven painted figures of T05's great hall (#701, app/levels/t05/figures/) are for the workbench's open doors alone: in the built site, with the doors shut, no page
-  // script holds their paint, nothing under shared/models/t05/ is requested even from beside the door, and `?hall=open` is not read off the workbench (this page's address is
-  // neither the dev server nor a preview's host name). The page fetches them only behind HALL_DOORS (the PR's #763 review: 「门关时请求数为 0」).
-  "t05-figures-shut": { tier: 2, async run(b, base) {
+  // The seven painted figures of T05's great hall (#701, #763, app/levels/t05/figures/). While its doors are shut (HALL_DOORS in hall.js) no page script
+  // holds their paint, nothing under shared/models/t05/ is requested even from beside the door, and `?hall=open` is not read off the workbench (the PR's
+  // #763 review: 「门关时请求数为 0」). Since the doors were opened on the canary (docs/t05/DECISIONS.md, 开殿门), standing before the hall fetches all
+  // seven, every one comes up ready and none fails, with nothing said in the console.
+  "t05-figures": { tier: 2, async run(b, base) {
+    if (!hallDoorsShut()) {
+      // drawn, not BARE: the seven are fetched by the hall's own tick, which a page with the site switched off never runs
+      const t = await open(b, base, "level=t05&q=low&fast=1"), seen = [];
+      t.page.on("request", (r) => seen.push(r.url()));
+      await t.page.evaluate(() => window.__pose(0, 30, 0, 0)); await t.frames(10);
+      await t.until(() => t.page.evaluate(() => { const f = window.__t05Figures?.(); return !!f && f.figures.length === 7 && f.figures.every((x) => x.status === "ready" || x.status === "failed"); }), 600000, "the seven never came up before the open hall");
+      const rep = await t.page.evaluate(() => window.__t05Figures());
+      const failed = rep.figures.filter((x) => x.status !== "ready"); expect(failed.length === 0, `figures that did not come up: ${JSON.stringify(failed)}`);
+      expect(seen.some((u) => /shared\/models\/t05\//.test(u)), "the open hall asked for none of the figures' files");
+      expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
+      return;
+    }
     for (const query of ["level=t05&q=low&fast=1", "level=t05&q=low&fast=1&hall=open"]) {
       const t = await open(b, base, query + BARE), seen = [], scripts = [];
       t.page.on("request", (r) => seen.push(r.url()));

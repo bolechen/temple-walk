@@ -26,9 +26,9 @@ const keep = () => {
         away.add(path.join(app, "shared", "walk", `${id}.bin`)); const list = path.join(app, "shared", "doorways", `${id}.json`); away.add(list);
         if (fs.existsSync(list)) for (const e of Object.values(JSON.parse(fs.readFileSync(list, "utf8")).halls || {})) for (const f of [e.day, e.night, e.dist, e.in?.day, e.in?.night, e.in?.dist]) if (f) away.add(path.join(app, "shared", "doorways", f));
       }
-      // T05's seven figures (#701, 20 MB, fetched by tools/setup.mjs into app/shared/models/t05/) are for the workbench's open doors alone (`?hall=open`, read only on a preview's host name):
-      // the canary and production builds do not carry the files, whether or not the machine that builds them has fetched them.
-      if (deploy !== "preview") away.add(path.join(app, "shared", "models", "t05"));
+      // T05's seven figures (#701, #763, 20 MB, fetched by tools/setup.mjs into app/shared/models/t05/) go wherever T05 itself goes: the preview and the canary
+      // (its doors open since 2026-11-26, docs/t05/DECISIONS.md 开殿门); a build that does not list T05 (production) does not carry the files, fetched or not.
+      if (!levelShipped("t05", deploy)) away.add(path.join(app, "shared", "models", "t05"));
       for (const f of KEPT) fs.cpSync(path.join(app, f), path.join(out, f), { recursive: true, filter: (p) => !away.has(p) && !/\.(py|md)$/.test(p) && !(p.includes(`${path.sep}levels${path.sep}`) && (p.endsWith(".js") || p.endsWith(`${path.sep}locales`))) });
       const file = path.join(out, NOTICES), text = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
       const lacking = LIBRARIES.filter((l) => !text.includes(l));

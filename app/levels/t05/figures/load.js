@@ -24,7 +24,7 @@ import recipe from "./recipe.json";
 import { mendTangents } from "./tangents.js";
 import { FIGURE_FILES, lotusGain, LOAD_ORDER, NEAR, PLINTH, DOOR, PIVOT_DZ, ENV_INTENSITY, HALO_COLOR } from "./registry.js";
 
-// `?skin=1.25` (this file runs only where the doors are open, the workbench's `?hall=open`): the skin zone's pigment lifted by that factor in linear light, hue unchanged, for the T4 that sets the lamps
+// `?skin=1.25` (this file runs only where the doors are open, ../hall.js HALL_DOORS): the skin zone's pigment lifted by that factor in linear light, hue unchanged, for the T4 that sets the lamps
 // alone against the lamps with a lighter skin side by side (the art director chooses; nothing is ever the default). 1 (or no parameter, or a bad one) is the recipe as it is.
 const SKIN = (() => { const v = typeof location === "undefined" ? NaN : Number(new URLSearchParams(location.search).get("skin")); return Number.isFinite(v) && v >= 0.5 && v <= 2 ? v : 1; })();
 const paintRecipe = SKIN === 1 ? recipe : { ...recipe, debugKey: `skin${SKIN}`, zones: recipe.zones.map((z) => (z.name === recipe.face.zone ? { ...z, color: `#${new THREE.Color(z.color).multiplyScalar(SKIN).getHexString()}` } : z)) };

@@ -42,23 +42,25 @@ test("the seven together stay (masks included) within 20.1 MB on the wire (the l
   assert.ok(files + masks <= 20.1e6, `${files} bytes and the masks ${masks}`);
 });
 
-test("with the doors shut the figures are not imported, fetched or built: site.js reaches ./figures/ only by a dynamic import behind the open doors", async () => {
-  assert.equal(HALL_DOORS.shut, true, "shut in Node, and in any page not on the workbench with ?hall=open");
+test("the figures are reached only by a dynamic import behind the open doors, and only in a page the bundler made: Node builds the hall without importing, fetching or building them", async () => {
+  // The doors were opened on 2026-11-26 (docs/t05/DECISIONS.md, 开殿门); `shut: true` in hall.js brings the first release back, and with it no figure at all.
   const src = readFileSync(new URL("../../app/levels/t05/site.js", import.meta.url), "utf8");
   const refs = src.split("\n").filter((l) => /figures\//.test(l) && !/^\s*\/\//.test(l));
   assert.equal(refs.length, 1, refs.join("\n"));
-  assert.match(refs[0], /showFigures\)\s*import\("\.\/figures\/index\.js"\)/);
+  assert.match(refs[0], /showFigures && import\.meta\.env\)\s*import\("\.\/figures\/index\.js"\)/);
   assert.ok(!/^import .*figures\//m.test(src), "no static import");
   assert.match(src, /const showFigures = !HALL_DOORS\.shut/);
   const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + k] ||= new THREE.MeshBasicMaterial()) : (t[k] ||= new THREE.MeshBasicMaterial())) });
   const { buildSite } = await import("../../app/levels/t05/site.js"); buildSite(M);
-  assert.equal(globalThis.__t05Figures, undefined, "no figure hook, no tap sheet");
+  assert.equal(globalThis.__t05Figures, undefined, "no figure hook in Node");
   assert.equal(NEAR, 60);
 });
 
-test("the workbench's switch is read only on the workbench: hall.js asks onBench, and a production page cannot open the doors by an address", () => {
+test("the doors are one constant, open, and nothing an address says shuts or opens them", () => {
   const src = readFileSync(new URL("../../app/levels/t05/hall.js", import.meta.url), "utf8");
-  assert.match(src, /onBench\(\{ dev: !!import\.meta\.env\?\.DEV, hostname: location\.hostname \}\) && new URLSearchParams\(location\.search\)\.get\("hall"\) === "open"/);
+  assert.match(src, /export const HALL_DOORS = Object\.freeze\(\{ shut: false, gap: 0 \}\)/);
+  assert.equal(HALL_DOORS.shut, false);
+  assert.ok(!/location\.search/.test(src), "hall.js reads no address");
 });
 
 test("with the doors shut the altar's merged geometry is byte for byte what it was before the figures (main's altar.js, 2026-11-26): stone, clay and halo", async () => {

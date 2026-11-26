@@ -225,7 +225,7 @@ export function buildSite(M) {
   // can draw one again (the hooks are `window.__t05Objects`); nowhere else, and the picture is the same either way. Read as `?off=altar` is.
   const bench = typeof location !== "undefined" && debugGate({ dev: !!import.meta.env?.DEV, hostname: location.hostname, search: location.search });
   const hooks = bench ? (/** @type {any} */ (globalThis).__t05Objects = /** @type {Record<string, any>} */ ({})) : null;
-  // The seven painted figures (./figures/): only where the hall's doors are open (HALL_DOORS, the workbench's `?hall=open`). With them shut nothing of ./figures/ is imported, fetched or drawn.
+  // The seven painted figures (./figures/): only where the hall's doors are open (HALL_DOORS, ./hall.js). With them shut nothing of ./figures/ is imported, fetched or drawn.
   // Open, the seven's white boxes are parts of their own (benchFigures) so that each can give way to its figure when that arrives.
   const showFigures = !HALL_DOORS.shut && !offAltar;
   /** @type {{ tick: (dt: number, eye: any) => void, report: () => any, debug: () => any } | null} */
@@ -237,7 +237,8 @@ export function buildSite(M) {
     // the art director on #762, 2026-11-26): until real kings stand there they are drawn in the halo board's dark earth (KING_DARK).
     const kingMat = showFigures ? new THREE.MeshStandardMaterial({ color: KING_DARK, roughness: 0.8, metalness: 0 }) : M.plaster();
     root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), kingMat, sh), fg.group); if (hooks) hooks.figures = fg;
-    if (showFigures) import("./figures/index.js").then((m) => m.startFigures({ root, fg, M, sh })).then((f) => { figures = f; if (typeof globalThis !== "undefined") { const g = /** @type {any} */ (globalThis); g.__t05Figures = () => f.report(); g.__t05FiguresDebug = () => f.debug(); } }).catch((e) => console.warn("figures:", e));
+    // (only in a page the bundler made: Node, the tests and the baking tools, fetches nothing and walks the altar as the boxes are drawn)
+    if (showFigures && import.meta.env) import("./figures/index.js").then((m) => m.startFigures({ root, fg, M, sh })).then((f) => { figures = f; if (typeof globalThis !== "undefined") { const g = /** @type {any} */ (globalThis); g.__t05Figures = () => f.report(); g.__t05FiguresDebug = () => f.debug(); } }).catch((e) => console.warn("figures:", e));
   }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);

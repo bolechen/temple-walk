@@ -58,7 +58,7 @@ async function models() {
 
 // ---- the seven Buddhas of level T05 (#701) ----
 // Not in git (20 MB of binaries): fetched from the dataset the registry names, each file checked against its SHA-256 (docs/t05/asset-register.csv), into app/shared/models/t05/.
-// The page keeps the hall's doors shut and never asks for them (app/levels/t05/hall.js), so a clone that cannot fetch them still runs; a file fetched that is not the registered one stops the install and says which hash was expected; one that cannot be fetched is a warning unless FIGURES=require.
+// Since the hall's doors were opened (app/levels/t05/hall.js HALL_DOORS, 2026-11-26) the page asks for them when he comes near; a clone that cannot fetch them still runs (the seven keep their white boxes); a file fetched that is not the registered one stops the install and says which hash was expected; one that cannot be fetched is a warning unless FIGURES=require.
 async function figures() {
   const { FIGURE_FILES, MASK_FILES, SOURCE } = await import("../app/levels/t05/figures/registry.js");
   if (!SOURCE.base) { say("T05's seven figures: no public source yet (app/levels/t05/figures/registry.js SOURCE), skipped"); return; }
