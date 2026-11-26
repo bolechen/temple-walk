@@ -39,6 +39,8 @@ export const SEAT = Object.freeze({ sumeru: 2.0, lotus: 1.0, w: 4.4, d: 3.2, z: 
 export const ATTEND = Object.freeze({ dx: 1.6, z: -14.95, w: 0.6, h: 2.6 });
 /** The two guardian kings on the floor at the altar's ends (ARCHITECTURE.md §2.3: x about ±19.5–20.5), 3.7 m on a 0.35 m plinth (DECISIONS.md §3: 3.5–4.0). */
 export const KING = Object.freeze({ x: 19.5, z: -16.4, w: 1.1, plinth: 0.35, h: 3.7 });
+/** The kings' placeholders once the seven are painted: the halo board's dark earth (figures/registry.js HALO_COLOR), so that a white column is not the lightest thing in the hall (#762, 2026-11-26). */
+export const KING_DARK = 0x42392d;
 
 /** The pointed body halo (boat-shaped), w wide at its widest, h tall, as a flat outline in x and y about its foot. */
 function haloShape(w, h) {
@@ -57,8 +59,8 @@ function haloShape(w, h) {
  * @param {{ id: string, x: number, h: number, yaw?: number }} f @param {number} [top] the altar's top (the hall's floor and the altar's height)
  */
 export function buildFigure(f, top = HALL.floor + ALTAR.h) {
-  const clay = [], halo = [], attendants = [];
-  const g = [], { x } = f, z = SEAT.z;
+  const clay = [], halo = [], attendants = [], attendClay = [];
+  const g = [], ga = [], { x } = f, z = SEAT.z;
   // the Sumeru base, waisted, and the lotus on it
   let y = top;
   for (const [kw, kd, h] of [[1, 1, 0.35], [0.86, 0.86, 1.2], [1.02, 1.02, 0.45]]) { g.push(box(SEAT.w * kw, h, SEAT.d * kd, 0, y + h / 2, 0)); y += h; }
@@ -75,19 +77,20 @@ export function buildFigure(f, top = HALL.floor + ALTAR.h) {
   // the attendants either side, a little in front: a lotus and a standing figure
   for (const s of [-1, 1]) {
     const ax = s * ATTEND.dx, az = ATTEND.z - z, a = ATTEND.w;
-    g.push(new THREE.CylinderGeometry(a * 0.6, a * 0.5, 0.25, 12).translate(ax, top + 0.125, az));
-    g.push(new THREE.CylinderGeometry(a * 0.3, a * 0.42, ATTEND.h - 0.25 - 0.5, 12).translate(ax, top + 0.25 + (ATTEND.h - 0.75) / 2, az));
-    g.push(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 10).translate(ax, top + ATTEND.h - 0.25, az));
+    ga.push(new THREE.CylinderGeometry(a * 0.6, a * 0.5, 0.25, 12).translate(ax, top + 0.125, az));
+    ga.push(new THREE.CylinderGeometry(a * 0.3, a * 0.42, ATTEND.h - 0.25 - 0.5, 12).translate(ax, top + 0.25 + (ATTEND.h - 0.75) / 2, az));
+    ga.push(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 10).translate(ax, top + ATTEND.h - 0.25, az));
   }
   // the whole group, Buddha, halo and attendants, stood on its bay and turned as it faces
   const turn = new THREE.Matrix4().makeTranslation(x, 0, z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
   for (const p of g) clay.push(p.applyMatrix4(turn));
+  for (const p of ga) attendClay.push(p.applyMatrix4(turn));   // (the attendants apart, so that the real figure (./figures/) takes the seated mass and not them)
   // the halo turned about its own middle, not the base's: turned about the base it would swing 0.26 m sideways into the
   // frame's beam beside it (the outer halos keep only 0.09 m from those beams, the structural review of #493)
   const turnHalo = new THREE.Matrix4().makeTranslation(x, 0, SEAT.halo.z).multiply(new THREE.Matrix4().makeRotationY(f.yaw ?? 0));
   for (const p of h) halo.push(p.applyMatrix4(turnHalo));
   for (const s of [-1, 1]) { const at = new THREE.Vector3(s * ATTEND.dx, 0, ATTEND.z - z).applyMatrix4(turn); attendants.push({ of: f.id, side: s, x: at.x, z: at.z, top: top + ATTEND.h }); }
-  return { clay, halo, top: topRec, attendants };
+  return { clay: [...clay, ...attendClay], body: clay, attendClay, halo, top: topRec, attendants };
 }
 
 /** The altar's meshes (by material), where each figure's top is, and what the written plan's walker is told of them. */
@@ -117,7 +120,7 @@ export function buildAltar() {
 }
 
 /**
- * The seven as parts of their own for the debug panel (#684): each one's clay and halo in two meshes of its own, kept out of the static merge
+ * The seven as parts of their own for the debug panel (#684): each one's seated mass, attendants and halo in three meshes of their own, kept out of the static merge
  * (`userData.keep`), and `rebuild(id, params)` drawing one again from `{ ...his FIGURES entry, ...params }` (x, h, yaw in radians). Returns what is
  * left of the altar's clay once the seven are out of it (`built.kingClay`, the two kings), to be merged as before, the group of the seven, and the hook. A rebuilt
  * figure also updates his place in `built.tops` and `built.attendants`.
@@ -130,7 +133,7 @@ export function benchFigures(M, built, sh) {
   const make = (e) => {
     for (const m of e.parts) { group.remove(m); m.geometry.dispose(); }
     const o = buildFigure(e.f, HALL.floor + ALTAR.h);
-    e.parts = [[o.clay, clayMat, "clay"], [o.halo, haloMat, "halo"]].map(([geos, material, kind]) => {
+    e.parts = [[o.body, clayMat, "clay"], [o.attendClay, clayMat, "attend"], [o.halo, haloMat, "halo"]].map(([geos, material, kind]) => {
       const m = mesh(merge(geos), material, sh); m.userData.keep = true; m.userData.figure = e.id; m.name = `altar-${e.id}-${kind}`; group.add(m); return m;
     });
     const k = at(e.id); if (k >= 0) built.tops[k] = o.top;

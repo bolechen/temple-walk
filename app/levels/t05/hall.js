@@ -10,6 +10,7 @@
 // line at z = 0 (docs/t05/SITE.md §1). Sizes and how far each is sourced: docs/t05/SOURCES.md §11.
 import * as THREE from "three";
 import { box, BODY, footAt, merge } from "../../src/geo.js";
+import { onBench } from "../../src/debuggate.js";
 import { buildRoof, ROOF } from "./roof.js";
 import { bracketSet, cornerSet, DOU, HEIGHT, REACH } from "./dougong.js";
 
@@ -71,7 +72,18 @@ export const FRONT = Object.freeze(["wall", "window", "window", "door", "door", 
  * (a gap narrower than his body, and the openings are solids in the walk data while shut). The one place the switch lives: the plan, the
  * baked floor, the views the checks walk and the tests all read it from here.
  */
-export const HALL_DOORS = Object.freeze({ shut: true, gap: 0 });
+export const HALL_DOORS = Object.freeze({ shut: !benchOpensHall(), gap: 0 });
+
+/**
+ * `?hall=open` on the workbench (the dev server and a pull request's preview: src/debuggate.js `onBench`, never the canary nor the public page) draws the
+ * hall with its doors open, so that the figures the statue session makes (#701, ./figures/) can be seen while the first release keeps them shut. It
+ * changes what is drawn and loaded and nothing else: the baked floor is the shut hall's, so he cannot be walked in through the doors, and the eye is put
+ * inside with `__look` or an address. Read once when this file is loaded; Node (the tests, the baking tools) has no address and reads it shut.
+ */
+function benchOpensHall() {
+  if (typeof location === "undefined") return false;
+  return onBench({ dev: !!import.meta.env?.DEV, hostname: location.hostname }) && new URLSearchParams(location.search).get("hall") === "open";
+}
 
 /** The gongyan board between the bracket sets: its thickness (the Yingzao Fashi, chapter 7: 1.2 cun of 3.12 cm = 3.7 cm) and how far out of the column line it stands (on it, between the cross-arms along the wall: the board's place). */
 export const BOARD = Object.freeze({ t: 0.037, back: 0 });

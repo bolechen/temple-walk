@@ -7,8 +7,8 @@
 // Each scenario is independent and fails on any error the page reports. A report is written to tools/out/e2e-report.json.
 const fs = require("fs"), path = require("path");
 const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
-/** Whether T05's great hall has its doors shut (app/levels/t05/hall.js, `HALL_DOORS.shut`; DECISIONS.md, 先行版关殿门): read from the source, one constant to turn. */
-const hallDoorsShut = () => /HALL_DOORS\s*=\s*Object\.freeze\(\{\s*shut:\s*true/.test(fs.readFileSync(path.join(__dirname, "../../app/levels/t05/hall.js"), "utf8"));
+/** Whether T05's great hall has its doors shut (app/levels/t05/hall.js, `HALL_DOORS.shut`; DECISIONS.md, 先行版关殿门): read from the source, one constant to turn. The constant is `true`, or `!benchOpensHall()` (the workbench's `?hall=open`, which no built page reads: these tests run on dist/ at 127.0.0.1) while it is shut. */
+const hallDoorsShut = () => /HALL_DOORS\s*=\s*Object\.freeze\(\{\s*shut:\s*(true|!benchOpensHall\(\))/.test(fs.readFileSync(path.join(__dirname, "../../app/levels/t05/hall.js"), "utf8"));
 
 // Software rendering draws the whole temple about once a second and takes twenty seconds to bring it up. A scenario
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
@@ -922,6 +922,23 @@ const scenarios = {
           expect(q.errors.length === 0, `${target} (probe): ` + q.errors.join("\n")); await q.close();
         } finally { srv.close(); }
       } finally { fs.rmSync(out, { recursive: true, force: true }); }
+    }
+  } },
+  // The seven painted figures of T05's great hall (#701, app/levels/t05/figures/) are for the workbench's open doors alone: in the built site, with the doors shut, no page
+  // script holds their paint, nothing under shared/models/t05/ is requested even from beside the door, and `?hall=open` is not read off the workbench (this page's address is
+  // neither the dev server nor a preview's host name). The page fetches them only behind HALL_DOORS (the PR's #763 review: 「门关时请求数为 0」).
+  "t05-figures-shut": { tier: 2, async run(b, base) {
+    for (const query of ["level=t05&q=low&fast=1", "level=t05&q=low&fast=1&hall=open"]) {
+      const t = await open(b, base, query + BARE), seen = [], scripts = [];
+      t.page.on("request", (r) => seen.push(r.url()));
+      t.page.on("response", async (r) => { if (/\.js(\?|$)/.test(r.url())) scripts.push(r.text().then((x) => (x.includes("t05paint:") ? r.url() : null)).catch(() => null)); });
+      await t.page.reload(); await t.until(() => t.page.evaluate(() => document.body.dataset.ready === "1"), 120000, "the page never came up");
+      await t.page.evaluate(() => window.__pose(0, 30, 0, 0)); await t.frames(30);
+      const held = (await Promise.all(scripts)).filter(Boolean);
+      expect(held.length === 0, `${query}: a loaded script holds the figures' paint: ${held.join(", ")}`);
+      const asked = seen.filter((u) => /shared\/models\/t05\//.test(u)); expect(asked.length === 0, `${query}: asked for the figures with the doors shut: ${asked.join(", ")}`);
+      expect(await t.page.evaluate(() => typeof window.__t05Figures) === "undefined", `${query}: the figures' hook exists with the doors shut`);
+      expect(t.errors.length === 0, `${query}: ` + t.errors.join("\n")); await t.close();
     }
   } },
   // The events the operation reads (src/analytics.js): the page names what a visitor does, and the last of them are

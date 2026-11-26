@@ -57,12 +57,12 @@ test("the figures: buildAltar is buildFigure seven times, and the panel's parts 
   assert.equal(altar.parts.clay.length, flat.reduce((n, o) => n + o.clay.length, 0) + altar.kingClay.length);
   assert.equal(altar.parts.halo.length, 7);
   const fg = benchFigures(M, altar, {}), left = fg.group.children.length;
-  assert.equal(left, 14); assert.equal(fg.rest, altar.kingClay);
-  assert.equal(fg.list.reduce((n, e) => n + e.parts[0].geometry.attributes.position.count, 0), flat.reduce((n, o) => n + merge(o.clay).attributes.position.count, 0));
+  assert.equal(left, 21, "three meshes to each: the seated mass, the attendants, the halo (the figures of ./figures/ replace the first)"); assert.equal(fg.rest, altar.kingClay);
+  assert.equal(fg.list.reduce((n, e) => n + e.parts[0].geometry.attributes.position.count + e.parts[1].geometry.attributes.position.count, 0), flat.reduce((n, o) => n + merge(o.clay).attributes.position.count, 0));
   const other = fg.list.filter((e) => e.id !== "sikhin").map((e) => e.parts.map((m) => m.geometry));
   fg.rebuild("sikhin", { x: 6.4, h: 9, yaw: 0.1 });
   assert.equal(altar.tops.find((t) => t.id === "sikhin").x, 6.4); assert.ok(Math.abs(altar.tops.find((t) => t.id === "sikhin").top - (altar.tops.find((t) => t.id === "vipasyin").top - 9.28 + 9)) < 1e-6);
-  assert.equal(altar.attendants.length, 14); assert.equal(fg.group.children.length, 14);
+  assert.equal(altar.attendants.length, 14); assert.equal(fg.group.children.length, 21);
   assert.deepEqual(fg.list.filter((e) => e.id !== "sikhin").map((e) => e.parts.map((m) => m.geometry)), other, "the other six are left alone");
   assert.equal(FIGURES[2].x, 5.8, "the plan's own table is not written to");
   assert.throws(() => fg.rebuild("nobody", {}));

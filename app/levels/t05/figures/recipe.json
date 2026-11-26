@@ -1,0 +1,737 @@
+{
+ "version": 2,
+ "about": "彩塑的分区与用色（#287）。各区颜色是试验用的、待顾问核（docs/t05/ADVISOR-BRIEF.md 第 5 问），色值取自 docs/t05/ART.md 第 3 节。分区由各尊自己的锚点（paint/<尊>.json）定，本文件七尊共用。座标是像自己的：米，x 朝观者右，y 从座顶向上，z 朝观者。 2026-11-20（#370）：胸衣按顾问评审首轮做素面（去掉团花）；内衣加一条斜带（袒右像袈裟边下露出的内层衣缘，由 innerMin/innerMax、innerLowP/N、innerTopP/N 围成）。 2026-11-21（#370 主创五条）：内衣斜带的两端改由椭球收尖（innerC/innerR），不再是盒子的直边；面与手加一条上臂胶囊（armR）；背面袒右的分界改为沿衣褶的六段折线（bk1–bk6，每段一盒一半空间），正面的半空间只管 z 大于 bareMin.z 的前半身；唇色收到淡朱 #A8675A。 2026-11-21（ART.md §3.1 更正，主创转达）：面与手不再贴金，改为温哑的暖肤色 #8A6445（粗糙 0.72，金属 0）；贴金只点在袈裟的前衣缘一道（「衣缘描金」，暗金色板下限 #9A7A3E），由袒右边界和它向袈裟一侧平移约 7 cm 的平面夹出。 2026-11-21 第二轮（主创看 v3）：袈裟压到 #6A3428（赭红深一侧、降饱和带土色，斑驳 0.22）；肤色往赭、往灰 #75634F（粗糙 0.78），读成泥塑上的彩而不是人肤；唇 #836457（粗糙 0.72，不起粉红高光）；螺发石青收到 #353B42。 内衣灰绿压到 #5F6E61。 2026-11-21 第四轮：嘴以下的肤色只在下巴宽的盒（chinMin/Max）、两耳的椭球和颈的胶囊里（jawMin、neckA/B/R），颈线随圆领走成弧，不再是一道平切压到肩上。 内衣的领口只有迦叶沿圆领一道弯带（主创：另三尊的直带像贴上去的胶条，不留）。胸衣与袈裟拉开：低饱和的褐灰 #584F47（粗糙 0.82），拘留孙、毗婆尸、拘那含牟尼胸前的方块（ART.md §3.1：内衣、胸衣压在袈裟下面不抢）。白毫从米白亮点压成暗金 #8A7550。 2026-11-21 第六轮：胸衣不再用盒子画，改由各尊自己的掩码（paint/masks/<尊>-front.png，tools/t05-hall/mask.py 从正投影的法线图上沿衣褶、领口的棱长出来，边缘 2–4 cm 过渡）；盒子只留给没有掩码的像。 释迦袒右的分界（正面和背面）与衣缘描金也改用掩码（sakyamuni-front.png 的 R 是袒露的胸肩臂、G 是沿袈裟边的一道金，sakyamuni-back.png 的 R 是袒露的背），原来的半空间和背面六段折线不再用。 掩码的通道：R 袒露的肤（释迦），G 衣缘描金，B 胸衣。 2026-11-21 第七轮（Fable 美术总监的意见）：分区照原型图的衣式（各尊掩码 R 露出的胸、B 内衣、G 沿衣缘一道暗金）；内衣和胸衣都用矿物绿（色板下限 #4F6B58 一系，殿内光下屏上读成薄荷，压暗、降饱和到 #45544A，粗糙 0.82）；袈裟 #6E4C3E（cam03 冬、不开灯，袈裟表面取点量屏上色相 13.5°、饱和 0.46）并按各尊锚点 tint 微调色相明度；莲座压到深褐 #3B332B；朝上的面落灰（dust，往壁画底 #8A7A66 混）；脸：眉用压暗的肤色 #4A3F33、不透明度 0.45、两端收尖、位置压低，只留上眼睑一道深梁架色 #2B211B 的软线，去掉瞳点，唇收小、比肤色深 #6A4438。 2026-11-25（#463 第三阶段，只动配方和掩码）：唇 #6B5144（屏上与颊的饱和度差 0.03–0.05）；内衣、胸衣 #485446（cam03 屏上 131–140°、饱和 0.20–0.21）；描金 #6A5530、金属 0.22；莲座分上下两层（座上 lotusUp 以上，#483D32，量到脸的 0.65–0.70；两端两尊带 lotusGain 补光）；背光板 #6C5641；尸弃、释迦的手的范围放大。数和取法见 tools/t05-hall/paint-measure.py。 2026-11-25 第二轮（美术初审）：唇 #573A2E，对 #480 第七轮的线（亮度 0.58–0.64、色相 12–16°、饱和比颊高 0.10–0.15）；肤色区加 handR3、handL3 两个胶囊补手；莲座与背光的补光系数不再放锚点，放审图台 spec。 第三轮：拘那含牟尼的手的肤色胶囊挪到手的长轴上（上一轮落在膝上）；内衣、胸衣加 gain: inner，两端两尊的色偏放审图台 spec。 2026-11-25 #701 第二轮（美术总监）：唇色 #6A503A，在肤色 #75634F 的 Lab 里暗 7 L*、彩度高 4、色相偏红 8°（原来暗 16 L*）；唇色只落在朝向眼的唇面上（不落上唇底面和唇缝的壁）。",
+ "edge": 0.02,
+ "base": {
+  "name": "袈裟",
+  "color": "#6E4C3E",
+  "rough": 0.78,
+  "metal": 0
+ },
+ "zones": [
+  {
+   "name": "袈裟",
+   "color": "#6E4C3E",
+   "rough": 0.78,
+   "metal": 0,
+   "roughJitter": 0.12,
+   "wear": 0.22,
+   "where": {
+    "box": {
+     "min": [
+      -9,
+      -9,
+      -9
+     ],
+     "max": [
+      9,
+      99,
+      9
+     ]
+    }
+   },
+   "tint": true
+  },
+  {
+   "name": "裙",
+   "color": "#4F6B58",
+   "rough": 0.86,
+   "metal": 0,
+   "roughJitter": 0.1,
+   "wear": 0.1,
+   "where": {
+    "box": {
+     "min": "@skirtMin",
+     "max": "@skirtMax"
+    }
+   }
+  },
+  {
+   "name": "胸衣",
+   "color": "#485446",
+   "rough": 0.82,
+   "metal": 0,
+   "where": {
+    "or": [
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@chestMin",
+         "max": "@chestMax"
+        }
+       },
+       {
+        "half": {
+         "p": "@chestLow",
+         "n": "@chestLowN"
+        }
+       }
+      ]
+     },
+     {
+      "map": {
+       "m": "front",
+       "ch": 2
+      }
+     }
+    ]
+   },
+   "gain": "inner"
+  },
+  {
+   "name": "内衣",
+   "color": "#485446",
+   "rough": 0.82,
+   "metal": 0,
+   "where": {
+    "or": [
+     {
+      "band": {
+       "y0": "@collar.x",
+       "c": "@collar.y",
+       "h": "@collar.z",
+       "w": "@collarW.x",
+       "z0": "@collarW.y"
+      }
+     },
+     {
+      "ell": {
+       "c": "@knotC",
+       "r": "@knotR"
+      }
+     },
+     {
+      "and": [
+       {
+        "ell": {
+         "c": "@innerC",
+         "r": "@innerR"
+        }
+       },
+       {
+        "half": {
+         "p": "@innerLowP",
+         "n": "@innerLowN"
+        }
+       },
+       {
+        "half": {
+         "p": "@innerTopP",
+         "n": "@innerTopN"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "gain": "inner"
+  },
+  {
+   "name": "座",
+   "color": "#604B36",
+   "rough": 0.9,
+   "metal": 0,
+   "roughJitter": 0.1,
+   "wear": 0.16,
+   "where": {
+    "box": {
+     "min": [
+      -9,
+      -9,
+      -9
+     ],
+     "max": [
+      9,
+      "@plinthTop",
+      9
+     ]
+    }
+   },
+   "edgeTint": {
+    "color": "#7A6A48",
+    "amount": 0.55
+   },
+   "gain": "lotus"
+  },
+  {
+   "name": "座上",
+   "color": "#614933",
+   "rough": 0.86,
+   "metal": 0,
+   "roughJitter": 0.1,
+   "wear": 0.16,
+   "where": {
+    "box": {
+     "min": [
+      -9,
+      "@lotusUp",
+      -9
+     ],
+     "max": [
+      9,
+      "@plinthTop",
+      9
+     ]
+    }
+   },
+   "edgeTint": {
+    "color": "#7A6A48",
+    "amount": 0.6
+   },
+   "gain": "lotus"
+  },
+  {
+   "name": "衣缘描金",
+   "color": "#6A5530",
+   "rough": 0.62,
+   "metal": 0.22,
+   "roughJitter": 0.08,
+   "wear": 0.25,
+   "where": {
+    "or": [
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bareMin",
+         "max": "@bareMax"
+        }
+       },
+       {
+        "half": {
+         "p": "@trimP",
+         "n": "@bareN"
+        }
+       },
+       {
+        "half": {
+         "p": "@bareP",
+         "n": "@trimN"
+        }
+       }
+      ]
+     },
+     {
+      "map": {
+       "m": "front",
+       "ch": 1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "面与手（肤色）",
+   "color": "#8D765A",
+   "rough": 0.78,
+   "metal": 0,
+   "roughJitter": 0.08,
+   "wear": 0.12,
+   "where": {
+    "or": [
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@skinMin",
+         "max": "@skinMax"
+        }
+       },
+       {
+        "or": [
+         {
+          "half": {
+           "through": [
+            "@robeTopF",
+            "@robeTopS"
+           ]
+          }
+         },
+         {
+          "half": {
+           "through": [
+            "@robeTopS",
+            "@robeTopB"
+           ]
+          }
+         }
+        ]
+       },
+       {
+        "or": [
+         {
+          "box": {
+           "min": "@jawMin",
+           "max": "@skinMax"
+          }
+         },
+         {
+          "box": {
+           "min": "@chinMin",
+           "max": "@chinMax"
+          }
+         },
+         {
+          "ell": {
+           "c": "@earL",
+           "r": "@earR_"
+          }
+         },
+         {
+          "ell": {
+           "c": "@lobeL",
+           "r": "@lobe_"
+          }
+         },
+         {
+          "ell": {
+           "c": "@lobeR",
+           "r": "@lobe_"
+          }
+         },
+         {
+          "ell": {
+           "c": "@earR",
+           "r": "@earR_"
+          }
+         },
+         {
+          "cap": {
+           "a": "@neckA",
+           "b": "@neckB",
+           "r": "@neckR"
+          }
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@skinMin",
+         "max": "@skinMax"
+        }
+       },
+       {
+        "half": {
+         "through": [
+          "@neckFront",
+          "@neckBack"
+         ]
+        }
+       },
+       {
+        "box": {
+         "min": "@openMin",
+         "max": "@openMax"
+        }
+       }
+      ]
+     },
+     {
+      "cap": {
+       "a": "@handRa",
+       "b": "@handRb",
+       "r": "@handRr"
+      }
+     },
+     {
+      "ell": {
+       "c": "@handLc",
+       "r": "@handLr"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handR2a",
+       "b": "@handR2b",
+       "r": "@handR2r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handL2a",
+       "b": "@handL2b",
+       "r": "@handL2r"
+      }
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bareMin",
+         "max": "@bareMax"
+        }
+       },
+       {
+        "half": {
+         "p": "@bareP",
+         "n": "@bareN"
+        }
+       }
+      ]
+     },
+     {
+      "and": [
+       {
+        "ell": {
+         "c": "@shoulderC",
+         "r": "@shoulderR"
+        }
+       },
+       {
+        "half": {
+         "p": "@bareP",
+         "n": "@bareN"
+        }
+       }
+      ]
+     },
+     {
+      "cap": {
+       "a": "@armRa",
+       "b": "@armRb",
+       "r": "@armRr"
+      }
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bk1Min",
+         "max": "@bk1Max"
+        }
+       },
+       {
+        "half": {
+         "p": "@bk1P",
+         "n": "@bk1N"
+        }
+       }
+      ]
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bk2Min",
+         "max": "@bk2Max"
+        }
+       },
+       {
+        "half": {
+         "p": "@bk2P",
+         "n": "@bk2N"
+        }
+       }
+      ]
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bk3Min",
+         "max": "@bk3Max"
+        }
+       },
+       {
+        "half": {
+         "p": "@bk3P",
+         "n": "@bk3N"
+        }
+       }
+      ]
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bk4Min",
+         "max": "@bk4Max"
+        }
+       },
+       {
+        "half": {
+         "p": "@bk4P",
+         "n": "@bk4N"
+        }
+       }
+      ]
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bk5Min",
+         "max": "@bk5Max"
+        }
+       },
+       {
+        "half": {
+         "p": "@bk5P",
+         "n": "@bk5N"
+        }
+       }
+      ]
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bk6Min",
+         "max": "@bk6Max"
+        }
+       },
+       {
+        "half": {
+         "p": "@bk6P",
+         "n": "@bk6N"
+        }
+       }
+      ]
+     },
+     {
+      "map": {
+       "m": "front",
+       "ch": 0
+      }
+     },
+     {
+      "map": {
+       "m": "back",
+       "ch": 0
+      }
+     },
+     {
+      "map": {
+       "m": "right",
+       "ch": 0
+      }
+     },
+     {
+      "cap": {
+       "a": "@handR3a",
+       "b": "@handR3b",
+       "r": "@handR3r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handR4a",
+       "b": "@handR4b",
+       "r": "@handR4r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handL4a",
+       "b": "@handL4b",
+       "r": "@handL4r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handR5a",
+       "b": "@handR5b",
+       "r": "@handR5r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@handL3a",
+       "b": "@handL3b",
+       "r": "@handL3r"
+      }
+     },
+     {
+      "cap": {
+       "a": "@shoulderRa",
+       "b": "@shoulderRb",
+       "r": "@shoulderRr"
+      }
+     },
+     {
+      "cap": {
+       "a": "@elbowRa",
+       "b": "@elbowRb",
+       "r": "@elbowRr"
+      }
+     },
+     {
+      "and": [
+       {
+        "box": {
+         "min": "@bareBackMin",
+         "max": "@bareBackMax"
+        }
+       },
+       {
+        "half": {
+         "p": "@bareBackA",
+         "n": "@bareBackAn"
+        }
+       },
+       {
+        "half": {
+         "p": "@bareBackB",
+         "n": "@bareBackBn"
+        }
+       },
+       {
+        "half": {
+         "p": "@bareBackC",
+         "n": "@bareBackCn"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "folds": false
+  },
+  {
+   "name": "螺发",
+   "color": "#233442",
+   "rough": 0.74,
+   "metal": 0,
+   "roughJitter": 0.1,
+   "where": {
+    "or": [
+     {
+      "and": [
+       {
+        "and": [
+         {
+          "box": {
+           "min": "@skinMin",
+           "max": "@skinMax"
+          }
+         },
+         {
+          "half": {
+           "through": [
+            "@neckFront",
+            "@neckBack"
+           ]
+          }
+         }
+        ]
+       },
+       {
+        "or": [
+         {
+          "half": {
+           "through": [
+            "@hairFront",
+            "@hairBack"
+           ]
+          }
+         },
+         {
+          "and": [
+           {
+            "half": {
+             "p": "@napeP",
+             "n": "@napeN"
+            }
+           },
+           {
+            "half": {
+             "p": "@napeFloorP",
+             "n": "@napeFloorN"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "not": {
+         "or": [
+          {
+           "ell": {
+            "c": "@earHL",
+            "r": "@earH_"
+           }
+          },
+          {
+           "ell": {
+            "c": "@earHR",
+            "r": "@earH_"
+           }
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "map": {
+       "m": "hair",
+       "ch": 0
+      }
+     }
+    ]
+   },
+   "folds": false,
+   "dust": 0,
+   "aged": {
+    "worn": "#4C555B",
+    "wornAmount": 0.68,
+    "apex": [
+     0.72,
+     0.97
+    ],
+    "grain": 0.45,
+    "polish": 0.14,
+    "dust": "#494643",
+    "sides": 0.8,
+    "side": [
+     0.15,
+     0.7
+    ],
+    "hollow": 0.25,
+    "top": 0.5
+   }
+  }
+ ],
+ "face": {
+  "zone": "面与手（肤色）",
+  "ink": "#2B211B",
+  "inkRough": 0.6,
+  "lip": "#6A503A",
+  "lipRough": 0.82,
+  "urnaColor": "#8A7550",
+  "browUp": 0.55,
+  "browHalf": 0.72,
+  "browT": 0.07,
+  "lidHalf": 0.6,
+  "lidT": 0.01,
+  "lidSag": 0.05,
+  "lidLift": 0,
+  "iris": 0,
+  "lipHalf": 0.45,
+  "lipH": 0.16,
+  "urna": 0.12,
+  "depth": 0.35,
+  "browColor": "#4A3F33",
+  "browAlpha": 0.45,
+  "soft": 0.015,
+  "eyeWhite": "#7E7366",
+  "pupil": "#231C17"
+ },
+ "dust": {
+  "color": "#8A7A66",
+  "amount": 0.35
+ },
+ "folds": {
+  "hollow": 0.35,
+  "edge": 0.3,
+  "k0": 3,
+  "k1": 18,
+  "edgeColor": "#8A7A66"
+ }
+}

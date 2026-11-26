@@ -1,0 +1,49 @@
+{
+ "figure": "sakyamuni",
+ "source": {
+  "file": "sakyamuni-V14b.glb",
+  "sha256": "df2bc9ef57641860c92602eb0b607bbe72e9704bd47254ab5f9fade396a1a229"
+ },
+ "maps": [
+  {
+   "part": "body",
+   "size": 2048,
+   "specks": 14614,
+   "filled": 52997,
+   "lost": 3357,
+   "margin": 194334
+  },
+  {
+   "part": "head",
+   "size": 2048,
+   "specks": 7366,
+   "filled": 23109,
+   "lost": 1162,
+   "margin": 60100
+  }
+ ],
+ "shape": {
+  "part": "body",
+  "points": [
+   34507,
+   35151
+  ],
+  "triangles": [
+   36140,
+   32437
+  ],
+  "scraps": 4718,
+  "trims": 200,
+  "pressed": 100,
+  "hanging": 17,
+  "tube": {
+   "points": 644,
+   "triangles": 1232
+  }
+ },
+ "out": {
+  "file": "sakyamuni-V14c.glb",
+  "sha256": "d95c8c613c830400c5722af0f80a6ef128c56b066b4c7669057b76190f87e86d",
+  "bytes": 14545440
+ }
+}
