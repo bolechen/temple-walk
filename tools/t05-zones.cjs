@@ -57,7 +57,7 @@ async function prepare(page, view) {
       requestAnimationFrame(() => requestAnimationFrame(() => {
         const h = window.__pick(innerWidth / 2, innerHeight / 2, 1)[0], ok = !h || h.distance > far - 0.3;
         window.__look(eye, [at.x, y, at.z]);
-        requestAnimationFrame(() => requestAnimationFrame(() => done(ok)));
+        let k = 0; const step = () => (++k < 20 ? requestAnimationFrame(step) : done(ok)); requestAnimationFrame(step);   // twenty frames on the pose before the picture (on the T4 the fifth figure's view came out three-quarters dark)
       }));
     }), [+mid[2], mid[1] === "mid10" ? 10 : 3.5, side]);
     if (clear) { if (side) console.log(`${view}: the eye stepped ${side} m aside to see past what stood in the way`); break; }
