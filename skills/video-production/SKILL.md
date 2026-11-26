@@ -108,7 +108,7 @@ metadata:
 
 ## 六、入库 `social-promotion`
 
-落盘、目录内文件、进台账「待审」、绑定素材包、刷新看板，全部按 `/Users/avenger/social-promotion/docs/VIDEO-DELIVERY.md` 第一、二、五节做；制作方只新增「待审」。本项目另加两条：
+落盘、目录内文件、进台账「待审」、绑定素材包、刷新看板，全部按 `/Users/avenger/social-promotion/docs/VIDEO-DELIVERY.md` 第一、二、五节做；制作方只新增「待审」。本项目另加四条：
 
 - 文案注明「云径禅寺为原创虚构山寺，全部为实机渲染」，不写宗教布道口径，不放 Steam 导流、外链、二维码。
 - 文案零违禁词。清单与机检在 `VIDEO-DELIVERY.md`，不过就改文案，不算软项例外。
