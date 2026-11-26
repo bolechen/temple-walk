@@ -18,6 +18,18 @@ import { bakeLut, isIdentity, LUT_SIZE, IDENTITY } from "./lut.js";
 // levels of the bloom only, so the near bloom stays neutral and the far glow warms.
 const HALATION = [1, 0.64, 0.42], HAL_LEVELS = [0, 0.25, 0.6, 1, 1];
 
+// One pixel that is not a number (a NaN or an infinity, in colour or alpha; the bloom's high pass mixes by alpha) becomes, through the
+// bloom's widest blurs, a dark slab over most of the picture: on a T4 the T05 hall seen 10 m before its fifth figure came out three
+// quarters dark, and only with the bloom on (#762; software rendering never showed it). Such a pixel gives the bloom nothing.
+export const BLOOM_GUARD = "vec4 texel = texture2D( tDiffuse, vUv ); if ( any( isnan( texel ) ) || any( isinf( texel ) ) ) texel = vec4( 0.0 );";
+export function guardBloom(bloom) {
+  const m = bloom.materialHighPassFilter, line = "vec4 texel = texture2D( tDiffuse, vUv );";
+  if (m.fragmentShader.includes(BLOOM_GUARD)) return bloom;
+  if (!m.fragmentShader.includes(line)) throw new Error("post: the bloom's high pass no longer reads its texel as it did; the guard cannot be laid");
+  m.fragmentShader = m.fragmentShader.replace(line, BLOOM_GUARD); m.needsUpdate = true;
+  return bloom;
+}
+
 export function createPost(renderer, scene, camera, quality, off = new Set()) {
   const depth = !!quality.depth, rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: quality.msaa });
   if (depth) rt.depthTexture = new THREE.DepthTexture(4, 4);
@@ -36,7 +48,7 @@ export function createPost(renderer, scene, camera, quality, off = new Set()) {
     const size = gtao.setSize.bind(gtao); gtao.setSize = (w, h) => size(Math.max(1, w >> 1), Math.max(1, h >> 1));
     composer.addPass(gtao);
   }
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.22, 0.7, 0.92);
+  const bloom = guardBloom(new UnrealBloomPass(new THREE.Vector2(256, 256), 0.22, 0.7, 0.92));
   composer.addPass(bloom);
   const lut = new THREE.Data3DTexture(bakeLut(IDENTITY), LUT_SIZE, LUT_SIZE, LUT_SIZE);
   Object.assign(lut, { format: THREE.RGBAFormat, type: THREE.UnsignedByteType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, wrapS: THREE.ClampToEdgeWrapping, wrapT: THREE.ClampToEdgeWrapping, wrapR: THREE.ClampToEdgeWrapping, unpackAlignment: 1, needsUpdate: true });

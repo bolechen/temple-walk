@@ -1,0 +1,84 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "cam03-third.png",
+   "bytes": 2739672,
+   "sha256": "5da6a0f1095753a68b793f1dd21dd3e35fc045a0f879849d9a4422340e04b200",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "cam03.png",
+   "bytes": 2549768,
+   "sha256": "f44da725d02be70fcd0a0dcb2eb55fc746d1f235dc9fd80fa39a19e787df096f",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "cam05.png",
+   "bytes": 2453605,
+   "sha256": "4d2a3fc7cb8f059cdfe620a5b8882c32029a67e05c1a2405c225917c1b9e42d5",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "cam06.png",
+   "bytes": 2646145,
+   "sha256": "f86bf838dd788e8da0d22488af01ec1227c7256b7369945a89131e8d825ecaff",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 210647,
+   "sha256": "995c2c0fe2bc3b4f8c0f6e44d5700f3e01a5cc312ceb32ca4887db53f2d8cfe5",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "head-6.png",
+   "bytes": 2165738,
+   "sha256": "88ebf0a5ce2f8380a7bc6542f591e81923c1051001edf95768a63d99fc04a925",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "mid10-0.png",
+   "bytes": 2521773,
+   "sha256": "bbbbbfdcd8013d18e5507e508488807e1904577c3c35169208687bfc8ceb1a4b",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "mid10-1.png",
+   "bytes": 2591357,
+   "sha256": "d7be3b2e9e9c611695e57fd5985262dc9a5d6cc83121ec99717a39974e0862d3",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "mid10-2.png",
+   "bytes": 2533000,
+   "sha256": "523ac3d95cd8efff6c8816fafd53e9dc3219b434c712741d0e7ce141ded461ef",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "mid10-3.png",
+   "bytes": 2484392,
+   "sha256": "90f183967b8b8637091182a09f65190f0ced5e1a3deae5de19cb83a4a46ea5a0",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "mid10-4.png",
+   "bytes": 1353524,
+   "sha256": "62c23c44ed430c7b40a0ad74709baccadbd136ea462b917a09a771c791cd1ad9",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "mid10-5.png",
+   "bytes": 2545712,
+   "sha256": "e1721f3270133c28188c3604ea6d45ec9a18225fafb63c926ec240ed860786e1",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  },
+  {
+   "path": "mid10-6.png",
+   "bytes": 2485029,
+   "sha256": "06476096e28783ae44453f57f1c03b34ce99ec7e916818ce09f1e214d0972aa3",
+   "rev": "8b2f5d77fe6c4cb7584e08a21d91042db81e7908"
+  }
+ ]
+}
