@@ -76,7 +76,7 @@ vec2 faceInk(vec3 p, vec3 n, out float lip, out float urna) {
   vec2 q = p.xy; float aa = max(fwidth(q.x), fwidth(q.y)) * 1.2 + .002, soft = uFace[5].y;
   for (int s = 0; s < 2; s++) {
     vec2 e = s == 0 ? uFace[0].xy : uFace[0].zw;
-    float bw = uFace[2].y, tt = clamp(abs(q.x - e.x) / bw, 0., 1.), bt = uFace[2].z * (1. - .8 * pow(tt, 1.5));   // a brow thins to points at its ends
+    float bw = uFace[2].y, tt = clamp(abs(q.x - e.x) / bw, 0., 1.), bt = uFace[2].z * (1. - .8 * pow(max(tt, 0.), 1.5));   // a brow thins to points at its ends
     ink.x = max(ink.x, 1. - smoothstep(bt - aa - soft, bt + aa + soft, arcDist(q, e + vec2(0., uFace[2].x), bw, uFace[2].x * .35)));
     // the lid: on the carved slit when it was measured (uFace[6], tilted by its rise outward, uFace[7]); its line thins
     // to nothing at both ends, so the outer corner does not flick up like eyeliner (#463)
