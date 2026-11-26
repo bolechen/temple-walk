@@ -19,12 +19,19 @@ test("the mural ground stands from the hall's floor to the column heads, no high
   for (const g of hp.mural) { g.computeBoundingBox(); assert.ok(g.boundingBox.max.y <= heads + 1e-6, `a mural ground reaches ${g.boundingBox.max.y.toFixed(2)}, over the column heads at ${heads.toFixed(2)}`); assert.ok(g.boundingBox.min.y >= HALL.floor - 1e-6); }
 });
 
-test("the hall's walls: every face that looks into the hall takes the ground, the boards over the column heads with them, and every face that looks out stays lime", () => {
+test("the hall's walls: every face against a wall that looks into the hall takes the ground, the boards over the column heads with them; the door jambs and every outer face stay lime", () => {
   const [inward, lime] = splitInward(hp.plaster, b, HALL.wall);
-  let n = 0, high = 0, outN = 0;
-  faces(inward, (c, nn) => { n++; assert.ok(looksIn(c, nn), "a face given the ground looks out of the hall"); if (c.y > heads + 0.5) high++; });
-  faces(lime, (c, nn) => { if (looksIn(c, nn) && Math.abs(nn.y) < 0.5) assert.ok(c.x < b.x0 - HALL.wall || c.x > b.x1 + HALL.wall || c.z < b.z0 - HALL.wall || c.z > b.z1 + HALL.wall || c.y < b.y0 || c.y > b.y1, `a face inside the hall that looks in is left lime at ${c.x.toFixed(1)}, ${c.y.toFixed(1)}, ${c.z.toFixed(1)}`); else outN++; });
+  const r = HALL.wall + 0.02, against = (c, nn) => c.y > b.y0 && c.y < b.y1 && c.x > b.x0 - r && c.x < b.x1 + r && c.z > b.z0 - r && c.z < b.z1 + r &&
+    ((nn.x > 0.7 && Math.abs(c.x - b.x0) < r) || (nn.x < -0.7 && Math.abs(c.x - b.x1) < r) || (nn.z > 0.7 && Math.abs(c.z - b.z0) < r) || (nn.z < -0.7 && Math.abs(c.z - b.z1) < r));
+  let n = 0, high = 0, outN = 0, jambs = 0;
+  faces(inward, (c, nn) => { n++; assert.ok(looksIn(c, nn) && against(c, nn), `a face given the ground at ${c.x.toFixed(1)}, ${c.y.toFixed(1)}, ${c.z.toFixed(1)} does not stand against a wall looking in`); if (c.y > heads + 0.5) high++; });
+  faces(lime, (c, nn) => {
+    if (looksIn(c, nn) && against(c, nn)) assert.fail(`a face against a wall that looks in is left lime at ${c.x.toFixed(1)}, ${c.y.toFixed(1)}, ${c.z.toFixed(1)}`);
+    if (looksIn(c, nn) && Math.abs(nn.x) > 0.7 && c.z > b.z1 - r && c.z < b.z1 + r && c.y > b.y0 && c.y < b.y1) jambs++;
+    if (!looksIn(c, nn)) outN++;
+  });
   assert.ok(n > 0 && high > 0, `faces given the ground: ${n}, above the column heads: ${high}`);
+  assert.ok(jambs > 0, "the front doors' jambs, sunlit from the terrace, stay lime");
   assert.ok(outN > 0, "the walls' outer faces stay lime");
   // nothing is lost or made twice
   const count = (l) => l.reduce((s, g) => s + (g.index ? g.index.count : g.attributes.position.count) / 3, 0);

@@ -55,10 +55,17 @@ export function splitInward(list, b, reach = 0) {
   for (const g0 of list) {
     const g = g0.index ? g0.toNonIndexed() : g0, P = g.attributes.position, N = g.attributes.normal, n = P.count / 3, keep = [[], []];
     for (let t = 0; t < n; t++) {
-      let x = 0, y = 0, z = 0, nx = 0, nz = 0;
-      for (let k = 0; k < 3; k++) { const i = 3 * t + k; x += P.getX(i) / 3; y += P.getY(i) / 3; z += P.getZ(i) / 3; nx += N.getX(i); nz += N.getZ(i); }
-      const r = e + reach, within = x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r && y > b.y0 - e && y < b.y1 + e;
-      keep[within && nx * (cx - x) + nz * (cz - z) > 1e-6 ? 0 : 1].push(t);
+      let x = 0, y = 0, z = 0, nx = 0, ny = 0, nz = 0;
+      for (let k = 0; k < 3; k++) { const i = 3 * t + k; x += P.getX(i) / 3; y += P.getY(i) / 3; z += P.getZ(i) / 3; nx += N.getX(i); ny += N.getY(i); nz += N.getZ(i); }
+      const l = Math.hypot(nx, ny, nz) || 1, r = e + reach, c = 0.7;
+      nx /= l; nz /= l;
+      // A face belongs to the room's ground only where it stands against one of the room's walls and looks
+      // away from that wall into the room: the jambs of the front doors also look toward the middle, but
+      // they stand across the front wall's depth, sunlit from the terrace, and stay lime as the doorway is.
+      const against = y > b.y0 - e && y < b.y1 + e && x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r && (
+        (nx > c && Math.abs(x - b.x0) < r) || (nx < -c && Math.abs(x - b.x1) < r) ||
+        (nz > c && Math.abs(z - b.z0) < r) || (nz < -c && Math.abs(z - b.z1) < r));
+      keep[against && nx * (cx - x) + nz * (cz - z) > 1e-6 ? 0 : 1].push(t);
     }
     keep.forEach((ts, s) => {
       if (!ts.length) return;

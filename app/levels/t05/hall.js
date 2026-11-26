@@ -56,7 +56,7 @@ export const HALL = Object.freeze({
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
 export const TIMBER = Object.freeze({ ring: 2.2, lift: 10.5, beam: 9.5, board: 1.0, from: 3.0, to: 4.5 });
 export const FILL = Object.freeze({
-  door: 1030, doorX: [-8, 8], doorY: 14, doorZ: 8, doorAimX: [-11, 11], doorAimY: 11.5, doorAimZ: -16.9, doorDist: 31, doorAngle: 0.6, doorSoft: 0.3, doorCol: 0xfff4e8,
+  door: 1030, doorX: [-8, 8], doorY: 14, doorZ: 8, doorAimX: [-12.5, 12.5], doorAimY: 11.5, doorAimZ: -16.9, doorDist: 31, doorAngle: 0.6, doorSoft: 0.3, doorCol: 0xfff4e8,
   up: 50, upDist: 26, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-6, -8, -6], upAngle: 0.6, upSoft: 0.5, upCol: 0xffe0c0, out: 9, depth: 3, ease: 0.5,
 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
