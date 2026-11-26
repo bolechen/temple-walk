@@ -1,0 +1,210 @@
+{
+ "turn": -90,
+ "source": "kanakamuni.base_model.glb (tools/out/t05/tripo-six)",
+ "ops": [
+  {
+   "op": "squeeze",
+   "note": "lotus throne narrowed to the knees' width so that it fits its seat with 0.2 m to each neighbour (DECISIONS.md §3 seats)",
+   "below": 0.315,
+   "k": 0.926,
+   "band": 0.03
+  },
+  {
+   "op": "headscale",
+   "note": "a face of its own among the seven (3D review risk 1): head width, depth and height scaled about its centre",
+   "c": [
+    0,
+    0.07,
+    0.8902
+   ],
+   "s": [
+    1.04,
+    1.0,
+    1.04
+   ],
+   "z0": 0.7852,
+   "fade": 0.03
+  },
+  {
+   "op": "zband",
+   "note": "trunk shortened by 7% between the lap and the shoulders (3D review risk 3: the upper body read long)",
+   "z0": 0.48,
+   "z1": 0.7,
+   "k": 0.93
+  },
+  {
+   "op": "xband",
+   "note": "shoulders widened 4% (3D review risk 3: the shoulders read narrow)",
+   "z0": 0.58,
+   "z1": 0.7,
+   "k": 1.04,
+   "fade": 0.03
+  },
+  {
+   "op": "squeeze",
+   "note": "lotus and knees narrowed together so the figure is no wider than 4.9 m on its seat (the lead's 2026-11-21 rule: the narrowest pair of seats, 5.12 m apart, less 0.2 m)",
+   "below": 0.47,
+   "k": 0.913,
+   "band": 0.05
+  },
+  {
+   "op": "tilt",
+   "note": "the figure above the lotus leaned 4.0° about the seat's rear edge (#701)",
+   "c": [
+    0,
+    0.1895,
+    0.3553
+   ],
+   "deg": 4.0,
+   "z0": 0.4738,
+   "fade": 0.1421
+  },
+  {
+   "op": "tilt",
+   "note": "head bowed 10.0° about the neck (the shipping pose, #701)",
+   "c": [
+    0,
+    0.0455,
+    0.7025
+   ],
+   "deg": 10.0,
+   "z0": 0.7111,
+   "fade": 0.0361,
+   "rx": 0.1205,
+   "fx": 0.0207
+  },
+  {
+   "op": "snapshot",
+   "name": "bow",
+   "note": "the points as the bow leaves them"
+  },
+  {
+   "op": "chinshape",
+   "from": "bow",
+   "z0": 0.7581,
+   "s": 8.4429,
+   "k_groove": 0.85,
+   "k_chin": 1.0,
+   "arc_keep": 0.5,
+   "bow": 14.0,
+   "chin_behind": 0.0065,
+   "chin_shift": 0.015,
+   "lip0": 0.001421317365269461,
+   "lip1": 0.0076988023952095815,
+   "gr0": 0.001421317365269461,
+   "gr1": 0.010659880239520957,
+   "chin0": 0.001421317365269461,
+   "chin1": 0.018950898203592813,
+   "jaw": 0.008291017964071857,
+   "bin": 0.0004737724550898204,
+   "span": 0.04263952095808383,
+   "xm": 0.0035532934131736523,
+   "x0": 0.0,
+   "x1": 0.047377245508982035,
+   "front": 0.0455,
+   "ffront": 0.012,
+   "smooth": {
+    "iter": 24,
+    "lam": 0.5
+   },
+   "dsmooth": 9,
+   "ramp": 0.25,
+   "note": "the lower profile from the lower lip to the jaw rebuilt on r3c's own: the groove at 0.85 of its depth, the chin behind the lip's tip, a wide bell across the face (#701, 自拟)"
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.4429,
+   "front": 0.0455,
+   "iter": 150,
+   "k": 0.5,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      0.155,
+      6.415186526757688
+     ],
+     "p1": [
+      0.175,
+      6.3701865267576885
+     ],
+     "r": 0.016,
+     "soft": 0.02
+    },
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.155,
+      6.415186526757688
+     ],
+     "p1": [
+      -0.175,
+      6.3701865267576885
+     ],
+     "r": 0.016,
+     "soft": 0.02
+    }
+   ],
+   "note": "the dimples at the lips' ends: their depth kept to this share, outside the lips (#701, 自拟)"
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.4429,
+   "front": 0.0455,
+   "iter": 400,
+   "k": 0.1,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      0.15,
+      6.340186526757689
+     ],
+     "p1": [
+      0.165,
+      6.260186526757689
+     ],
+     "r": 0.012,
+     "soft": 0.02
+    },
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.15,
+      6.340186526757689
+     ],
+     "p1": [
+      -0.165,
+      6.260186526757689
+     ],
+     "r": 0.012,
+     "soft": 0.02
+    }
+   ],
+   "note": "the lines from under the lip's corner down the chin's sides taken out (detail kept to this share, 400 passes; #701, 自拟)"
+  },
+  {
+   "op": "flatblocks",
+   "s": 8.4429,
+   "front": 0.0455,
+   "iter": 400,
+   "k": 0.15,
+   "blocks": [
+    {
+     "kind": "capsule",
+     "p0": [
+      -0.13,
+      6.090186526757689
+     ],
+     "p1": [
+      0.13,
+      6.090186526757689
+     ],
+     "r": 0.02,
+     "soft": 0.03
+    }
+   ],
+   "note": "the soft ridge across under the chin taken out (#701, 自拟)"
+  }
+ ]
+}
