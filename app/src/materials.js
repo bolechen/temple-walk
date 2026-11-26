@@ -65,13 +65,14 @@ export function procMat(key, params, body, { snow = true, tex = [], stair = fals
 export const STAIR_STYLE = Object.freeze({ stoneW: 0.8, cheekL: 0.95, leaves: true, moss: true, crest: 1, crestVary: 1 });
 // How a level's outdoor timber reads (the `woodV`/`woodX`/`woodZ` materials below). A level that wants it otherwise sets what it
 // changes with `M.woodStyle({ … })` while its site is built (before the first frame; the page walks one level): `gain` how light
-// the wood is, a multiplier on its colour (1 as it was drawn first); `dampTop` how high, in metres above the world's zero, the damp
+// the wood is, a multiplier on its colour (1 as it was drawn first); `sat` how much of its colour it keeps about its own grey (1 all of
+// it); `dampTop` how high, in metres above the world's zero, the damp
 // that darkens the foot of a column reaches before it has faded out (it fades over the 1.3 m below that). These are the values
 // every level had before T00 set its own (#758), so a level that sets nothing draws exactly as it did.
-export const WOOD_STYLE = Object.freeze({ gain: 1, dampTop: 2.2 });
+export const WOOD_STYLE = Object.freeze({ gain: 1, sat: 1, dampTop: 2.2 });
 export function createMaterials() {
-  const woodU = { uWoodGain: { value: WOOD_STYLE.gain }, uWoodDamp: { value: WOOD_STYLE.dampTop } };
-  const woodStyle = (o = {}) => { const st = { ...WOOD_STYLE, ...o }; woodU.uWoodGain.value = st.gain; woodU.uWoodDamp.value = st.dampTop; return st; };
+  const woodU = { uWoodGain: { value: WOOD_STYLE.gain }, uWoodSat: { value: WOOD_STYLE.sat }, uWoodDamp: { value: WOOD_STYLE.dampTop } };
+  const woodStyle = (o = {}) => { const st = { ...WOOD_STYLE, ...o }; woodU.uWoodGain.value = st.gain; woodU.uWoodSat.value = st.sat; woodU.uWoodDamp.value = st.dampTop; return st; };
   // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
   const wood = (key, grain, turn, base = ".125,.07,.05", styled = false) => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
     vec3 q=vWP.${turn}*vec3(.95,.5,.95), w=triW(vWN.${turn});
@@ -79,8 +80,8 @@ export function createMaterials() {
     col=vec3(${base})*mix(vec3(1.),A,.9)*(.72+.56*n3(vWP*vec3(${grain})*.22));       // old dark timber, its red long faded; each member its own tone
     float weather=smoothstep(.36,.7,fbm3(vWP*.6+3.)+.25*n2(vec2((vWP.x+vWP.z)*7.,vWP.y*.5))); col=mix(col,vec3(.13,.118,.1)*A,weather*.55);   // bleached silver where the rain runs
     float damp=smoothstep(${styled ? "uWoodDamp,uWoodDamp-1.3" : "2.2,.9"},vWP.y+fbm3(vWP*.8)*.8);          // feet of columns stay damp and dark
-    col*=mix(1.,.62,damp)${styled ? "*uWoodGain" : ""}; rough_=mix(Nr.w*.92,.5,damp);
-    nd_=Nr.xyz.${turn}*1.5;`, styled ? { tex: ["wood"], uniforms: () => woodU, glsl: "uniform float uWoodGain, uWoodDamp;" } : { tex: ["wood"] });
+    col*=mix(1.,.62,damp); ${styled ? "col=mix(vec3(dot(col,vec3(.2126,.7152,.0722))),col,uWoodSat)*uWoodGain; " : ""}rough_=mix(Nr.w*.92,.5,damp);
+    nd_=Nr.xyz.${turn}*1.5;`, styled ? { tex: ["wood"], uniforms: () => woodU, glsl: "uniform float uWoodGain, uWoodSat, uWoodDamp;" } : { tex: ["wood"] });
 
   // Lime-washed walls. One material for all of them: each wall's geometry says how high its foot stands (geo.footAt).
   const plasterOne = procMat("plaster", { roughness: 0.9, envMapIntensity: 0.25 }, `

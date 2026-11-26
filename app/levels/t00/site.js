@@ -112,12 +112,13 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
  * J01's overcast the prologue's columns, doors and brackets came out far darker than the picture the place is judged by: the gate's
  * leaves at L* 12 with no colour left, where the reference's doors are 21 and its columns 34 (refs/t00-atlas/T00.lossless.webp, Lab
  * as tools/look.py measures it), and the palette's faded vermilion for posts and doors is 28 (docs/ART-SPEC.md). The light is right
- * (the white walls and the paving already read as the reference's), so it is the timber's own colour: 1.7 times as light brings the
- * gate to about 20 and back to a red-brown (#758). The damp the shader lays at a column's foot reached 2.2 m above the world's zero,
+ * (the white walls and the paving already read as the reference's), so it is the timber's own colour: 1.65 times as light brings the
+ * gate to about 20 and back to a red-brown (#758). In sunlight (autumn by day) the same timber would then be a bright rust: a tenth of
+ * its colour is taken back toward its grey, which keeps the sunlit leaves under L* 40 and C* 16 (the art director's lines on art2). The damp the shader lays at a column's foot reached 2.2 m above the world's zero,
  * over the lower leaf of every door at the foot of the courts; rain splashes a column's foot, not a leaf at shoulder height under the
  * eaves, so here it fades out between 1.4 m and 0.1 m.
  */
-export const WOOD_STYLE = Object.freeze({ gain: 1.7, dampTop: 1.4 });
+export const WOOD_STYLE = Object.freeze({ gain: 1.65, sat: 0.9, dampTop: 1.4 });
 
 export function buildSite(M) {
   const root = new THREE.Group();
