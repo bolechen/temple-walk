@@ -5,7 +5,9 @@
 // holds 14 maps at 1 byte a pixel, not 4; at 2048 px they would cost 41 MB on the wire (docs/t05/evidence/701-pack-r24).
 //
 //   PACK_DIR=<dir where `npm i @gltf-transform/core @gltf-transform/extensions @gltf-transform/functions meshoptimizer ktx2-encoder sharp`
-//   was run; none of them is a dependency of the page> node tools/t05-pack-figures.mjs <dir of the seven direct .glb> <out dir> [size=1024]
+//   was run; none of them is a dependency of the page> node tools/t05-pack-figures.mjs <dir of the seven direct .glb> <out dir> [size=1024] [figure id …]
+//
+// With figure ids after the size only those are packed (one figure mended again: tools/t05-statue/mend.mjs), the others' files left as they are.
 import fs from "node:fs"; import path from "node:path"; import url from "node:url"; import { createRequire } from "node:module";
 const dir = process.env.PACK_DIR; if (!dir) throw new Error("PACK_DIR: where the packers are installed (see the head of this file)");
 const req = createRequire(path.resolve(dir) + "/");
@@ -16,13 +18,14 @@ const { NodeIO } = await imp("@gltf-transform/core"), { ALL_EXTENSIONS } = await
 const { quantize, meshopt, dedup, prune } = await imp("@gltf-transform/functions"), { MeshoptEncoder, MeshoptDecoder } = await imp("meshoptimizer");
 const { ktx2 } = await import(url.pathToFileURL(path.resolve(dir, "node_modules/ktx2-encoder/dist/gltf-transform/index.js")).href);
 const sharp = (await imp("sharp")).default;
-const [inDir, outDir, size = "1024"] = process.argv.slice(2); fs.mkdirSync(outDir, { recursive: true });
+const [inDir, outDir, size = "1024", ...only] = process.argv.slice(2); fs.mkdirSync(outDir, { recursive: true });
 await MeshoptEncoder.ready; await MeshoptDecoder.ready;
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.encoder": MeshoptEncoder, "meshopt.decoder": MeshoptDecoder });
 const imageDecoder = async (b) => { const { data, info } = await sharp(b).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); return { data: new Uint8Array(data), width: info.width, height: info.height }; };
-const FILES = { kasyapa: "kasyapa-B4H10b", krakucchanda: "krakucchanda-B4H10b", sikhin: "sikhin-M40vb", vipasyin: "vipasyin-B4H10b", visvabhu: "visvabhu-V3b", kanakamuni: "kanakamuni-K1Lb", sakyamuni: "sakyamuni-V14b" };
+const FILES = { kasyapa: "kasyapa-B4H10b", krakucchanda: "krakucchanda-B4H10b", sikhin: "sikhin-M40vb", vipasyin: "vipasyin-B4H10b", visvabhu: "visvabhu-V3b", kanakamuni: "kanakamuni-K1Lb", sakyamuni: "sakyamuni-V14c" };   // V14c: V14b mended (tools/t05-statue/sakyamuni/mend.json)
 let total = 0;
 for (const [id, file] of Object.entries(FILES)) {
+  if (only.length && !only.includes(id)) continue;
   const doc = await io.read(path.join(inDir, `${file}.glb`));
   for (const t of doc.getRoot().listTextures()) {
     const small = await sharp(Buffer.from(t.getImage())).resize(+size, +size, { kernel: "lanczos3" }).png().toBuffer();

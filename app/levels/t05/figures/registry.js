@@ -28,7 +28,7 @@ export const FIGURE_FILES = Object.freeze([
   { id: "vipasyin", file: "vipasyin.glb", sha256: "1421c0abc563ea3782a83e433687f60f419e39870f19f32003c0904784bcd97f", stageH: 9.0 },
   { id: "visvabhu", file: "visvabhu.glb", sha256: "011abb1a09e6d264d7ca73f6880be8f0c6e297f357cf6afddadc1a7f06aebc7d", stageH: 8.9 },
   { id: "kanakamuni", file: "kanakamuni.glb", sha256: "d05629685149e510a33295e62129e8f25769eb850f5698faccf5253592252997", stageH: 8.75 },
-  { id: "sakyamuni", file: "sakyamuni.glb", sha256: "589ac283bde1b1e2f77edd3fbf957c6e0974bd448b26f33f976cd1f4be50ddd4", stageH: 8.6, inner: [0.96, 1, 1.05], lotus: 1.25 },
+  { id: "sakyamuni", file: "sakyamuni.glb", sha256: "c7b394601979c1dbcfcf1e81dc4186d9a98ab9a931b2d4793865e85844dac859", stageH: 8.6, inner: [0.96, 1, 1.05], lotus: 1.25 },
 ].map((f) => Object.freeze(f)));
 
 /** The order they are fetched in: the middle one first, then outward (east before west). */
@@ -61,8 +61,9 @@ export const MASK_FILES = Object.freeze({
 });
 /**
 
- * Where tools/setup.mjs fetches the files from (`<base><path>`): the public dataset the owner published on 2026-11-26 (bolechen/temple-walk-t05-figures, the commit pinned, files never overwritten),
+ * Where tools/setup.mjs fetches the files from (`<base><path>`): the public dataset the owner published on 2026-11-26 (bolechen/temple-walk-t05-figures, the commit pinned, files never overwritten:
+ * a figure mended later goes into a new folder with the rest beside it, as ship-763/ holds Sakyamuni with his right wrist mended and the other six and the masks as ship-701/ had them),
  * or null where there is none (a clone then draws the hall's doors shut, as production does, and the figures tests that need the files are skipped). Pinned by commit, never overwritten. `private`: the dataset is private, and setup sends
  * the HF_TOKEN of the machine as a bearer token (a machine without one cannot fetch, and says so). Whether the files may be published at all is the owner's call (docs/t05/asset-register.csv).
  */
-export const SOURCE = Object.freeze({ base: /** @type {string | null} */ ("https://huggingface.co/datasets/bolechen/temple-walk-t05-figures/resolve/0b835c7ad6f21ab6d0165c4cbd7911d31f58cd35/ship-701/"), private: false });
+export const SOURCE = Object.freeze({ base: /** @type {string | null} */ ("https://huggingface.co/datasets/bolechen/temple-walk-t05-figures/resolve/5bdba2c44d95a6eb29630e027f0801e4c973fd50/ship-763/"), private: false });
