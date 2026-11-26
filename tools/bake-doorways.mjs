@@ -27,6 +27,7 @@ import { execFileSync } from "node:child_process";
 const require = createRequire(import.meta.url);
 const { DEFAULT_LEVEL, levelFromCommandLine, levelIds, levelObject, doorwayManifest } = await import("./walk/level-arg.mjs");
 const { levelShipped } = await import("../app/src/bench.js");
+const { moodOf } = await import("../app/src/mood.js");
 const { deployOf } = await import("../app/src/deploy.js");
 const { buildInteriors, STAND } = await import("../app/src/interior.js");
 
@@ -43,13 +44,18 @@ export const BAKE = { version: 1, size: 256, quality: 0.9, moods: [["summer", "d
 const sha = (...parts) => { const h = createHash("sha256"); for (const p of parts) h.update(p); return h.digest("hex"); };
 const filesUnder = (dir) => (existsSync(dir) ? readdirSync(dir, { recursive: true }).map((f) => join(dir, String(f))).filter((f) => statSync(f).isFile()).sort() : []);
 
-/** Each hall's fingerprint: what its pictures are drawn from (the halls of the level `L`, the prologue by default). */
-export function fingerprints(L = PROLOGUE) {
+/**
+ * Each hall's fingerprint: what its pictures are drawn from (the halls of the level `L`, the prologue by default).
+ * The light is the table of each mood in `BAKE.moods`, as the level `L` tunes it (`mood`, moodOf by default; a test passes
+ * its own), not mood.js as a file: another season's or hour's numbers draw nothing here (#760).
+ */
+export function fingerprints(L = PROLOGUE, mood = moodOf) {
   const code = ["interior.js", "framing.js", "materials.js", "glsl.js", "textures.js", "geo.js", "fog.js", "sky.js", "doorway-shape.js", "doorway-capture.js", "lut.js", "post.js"]
     .map((f) => join(app, "src", f)).filter(existsSync).map((f) => readFileSync(f));
   const shared = [...filesUnder(join(app, "shared", "textures")), ...filesUnder(join(app, "shared", "models")).filter((f) => !/novice/.test(f))].map((f) => readFileSync(f));
   const three = readFileSync(join(top, "node_modules", "three", "package.json"));
-  const global = sha(JSON.stringify(BAKE), three, ...code, ...shared, readFileSync(fileURLToPath(import.meta.url)));
+  const light = JSON.stringify(BAKE.moods.map(([season, time]) => mood(season, time, L.moodFor)));
+  const global = sha(JSON.stringify(BAKE), light, three, ...code, ...shared, readFileSync(fileURLToPath(import.meta.url)));
   const M = new Proxy({}, { get: (t, k) => (k === "plaster" || k === "interior" ? () => (t["__" + String(k)] ||= Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) })) : (t[k] ||= Object.assign(new THREE.MeshBasicMaterial(), { name: String(k) }))) });
   const site = L.build(M), rooms = buildInteriors(M, site.halls), out = {};
   for (const h of site.halls) {
