@@ -139,13 +139,15 @@ function verdict(all) {
   const res = {};
   for (const [view, figs] of Object.entries(all)) {
     const faces = Object.entries(figs).filter(([, z]) => z["头"]).map(([k, z]) => [k, z["头"].luma, z["头"].lab.b]);
-    const curls = Object.entries(figs).filter(([, z]) => z["螺发"]).map(([k, z]) => [k, z["螺发"].lab]);
+    const curls = Object.entries(figs).filter(([, z]) => z["螺发"]).map(([k, z]) => [k, z["螺发"].lab, z["袈裟"]?.lab.C ?? null]);
     const robe = Object.entries(figs).filter(([, z]) => z["头"] && z["袈裟"]).map(([k, z]) => [k, z["头"].luma - z["袈裟"].luma]);
     const ls = faces.map((f) => f[1]);
     res[view] = {
       faceMin: ls.length ? Math.min(...ls) : null, ratio: ls.length > 1 ? +(Math.max(...ls) / Math.min(...ls)).toFixed(2) : null,
       faceBpos: faces.every((f) => f[2] > 0), faceOverRobe: robe.map(([k, d]) => [k, +d.toFixed(1)]),
-      curls: curls.map(([k, l]) => ({ fig: k, L: l.L, C: l.C, h: l.h, ok: l.L >= 18 && l.L <= 26 && l.C >= 8 && l.C <= 14 && l.h >= 255 && l.h <= 275 })),
+      // curls: L* 18–26 and hue 255–275° as before; their chroma no more than the same figure's robe in the same picture, aimed at 6–8
+      // (the art director's final review of #763, 2026-11-26: the curls had read as blue caps, the one cold, saturated thing in the hall)
+      curls: curls.map(([k, l, robeC]) => ({ fig: k, L: l.L, C: l.C, h: l.h, robeC, ok: l.L >= 18 && l.L <= 26 && l.h >= 255 && l.h <= 275 && (robeC == null || l.C <= robeC) })),
     };
   }
   return res;
