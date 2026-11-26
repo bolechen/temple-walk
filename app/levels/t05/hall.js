@@ -57,7 +57,7 @@ export const HALL = Object.freeze({
 /** How much more of the inside's light the timber overhead takes than the walls, and between which heights over the hall's floor it comes up to that (the art director on #493). */
 export const TIMBER = Object.freeze({ ring: 2.2, lift: 10.5, beam: 9.5, board: 1.0, from: 3.0, to: 4.5 });
 export const FILL = Object.freeze({
-  door: 250, doorX: [-8, 8], doorY: 14, doorZ: 8, doorAimX: [-6, 6], doorAimY: 10.5, doorAimZ: -16.9, doorDist: 42, doorAngle: 1.0, doorCol: 0xfff4e8,
+  door: 360, doorX: [-8, 8], doorY: 14, doorZ: 8, doorAimX: [-11, 11], doorAimY: 11.5, doorAimZ: -16.9, doorDist: 42, doorAngle: 0.6, doorSoft: 0.3, doorCol: 0xfff4e8,
   up: 105, upDist: 26, upX: [-14, 0, 14], upZ: -8, upY: 16, upAim: [-6, -8, -6], upAngle: 0.6, upSoft: 0.3, upCol: 0xffc890, out: 9, depth: 3, ease: 0.5,
 });
 /** Where the inner columns stand: the back row on the fourth column line, one under each of the eight frames (ARCHITECTURE.md §2.2's proposal, and the statue session's stage); in front of the altar the inner columns are left out, but for the two end bays. */
@@ -350,7 +350,7 @@ export function buildHall(M) {
     // colour, aim]: a spot where an aim is given, a lamp otherwise; the intensity is what it reaches once he is well
     // inside; from the court it is out, so that the doorway reads dark (`within` below, and the site's tick, raise it).
     fill: [
-      ...FILL.doorX.map((x, i) => [x, y0 + FILL.doorY, FILL.doorZ, FILL.door, FILL.doorDist, FILL.doorCol, [FILL.doorAimX[i], y0 + FILL.doorAimY, FILL.doorAimZ], FILL.doorAngle]),
+      ...FILL.doorX.map((x, i) => [x, y0 + FILL.doorY, FILL.doorZ, FILL.door, FILL.doorDist, FILL.doorCol, [FILL.doorAimX[i], y0 + FILL.doorAimY, FILL.doorAimZ], FILL.doorAngle, FILL.doorSoft]),
       // (the timber's light, from under the floor: three narrow spots turned up into the frame over the worship band, as the light the doors lay on the floor goes up into it)
       ...FILL.upX.map((x, i) => [x, y0 - 0.5, FILL.upZ, FILL.up, FILL.upDist, FILL.upCol, [x, y0 + FILL.upY, FILL.upAim[i]], FILL.upAngle, FILL.upSoft]),
     ],
