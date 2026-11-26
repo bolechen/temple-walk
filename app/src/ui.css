@@ -176,13 +176,13 @@ body.far #hint.on::after { content: ""; position: absolute; left: 0; right: 0; t
 
 #moodTag { position: absolute; z-index: 2; left: max(28px, env(safe-area-inset-left, 0px)); top: calc(24px + env(safe-area-inset-top, 0px)); margin: 0; font: 400 13px/1 var(--kai); letter-spacing: .24em; color: var(--on-2); text-shadow: var(--lift); pointer-events: none; }
 /* The next place: a small seal with its first character, then the name. */
-#goal { position: absolute; z-index: 2; left: calc(max(22px, env(safe-area-inset-left, 0px)) + 50px); top: calc(56px + env(safe-area-inset-top, 0px)); margin: 0; display: flex; align-items: center; gap: 12px; color: var(--on); text-shadow: var(--lift); pointer-events: none; }
+#goal { position: absolute; z-index: 2; left: calc(max(22px, env(safe-area-inset-left, 0px)) + 58px); top: calc(56px + env(safe-area-inset-top, 0px)); margin: 0; display: flex; align-items: center; gap: 12px; color: var(--on); text-shadow: var(--lift); pointer-events: none; }
 /* The book: a small seal at the top left, always there while he walks, its character the first of the next place. */
 #bookBtn { position: absolute; z-index: 3; left: max(22px, env(safe-area-inset-left, 0px)); top: calc(50px + env(safe-area-inset-top, 0px)); width: 44px; height: 44px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
 #bookBtn .seal-mark { width: 28px; height: 28px; font-size: 16px; font-style: normal; transform: rotate(-3deg); filter: drop-shadow(0 1px 6px rgba(0,0,0,.45)); transition: transform .3s var(--ease); }
-/* How many are held, written small under the seal like a note in the margin: no box, only a little shade so that it reads on a bright court and on dark bamboo.
-   Under, not beside: the next place's name already lies to the seal's right (#goal). It sits inside the button, so a press on it opens the book too. */
-#bookBtn .seal-count { position: absolute; left: 50%; top: calc(100% - 4px); transform: translateX(-50%); white-space: nowrap; font: 400 12px/1 var(--kai); letter-spacing: .14em; text-indent: .14em; color: var(--on); text-shadow: var(--lift), 0 0 3px rgba(0,0,0,.7), 0 1px 2px rgba(0,0,0,.6); pointer-events: none; }
+/* How many are held, written small under the seal like a note in the margin: no box, only shade so that it reads on a bright court and on dark bamboo.
+   Under, not beside: the next place's name lies to the seal's right (#goal, 58 px in, so that the two stay 16 px apart). The note is no part of the 44 px target (pointer-events: none): a tap on it is a tap on the ground. */
+#bookBtn .seal-count { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); white-space: nowrap; font: 400 13px/1 var(--kai); letter-spacing: .04em; text-indent: .04em; color: var(--on); text-shadow: var(--lift), 0 0 3px rgba(0,0,0,.85), 0 0 1px rgba(0,0,0,.9); pointer-events: none; }
 #bookBtn:hover .seal-mark { transform: rotate(-6deg) scale(1.08); }
 body.photo #bookBtn, body.bare #bookBtn, body:not(.entered) #bookBtn { display: none; }
 /* Said to a screen reader, not shown. */

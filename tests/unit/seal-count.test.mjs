@@ -12,13 +12,14 @@ test("numerals: zero is 〇, and each language has its own table", () => {
   assert.deepEqual(Object.keys(NUMERALS).sort(), ["en", "ja", "ko", "zh"]);
 });
 test("the count reads 'n / total', never past the total or below none", () => {
-  assert.equal(sealCount(0, 7, "zh"), "〇 / 七"); assert.equal(sealCount(3, 7, "zh"), "三 / 七");
-  assert.equal(sealCount(7, 7, "zh"), "七 / 七"); assert.equal(sealCount(1, 7, "ja"), "一 / 七");
-  assert.equal(sealCount(3, 7, "en"), "3 / 7"); assert.equal(sealCount(0, 7, "ko"), "0 / 7");
-  assert.equal(sealCount(9, 7, "zh"), "七 / 七"); assert.equal(sealCount(-1, 7, "zh"), "〇 / 七");
+  assert.equal(sealCount(0, 7, "zh"), "〇\u2009/\u2009七"); assert.equal(sealCount(3, 7, "zh"), "三\u2009/\u2009七");
+  assert.equal(sealCount(7, 7, "zh"), "七\u2009/\u2009七"); assert.equal(sealCount(1, 7, "ja"), "一\u2009/\u2009七");
+  assert.equal(sealCount(3, 7, "en"), "3\u2009/\u20097"); assert.equal(sealCount(0, 7, "ko"), "0\u2009/\u20097");
+  assert.equal(sealCount(9, 7, "zh"), "七\u2009/\u2009七"); assert.equal(sealCount(-1, 7, "zh"), "〇\u2009/\u2009七");
 });
 test("the line a screen reader gets says it once, with a blank for each number", () => {
   for (const [k, T] of [["en", EN], ["ja", JA], ["ko", KO]]) {
     const s = T["朱印 {n}枚，共{total}枚"]; assert.ok(s && s.includes("{n}") && s.includes("{total}"), `${k} lacks the spoken count`);
+    assert.ok(T["朱印帐，{count}"]?.includes("{count}"), `${k} lacks the button's name with the count`);
   }
 });

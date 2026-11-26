@@ -136,9 +136,9 @@ export function createGame(y) {
     // how many seals are held is said to a screen reader, and to the tests.
     // In Japanese the seal is cut in Japanese forms; in English it stays the temple's own character.
     const word = next ? `下一处 · ${next.place}` : "七印圆满", mark = glyphs(next ? next.place : "圆")[0], b = $("bookBtn");
-    // Beside it, small, in ink: how many seals are held out of seven ("三 / 七", #651). The visible line is hidden from a screen
-    // reader, which hears the same once, in words, from the span after it.
-    if (b && b.dataset.word !== `${mark}${n}${lang}`) { b.dataset.word = `${mark}${n}${lang}`; b.innerHTML = `<i class="seal-mark">${mark}</i><span class="seal-count" aria-hidden="true">${sealCount(n, SEALS.length)}</span><span class="sr">${t("朱印 {n}枚，共{total}枚", { n: numeral(n), total: numeral(SEALS.length) })}</span>`; }
+    // Under it, small, in ink: how many seals are held out of seven ("三 / 七", #651). The visible line is hidden from a screen
+    // reader; the button's name says the same once, in words, with the book's name (a static aria-label would cover it, so it is written here, through t()).
+    if (b && b.dataset.word !== `${mark}${n}${lang}`) { b.dataset.word = `${mark}${n}${lang}`; b.innerHTML = `<i class="seal-mark">${mark}</i><span class="seal-count" aria-hidden="true">${sealCount(n, SEALS.length)}</span>`; b.setAttribute("aria-label", t("朱印帐，{count}", { count: t("朱印 {n}枚，共{total}枚", { n: numeral(n), total: numeral(SEALS.length) }) })); }
     // The next place: 下一处 above its name, beside that seal.
     const g = $("goal");
     if (g && g.dataset.word !== word) { if (g.dataset.word) y.hints?.say.goal(); g.dataset.word = word; g.innerHTML = next ? `<span><small>${t("下一处")}</small>${t(next.place)}</span>` : `<span>${t("七印圆满")}</span>`; }

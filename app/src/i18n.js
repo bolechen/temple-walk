@@ -79,7 +79,7 @@ export const NUMERALS = { zh: "〇一二三四五六七", ja: "〇一二三四�
 export const numeral = (n, to = lang) => { const k = NUMERALS[to] || NUMERALS.zh; return k[Math.max(0, Math.min(k.length - 1, Math.floor(n)))]; };
 /** The seals held out of the seals there are, as "三 / 七", for the small line beside the book's seal.
  * @param {number} n @param {number} total @param {string=} to */
-export const sealCount = (n, total = 7, to = lang) => `${numeral(Math.min(n, total), to)} / ${numeral(total, to)}`;
+export const sealCount = (n, total = 7, to = lang) => `${numeral(Math.min(n, total), to)}\u2009/\u2009${numeral(total, to)}`;
 /** Whether a line has its own translation (the tests ask). */
 export const has = (zh, to = "ja") => !!TABLES[to] && Object.prototype.hasOwnProperty.call(TABLES[to], zh);
 
