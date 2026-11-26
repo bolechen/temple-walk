@@ -7,8 +7,8 @@
 // Each scenario is independent and fails on any error the page reports. A report is written to tools/out/e2e-report.json.
 const fs = require("fs"), path = require("path");
 const { serve, launch, renderer, open, expect, out } = require("./lib.cjs");
-/** Whether T05's great hall has its doors shut (app/levels/t05/hall.js, `HALL_DOORS.shut`; DECISIONS.md, 先行版关殿门): read from the source, one constant to turn. */
-const hallDoorsShut = () => /HALL_DOORS\s*=\s*Object\.freeze\(\{\s*shut:\s*true/.test(fs.readFileSync(path.join(__dirname, "../../app/levels/t05/hall.js"), "utf8"));
+/** Whether T05's great hall has its doors shut (app/levels/t05/hall.js, `HALL_DOORS.shut`; DECISIONS.md, 先行版关殿门): read from the source, one constant to turn. The constant is `true`, or `!benchOpensHall()` (the workbench's `?hall=open`, which no built page reads: these tests run on dist/ at 127.0.0.1) while it is shut. */
+const hallDoorsShut = () => /HALL_DOORS\s*=\s*Object\.freeze\(\{\s*shut:\s*(true|!benchOpensHall\(\))/.test(fs.readFileSync(path.join(__dirname, "../../app/levels/t05/hall.js"), "utf8"));
 
 // Software rendering draws the whole temple about once a second and takes twenty seconds to bring it up. A scenario
 // that asks what the page does (where he may walk, what a key opens, what is kept) and never looks at the picture is
