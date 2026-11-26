@@ -61,8 +61,8 @@ export function steleLayout(px, ph) {
   cols.forEach((s, k) => { put(slot++, s, false, [...s].length, fs * 0.86); const w = W.columns.find((c) => c.after === k); if (w) put(slot++, "", true, w.cells, fs * 0.86); });
   return out;
 }
-/** The common characters the worn cells keep a third of (none of them is in the stone's own text or names anything there). */
-const REMNANT = "山水人日月天心三大小上下中不有";
+/** The common characters the worn cells keep a third of (strokes of the readable text's own characters, none from the heading or the temple-naming columns, and the clip keeps too little of one to read it whole). */
+const REMNANT = "鐘藏崔嵬儼僧納寶觀殿";
 function inscription(w, h, again = true) {
   if (typeof document === "undefined" || !document.createElement) return null;
   const c = document.createElement("canvas"); if (!c.getContext) return null;
@@ -93,7 +93,7 @@ function inscription(w, h, again = true) {
     // Only one faint pale patch of flaked stone is added, no more (soft dark patches read as water stains).
     const ch = REMNANT[Math.floor(wr() * REMNANT.length)];
     g.save(); g.beginPath();
-    for (let k = 0; k < 3; k++) { const w = c.size * (0.28 + 0.2 * wr()), h = c.size * (0.34 + 0.2 * wr()); g.rect(c.x - c.size / 2 + wr() * (c.size - w), c.y - c.size / 2 + wr() * (c.size - h), w, h); }
+    for (let k = 0; k < 3; k++) { const w = c.size * (0.2 + 0.2 * wr()), h = c.size * (0.22 + 0.22 * wr()); g.rect(c.x - c.size / 2 + wr() * (c.size - w), c.y - c.size / 2 + wr() * (c.size - h), w, h); }
     g.clip(); draw(ch, c.x, c.y, c.size, 0.36 + 0.12 * wr()); g.restore();
     { const rx = c.size * (0.4 + 0.3 * wr()), ry = rx * 0.7;
       g.save(); g.translate(c.x + (wr() - 0.5) * c.size, c.y + (wr() - 0.5) * c.size); g.rotate(wr() * 3); g.scale(1, ry / rx);
