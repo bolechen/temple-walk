@@ -8,7 +8,7 @@
 // Before this the colour pass measured on the stage page and the light pass by hand-drawn boxes on the T4's pictures, and
 // their curls disagreed by 3 L* and 20% of chroma for the same pigment; both are retired for this.
 //
-// usage, software rendering:  node tools/t05-zones.cjs <outdir> [--views=cam03,cam06,mid10-0,mid10-3,mid10-6] [--query=k=v&…] [--size=1920x1080]
+// usage, software rendering:  node tools/t05-zones.cjs <outdir> [--views=cam03,cam06,mid10-0,mid10-3,mid10-6] [--query=k=v&…] [--size=1920x1080] [--picks=12, 0 for none]
 // on a T4: tools/t05-gpu.sh stages this file and runs it through tools/gpu/job.cjs as spec.script (exports.run).
 const fs = require("fs"), path = require("path");
 
@@ -138,7 +138,7 @@ const recipeZones = (root) => {
 // On a T4, from tools/gpu/job.cjs: `open(query, size)` gives a page of the staged site. Each view leaves its picture and its
 // mask (<view>.png, <view>.mask.json); the job's machine has no image library, so the reading is done after, by
 // `node tools/t05-zones.cjs --measure=<dir>`, which software runs do at once.
-exports.run = async ({ open, out, log = console.log, size = [1920, 1080], views = ["cam03", "cam06", "mid10-0", "mid10-3", "mid10-6"], query = "" }) => {
+exports.run = async ({ open, out, log = console.log, size = [1920, 1080], views = ["cam03", "cam06", "mid10-0", "mid10-3", "mid10-6"], query = "", picks = 12 }) => {   // picks: the step in pixels of the scene's material probe, 0 for none (each __pick is a ray through the whole hall: at 12 px a 1080p view takes about 15 minutes on a T4)
   fs.mkdirSync(out, { recursive: true });
   const files = [];
   for (const v of views) {
@@ -148,7 +148,7 @@ exports.run = async ({ open, out, log = console.log, size = [1920, 1080], views 
       await page.screenshot({ path: path.join(out, `${v}.png`) });
       const mask = await page.evaluate(idPass);
       // what lies under every 12th pixel that is not a figure (the back wall, the timber, the floor): the page's own __pick
-      mask.picks = await page.evaluate((step) => { const r = [], W = innerWidth, H = innerHeight; for (let y = step / 2; y < H; y += step) for (let x = step / 2; x < W; x += step) { const h = window.__pick(x, y, 1)[0]; r.push([x, y, h ? h.material : "sky", h ? String(h.part ?? "") : "", h ? +h.distance.toFixed(1) : -1, h ? h.at[1] : 0]); } return { W, H, r }; }, 12).catch(() => null);
+      if (picks > 0) mask.picks = await page.evaluate((step) => { const r = [], W = innerWidth, H = innerHeight; for (let y = step / 2; y < H; y += step) for (let x = step / 2; x < W; x += step) { const h = window.__pick(x, y, 1)[0]; r.push([x, y, h ? h.material : "sky", h ? String(h.part ?? "") : "", h ? +h.distance.toFixed(1) : -1, h ? h.at[1] : 0]); } return { W, H, r }; }, picks).catch(() => null);
       fs.writeFileSync(path.join(out, `${v}.mask.json`), JSON.stringify(mask));
       const cost = await page.evaluate(() => (window.__cost ? window.__cost(60) : null)).catch(() => null);
       files.push({ view: v, cost }); log("zones", v, cost);
@@ -183,7 +183,7 @@ if (require.main === module) (async () => {
     page.on("pageerror", (e) => console.log("pageerror", e.message));
     page.on("console", (m) => { if (m.type() === "error") console.log("console", m.text().slice(0, 400)); });   // (a shader that does not compile says so only here)
     await page.goto(`http://${BENCH_HOST}:${port}/?${q}&debug=0`, { waitUntil: "commit", timeout: 120000 }); await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 600000 }); return { ctx, page }; };
-  await exports.run({ open, out, size: [w, h], views: arg("views", "cam03,cam06,mid10-0,mid10-3,mid10-6").split(","), query: arg("query", "") });
+  await exports.run({ open, out, size: [w, h], views: arg("views", "cam03,cam06,mid10-0,mid10-3,mid10-6").split(","), query: arg("query", ""), picks: +arg("picks", "12") });
   await br.close(); srv.close();
   console.log(JSON.stringify(await exports.measureDir(out, zones), null, 1));
 })().catch((e) => { console.error(e); process.exit(1); });
