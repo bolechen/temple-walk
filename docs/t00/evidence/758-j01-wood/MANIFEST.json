@@ -747,6 +747,66 @@
    "rev": "6065b82db9484a502e2106e86199b9ec6801e597"
   },
   {
+   "path": "F-clumps-as-main/art1_summer-dawn_first.png",
+   "bytes": 3031295,
+   "sha256": "6d62fbcf1bf1ddbf2dea77bcce3d0809e5b6544ccd1e96519ce902ea589e2ad9",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/art1_summer-dawn_first_base.png",
+   "bytes": 3013359,
+   "sha256": "f3d75dfaaba7db6ce781c249db63eb95e5796b9b22f3046e638ac454e00aa175",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/cam01_summer-day_first.png",
+   "bytes": 3459722,
+   "sha256": "000252c30ce23f6ece37e95a964ffe86b178c7a97de58f787ccd8d9af0b2ca09",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/cam01_summer-day_first_base.png",
+   "bytes": 3392378,
+   "sha256": "7ecb210cb1dc54f68a1fb9754d8aa3ec5227999d0b4659a3aad797bb3c52d18c",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/cam01_summer-night_first.png",
+   "bytes": 2944860,
+   "sha256": "2de7a8718f5e1ccba2042a5c55c30c969dd0dacc157cdbc5ca83c1f9412a30f9",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/cam01_summer-night_first_base.png",
+   "bytes": 2921918,
+   "sha256": "6db1f76c707782114ae30ed292d1ccb0dffcfaf28f1b31028bff00d6b29c36ec",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/cam02_summer-day_first.png",
+   "bytes": 3234208,
+   "sha256": "c4452c9609937e10eec74d7b63c0af4c1c9d4bfa71cc903179cdbde2f4d0bae2",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/cam02_summer-day_first_base.png",
+   "bytes": 3174206,
+   "sha256": "3fa8b62aa1eb2700429d99bc0d888996bbf25452aea534dbcb6cbbc6cd63c8a5",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/stair_summer-day_third.png",
+   "bytes": 3054163,
+   "sha256": "182d844f10f58ac5870f0ec2694abb3b8e203d548f179193f5368aa7b582b0e4",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
+   "path": "F-clumps-as-main/stair_summer-day_third_base.png",
+   "bytes": 3040404,
+   "sha256": "2c4f1aaf736d77feea379cb00d981e67457cfd435f6e00d4cb96b60cefe74d38",
+   "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 371733,
    "sha256": "c1c51c851dba6e9f889f859387c2567602d0eeb696d504b62545013be9377088",
