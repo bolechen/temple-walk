@@ -7,7 +7,7 @@
 // Nothing is counted, nothing is said to be missing, and walking past both leaves the page empty (CHECKPOINTS.md §0, §2.2).
 import { STATION, TERRACE } from "./site.js";
 import { STELE_TEXT } from "./stele.js";
-import { HALL, ZS } from "./hall.js";
+import { HALL, ZS, XS, HALL_DOORS } from "./hall.js";
 
 /** The edge of the front eave over the middle bay: what C02 asks to be seen. */
 const EAVE = Object.freeze([0, HALL.eave, ZS[0] + HALL.overhang]);
@@ -43,4 +43,13 @@ export const PAGE = Object.freeze({
       shot: Object.freeze({ at: [0.8, 0.9, -1.1], look: [0.05, 1.5, 2.0], fov: 56, in: 2.2, out: 1.0, drift: Object.freeze({ rise: 0.01, for: 12 }), keep: [[0, 0.7, 0], [0, 1.1, 0], [0, 0.8, 0.25], [0, 11, 22]] }) }),
   }),
   terraceZ: TERRACE.zS,
+  // Two short lines at the foot of the picture, the owner's choice of 2026-11-26 (#770; CHECKPOINTS.md §2.2 and DECISIONS.md record that this
+  // overrides "no hint"): nothing counted and nothing said of what is missing.
+  //   door  before the shut great hall's doors (the three middle bays, up to 3 m out from the front wall): said once each time he comes up
+  //         to them afresh (he must go 3 m clear again to be told again). Only while HALL_DOORS.shut: an open door has nothing to explain.
+  //   eave  once the whole front has been looked at (C01) and the eaves not yet (C02): that they can be looked up at. Said once in a visit.
+  hints: Object.freeze({
+    door: HALL_DOORS.shut ? Object.freeze({ box: Object.freeze({ x0: XS[3], x1: XS[6], z0: ZS[0] + HALL.front, z1: ZS[0] + HALL.front + 3 }), text: "门还关着。" }) : null,
+    eave: Object.freeze({ text: "走到檐下，抬头看看。" }),
+  }),
 });

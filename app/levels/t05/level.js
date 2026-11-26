@@ -8,7 +8,7 @@ import { PAGE } from "./page.js";
 import ja from "./locales/ja.js";
 import en from "./locales/en.js";
 import ko from "./locales/ko.js";
-import { XS, HALL } from "./hall.js";
+import { XS, HALL, HALL_DOORS } from "./hall.js";
 
 // J01, the first look of T05: an early-winter morning, clear and cold, no snow (docs/t05/ART.md §4.2, PRD.md §4). The sun is
 // where #280's white box worked it out for 9:45 on a day in early December at 41.5° N: 17° up, 152° from north (a calculation, not a record), which in
@@ -50,8 +50,10 @@ export default {
   // whatever the address asks, and the plan serves only the eye before its hierarchy is built and the sound of his steps.
   keepsOwnPlace: true,                 // where he stood is kept under yunjing.levels.v1, apart from the prologue's keys (S4)
   page: PAGE,                          // its own page, kept beside its place (yunjing.levels.v1): the observation's stroke and the line copied from the stele (./page.js, src/levelpage.js)
-  // One line said once as the walk begins, in the foot line: the first edition has no seals and no book yet (the lead's and the owner's step one, 2026-11-25). No temple's name in it.
-  intro: "这座寺还在修建，眼下没有朱印，也没有朱印帐。慢慢走一走就好。",
+  // One line said once as the walk begins, in the foot line: the great hall is shut in the first edition (DECISIONS.md 2026-11-25 先行版关殿门), and it says so
+  // rather than let a visitor find the door shut with nothing said (#770). It follows `HALL_DOORS.shut`: once the doors are open there is nothing to explain
+  // and the line is not said. It names no seals: the first edition has none and tells nothing of them (`book` is left out). No temple's name in it.
+  intro: HALL_DOORS.shut ? "大殿正在整修，暂不开放。院子和碑亭可以走一走。" : undefined,
   tr: { ja, en, ko },   // its own words in the other languages, kept with the level
   writtenPlan: false,
   land: () => 0,                       // a flat plain: the land outside the walls is the court's own level

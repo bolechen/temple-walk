@@ -19,11 +19,16 @@ import { MONUMENT, MONUMENT_FORM, STELE } from "./axis.js";
  * lines that may be copied: an id (kept on the page, never the words), its text as cut, and which column holds it.
  */
 export const STELE_TEXT = Object.freeze({
-  title: "義州重修大奉國寺碑",   // as Luo Fuyi's Manzhou jinshi zhi heads it (SOURCES.md §17); the longer title with 大元國大寧路 is only second-hand
-  columns: Object.freeze(["觀其寶殿崔嵬儼居七佛", "法堂弘敞可納千僧", "遼金遺刹一炬殆盡", "獨奉國孑然而在"]),
+  // The owner's choice of 2026-11-26 (#770, SOURCES.md §17): the stone's heading (義州重修大奉國寺碑) and the column that names the temple (遼金遺刹，一炬殆盡，
+  // 獨奉國孑然而在) are weathered past reading, so that nothing readable names the real temple or its county town beside the fictional 奉明寺 on the head. What
+  // can be read is only what names no temple: the two passages below. `worn` says which columns are weathered and how many cells each holds (blotches, no characters).
+  title: "",
+  columns: Object.freeze(["觀其寶殿崔嵬儼居七佛", "法堂弘敞可納千僧"]),
+  worn: Object.freeze({ title: 9, columns: Object.freeze([{ after: 0, cells: 11 }, { after: 1, cells: 7 }]) }),
   lines: Object.freeze([
+    // The line's text is also the key of its rendering in the other languages (locales/{ja,en,ko}.js: a free rendering, shown under it on the slip).
     Object.freeze({ id: "qifo", text: "觀其寶殿崔嵬，儼居七佛", col: 0 }),
-    Object.freeze({ id: "zairan", text: "遼金遺刹，一炬殆盡，獨奉國孑然而在", col: 2 }),
+    Object.freeze({ id: "kenqian", text: "法堂弘敞，可納千僧", col: 1 }),
   ]),
 });
 
@@ -46,14 +51,18 @@ export const FACE = Object.freeze({ margin: 0.07, foot: 0.12, head: 0.1 });
  * Where each character stands on the face, as a canvas `px` wide and `ph` high lays them: its centre (x, y) and size, the title
  * down the first column, larger, then the columns read, right to left; each as large as a column is wide, reaching about half
  * way down. The face's own drawing and the tests that keep the copy's shot from cutting a character both read it.
- * @param {number} px @param {number} ph @returns {{ ch: string, col: number, row: number, x: number, y: number, size: number }[]}
+ * @param {number} px @param {number} ph @returns {{ ch: string, worn: boolean, col: number, row: number, x: number, y: number, size: number }[]}
  */
 export function steleLayout(px, ph) {
-  const cols = STELE_TEXT.columns, n = cols.length + 1, step = px / (n + 0.4), fs = step * 0.8, cell = fs * 1.08, out = [];
-  [...STELE_TEXT.title].forEach((ch, i) => out.push({ ch, col: 0, row: i, x: px - step * 0.7, y: ph * 0.03 + cell * (i + 0.5), size: fs * 0.92 }));
-  cols.forEach((s, k) => [...s].forEach((ch, i) => out.push({ ch, col: k + 1, row: i, x: px - step * (1.7 + k), y: ph * 0.03 + cell * (i + 0.5), size: fs * 0.86 })));
+  const cols = STELE_TEXT.columns, W = STELE_TEXT.worn, n = cols.length + W.columns.length + 1, step = px / (n + 0.4), fs = step * 0.8, cell = fs * 1.08, out = [];
+  // Slots right to left: the weathered heading, then each readable column with the weathered one that follows it.
+  const put = (slot, text, worn, rows, size) => { for (let i = 0; i < rows; i++) out.push({ ch: worn ? "" : [...text][i], worn, col: slot, row: i, x: px - step * (slot === 0 ? 0.7 : 0.7 + slot), y: ph * 0.03 + cell * (i + 0.5), size }); };
+  let slot = 0; put(slot++, "", true, W.title, fs * 0.92);
+  cols.forEach((s, k) => { put(slot++, s, false, [...s].length, fs * 0.86); const w = W.columns.find((c) => c.after === k); if (w) put(slot++, "", true, w.cells, fs * 0.86); });
   return out;
 }
+/** The common characters the worn cells keep a third of (strokes of the readable text's own characters, none from the heading or the temple-naming columns, and the clip keeps too little of one to read it whole). */
+const REMNANT = "鐘藏鑑藥續龍鳳";
 function inscription(w, h, again = true) {
   if (typeof document === "undefined" || !document.createElement) return null;
   const c = document.createElement("canvas"); if (!c.getContext) return null;
@@ -62,14 +71,36 @@ function inscription(w, h, again = true) {
   g.clearRect(0, 0, px, ph);
   // An incised character in a stone under a roof reads by its two edges: the upper wall of the cut in shadow, and the floor of
   // the cut and its lower lip catching the sky (with the pale dust that lies in old cuts). Drawn as three passes of the glyph.
-  const draw = (ch, x, y, size) => {
+  let ds = 11; const dr = () => ((ds = (ds * 16807) % 2147483647) / 2147483647);
+  const draw = (ch, x, y, size, fade = 0) => {
+    g.globalAlpha = fade || 0.62 + 0.3 * dr();   // old cuts are not all as deep as each other (`fade`: a worn cell's remnant, a third to a half as bright as a readable one)
     g.font = `${size}px "Yunjing Kai", serif`; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "rgba(8,7,6,0.85)"; g.fillText(ch, x - size * 0.025, y - size * 0.035);       // the upper wall of the cut, in shadow
     g.fillStyle = "rgba(214,208,196,0.78)"; g.fillText(ch, x + size * 0.02, y + size * 0.03);   // the lower lip, catching the light
     g.fillStyle = "rgba(150,144,134,0.9)"; g.fillText(ch, x, y);                                 // the floor of the cut, pale with dust
+    g.globalAlpha = 1;
+    // a nick or two where the edge of a stroke has flaked: a small patch of the face's own tone laid over the cut
+    for (let k = 0, n = dr() < 0.5 ? 1 : 0; k < n; k++) { g.fillStyle = "rgba(128,124,116,0.55)"; g.beginPath(); g.arc(x + (dr() - 0.5) * size * 0.7, y + (dr() - 0.5) * size * 0.7, size * (0.04 + 0.05 * dr()), 0, 6.283); g.fill(); }
   };
   // The five columns (steleLayout); below them the stone is left as it weathered.
-  for (const c of steleLayout(px, ph)) draw(c.ch, c.x, c.y, c.size);
+  // A weathered cell is a few dull, uneven scuffs of the stone, drawn with the same seeded hand every time, with no character in it.
+  let ws = 3; const wr = () => ((ws = (ws * 16807) % 2147483647) / 2147483647);
+  for (const c of steleLayout(px, ph)) {
+    if (!c.worn) { draw(c.ch, c.x, c.y, c.size); continue; }
+    // A cell where the cut has worn away keeps remnants of the old cut: a third of the strokes of a common character, in the same face, size and
+    // line as the readable ones and a third to a half as bright (the art director, #773). The character is drawn from a fixed set that has nothing to do
+    // with the stone's own text, by a fixed seed, so that no heading or column of it, nor any name, can be made out however the contrast is lifted.
+    // Only one faint pale patch of flaked stone is added, no more (soft dark patches read as water stains).
+    const ch = REMNANT[Math.floor(wr() * REMNANT.length)];
+    if (wr() < Math.min(0.75, 0.25 + 0.6 * (c.y / ph))) continue;   // some cells are worn clean through, more of them lower down the face
+    g.save(); g.beginPath();
+    for (let k = 0; k < 3; k++) { const w = c.size * (0.16 + 0.16 * wr()), h = c.size * (0.18 + 0.18 * wr()); g.rect(c.x - c.size / 2 + wr() * (c.size - w), c.y - c.size / 2 + wr() * (c.size - h), w, h); }
+    g.clip(); draw(ch, c.x, c.y, c.size, 0.2 + 0.1 * wr()); g.restore();
+    { const rx = c.size * (0.4 + 0.3 * wr()), ry = rx * 0.7;
+      g.save(); g.translate(c.x + (wr() - 0.5) * c.size, c.y + (wr() - 0.5) * c.size); g.rotate(wr() * 3); g.scale(1, ry / rx);
+      const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, "rgba(206,200,188,0.07)"); gr.addColorStop(1, "rgba(206,200,188,0)");
+      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 6.283); g.fill(); g.restore(); }
+  }
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
   let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   for (let i = 0; i < 1800; i++) {
@@ -78,7 +109,7 @@ function inscription(w, h, again = true) {
   }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   // Redrawn once the face has come (the first frames may draw before the font has loaded).
-  if (again) document.fonts?.load?.(`40px "Yunjing Kai"`, STELE_TEXT.title + STELE_TEXT.columns.join("")).then(() => { const next = inscription(w, h, false); if (next) { t.image = next.image; t.needsUpdate = true; } }).catch(() => {});
+  if (again) document.fonts?.load?.(`40px "Yunjing Kai"`, STELE_TEXT.columns.join("")).then(() => { const next = inscription(w, h, false); if (next) { t.image = next.image; t.needsUpdate = true; } }).catch(() => {});
   return t;
 }
 

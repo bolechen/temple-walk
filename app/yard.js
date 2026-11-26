@@ -127,7 +127,7 @@ createShare(ui);   // the sheet a picture is saved from where the system cannot 
 const carryOut = createCarryOut(ui);
 document.getElementById("bookCarry")?.addEventListener("click", () => { ui.close("bookMore"); carryOut.open(); });   // (from the book's 更多 sheet, which it puts away first, #473)
 mountVersion(document);   // which build this is, at the foot of the menu and the thanks (#310)
-const hints = createHints({ off: Q.has("shot") || TRAILER, ui, strafeAD: () => settings.get().strafeAD }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
+const hints = createHints({ off: Q.has("shot") || TRAILER, ui, strafeAD: () => settings.get().strafeAD, book: !!L.book }); let arrived = false, walked = false;   // what is said about the controls, and when; whether he has walked yet
 const settings = createSettings(browserSettingsStore()); { const S = settings.get(); setLevels({ volume: S.volume, music: S.music, ambience: S.ambience, effects: S.effects }); }   // what the visitor has set for themselves (the pause menu)
 // What a visitor changes in the pause menu or the photograph's settings (#326): one event per key in 800 ms, the
 // last value winning, so that dragging a slider is a change and not a stream. A value that did not change is not sent.
