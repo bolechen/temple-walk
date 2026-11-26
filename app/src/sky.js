@@ -53,9 +53,11 @@ export function createSky(renderer, scene, quality, focus) {
   u.tSky.value.needsUpdate = true;
   const dome = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), mat);
   scene.add(dome);
-  const env = new THREE.Scene(); env.add(new THREE.Mesh(dome.geometry, mat));
-  const pm = new THREE.PMREMGenerator(renderer);
-  let envRT = pm.fromScene(env, 0.02); scene.environment = envRT.texture;
+  // No light is taken from the sky as an environment map. One was baked here from the dome until #749, by a cube camera that
+  // sees 100 m while the dome stands at 600: it saw only the clear colour, black, so every lit surface looked up two mip levels
+  // of nothing in every frame. Leaving it out leaves the picture exactly as it was. A sky that truly lights the surfaces is a
+  // change of the picture, for the art review (the figures in T05's hall keep their own probe of the hall, figures/load.js).
+  scene.environment = null;
 
   const at = new THREE.Vector3(focus[0], 0, focus[1]);
   const sun = new THREE.DirectionalLight(0xfff0dc, 2.3);
@@ -103,7 +105,6 @@ export function createSky(renderer, scene, quality, focus) {
       hemi.color.fromArray(m.hemiS); hemi.groundColor.fromArray(m.hemiG); hemi.intensity = m.hemiI;
       U.uAmb.value.fromArray(m.hemiS).multiplyScalar(m.hemiI * 0.82); last = m; lit(m);
       scene.fog.color.copy(FOG); scene.fog.density = U.uFogD.value = m.fogD;
-      const next = pm.fromScene(env, 0.02); scene.environment = next.texture; envRT.dispose(); envRT = next;
     },
   };
 }
