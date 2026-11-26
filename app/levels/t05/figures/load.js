@@ -30,14 +30,14 @@ const anchorsOf = (id) => /** @type {any} */ (ANCHORS[`./anchors/${id}.json`]).a
  *   root: the level's group; fg: `benchFigures`'s result (each figure's white-box body, attendants and halo as parts of their own); M: the level's materials
  */
 export function createFigures({ root, fg, M, sh }) {
-  const top = HALL.floor + ALTAR.h, state = { renderer: /** @type {THREE.WebGLRenderer | null} */ (null), scene: /** @type {THREE.Object3D | null} */ (null), probe: /** @type {THREE.Texture | null} */ (null), started: false, loaded: 0 };
-  const figs = new Map(FIGURE_FILES.map((d) => [d.id, { d, status: /** @type {"idle" | "loading" | "ready" | "failed"} */ ("idle"), ms: 0, bytes: 0, pivot: /** @type {THREE.Object3D | null} */ (null) }]));
+  const top = HALL.floor + ALTAR.h, state = { renderer: /** @type {THREE.WebGLRenderer | null} */ (null), scene: /** @type {THREE.Object3D | null} */ (null), probe: /** @type {THREE.Texture | null} */ (null), camera: /** @type {THREE.Camera | null} */ (null), started: false, loaded: 0 };
+  const figs = new Map(FIGURE_FILES.map((d) => [d.id, { d, status: /** @type {"idle" | "loading" | "ready" | "failed"} */ ("idle"), ms: 0, bytes: 0, pivot: /** @type {THREE.Object3D | null} */ (null), paints: /** @type {Map<string, THREE.Material> | null} */ (null) }]));
   const entry = (id) => fg.list.find((e) => e.id === id);
 
   // The renderer, from the first frame: a sheet one triangle large that draws nothing (the same kind as the shut windows' veil in ../site.js).
   const tap = new THREE.Mesh(new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0, 0, 0, 0], 3)), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
   tap.frustumCulled = false; tap.userData.keep = true; tap.userData.bake = false; tap.userData.eye = false; tap.userData.walk = false; tap.name = "figures-tap";
-  tap.onBeforeRender = (r, s) => { state.renderer ||= r; state.scene ||= s; };
+  tap.onBeforeRender = (r, s, c) => { state.renderer ||= r; state.scene ||= s; state.camera ||= c; };
   root.add(tap);
 
   /** @type {Promise<{ loader: GLTFLoader, masks: Map<string, THREE.Texture> }> | null} */
@@ -80,7 +80,7 @@ export function createFigures({ root, fg, M, sh }) {
       const f = e.f, s = (f.h - PLINTH.h) / (d.stageH - PLINTH.h);
       const pivot = new THREE.Group(); pivot.add(obj);
       pivot.position.set(f.x, top + PLINTH.h, SEAT.z + PIVOT_DZ); pivot.rotation.y = f.yaw ?? 0; pivot.scale.setScalar(s); pivot.name = `figure-${id}`;
-      const paints = new Map();
+      const paints = new Map(); rec.paints = paints;
       obj.traverse((o) => {
         const m = /** @type {THREE.Mesh} */ (o); if (!m.isMesh) return;
         const nmap = /** @type {any} */ (m.material).normalMap ?? null, key = nmap ? nmap.uuid : "none";
@@ -116,5 +116,7 @@ export function createFigures({ root, fg, M, sh }) {
     load(/** @type {string} */ (queue.shift())).finally(() => { busy = false; });
   };
   const report = () => ({ near: NEAR, started: state.started, loaded: state.loaded, probe: !!state.probe, figures: [...figs.values()].map((r) => ({ id: r.d.id, status: r.status, ms: Math.round(r.ms) })), scale: FIGURES.map((f) => { const d = /** @type {any} */ (figs.get(f.id)).d; return { id: f.id, stageH: d.stageH, gameH: f.h, s: +((f.h - PLINTH.h) / (d.stageH - PLINTH.h)).toFixed(4) }; }) });
-  return { tick, report };
+  // For the workbench's measuring tools (site.js hangs it on `__t05FiguresDebug`): the renderer, the scene and each loaded figure's pivot and paint materials.
+  const debug = () => ({ renderer: state.renderer, scene: state.scene, camera: state.camera, figures: Object.fromEntries([...figs].filter(([, r]) => r.pivot).map(([id, r]) => [id, { pivot: r.pivot, paints: [...(r.paints?.values() ?? [])], anchors: anchorsOf(id) }])) });
+  return { tick, report, debug };
 }

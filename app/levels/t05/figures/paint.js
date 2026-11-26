@@ -252,7 +252,7 @@ ${zoneCode}
       .replace("#include <metalnessmap_fragment>", "#include <metalnessmap_fragment>\n  metalnessFactor = clamp(pMetal, 0., 1.);")
       // a picture of which zone each pixel is, for measuring the colours on screen zone by zone (stage.js zoneIds): red
       // the zone's number (the lips 14) over 16, green the figure's
-      .replace("#include <dithering_fragment>", "#include <dithering_fragment>\n  if (uIdMode > .5) gl_FragColor = vec4(mix(zone, 14., step(.5, lip_ * onFace)) / 16., (uFig + 1.) / 16., 0., 1.);");
+      .replace("#include <dithering_fragment>", "#include <dithering_fragment>\n  if (uIdMode > .5 && uIdMode < 1.5) gl_FragColor = vec4(mix(zone, 14., step(.5, lip_ * onFace)) / 16., (uFig + 1.) / 16., 0., 1.);\n  // uIdMode 2: the pigment alone, no light (the colour the zones and the face lines give before anything shines on it), in sRGB, to compare one figure in two places\n  if (uIdMode > 1.5) { vec3 a = max(pCol, vec3(0.)); gl_FragColor = vec4(mix(a * 12.92, 1.055 * pow(max(a, vec3(0.)), vec3(1. / 2.4)) - .055, step(.0031308, a)), 1.); }");
   };
   m.customProgramCacheKey = () => "t05paint:" + recipe.version + ":" + N + ":" + fh + ":" + fe + (recipe.debugKey ?? "");
   const upd = () => { pivot.updateMatrixWorld(true); U.uToFig.value.copy(pivot.matrixWorld).invert(); };

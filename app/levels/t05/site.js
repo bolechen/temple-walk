@@ -217,12 +217,12 @@ export function buildSite(M) {
   // The seven painted figures (./figures/): only where the hall's doors are open (HALL_DOORS, the workbench's `?hall=open`). With them shut nothing of ./figures/ is imported, fetched or drawn.
   // Open, the seven's white boxes are parts of their own (benchFigures) so that each can give way to its figure when that arrives.
   const showFigures = !HALL_DOORS.shut && !offAltar;
-  /** @type {{ tick: (dt: number, eye: any) => void, report: () => any } | null} */
+  /** @type {{ tick: (dt: number, eye: any) => void, report: () => any, debug: () => any } | null} */
   let figures = null;
   if (!offAltar && !bench && !showFigures) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
   if (!offAltar && (bench || showFigures)) {
     const fg = benchFigures(M, altar, sh); root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), M.plaster(), sh), fg.group); if (hooks) hooks.figures = fg;
-    if (showFigures) import("./figures/index.js").then((m) => m.startFigures({ root, fg, M, sh })).then((f) => { figures = f; if (typeof globalThis !== "undefined") /** @type {any} */ (globalThis).__t05Figures = () => f.report(); }).catch((e) => console.warn("figures:", e));
+    if (showFigures) import("./figures/index.js").then((m) => m.startFigures({ root, fg, M, sh })).then((f) => { figures = f; if (typeof globalThis !== "undefined") { const g = /** @type {any} */ (globalThis); g.__t05Figures = () => f.report(); g.__t05FiguresDebug = () => f.debug(); } }).catch((e) => console.warn("figures:", e));
   }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
