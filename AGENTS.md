@@ -32,6 +32,8 @@
 
 **出对外宣传片或短视频**：先读 [skills/video-production/SKILL.md](skills/video-production/SKILL.md)，照它做。本仓库的 `skills/` 不会按 description 自动触发，只能靠这里点名。
 
+**写或修端到端场景**：先读 [skills/e2e-waits/SKILL.md](skills/e2e-waits/SKILL.md)。**合并已经绿了、但 main 又往前走了的 PR 之前**：先读 [skills/merge-green/SKILL.md](skills/merge-green/SKILL.md)。
+
 ## 与研究 Site 的关系
 
 研究 Site（<https://temple-atlas-research.floralpage64.chatgpt.site/>，下称 Site）是《山门之外》的研究图集和对外的进度、验收看板，本仓库是 T00 的实现。两边的分工：
