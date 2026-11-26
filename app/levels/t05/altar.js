@@ -39,6 +39,8 @@ export const SEAT = Object.freeze({ sumeru: 2.0, lotus: 1.0, w: 4.4, d: 3.2, z: 
 export const ATTEND = Object.freeze({ dx: 1.6, z: -14.95, w: 0.6, h: 2.6 });
 /** The two guardian kings on the floor at the altar's ends (ARCHITECTURE.md §2.3: x about ±19.5–20.5), 3.7 m on a 0.35 m plinth (DECISIONS.md §3: 3.5–4.0). */
 export const KING = Object.freeze({ x: 19.5, z: -16.4, w: 1.1, plinth: 0.35, h: 3.7 });
+/** The kings' placeholders once the seven are painted: the halo board's dark earth (figures/registry.js HALO_COLOR), so that a white column is not the lightest thing in the hall (#762, 2026-11-26). */
+export const KING_DARK = 0x42392d;
 
 /** The pointed body halo (boat-shaped), w wide at its widest, h tall, as a flat outline in x and y about its foot. */
 function haloShape(w, h) {

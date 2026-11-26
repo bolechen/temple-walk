@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
 import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
-import { buildAltar, benchFigures } from "./altar.js";
+import { buildAltar, benchFigures, KING_DARK } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE, AXIS_TREES } from "./axis.js";
 import { buildTower } from "./tower.js";
 import { buildDistance } from "./distance.js";
@@ -221,7 +221,11 @@ export function buildSite(M) {
   let figures = null;
   if (!offAltar && !bench && !showFigures) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
   if (!offAltar && (bench || showFigures)) {
-    const fg = benchFigures(M, altar, sh); root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), M.plaster(), sh), fg.group); if (hooks) hooks.figures = fg;
+    const fg = benchFigures(M, altar, sh);
+    // With the seven painted, the two kings' white placeholders at the altar's ends were the lightest things in the hall (L* 58 on the T4,
+    // the art director on #762, 2026-11-26): until real kings stand there they are drawn in the halo board's dark earth (KING_DARK).
+    const kingMat = showFigures ? new THREE.MeshStandardMaterial({ color: KING_DARK, roughness: 0.8, metalness: 0 }) : M.plaster();
+    root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), kingMat, sh), fg.group); if (hooks) hooks.figures = fg;
     if (showFigures) import("./figures/index.js").then((m) => m.startFigures({ root, fg, M, sh })).then((f) => { figures = f; if (typeof globalThis !== "undefined") { const g = /** @type {any} */ (globalThis); g.__t05Figures = () => f.report(); g.__t05FiguresDebug = () => f.debug(); } }).catch((e) => console.warn("figures:", e));
   }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
