@@ -2745,13 +2745,12 @@ const scenarios = {
   // (hidden, or only a gap in the frames: some in-app browsers send no visibilitychange); the first watch is passed over only by
   // holding for a second and a half, and letting go half way carries on; once seen, a tap does it; 山顶再坐一回 plays it again
   // and writes nothing in the book.
-  // The close's eye, for every season and both pictures (#498): from the first frame to the far view, the sphere the near plane's
+  // The close's eye (#498), one guard, the case nearest to what was reported (high tier, autumn, held upright; ~5 minutes under software, so the night's shares stay whole): from the first frame to the far view, the sphere the near plane's
   // corners make, set at every tenth of a second of the route, touches nothing drawn (a crown, a baluster, a rail); the trees are
   // drawn (no BARE), since the eye's hierarchy holds only what is built. The route is asked of the page, the hierarchy of the page.
   "ending-eye": { tier: 3, async run(b, base) {
-    const SHAPES = process.env.ENDING_SHAPE ? { [process.env.ENDING_SHAPE]: { upright: { width: 390, height: 844 }, wide: { width: 960, height: 540 } }[process.env.ENDING_SHAPE] } : { upright: { width: 390, height: 844 }, wide: { width: 960, height: 540 } };
-    const bad = [], Q = process.env.ENDING_Q || "low", SEASONS = (process.env.ENDING_SEASONS || "spring,summer,autumn,winter").split(",");
-    for (const season of SEASONS) for (const [shape, viewport] of Object.entries(SHAPES)) {
+    const bad = [], Q = "high", season = "autumn", shape = "upright", viewport = { width: 390, height: 844 };
+    {
       const t = await open(b, base, `q=${Q}&view=third&season=${season}&time=day&off=reflect,bloom,drift`, { viewport });
       await t.until(async () => (await t.page.evaluate(() => window.__eyeSpace().state)) === "ready", 180000, "the eye's hierarchy was not built");
       // as the workbench's ?play=ending does it: he sits on the summit mat, the following eye behind him, and the close begins
@@ -2763,32 +2762,33 @@ const scenarios = {
       await t.page.evaluate(() => window.__riteClock(0)); await t.frames(3);
       const hits = await t.page.evaluate(() => { const r = window.__closeRoute(0.1); return r && r.map((p, i) => [i * 0.1, p, window.__eyeShutAt(p[0], p[1], p[2])]).filter((h) => h[2]).map((h) => [+h[0].toFixed(1), h[1].map((v) => +v.toFixed(2))]); });
       expect(hits !== null, `${season} ${shape}: no route`);
-      // and what the picture itself shows: from 6 s to 22 s (the ninth second, and the line about the road beyond the gate, are where it was seen) the clock is stepped by a fifth and the
+      // and what the picture itself shows: from 8 s to 16 s (the ninth second, and the line about the road beyond the gate at 13.5 s, are where it was seen) the clock is stepped by a quarter and the
       // picture's centre, corners and edges are asked what is nearest (`__pick`: crowns of cut-out cards the hierarchy may let pass)
-      await t.page.evaluate(() => window.__riteClock(6000)); await t.frames(2);
+      await t.page.evaluate(() => window.__riteClock(8000)); await t.frames(2);
       const NEAR_MIN = 0.6, close = []; let road = false;
-      for (let i = 0; i < 80; i++) {
+      for (let i = 0; i < 32; i++) {
         const r = await t.page.evaluate(() => { const w = innerWidth, h = innerHeight; const d = [[.5,.5],[.02,.02],[.98,.02],[.02,.98],[.98,.98],[.5,.05],[.5,.95],[.05,.5],[.95,.5]].map(([x, y]) => window.__pick(w * x, h * y, 4).filter((q) => q.part !== "monk")[0]).filter(Boolean); const nearest = d.sort((p, q) => p.distance - q.distance)[0]; return { t: window.__rites().close.u * 30, line: document.getElementById("endingLine").textContent, nearest: nearest && [nearest.distance, nearest.part, nearest.material] }; });
         if (/山门之外/.test(r.line) && !road) { road = true; require("fs").mkdirSync("tools/out/ending-eye", { recursive: true }); await t.page.screenshot({ path: `tools/out/ending-eye/${Q}-${season}-${shape}-road.png` }); }
-        if (i === 15) { require("fs").mkdirSync("tools/out/ending-eye", { recursive: true }); await t.page.screenshot({ path: `tools/out/ending-eye/${Q}-${season}-${shape}-9s.png` }); }   // (6 s and fifteen fifths on: the ninth second)
+        if (i === 4) { require("fs").mkdirSync("tools/out/ending-eye", { recursive: true }); await t.page.screenshot({ path: `tools/out/ending-eye/${Q}-${season}-${shape}-9s.png` }); }   // (8 s and four quarters on: the ninth second)
         if (r.nearest && r.nearest[0] < NEAR_MIN) close.push(`${r.t.toFixed(1)} s ${JSON.stringify(r.nearest)}`);
-        await t.page.evaluate(() => window.__riteClock(200)); await t.frames(2);
+        await t.page.evaluate(() => window.__riteClock(250)); await t.frames(2);
       }
-      if (close.length) bad.push(`${season} ${shape}: something drawn within ${NEAR_MIN} m of the eye in the picture at ${close.length} of 80 frames, first ` + close.slice(0, 3).join("; "));
+      if (close.length) bad.push(`${season} ${shape}: something drawn within ${NEAR_MIN} m of the eye in the picture at ${close.length} of 32 frames, first ` + close.slice(0, 3).join("; "));
       if (hits.length) bad.push(`${season} ${shape}: the eye is inside something at ${hits.length} of the route's 301 points, from ${hits[0][0]} s to ${hits[hits.length - 1][0]} s, first at ` + JSON.stringify(hits.slice(0, 3)));
       expect(t.errors.length === 0, t.errors.join("\n")); await t.close();
     }
     expect(bad.length === 0, bad.join("\n     "));
   } },
   // The title of what has ended (#497): at the moment it comes (after TITLE_AT, held with the rites' clock), each of its three lines
-  // reads on what lies under it, at 4.5:1 or better, on two phones held upright and on a wide screen, in all four languages. The
+  // reads on what lies under it, at 4.5:1 or better, on two phones held upright and on a wide screen, and in all four languages upright. The
   // lines' own colour is taken as it is drawn (the third is thinner: its opacity blends it into the picture), the picture under
   // them from a second shot with the words hidden, the median over each line's box; the words stay inside the picture.
-  "ending-title": { tier: 2, async run(b, base) {
+  "ending-title": { tier: 3, async run(b, base) {
     const SHAPES = { upright: { width: 390, height: 844 }, small: { width: 360, height: 780 }, wide: { width: 1920, height: 1080 } };
     const LOCALE = { zh: "zh-CN", ja: "ja-JP", en: "en-US", ko: "ko-KR" }, bad = [], rows = [];
-    const only = (process.env.ENDING_SHAPES || Object.keys(SHAPES).join()).split(","), langs = (process.env.ENDING_LANGS || "zh,ja,en,ko").split(",");
-    for (const shape of only) for (const lang of langs) {
+    // Every picture in Chinese; the other three languages upright, where their longer lines have the least room.
+    const CASES = (process.env.ENDING_CASES || "upright:zh,small:zh,wide:zh,upright:en,upright:ko,upright:ja").split(",").map((c) => c.split(":"));
+    for (const [shape, lang] of CASES) {
       const touch = shape !== "wide", viewport = SHAPES[shape];
       const t = await open(b, base, `q=low&view=third&season=autumn&time=day&lang=${lang}&off=reflect,bloom,drift`, { viewport, locale: LOCALE[lang], ...(touch ? { hasTouch: true, isMobile: true } : {}) });
       await t.page.evaluate(() => { const p = window.__places.sit; window.__poseNear(p.at[0] + 0.3, p.at[1] + 0.3, Math.PI - p.face, 0); }); await t.frames(3);
