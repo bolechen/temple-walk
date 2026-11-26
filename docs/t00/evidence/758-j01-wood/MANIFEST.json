@@ -807,6 +807,294 @@
    "rev": "4220c524a22a525f1dc3fc7101d857d29228792e"
   },
   {
+   "path": "G-indoor/main-again/chan-door.png",
+   "bytes": 1177547,
+   "sha256": "7ca23860fe1b513253e39574f6b2478a6e7b817db94b6ea187e67f358d63c73f",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/chan-roof.png",
+   "bytes": 1112220,
+   "sha256": "bf69f823e792e82192379a2079d7e5a6e286af177bbd2c8ebb4e086fde4fd8eb",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/dahui-roof.png",
+   "bytes": 1163680,
+   "sha256": "26fcbd35cedf884e930f50afe45997e8cecaec2963b4cd1519a92ace8dbe6119",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/dahui-table.png",
+   "bytes": 1201164,
+   "sha256": "2298f7a294f1d451cded6a88764230e56f1f34f893a27232a81fa1d38bf6fdfa",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/guanyin-altar.png",
+   "bytes": 1186284,
+   "sha256": "7714c3fbb512d0f4700054207cecc621c9f95a923bbe5c515fbf7f3c6a79ebd5",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/guanyin-roof.png",
+   "bytes": 1132805,
+   "sha256": "9d75aa91e7872321153ff12e0dfb4513d4962b0aa3b452c8f7e6d1fb8d7b0b3f",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/library-ceiling.png",
+   "bytes": 1077107,
+   "sha256": "b3db06ef8a09447497492a6dc7b618bbf00af10481e80248a237b0919060bfe5",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/library-shelves.png",
+   "bytes": 1181727,
+   "sha256": "ef01d70f250ae0f30d2d4f891c543ffea925fdf4782eef95f00a70b13523754c",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/lingxiao-roof.png",
+   "bytes": 1088759,
+   "sha256": "ac3d28c26febdbccc9c41c4b115de26765834898fd460e3ac404eb20ba159250",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/lingxiao-room.png",
+   "bytes": 1181907,
+   "sha256": "43eb3b723ddd566b02cdf38b2ed1039dadd22a8bc79f2692862862357e01b600",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/main-altar.png",
+   "bytes": 1254653,
+   "sha256": "8b322afa81473294f70c00d17a6d58dbe417a0e987b1ca8741f54cf8c4f62c26",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/main-roof.png",
+   "bytes": 1100912,
+   "sha256": "d75907d7d86eedee38660075f1ef5fe164c3140e72cca965dfd033118c92e4fb",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/tea-door.png",
+   "bytes": 1239586,
+   "sha256": "029f77a7ca28be5889bfd9ef7e60453534d89e31cf12fa1d9e98b7a6bef675b9",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/tea-roof.png",
+   "bytes": 1092677,
+   "sha256": "acdfe4567c2f980c5f40be486bfec6c02f43a8c7833d06f1e0cae66e3e52d20f",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/yaoshi-altar.png",
+   "bytes": 1176243,
+   "sha256": "fa8a96ed8c62cfe0c322913678b67c4d486ee4b01d5509776456c32d65e81a5d",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main-again/yaoshi-roof.png",
+   "bytes": 1116893,
+   "sha256": "52d4e1a1e1f1bb5fa7b924c7f474645ca462c121ed36a008686bf4d9de49e2c1",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/chan-door.png",
+   "bytes": 1177503,
+   "sha256": "c4b5b6a0df3fd4b862b7569346331d885fc9c95da9f58586ea1750b2580cd576",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/chan-roof.png",
+   "bytes": 1112480,
+   "sha256": "90bd94e80a3757e8a65b7e77b9a56f11ef41358858ccbf4d02527754f583be2e",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/dahui-roof.png",
+   "bytes": 1163381,
+   "sha256": "1748bbd976c3587b545c883e4342b8c3eed2c6e5e547071659322aadb0789461",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/dahui-table.png",
+   "bytes": 1201125,
+   "sha256": "b20ca4bc919f28d54d2e08ca5f031a8f5e7a87b85b9b69b8006997828f25c188",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/guanyin-altar.png",
+   "bytes": 1185405,
+   "sha256": "fe36f9486a165f02da1aae6195051700f11ed4f3356dafd3758fe50cf177ea95",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/guanyin-roof.png",
+   "bytes": 1133097,
+   "sha256": "f8680f3e9acae5038b20c4f86c1c2b0dfddaf0d5a954708dfc97c23bd24901ab",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/library-ceiling.png",
+   "bytes": 1077063,
+   "sha256": "9045e717750596ac0ae979458311664543b1b53e118332d8f3636c8b1e886622",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/library-shelves.png",
+   "bytes": 1181383,
+   "sha256": "1c3dc33fb6d50154f83535337736e8216ac311677d9aeb5273e49c9af3322e4c",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/lingxiao-roof.png",
+   "bytes": 1089230,
+   "sha256": "8b285f1193b2cada1416ef4c9d836e1fa171d25a3246378ec24d6e053c9adb80",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/lingxiao-room.png",
+   "bytes": 1182056,
+   "sha256": "eb4101fa53381126717104a44f6b6953814da70d01b0d3d3db06e2c48ac4159a",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/main-altar.png",
+   "bytes": 1255120,
+   "sha256": "e20aeb1bd555ea2a59cf147abb361d1c5cc8f79e02b1aef91974e036a50e56cc",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/main-roof.png",
+   "bytes": 1100417,
+   "sha256": "da363248beffbc68b0c6b3c30ee545757c75137428c92311f53b9096a3f17399",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/tea-door.png",
+   "bytes": 1239777,
+   "sha256": "8a9e47c3b01531e8be4e6c09d367e06a25dc069d6a824d6748586f701dbc7a24",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/tea-roof.png",
+   "bytes": 1093151,
+   "sha256": "7b64843f989518f33c00910072540433f7ff4d02fd67d70479a8aa0332513de4",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/yaoshi-altar.png",
+   "bytes": 1175876,
+   "sha256": "030ab18a2198dcfdca250e84f2436d2c747f40ead5211fca66e902e6bb99d112",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/main/yaoshi-roof.png",
+   "bytes": 1117316,
+   "sha256": "97e5844d70a790884da5ffe6d16f382681605f83c3f5aec3668e73fa7b2d698b",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/chan-door.png",
+   "bytes": 1177172,
+   "sha256": "d6b3c6f35a338936c6f124c3d6e63f43ccd4bc2d13fffe849005faa8509f9413",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/chan-roof.png",
+   "bytes": 1112036,
+   "sha256": "57c1deb4ff8244f7d1ab362c49d7de5b297ae57954a7f6812e0dca4a0da94741",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/dahui-roof.png",
+   "bytes": 1163133,
+   "sha256": "efd2c023767fcc1893d62ef637570f91b819ae9cc7ebf0877ff81e4e3a84ff4b",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/dahui-table.png",
+   "bytes": 1201179,
+   "sha256": "7be30284bde90e966203a22e846ac677abee876a00d68ad69f65670283a22587",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/guanyin-altar.png",
+   "bytes": 1186028,
+   "sha256": "65f0939e36bcc97bc706b79f322f4d0f94617c2f6ebb9109261a1850625a985b",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/guanyin-roof.png",
+   "bytes": 1132802,
+   "sha256": "1b86d4a63b6b32ba245364d9c926ef06ac3573f9bae488261ca4d794f2f071d9",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/library-ceiling.png",
+   "bytes": 1076883,
+   "sha256": "e52520f6ded31a5894582f4eed1458f397ce23b9e2912dcfed3ce7bfdff5d040",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/library-shelves.png",
+   "bytes": 1181597,
+   "sha256": "c9b4d3a2ab671ec598dafd81be47529b175af0bc569513b26f926283a78da97e",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/lingxiao-roof.png",
+   "bytes": 1088739,
+   "sha256": "fd66a8e1d8ed8b8d76ff3bef0beccf2bc2d94ac22963168a55b575bb9a62298f",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/lingxiao-room.png",
+   "bytes": 1182178,
+   "sha256": "cc88c130850fde188ed69c51f92e81e55fccb2f24034556d8ff9fd8500245614",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/main-altar.png",
+   "bytes": 1254485,
+   "sha256": "b208db4672a992913beca15485aaf37422b5da8a93efe738e6a30efc5889737a",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/main-roof.png",
+   "bytes": 1100709,
+   "sha256": "c6c1bbdd2bb77668756ff63aa795d13e517f885d4adb858f7de717c31069f5b2",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/tea-door.png",
+   "bytes": 1239675,
+   "sha256": "d15da3b537ccb124551c244b557fbf76e129b995ac8b819c58e36bd1d14ca30d",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/tea-roof.png",
+   "bytes": 1092961,
+   "sha256": "d3921616513199ea9910e42c4489d964785d7860fb45d01049d8d59c67b52014",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/yaoshi-altar.png",
+   "bytes": 1176149,
+   "sha256": "d9b433010596892ecf91c4e553543be6a82402f47841d405ef0268c9d17921ca",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
+   "path": "G-indoor/pr-43c671d/yaoshi-roof.png",
+   "bytes": 1117063,
+   "sha256": "4a73ff416e996271d3cabeb7a521a2369f492f316e3d43503db1810877765561",
+   "rev": "cf86924987bc676ecc7befe50da921e05a8c63bd"
+  },
+  {
    "path": "collage.jpg",
    "bytes": 371733,
    "sha256": "c1c51c851dba6e9f889f859387c2567602d0eeb696d504b62545013be9377088",

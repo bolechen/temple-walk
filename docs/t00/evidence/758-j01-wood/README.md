@@ -11,6 +11,7 @@ T4（t4-small，ANGLE on Vulkan）原图，`gpu-render.sh` 出图，每个 run �
 | `D-wood165-sat09/` | 20261126-070837 | 18d1ee2（木色 1.65、彩度 0.9） | J01 cam01–06、art1–6（只画新版；对照用 A、C 里的 `_base`） |
 | `E-bamboo-open/` | 20261126-074041 | 34f8321（竹叶按露天多少透光、透光往灰收、竹下小丛不透） | J01 cam01–06、art1/2/3/5；cam01 夏暮、夏夜，stair、gate 第三人称各带同 Job 的 main（`_base`） |
 | `F-clumps-as-main/` | 20261126-075720 | 2e26672（竹下小丛还原成 main） | cam01 夏昼、夏夜，cam02，stair 第三人称，art1，各带同 Job 的 main（`_base`） |
+| `G-indoor/` | 软件渲染（`tools/inside.cjs --views t00`，1280×720） | main `c0ea233` 拍两遍（`main/`、`main-again/`），43c671d 一遍（`pr-43c671d/`） | 十六个殿内机位：PR 与 main 的差落在 main 自己两遍之间的差以内（灯焰、GTAO 每帧不同），殿内木头没变 |
 
 `collage.jpg`：左 main，右 18d1ee2；cam01、cam04、cam05、art2。
 
