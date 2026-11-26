@@ -295,7 +295,7 @@ export default {
   "云径禅寺 · 点灯": "Yunjing Temple · A lamp",
   "下一处": "Next",
   "{n} 步": "{n} steps",
-  "朱印 {n}": "Seals: {n}",
+  "朱印 {n}枚，共{total}枚": "{n} of {total} seals",
   "七印圆满": "All seven seals",
   "云径禅寺 · 七印圆满": "Yunjing Temple · All seven seals",
   "钟、香、茶、句、井、灯、坐，帐上七处都盖了印。": "Bell, incense, tea, a line, the well, a lamp, sitting: all seven places in the book bear their seal.",
