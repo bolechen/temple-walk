@@ -82,7 +82,7 @@ function inscription(w, h, again = true) {
     if (!c.worn) { draw(c.ch, c.x, c.y, c.size); continue; }
     // (each scuff is a soft-edged patch: a radial fade squeezed into an ellipse, so that no canvas filter is needed)
     for (let k = 0; k < 4; k++) {
-      const rx = c.size * (0.35 + 0.5 * wr()), ry = rx * (0.5 + 0.5 * wr()), a = 0.24 + 0.2 * wr(), dark = wr() < 0.65, tone = dark ? "20,18,15" : "196,190,178";
+      const rx = c.size * (0.35 + 0.5 * wr()), ry = rx * (0.5 + 0.5 * wr()), a = 0.15 + 0.14 * wr(), dark = wr() < 0.65, tone = dark ? "20,18,15" : "196,190,178";
       g.save(); g.translate(c.x + (wr() - 0.5) * c.size * 1.2, c.y + (wr() - 0.5) * c.size * 1.2); g.rotate(wr() * 3); g.scale(1, ry / rx);
       const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, `rgba(${tone},${a.toFixed(3)})`); gr.addColorStop(1, `rgba(${tone},0)`);
       g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 6.283); g.fill(); g.restore();
