@@ -1,0 +1,330 @@
+{
+ "out": "tools/out/t05/fl10/run",
+ "size": [
+  1600,
+  900
+ ],
+ "ao": true,
+ "statues": [
+  {
+   "url": "tools/out/t05/ship701c/kasyapa-B4H10b.glb",
+   "x": 16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "kasyapa-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.97,
+    1.0,
+    1.03
+   ]
+  },
+  {
+   "url": "tools/out/t05/ship701b/krakucchanda-B4H10b.glb",
+   "x": 11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "krakucchanda-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701e/sikhin-M40vb.glb",
+   "x": 5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "sikhin-B"
+  },
+  {
+   "url": "tools/out/t05/ship701d/vipasyin-B4H10b.glb",
+   "x": 0,
+   "h": 9.0,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "vipasyin-B"
+  },
+  {
+   "url": "tools/out/t05/ship701b/visvabhu-V3b.glb",
+   "x": -5.8,
+   "h": 8.9,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "visvabhu-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701b/kanakamuni-K1Lb.glb",
+   "x": -11.33,
+   "h": 8.75,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0
+   },
+   "paint": "clay",
+   "colour": "kanakamuni-L2"
+  },
+  {
+   "url": "tools/out/t05/ship701c/sakyamuni-V14b.glb",
+   "x": -16.45,
+   "h": 8.6,
+   "base": false,
+   "plinth": 0.4,
+   "turn": 0,
+   "headAt": 0.13,
+   "maxW": 10,
+   "halo": {
+    "rings": 0,
+    "tips": 0,
+    "gain": 1.5
+   },
+   "paint": "clay",
+   "colour": "sakyamuni-B",
+   "lotusGain": 1.25,
+   "innerTint": [
+    0.96,
+    1.0,
+    1.05
+   ]
+  }
+ ],
+ "shots": [
+  {
+   "name": "fl-mid10-sikhin",
+   "shoot": {
+    "paint": {
+     "flat": true,
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "light": "diffuse",
+    "hemi": 1.4,
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.28,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 1.0
+    }
+   }
+  },
+  {
+   "name": "fl-join-sikhin",
+   "shoot": {
+    "paint": {
+     "flat": true,
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "light": "diffuse",
+    "hemi": 1.4,
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -12.1
+     ],
+     "look": [
+      5.8,
+      10.83,
+      -18.1
+     ],
+     "fov": 16,
+     "exp": 1.0
+    }
+   }
+  },
+  {
+   "name": "fl-collar-sikhin",
+   "shoot": {
+    "paint": {
+     "flat": true,
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "light": "diffuse",
+    "hemi": 1.4,
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -9.6
+     ],
+     "look": [
+      5.8,
+      10.479999999999999,
+      -18.1
+     ],
+     "fov": 8,
+     "exp": 1.0
+    }
+   }
+  },
+  {
+   "name": "sk-p-mid10",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.28,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "sk-p-join",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -12.1
+     ],
+     "look": [
+      5.8,
+      10.83,
+      -18.1
+     ],
+     "fov": 16,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "sk-p-mouth",
+   "shoot": {
+    "paint": {
+     "envIntensity": 0.6
+    },
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      10.78,
+      -18.1
+     ],
+     "fov": 7,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  },
+  {
+   "name": "sk-clay-mid10",
+   "shoot": {
+    "paint": false,
+    "mood": "winter",
+    "view": "faceFrom10",
+    "over": {
+     "at": [
+      5.8,
+      4.6,
+      -7.6
+     ],
+     "look": [
+      5.8,
+      11.28,
+      -18.1
+     ],
+     "fov": 11,
+     "exp": 3.2
+    },
+    "lamp": 0,
+    "noFloor": true,
+    "keyI": 260,
+    "keyAim": 12
+   }
+  }
+ ],
+ "aoi": 0.4
+}
