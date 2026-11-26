@@ -69,23 +69,34 @@ function inscription(w, h, again = true) {
   g.clearRect(0, 0, px, ph);
   // An incised character in a stone under a roof reads by its two edges: the upper wall of the cut in shadow, and the floor of
   // the cut and its lower lip catching the sky (with the pale dust that lies in old cuts). Drawn as three passes of the glyph.
+  let ds = 11; const dr = () => ((ds = (ds * 16807) % 2147483647) / 2147483647);
   const draw = (ch, x, y, size) => {
+    g.globalAlpha = 0.62 + 0.3 * dr();   // old cuts are not all as deep as each other
     g.font = `${size}px "Yunjing Kai", serif`; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "rgba(8,7,6,0.85)"; g.fillText(ch, x - size * 0.025, y - size * 0.035);       // the upper wall of the cut, in shadow
     g.fillStyle = "rgba(214,208,196,0.78)"; g.fillText(ch, x + size * 0.02, y + size * 0.03);   // the lower lip, catching the light
     g.fillStyle = "rgba(150,144,134,0.9)"; g.fillText(ch, x, y);                                 // the floor of the cut, pale with dust
+    g.globalAlpha = 1;
+    // a nick or two where the edge of a stroke has flaked: a small patch of the face's own tone laid over the cut
+    for (let k = 0, n = dr() < 0.5 ? 1 : 0; k < n; k++) { g.fillStyle = "rgba(128,124,116,0.55)"; g.beginPath(); g.arc(x + (dr() - 0.5) * size * 0.7, y + (dr() - 0.5) * size * 0.7, size * (0.04 + 0.05 * dr()), 0, 6.283); g.fill(); }
   };
   // The five columns (steleLayout); below them the stone is left as it weathered.
   // A weathered cell is a few dull, uneven scuffs of the stone, drawn with the same seeded hand every time, with no character in it.
   let ws = 3; const wr = () => ((ws = (ws * 16807) % 2147483647) / 2147483647);
   for (const c of steleLayout(px, ph)) {
     if (!c.worn) { draw(c.ch, c.x, c.y, c.size); continue; }
-    // (each scuff is a soft-edged patch: a radial fade squeezed into an ellipse, so that no canvas filter is needed)
+    // A cell where the cut has worn away: mostly pale, flaked stone (lighter than the face, as weathering is), a few broken strokes of the old cut that cannot be
+    // read as anything, and, from the edges, no more. Soft-edged patches are a radial fade squeezed into an ellipse, so that no canvas filter is needed.
     for (let k = 0; k < 4; k++) {
-      const rx = c.size * (0.35 + 0.5 * wr()), ry = rx * (0.5 + 0.5 * wr()), a = 0.15 + 0.14 * wr(), dark = wr() < 0.65, tone = dark ? "20,18,15" : "196,190,178";
+      const rx = c.size * (0.35 + 0.5 * wr()), ry = rx * (0.5 + 0.5 * wr()), a = 0.1 + 0.1 * wr(), pale = wr() < 0.75, tone = pale ? "206,200,188" : "24,22,18";
       g.save(); g.translate(c.x + (wr() - 0.5) * c.size * 1.2, c.y + (wr() - 0.5) * c.size * 1.2); g.rotate(wr() * 3); g.scale(1, ry / rx);
       const gr = g.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, `rgba(${tone},${a.toFixed(3)})`); gr.addColorStop(1, `rgba(${tone},0)`);
       g.fillStyle = gr; g.beginPath(); g.arc(0, 0, rx, 0, 6.283); g.fill(); g.restore();
+    }
+    g.lineCap = "round";
+    for (let k = 0; k < 3; k++) {   // broken, faint strokes: short, thin, each cut off at its ends; two passes as a cut has, a shadow edge and a lit edge
+      const x0 = c.x + (wr() - 0.5) * c.size * 0.8, y0 = c.y + (wr() - 0.5) * c.size * 0.8, ang = wr() < 0.5 ? wr() * 0.5 : 1.35 + wr() * 0.4, len = c.size * (0.12 + 0.28 * wr());
+      for (const [dx, col] of /** @type {[number, string][]} */ ([[-0.012, "rgba(8,7,6,0.2)"], [0.012, "rgba(214,208,196,0.22)"]])) { g.strokeStyle = col; g.lineWidth = Math.max(1, c.size * 0.05); g.beginPath(); g.moveTo(x0 + dx * c.size, y0); g.lineTo(x0 + dx * c.size + Math.cos(ang) * len, y0 + Math.sin(ang) * len); g.stroke(); }
     }
   }
   // Weathering: the stone's own blotches over the face, heavier toward its foot and its left, where nothing is read.
