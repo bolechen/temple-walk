@@ -119,10 +119,17 @@ const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAtt
  * eaves, so here it fades out between 1.4 m and 0.1 m.
  */
 export const WOOD_STYLE = Object.freeze({ gain: 1.65, sat: 0.9, dampTop: 1.4 });
+/**
+ * The bare earth outdoors (EARTH_STYLE in src/materials.js): the litter under the bamboo at the start read L* 13 where the target picture
+ * the art director named for J01 (#757's first version of cam01) reads 17 (#758). A third lighter brings it to 16, its hue as it was.
+ * Snow lies over it as before; the far hills are not this earth.
+ */
+export const EARTH_STYLE = Object.freeze({ gain: 1.35 });
 
 export function buildSite(M) {
   const root = new THREE.Group();
-  if (typeof M.woodStyle === "function") M.woodStyle(WOOD_STYLE);   // (one page walks one level, so the timber is this level's for good; a test's stand-in materials have none)
+  if (typeof M.woodStyle === "function") M.woodStyle(WOOD_STYLE);
+  if (typeof M.earthStyle === "function") M.earthStyle(EARTH_STYLE);   // (one page walks one level, so the timber is this level's for good; a test's stand-in materials have none)
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
   const litWindows = [], walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {}, benchSeats = [];
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
