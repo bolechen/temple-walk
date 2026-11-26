@@ -100,6 +100,9 @@ for ci, z in enumerate(spec["channels"]):
   spill = reg | (ndi.binary_dilation(reg, structure=st, iterations=max(1, int(round(3 * z.get("blur", 0.012) / mpp)))) & bg)
   m = ndi.gaussian_filter(spill.astype(np.float32), sigma=z.get("blur", 0.012) / mpp)
   val = np.clip(m * z.get("gain", 1.0) * 255, 0, 255).astype(np.uint8)   # gain: a region whose rim is a pale fringe (a finger's grazing edge the growth stops short of) is pushed to full over its blur
+  for ex in z.get("exclude", []):
+    # a patch the picture could not tell from the zone (a nail of cloth just behind a hand's edge): boxes cleared from this channel
+    ex0, ey0 = px(ex[0], ex[3]); ex1, ey1 = px(ex[2], ex[1]); val[max(ey0, 0):max(ey1, 0), max(ex0, 0):max(ex1, 0)] = 0
   out[..., ch] = np.maximum(out[..., ch], val) if z.get("union") else val   # union: this region joins what an earlier entry put in the same channel (the bare chest and the raised hand are both skin)
   report["channels"].append({"zone": z["zone"], "pixels": int(reg.sum()), "area_m2": round(float(reg.sum()) * mpp * mpp, 3)})
 if spec.get("depth"):
