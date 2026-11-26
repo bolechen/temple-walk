@@ -1,0 +1,32 @@
+== tools/out/gpu/20261126-120913/
+art2_autumn-day_first noSkyL95 55.6->56.2 L50 23.2->23.2 sky 81.3
+cam01_summer-day_first noSkyL95 39.2->39.2 L50 18.9->20.4 sky 77.2
+    ground base L50 13.3 P90 21.0 spread 11.7 C 5.5 h 135 | new L50 16.3 P90 26.5 spread 15.8 C 7.3 h 134
+cam01_summer-night_first noSkyL95 21.7->20.7 L50 10.1->10.1 sky 85.6
+    ground base L50 7.1 P90 9.9 spread 4.1 C 4.2 h -89 | new L50 7.6 P90 11.6 spread 5.6 C 4.5 h -92
+cam01_winter-day_first noSkyL95 68.8->68.8 L50 41.9->41.8 sky 84.2
+    ground base L50 88.6 P90 89.8 spread 12.9 C 0.6 h 145 | new L50 88.6 P90 89.8 spread 12.9 C 0.6 h 145
+cam03_summer-day_first noSkyL95 62.8->63.8 L50 27.8->27.8 sky 75.5
+    screenL base L50 66.5 P90 70.3 spread 18.3 C 3.0 h 144 | new L50 67.9 P90 70.7 spread 15.3 C 3.0 h 139
+    screenR base L50 65.4 P90 69.6 spread 18.7 C 3.1 h 142 | new L50 66.9 P90 70.6 spread 16.1 C 3.1 h 140
+cam04_autumn-day_first noSkyL95 55.0->55.5 L50 22.9->23.0 sky 81.7
+    leftwall base L50 67.5 P90 84.2 spread 30.4 C 4.3 h 113 | new L50 68.6 P90 84.9 spread 29.4 C 4.2 h 112
+    gaps base L50 24.1 P90 43.2 spread 27.5 C 3.0 h 61 | new L50 24.1 P90 43.9 spread 28.2 C 3.0 h 61
+cam04_summer-day_first noSkyL95 46.6->47.0 L50 18.9->18.9 sky 75.5
+    leftwall base L50 59.3 P90 64.8 spread 14.9 C 3.4 h 144 | new L50 60.5 P90 65.8 spread 14.0 C 3.4 h 142
+    gaps base L50 21.7 P90 42.9 spread 31.0 C 3.9 h 78 | new L50 21.7 P90 44.1 spread 32.2 C 3.9 h 78
+cam04_summer-night_first noSkyL95 42.6->43.5 L50 10.4->10.1 sky 85.0
+    leftwall base L50 22.4 P90 43.6 spread 28.8 C 14.4 h -80 | new L50 17.9 P90 42.3 spread 28.8 C 18.3 h -77
+    gaps base L50 7.8 P90 13.4 spread 7.4 C 5.3 h -78 | new L50 7.8 P90 14.4 spread 8.5 C 5.3 h -78
+cam04_winter-day_first noSkyL95 58.3->58.8 L50 25.9->25.9 sky 86.1
+    leftwall base L50 65.1 P90 79.0 spread 21.2 C 3.4 h 118 | new L50 65.9 P90 79.8 spread 20.4 C 3.3 h 117
+    gaps base L50 27.6 P90 48.0 spread 30.1 C 3.0 h 60 | new L50 27.6 P90 49.4 spread 31.3 C 3.0 h 60
+cam06_autumn-day_first noSkyL95 67.3->67.3 L50 44.8->44.9 sky 82.8
+    farwall base L50 63.9 P90 85.9 spread 61.6 C 6.1 h 101 | new L50 64.5 P90 86.6 spread 62.2 C 6.0 h 100
+    pave base L50 62.4 P90 72.5 spread 21.6 C 3.4 h 135 | new L50 62.4 P90 72.5 spread 21.6 C 3.4 h 134
+cam06_summer-day_first noSkyL95 56.1->56.2 L50 27.4->27.4 sky 77.7
+    farwall base L50 42.8 P90 67.7 spread 56.4 C 3.8 h 142 | new L50 43.6 P90 68.8 spread 57.4 C 3.8 h 142
+    pave base L50 44.2 P90 56.0 spread 33.4 C 3.4 h 178 | new L50 44.2 P90 56.0 spread 33.4 C 3.4 h 178
+cam06_winter-day_first noSkyL95 68.3->68.3 L50 51.9->51.8 sky 87.5
+    farwall base L50 72.5 P90 82.6 spread 42.8 C 3.7 h 105 | new L50 72.9 P90 83.1 spread 43.3 C 3.7 h 105
+    pave base L50 87.3 P90 89.4 spread 27.2 C 1.9 h -124 | new L50 87.5 P90 89.4 spread 27.2 C 1.9 h -124

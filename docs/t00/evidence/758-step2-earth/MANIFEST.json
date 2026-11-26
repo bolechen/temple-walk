@@ -1,0 +1,168 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "F-earth135/art1_summer-dawn_first.png",
+   "bytes": 4056514,
+   "sha256": "bae58a1acbe1dc7ad7da8973746090f6d46ac91994e10e0a4a9c3f6518fc9d3d",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/art1_summer-dawn_first_base.png",
+   "bytes": 3983225,
+   "sha256": "ea84bf4b64c87616d72a4891bea4e1fd3f0631620dc12a976158a56ed3000c8d",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/art2_autumn-day_first.png",
+   "bytes": 3010589,
+   "sha256": "137d5efa7e0bccf0b243c6ba18b0a4afce94176cec1e821b970be268ec29c511",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/art2_autumn-day_first_base.png",
+   "bytes": 3009822,
+   "sha256": "509ea39b4adefeafc444fb22bc59afdb9bf557da7c7b552b0be6962753787a21",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/art5_summer-dusk_first.png",
+   "bytes": 2608725,
+   "sha256": "0a055610bf51b213a8bea0a1b859ad2a6d76e4fff963e87e8e722a9848fd4320",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/art5_summer-dusk_first_base.png",
+   "bytes": 2607829,
+   "sha256": "ec69161b7615507e48f80acf3a29a1482648e97792d5b49762c8be7b4be3e9d9",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_autumn-day_first.png",
+   "bytes": 4198732,
+   "sha256": "cc2f57a004ee9efc2046b9f4e0599458941251e7484e493bd209b56d1a329936",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_autumn-day_first_base.png",
+   "bytes": 4105222,
+   "sha256": "8bbbdb1a33c63a37cc22e288a3fa0b2125ddf53744a0654d327174bf459ed831",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_summer-day_first.png",
+   "bytes": 3584892,
+   "sha256": "200925dafca68fdb06f02c27452486cfe7f190ac420f22e077f03cf32fc4db50",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_summer-day_first_base.png",
+   "bytes": 3460266,
+   "sha256": "2c5161c98e3b28fe6febdb878e2bce4482bd30101740f518309f377c214c7503",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_summer-night_first.png",
+   "bytes": 3022419,
+   "sha256": "6b7c0a2635b18be425821955bc765ab46cf63e3ae10e25efb0478263c73fef43",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_summer-night_first_base.png",
+   "bytes": 2939962,
+   "sha256": "ad208881d7c861d22fade60b03c9d4ed45e1a5a04a5add6a6b3e3b324c69aa8b",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_winter-day_first.png",
+   "bytes": 3724904,
+   "sha256": "02f8ba7ecd6559f3d87cac6ce88e1198334fd3eb585373b4a11d488c6cebe427",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam01_winter-day_first_base.png",
+   "bytes": 3725167,
+   "sha256": "3225314f2a4b75ba4e93438ce1ab2fa927af721b4d149bcb41ea5a8ddbb20415",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam02_summer-day_first.png",
+   "bytes": 3306038,
+   "sha256": "2a0976bbdce1d8b098b4c2f4bc10778a9b1857d086a0f630cb35a159df9c2927",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam02_summer-day_first_base.png",
+   "bytes": 3234370,
+   "sha256": "8f3a21108bc74f929b8799960ba336ca4dd2b41cdda51f226e73763d7c6150cf",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam03_summer-day_first.png",
+   "bytes": 2672052,
+   "sha256": "26cd95cd661f44c405ac14ae7b2d8d39d4c78fe1e9c391e1cff7457a2ef2c932",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam03_summer-day_first_base.png",
+   "bytes": 2672994,
+   "sha256": "d62354ce0f250d09a6b93d6586b4c186720646562e10cbf1e3ae77ce4196e27e",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam04_summer-day_first.png",
+   "bytes": 2838020,
+   "sha256": "1c66482837ab1e32e2d93ce2b093def10b5879b4a148d4f13e57b8179193cff8",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam04_summer-day_first_base.png",
+   "bytes": 2838497,
+   "sha256": "5730290c07674fda446f65d9074b8d0643048ece3718c6dd7e1e41994158662f",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam05_summer-day_first.png",
+   "bytes": 2728047,
+   "sha256": "3451d6c8b5b4a2853e7a19138e113a030951c9bf2824ea7afd5e12df46ba6979",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam05_summer-day_first_base.png",
+   "bytes": 2729099,
+   "sha256": "0545b5feacef1b2e662da09bcff6b6fdfd1a3c5ebd4d4ca35abaf5d2ff8b07c2",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam06_autumn-day_first.png",
+   "bytes": 3176374,
+   "sha256": "67dcff1264e26948198af371e05acd2563362d8eb87c43508ae82982a7db3424",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam06_autumn-day_first_base.png",
+   "bytes": 3176739,
+   "sha256": "6d33d198af3a3255be982ca1d1ba922aaddbc6e41c73e82c8213b4bfce9130ec",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam06_summer-day_first.png",
+   "bytes": 2855334,
+   "sha256": "9ce574e6a2da5f017a670f3163eedb6326d69e0e254413449306ff40075bf1e8",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "F-earth135/cam06_summer-day_first_base.png",
+   "bytes": 2855031,
+   "sha256": "51709cb70079efca72ed54dc4c6cc3eff33154d7edce6031db8cecd114627c3a",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 457181,
+   "sha256": "43e05f957e67df5f489a9b07379b4401cf817f18c79aa76a2711f5bcf78a0904",
+   "rev": "382aa67ecacf3bae057136c2fc16061f4dd4ae6f"
+  }
+ ]
+}

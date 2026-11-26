@@ -70,9 +70,13 @@ export const STAIR_STYLE = Object.freeze({ stoneW: 0.8, cheekL: 0.95, leaves: tr
 // that darkens the foot of a column reaches before it has faded out (it fades over the 1.3 m below that). These are the values
 // every level had before T00 set its own (#758), so a level that sets nothing draws exactly as it did.
 export const WOOD_STYLE = Object.freeze({ gain: 1, sat: 1, dampTop: 2.2 });
+// The same for the bare earth of the hillside and the tree beds (`gain`: how much lighter it is). 1 is what every level had before T00
+// set its own (#758).
+export const EARTH_STYLE = Object.freeze({ gain: 1 });
 export function createMaterials() {
   const woodU = { uWoodGain: { value: WOOD_STYLE.gain }, uWoodSat: { value: WOOD_STYLE.sat }, uWoodDamp: { value: WOOD_STYLE.dampTop } };
   const woodStyle = (o = {}) => { const st = { ...WOOD_STYLE, ...o }; woodU.uWoodGain.value = st.gain; woodU.uWoodSat.value = st.sat; woodU.uWoodDamp.value = st.dampTop; return st; };
+  const earthU = { uEarthGain: { value: EARTH_STYLE.gain } }, earthStyle = (o = {}) => { const st = { ...EARTH_STYLE, ...o }; earthU.uEarthGain.value = st.gain; return st; };
   // Old unpainted timber. `turn` brings the grain's axis to y, so that the scan's grain runs along the member.
   const wood = (key, grain, turn, base = ".125,.07,.05", styled = false) => procMat(key, { roughness: 0.82, envMapIntensity: 0.35 }, `
     vec3 q=vWP.${turn}*vec3(.95,.5,.95), w=triW(vWN.${turn});
@@ -127,7 +131,7 @@ export function createMaterials() {
 
   return {
     interior,
-    woodV: wood("woodV", "9.,1.1,9.", "xyz", undefined, true), woodX: wood("woodX", "1.1,9.,9.", "yxz", undefined, true), woodZ: wood("woodZ", "9.,9.,1.1", "xzy", undefined, true), woodStyle,
+    woodV: wood("woodV", "9.,1.1,9.", "xyz", undefined, true), woodX: wood("woodX", "1.1,9.,9.", "yxz", undefined, true), woodZ: wood("woodZ", "9.,9.,1.1", "xzy", undefined, true), woodStyle, earthStyle,
     // The same timber for what stands inside the halls (the altar tables, the cases, the frames on the walls: interior.js), which a
     // level's outdoor style does not reach: the rooms are lit by their own lamps and were drawn for this wood as it is (#758).
     woodIn: { woodV: wood("woodVIn", "9.,1.1,9.", "xyz"), woodX: wood("woodXIn", "1.1,9.,9.", "yxz"), woodZ: wood("woodZIn", "9.,9.,1.1", "xzy") },
@@ -375,8 +379,8 @@ export function createMaterials() {
     earth: procMat("earth", { roughness: 0.95, envMapIntensity: 0.15 }, `
       float a=fbm2(vWP.xz*.35), b=fbm2(vWP.xz*.09+4.);
       vec2 uv=vWP.xz/1.9; vec3 A=mix(texture2D(tLeavesA,uv).rgb,texture2D(tLeavesA,uv.yx*.37+.3).rgb,.35)/mLeaves, nr=texture2D(tLeavesN,uv).xyz;   // two scales, so the litter does not repeat
-      col=mix(vec3(.045,.056,.034),vec3(.1,.11,.062),a)*mix(vec3(1.),A,.8)*1.1; col=mix(col,col*vec3(1.12,1.02,.8),smoothstep(.45,.7,b)); col*=.75+.5*fbm2(vWP.xz*.05+7.);   // dark and damp, never the same for long
-      rough_=nr.z; nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*1.6;`, { tex: ["leaves"] }),
+      col=mix(vec3(.045,.056,.034),vec3(.1,.11,.062),a)*mix(vec3(1.),A,.8)*1.1; col=mix(col,col*vec3(1.12,1.02,.8),smoothstep(.45,.7,b)); col*=(.75+.5*fbm2(vWP.xz*.05+7.))*uEarthGain;   // dark and damp, never the same for long
+      rough_=nr.z; nd_=vec3(nr.x*2.-1.,0.,nr.y*2.-1.)*1.6;`, { tex: ["leaves"], uniforms: () => earthU, glsl: "uniform float uEarthGain;" }),
     // Rough rubble laid dry: the lining of the well.
     // Water seeping down the stone of the dragon well's niche: irregular dark wet runs, more of them low down where
     // the water gathers, and moss at their feet. Laid on as thin sheets over the stone; vUv2 runs across and up.

@@ -1,0 +1,26 @@
+== tools/out/gpu/20261126-122039/
+art1_summer-dawn_first noSkyL95 54.5->54.6 L50 27.7->29.2 sky 89.8
+art2_autumn-day_first noSkyL95 55.6->55.6 L50 23.2->23.2 sky 81.3
+art5_summer-dusk_first noSkyL95 35.7->35.7 L50 17.6->17.6 sky 76.7
+cam01_autumn-day_first noSkyL95 55.0->57.2 L50 36.1->37.8 sky 77.0
+    ground base L50 32.1 P90 46.1 spread 23.1 C 13.3 h 123 | new L50 37.7 P90 54.1 spread 28.2 C 16.2 h 121
+cam01_summer-day_first noSkyL95 39.2->39.2 L50 18.9->20.4 sky 77.2
+    ground base L50 13.3 P90 21.0 spread 11.7 C 5.5 h 135 | new L50 16.3 P90 26.5 spread 15.8 C 7.3 h 134
+cam01_summer-night_first noSkyL95 21.1->21.9 L50 9.9->10.4 sky 89.5
+    ground base L50 7.1 P90 9.9 spread 4.1 C 4.2 h -89 | new L50 7.6 P90 11.6 spread 5.7 C 4.5 h -92
+cam01_winter-day_first noSkyL95 68.8->68.8 L50 41.8->41.8 sky 84.2
+    ground base L50 88.6 P90 89.8 spread 12.9 C 0.6 h 145 | new L50 88.4 P90 89.8 spread 12.9 C 0.6 h 145
+cam02_summer-day_first noSkyL95 48.2->48.2 L50 21.3->22.1 sky 78.3
+cam03_summer-day_first noSkyL95 62.8->62.8 L50 27.8->27.8 sky 75.5
+    screenL base L50 66.5 P90 70.3 spread 18.5 C 3.0 h 144 | new L50 66.5 P90 70.3 spread 18.3 C 3.0 h 144
+    screenR base L50 65.4 P90 69.6 spread 18.7 C 3.1 h 142 | new L50 65.4 P90 69.6 spread 18.7 C 3.1 h 142
+cam04_summer-day_first noSkyL95 46.6->46.6 L50 18.9->18.9 sky 75.5
+    leftwall base L50 59.3 P90 64.9 spread 15.1 C 3.4 h 144 | new L50 59.3 P90 64.9 spread 15.1 C 3.4 h 144
+    gaps base L50 21.7 P90 42.9 spread 31.0 C 3.9 h 78 | new L50 21.6 P90 42.9 spread 31.0 C 3.9 h 78
+cam05_summer-day_first noSkyL95 49.7->49.7 L50 17.9->17.9 sky 76.3
+cam06_autumn-day_first noSkyL95 67.3->67.3 L50 44.8->44.8 sky 82.8
+    farwall base L50 64.0 P90 85.9 spread 61.6 C 6.1 h 101 | new L50 63.9 P90 85.9 spread 61.5 C 6.1 h 101
+    pave base L50 62.4 P90 72.5 spread 21.6 C 3.4 h 134 | new L50 62.4 P90 72.5 spread 21.6 C 3.4 h 135
+cam06_summer-day_first noSkyL95 56.1->56.1 L50 27.4->27.4 sky 77.7
+    farwall base L50 42.8 P90 67.7 spread 56.3 C 3.8 h 142 | new L50 42.8 P90 67.7 spread 56.3 C 3.8 h 142
+    pave base L50 44.2 P90 56.0 spread 33.4 C 3.4 h 178 | new L50 44.2 P90 56.0 spread 33.4 C 3.4 h 178
