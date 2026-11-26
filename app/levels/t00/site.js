@@ -107,8 +107,21 @@ function place(r, at, q) {
 }
 const tiles = (pos, uv, idx) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return g; };
 
+/**
+ * How this level's outdoor timber reads (WOOD_STYLE in src/materials.js lists what can be changed and what it starts as). Under
+ * J01's overcast the prologue's columns, doors and brackets came out far darker than the picture the place is judged by: the gate's
+ * leaves at L* 12 with no colour left, where the reference's doors are 21 and its columns 34 (refs/t00-atlas/T00.lossless.webp, Lab
+ * as tools/look.py measures it), and the palette's faded vermilion for posts and doors is 28 (docs/ART-SPEC.md). The light is right
+ * (the white walls and the paving already read as the reference's), so it is the timber's own colour: 1.7 times as light brings the
+ * gate to about 20 and back to a red-brown (#758). The damp the shader lays at a column's foot reached 2.2 m above the world's zero,
+ * over the lower leaf of every door at the foot of the courts; rain splashes a column's foot, not a leaf at shoulder height under the
+ * eaves, so here it fades out between 1.4 m and 0.1 m.
+ */
+export const WOOD_STYLE = Object.freeze({ gain: 1.7, dampTop: 1.4 });
+
 export function buildSite(M) {
   const root = new THREE.Group();
+  if (typeof M.woodStyle === "function") M.woodStyle(WOOD_STYLE);   // (one page walks one level, so the timber is this level's for good; a test's stand-in materials have none)
   // carve: floors and stairs you can stand on, which override what would block. shade[i]: what darkens the paving of level i.
   const litWindows = [], walk = { solids: [], decks: [], ramps: [], posts: [], drops: [], roofs: [], rails: [] }, shade = [[], [], [], []], halls = [], buildings = [], lofts = {}, doorways = {}, benchSeats = [];
   // How high a roof's ridge stands over its eave purlins (Yingzao Fashi, juan 5): a third of the distance between the
