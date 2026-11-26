@@ -214,8 +214,16 @@ export function buildSite(M) {
   // can draw one again (the hooks are `window.__t05Objects`); nowhere else, and the picture is the same either way. Read as `?off=altar` is.
   const bench = typeof location !== "undefined" && debugGate({ dev: !!import.meta.env?.DEV, hostname: location.hostname, search: location.search });
   const hooks = bench ? (/** @type {any} */ (globalThis).__t05Objects = /** @type {Record<string, any>} */ ({})) : null;
-  if (!offAltar && !bench) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
-  if (!offAltar && bench) { const fg = benchFigures(M, altar, sh); root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), M.plaster(), sh), fg.group); hooks.figures = fg; }
+  // The seven painted figures (./figures/): only where the hall's doors are open (HALL_DOORS, the workbench's `?hall=open`). With them shut nothing of ./figures/ is imported, fetched or drawn.
+  // Open, the seven's white boxes are parts of their own (benchFigures) so that each can give way to its figure when that arrives.
+  const showFigures = !HALL_DOORS.shut && !offAltar;
+  /** @type {{ tick: (dt: number, eye: any) => void, report: () => any } | null} */
+  let figures = null;
+  if (!offAltar && !bench && !showFigures) root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(ap.clay), M.plaster(), sh), mesh(merge(ap.halo), M.woodX, sh));
+  if (!offAltar && (bench || showFigures)) {
+    const fg = benchFigures(M, altar, sh); root.add(mesh(merge(ap.stone), M.stone, sh), mesh(merge(fg.rest), M.plaster(), sh), fg.group); if (hooks) hooks.figures = fg;
+    if (showFigures) import("./figures/index.js").then((m) => m.startFigures({ root, fg, M, sh })).then((f) => { figures = f; if (typeof globalThis !== "undefined") /** @type {any} */ (globalThis).__t05Figures = () => f.report(); }).catch((e) => console.warn("figures:", e));
+  }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
     const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
@@ -233,6 +241,7 @@ export function buildSite(M) {
     lit.k = still || cut ? want : lit.k + (want - lit.k) * (1 - Math.exp(-dt / FILL.ease));
     if (Math.abs(lit.k - want) < 1e-3) lit.k = want;
     for (const l of fills) l.intensity = l.userData.full * lit.k;
+    figures?.tick(dt, eye);
     return lit.k;
   };
 
