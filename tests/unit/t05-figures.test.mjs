@@ -60,3 +60,11 @@ test("the workbench's switch is read only on the workbench: hall.js asks onBench
   const src = readFileSync(new URL("../../app/levels/t05/hall.js", import.meta.url), "utf8");
   assert.match(src, /onBench\(\{ dev: !!import\.meta\.env\?\.DEV, hostname: location\.hostname \}\) && new URLSearchParams\(location\.search\)\.get\("hall"\) === "open"/);
 });
+
+test("with the doors shut the altar's merged geometry is byte for byte what it was before the figures (main's altar.js, 2026-11-26): stone, clay and halo", async () => {
+  const { buildAltar } = await import("../../app/levels/t05/altar.js"), { merge } = await import("../../app/src/geo.js");
+  const h = (geos) => { const g = merge(geos), x = createHash("sha256"); for (const k of Object.keys(g.attributes).sort()) x.update(k).update(Buffer.from(g.attributes[k].array.buffer, g.attributes[k].array.byteOffset, g.attributes[k].array.byteLength)); if (g.index) x.update(Buffer.from(g.index.array.buffer, g.index.array.byteOffset, g.index.array.byteLength)); return x.digest("hex").slice(0, 16) + ":" + g.attributes.position.count; };
+  const a = buildAltar();
+  // recorded by running this same function over `git show origin/main:app/levels/t05/altar.js` (04ec3930's successor, before #763): the same three values
+  assert.deepEqual({ stone: h(a.parts.stone), clay: h(a.parts.clay), halo: h(a.parts.halo) }, { stone: "7fae4025ccf3d207:144", clay: "d3443d268f744394:15480", halo: "cfeb2e85f6eee9d4:4032" });
+});

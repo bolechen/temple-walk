@@ -76,7 +76,7 @@ async function figures() {
       try {
         let b;
         try { const r = await fetch(url, { headers: auth }); if (!r.ok) throw new Error("HTTP " + r.status); b = Buffer.from(await r.arrayBuffer()); }
-        catch (e) { b = execFileSync("curl", ["-fsSL", "--max-time", "180", ...Object.entries(auth).flatMap(([k, v]) => ["-H", `${k}: ${v}`]), url], { maxBuffer: 64e6 }); }
+        catch (e) { b = execFileSync("curl", ["-fsSL", "--max-time", "180", ...(SOURCE.private ? ["-H", "@-"] : []), url], { maxBuffer: 64e6, input: SOURCE.private ? Object.entries(auth).map(([k, v]) => `${k}: ${v}\n`).join("") : undefined }); }   // (the token goes in on stdin, never in the command line where `ps` shows it)
         if (sum(b) !== m.sha256) throw new Error("the file fetched is not the one expected (sha256 " + sum(b).slice(0, 12) + "…, expected " + m.sha256.slice(0, 12) + "…)"); got = b;
       }
       catch (e) { why = e.message; await new Promise((r) => setTimeout(r, 1500 * 2 ** k)); }
