@@ -73,7 +73,7 @@ function fingerprint(dir) {
     await page.addInitScript(() => { const say = console.error; console.error = (...a) => say(...a, "\n  at " + (new Error().stack || "").split("\n").slice(2, 8).map((l) => l.trim().replace(/^at /, "").replace(/https?:\/\/[^/]+\//, "")).join(" < ")); });
     page.on("pageerror", (e) => ours(String(e.message)) && report.errors.push(String(e.message).slice(0, 300)));
     page.on("console", (m) => m.type() === "error" && ours(m.text()) && report.errors.push(m.text().slice(0, 900)));
-    const bench = /(^|&)terrain=/.test(query), home = bench ? base.replace("127.0.0.1", BENCH_HOST) : base; if (bench && !/(^|&)debug=/.test(query)) query += "&debug=0";
+    const bench = /(^|&)(terrain=|hall=open)/.test(query), home = bench ? base.replace("127.0.0.1", BENCH_HOST) : base; if (bench && !/(^|&)debug=/.test(query)) query += "&debug=0";
     const t0 = Date.now(); await page.goto(home + at + "?" + query + (spec.level && spec.level !== "t00" && !/(^|&)level=/.test(query) ? "&level=" + encodeURIComponent(spec.level) : ""), { waitUntil: "commit", timeout: 120000 });
     await page.waitForFunction(() => document.body.dataset.ready === "1", null, { timeout: 240000 });
     return { ctx, page, loadMs: Date.now() - t0 };

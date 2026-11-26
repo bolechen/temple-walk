@@ -1648,6 +1648,9 @@ const scenarios = {
     const seal = async (id, what) => t.until(async () => (await t.journey()).seals[id] > 0, 90000, `no seal for ${what}`);
     const word = () => t.page.getAttribute("#act", "data-word"), offered = (w, what) => t.until(async () => (await t.page.isVisible("#act")) && (await word()) === w, 30000, `"${w}" was not offered ${what}`);
     let j = await t.journey(); expect(j.count === 0 && j.next === "incense", "a new book should be empty and point at the incense (#436)");
+    // (#651) the book's small seal carries how many are held, in ink numerals, and a screen reader hears it once
+    const count = async () => ({ ...(await t.page.evaluate(() => ({ shown: document.querySelector("#bookBtn .seal-count")?.textContent, hidden: document.querySelector("#bookBtn .seal-count")?.getAttribute("aria-hidden") }))), name: (await t.page.getByRole("button", { name: /朱印帐/ }).getAttribute("aria-label")), snap: await t.page.locator("#bookBtn").ariaSnapshot() });
+    { const c = await count(); expect(c.shown === "〇\u2009/\u2009七" && c.hidden === "true" && c.name === "朱印帐，朱印 〇枚，共七枚" && c.snap.includes("朱印 〇枚，共七枚"), "an empty book should read 〇 / 七: " + JSON.stringify(c)); }
     // #403: while a seal is being given, the same words must not stand on the page twice (the observance's line at the foot
     // and the seal's own line under the stamp). Watched from inside the page on every class change, so no frame is missed.
     await t.page.evaluate(() => {
@@ -1664,6 +1667,7 @@ const scenarios = {
     await t.page.evaluate(() => window.__music(true));   // the place heard, so that the close's music can be checked
     await at("sit"); await offered("静坐", "on the summit of an empty book"); await t.page.click("#act");
     await t.until(() => t.page.isVisible("#breathWord"), 60000, "no breath to follow"); await seal("sit", "sitting"); await once("sitting");
+    { const c = await count(); expect(c.shown === "一\u2009/\u2009七" && c.name === "朱印帐，朱印 一枚，共七枚" && c.snap.includes("朱印 一枚，共七枚"), "one seal should read 一 / 七: " + JSON.stringify(c)); }
     await t.until(async () => (await t.page.evaluate(() => window.__rites().ended)) === 1, 120000, "the chapter never closed with only one seal");
     { const cu = await t.page.evaluate(() => window.__cues()), mu = await t.page.evaluate(() => window.__music());
       expect(cu.farBell === 1, "the close should end on the far bell answering");

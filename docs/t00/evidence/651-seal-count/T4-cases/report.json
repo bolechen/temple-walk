@@ -1,0 +1,159 @@
+{
+  "started": "2026-11-26T09:48:57.699Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [],
+  "shots": [
+    {
+      "name": "z_new_phone_zero_zh",
+      "file": "z_new_phone_zero_zh.png",
+      "tris": 1312584,
+      "calls": 143,
+      "js": {
+        "name": "朱印帐，朱印 〇枚，共七枚",
+        "count": "<span class=\"zero\">〇</span> / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "z_new_desk_zero_zh",
+      "file": "z_new_desk_zero_zh.png",
+      "tris": 1312540,
+      "calls": 138,
+      "js": {
+        "name": "朱印帐，朱印 〇枚，共七枚",
+        "count": "<span class=\"zero\">〇</span> / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "z_old_phone_zero_zh",
+      "file": "z_old_phone_zero_zh.png",
+      "tris": 1312584,
+      "calls": 143,
+      "js": {
+        "name": "朱印帐，朱印 〇枚，共七枚",
+        "count": "〇 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "z_old_desk_zero_zh",
+      "file": "z_old_desk_zero_zh.png",
+      "tris": 1312540,
+      "calls": 138,
+      "js": {
+        "name": "朱印帐，朱印 〇枚，共七枚",
+        "count": "〇 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_three_zh_phone",
+      "file": "s_three_zh_phone.png",
+      "tris": 1312584,
+      "calls": 143,
+      "js": {
+        "name": "朱印帐，朱印 三枚，共七枚",
+        "count": "三 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_three_ja_phone",
+      "file": "s_three_ja_phone.png",
+      "tris": 1312584,
+      "calls": 143,
+      "js": {
+        "name": "御朱印帳、朱印三枚、全七枚",
+        "count": "三 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_three_ko_phone",
+      "file": "s_three_ko_phone.png",
+      "tris": 1312584,
+      "calls": 143,
+      "js": {
+        "name": "주인첩, 주인 3개, 전체 7개",
+        "count": "3 / 7",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_three_winter_zh_phone",
+      "file": "s_three_winter_zh_phone.png",
+      "tris": 1268712,
+      "calls": 137,
+      "js": {
+        "name": "朱印帐，朱印 三枚，共七枚",
+        "count": "三 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_night_three_zh_phone",
+      "file": "s_night_three_zh_phone.png",
+      "tris": 1312584,
+      "calls": 145,
+      "js": {
+        "name": "朱印帐，朱印 三枚，共七枚",
+        "count": "三 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_night_zero_zh_desk",
+      "file": "s_night_zero_zh_desk.png",
+      "tris": 1312540,
+      "calls": 140,
+      "js": {
+        "name": "朱印帐，朱印 〇枚，共七枚",
+        "count": "<span class=\"zero\">〇</span> / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_dusk_three_ja_desk",
+      "file": "s_dusk_three_ja_desk.png",
+      "tris": 1312576,
+      "calls": 158,
+      "js": {
+        "name": "御朱印帳、朱印三枚、全七枚",
+        "count": "三 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    },
+    {
+      "name": "s_all_zh_phone",
+      "file": "s_all_zh_phone.png",
+      "tris": 1312584,
+      "calls": 143,
+      "js": {
+        "name": "朱印帐，朱印 七枚，共七枚",
+        "count": "七 / 七",
+        "host": "pr-0-temple-walk-preview.test:33025"
+      }
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "0274f70bc4edf0f74482077c3b37c61c1b692519",
+    "entry": "assets/index-xwFhJu0X.js",
+    "files": 398,
+    "sha256": "0435c4d3a5438c277b3a684bf4e64fd611893b266bb3454c95214459886007c6"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-26T09:53:11.484Z"
+}

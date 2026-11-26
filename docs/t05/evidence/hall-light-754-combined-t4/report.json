@@ -1,0 +1,293 @@
+{
+  "started": "2026-11-26T04:03:45.082Z",
+  "host": {
+    "gpu": "Tesla T4, 620.70.06, 15360 MiB",
+    "cpu": "8",
+    "egl": "10_nvidia.json\n50_mesa.json",
+    "vulkan": "(failed) ",
+    "libs": "libvulkan.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libvulkan.so.1\n\tlibvdpau_nvidia.so.1 (libc6,x86-64) => /usr/lib64/vdpau/libvdpau_nvidia.so.1\n\tlibnvidia-wayland-client.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-wayland-clie\n\tlibnvidia-vksc-core.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-vksc-core.so.1\n\tlibnvidia-tls.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-tls.so.620.70.06\n\tlibnvidia-tileiras.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-tileiras.so.1\n\tlibnvidia-sandboxutils.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so.1\n\tlibnvidia-sandboxutils.so (libc6,x86-64) => /usr/lib64/libnvidia-sandboxutils.so\n\tlibnvidia-rtcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-rtcore.so.620.70.06\n\tlibnvidia-ptxjitcompiler.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so.1\n\tlibnvidia-ptxjitcompiler.so (libc6,x86-64) => /usr/lib64/libnvidia-ptxjitcompiler.so\n\tlibnvidia-present.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-present.so.620.70.0\n\tlibnvidia-pkcs11.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11.so.620.70.06\n\tlibnvidia-pkcs11-openssl3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-pkcs11-open\n\tlibnvidia-opticalflow.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so.1\n\tlibnvidia-opticalflow.so (libc6,x86-64) => /usr/lib64/libnvidia-opticalflow.so\n\tlibnvidia-opencl.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-opencl.so.1\n\tlibnvidia-nvvm70.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm70.so.4\n\tlibnvidia-nvvm.so.4 (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so.4\n\tlibnvidia-nvvm.so (libc6,x86-64) => /usr/lib64/libnvidia-nvvm.so\n\tlibnvidia-ngx.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ngx.so.1\n\tlibnvidia-ml.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-ml.so.1\n\tlibnvidia-ml.so (libc6,x86-64) => /usr/lib64/libnvidia-ml.so\n\tlibnvidia-imex.so.1 (libc6,x86-64) => /usr/lib64/libnvidia-imex.so.1\n\tlibnvidia-gtk3.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk3.so.620.70.06\n\tlibnvidia-gtk2.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gtk2.so.620.70.06\n\tlibnvidia-gpucomp.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-gpucomp.so.620.70.0\n\tlibnvidia-glvkspirv.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glvkspirv.so.620.\n\tlibnvidia-glsi.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glsi.so.620.70.06\n\tlibnvidia-glcore.so.620.70.06 (libc6,x86-64) => /usr/lib64/libnvidia-glcore.so.620.70.06",
+    "dev": "dri\nnvidia-caps\nnvidia-modeset\nnvidia-uvm\nnvidia-uvm-tools\nnvidia0\nnvidiactl\nby-path\ncard1\nrenderD128"
+  },
+  "tried": {
+    "angle-vulkan+new-headless": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)"
+  },
+  "bench": [
+    {
+      "view": "cam03",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 53.1,
+      "ms": 18.83,
+      "cost": 12,
+      "loadMs": 10812,
+      "tris": 778077,
+      "calls": 84,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1644,
+        "decodeMs": 136,
+        "prepareMs": 862,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3,
+        "eye": 4.3,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 5208.3,
+        "spikes": [
+          5208,
+          124,
+          5093,
+          834
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        0.6
+      ]
+    },
+    {
+      "view": "cam05",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 60,
+      "ms": 16.67,
+      "cost": 8.74,
+      "loadMs": 6111,
+      "tris": 441478,
+      "calls": 65,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1503,
+        "decodeMs": 131,
+        "prepareMs": 863,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 914,
+        "spikes": [
+          914,
+          352,
+          104
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -9
+      ]
+    },
+    {
+      "view": "cam06",
+      "q": "high",
+      "size": [
+        1920,
+        1080
+      ],
+      "season": "winter",
+      "time": "day",
+      "as": "first",
+      "level": "t05",
+      "before": "const t0=Date.now(); while(Date.now()-t0<180000){ const r=globalThis.__t05Figures&&globalThis.__t05Figures(); if(r&&r.figures.length===7&&r.figures.every(f=>f.status==='ready'||f.status==='failed')) break; await new Promise(r=>setTimeout(r,1000)); } for(let i=0;i<30;i++) await new Promise(r=>requestAnimationFrame(r));",
+      "fps": 50,
+      "ms": 20,
+      "cost": 12.6,
+      "loadMs": 6237,
+      "tris": 795752,
+      "calls": 86,
+      "buffer": [
+        1920,
+        1080
+      ],
+      "tier": "high",
+      "body": "code",
+      "walker": {
+        "mode": "mesh",
+        "bytes": 132820,
+        "inflated": 29150000,
+        "fetchMs": 1482,
+        "decodeMs": 148,
+        "prepareMs": 860,
+        "memory": 25896000,
+        "ledges": 12,
+        "grid": "outdoors",
+        "answers": true,
+        "drops": 12,
+        "start": [
+          0,
+          215
+        ],
+        "blockedHere": false,
+        "floor": 3.02,
+        "eye": 4.32,
+        "msPerFrame": null
+      },
+      "doors": {
+        "modes": [],
+        "halls": {},
+        "baked": null,
+        "failed": 0,
+        "steps": 12,
+        "keep": 4,
+        "dropped": 0,
+        "mb": 0,
+        "worstFrameMs": 900.9,
+        "spikes": [
+          901,
+          381,
+          102
+        ],
+        "live": null
+      },
+      "at": [
+        0,
+        -2
+      ]
+    }
+  ],
+  "shots": [
+    {
+      "name": "cam03",
+      "file": "cam03.png",
+      "tris": 778077,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam05",
+      "file": "cam05.png",
+      "tris": 441478,
+      "calls": 65,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam05-b1",
+      "file": "cam05-b1.png",
+      "tris": 441478,
+      "calls": 65,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam05-b2p",
+      "file": "cam05-b2p.png",
+      "tris": 350233,
+      "calls": 58,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "cam06",
+      "file": "cam06.png",
+      "tris": 795752,
+      "calls": 86,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-0",
+      "file": "mid10-0.png",
+      "tris": 460422,
+      "calls": 69,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-3",
+      "file": "mid10-3.png",
+      "tris": 597797,
+      "calls": 76,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "mid10-6",
+      "file": "mid10-6.png",
+      "tris": 461275,
+      "calls": 67,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    },
+    {
+      "name": "aisleE",
+      "file": "aisleE.png",
+      "tris": 802883,
+      "calls": 84,
+      "js": "ready,ready,ready,ready,ready,ready,ready"
+    }
+  ],
+  "errors": [],
+  "site": {
+    "commit": "d0b43bd2ba445c8adace0e714aeffd21c9c64240",
+    "entry": "assets/index-CKCgHBY4.js",
+    "files": 244,
+    "sha256": "c607702ab10331e71557b53693f23d839160c8006434872302face9dfe8367d4"
+  },
+  "using": "angle-vulkan+new-headless",
+  "renderer": "ANGLE (NVIDIA, Vulkan 1.4.357 (NVIDIA Tesla T4 (0x00001EB8)), NVIDIA)",
+  "finished": "2026-11-26T04:06:58.666Z"
+}

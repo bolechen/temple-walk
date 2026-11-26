@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { box, merge, mesh, stairGeo, stairProfile, BODY, CHEEK } from "../../src/geo.js";
 import { createPlanWalker } from "../../src/plan-walker.js";
-import { buildHall, OUTER, FILL, HALL_DOORS } from "./hall.js";
+import { buildHall, OUTER, FILL, HALL, HALL_DOORS } from "./hall.js";
 import { buildAltar, benchFigures, KING_DARK } from "./altar.js";
 import { buildAxis, HALL_HALF, LANE, AXIS_TREES } from "./axis.js";
 import { buildTower } from "./tower.js";
@@ -19,6 +19,8 @@ import { buildSurround, eaveCap } from "./surround.js";
 import { buildFlora, buildTreeGround } from "./flora.js";
 import { dryMaterials } from "./dry.js";
 import { ridgeMaterials } from "./ridge.js";
+import { muralMaterial, MURAL_LIT, splitInward } from "./mural.js";
+import { hallTimber } from "./timber.js";
 import { debugGate } from "../../src/debuggate.js";
 
 /** The great hall's platform (SITE.md §3.1, S03/S10: 55.80 × 25.91 m, about 3 m high), its south edge just before the front columns. 0.3 m deeper here (26.21): its back edge 0.2 m out to hold the back wall,
@@ -166,12 +168,13 @@ export function buildSite(M) {
   const hall = buildHall(M), hp = hall.parts;
   for (const k of ["solids", "decks", "posts"]) walk[k].push(...hall.walk[k]);
   // The wall ring's timber (hall.js, `ring`) in meshes of their own beside the roof's timber: the brackets keep the walls' share of the sky, the purlins and beams rise above it.
-  const splitRing = (/** @type {any[]} */ list, /** @type {any} */ mat, /** @type {any} */ own, /** @type {any} */ ringAo) => [[list.filter((g) => !hp.ring.has(g)), own], [list.filter((g) => hp.ring.has(g)), ringAo]].filter(([l]) => l.length).map(([l, o]) => mesh(merge(l), mat, o));
   // While the doors are shut nothing inside is to be read from outside, the bars of a window included (the art director's call on the first pictures): what is inside takes a seventh of the share it would, a deep dark behind the bars (HALL_DOORS; open, as it was).
   const inside = HALL_DOORS.shut ? (/** @type {number} */ x, /** @type {number} */ y, /** @type {number} */ z, nx = 0, ny = 1, nz = 0) => { const v = hall.shut(x, y, z, nx, ny, nz); return v < 0.999 ? v * 0.15 : v; } : hall.shut;
   const sh = { ao: inside };   // inside the walls the sky's light is mostly shut out (hall.js)
   const shT = { ao: hall.timberShut }, shRing = { ao: hall.ringShut }, shBeam = { ao: hall.beamShut }, shBoard = { ao: hall.boardShut };   // the timber overhead takes more of it (hall.js, TIMBER)
-  root.add(...splitRing(hp.wood, M.woodX, shT, shRing), ...splitRing(hp.woodZ, M.woodZ, shT, shRing), mesh(merge(hp.frame), M.woodZ, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
+  // The inside's own timber (./timber.js) for what stands within the walls; the wall ring's timber, seen from the court under the eaves too, keeps the court's wood.
+  const HT = hallTimber(M), ownRing = (/** @type {any[]} */ list, /** @type {any} */ inner, /** @type {any} */ ring) => [[list.filter((g) => !hp.ring.has(g)), inner, shT], [list.filter((g) => hp.ring.has(g)), ring, shRing]].filter(([l]) => l.length).map(([l, m, o]) => mesh(merge(l), m, o));
+  root.add(...ownRing(hp.wood, HT.x, M.woodX), ...ownRing(hp.woodZ, HT.z, M.woodZ), mesh(merge(hp.frame), HT.z, shBeam), mesh(merge(hp.columns), M.woodV, sh), mesh(merge(hp.dark), M.woodX, sh),
     mesh(merge(hp.tiles), M.tile), mesh(merge(hp.underside), M.woodX, { ...shBoard, cast: false }), mesh(merge(hp.ridge), ridgeMaterials(M).ridge));   // (the eave's underside casts nothing the tiles over it do not: #742)   // (T05's own ridge clay, ./ridge.js)
   // The bracket sets (./dougong.js), the column-head beams over them and the eave purlin, in the ring's shade as the wall's own
   // timber is, each grain along its side. They stand in the eave's shadow over the wall, where the floor's mirror would show
@@ -191,19 +194,27 @@ export function buildSite(M) {
   root.add(mesh(merge([...hp.fascia, ...hp.step]), M.fascia, { ao: () => 0.8 }), mesh(merge([...hp.rafters, ...hp.flyers]), M.woodZ, eaveAo), mesh(merge(hp.beams), M.woodX, eaveAo),
     mesh(merge([...hp.ends, ...hp.drips]), ridgeMaterials(M).ends, eaveAo));
   shade[0].push(hall.box);
-  // The murals' ground inside the walls: plaster, darkened by the hall's shut-out sky like everything inside, until the
-  // walls are painted (ART.md, phase two).
+  // The murals' ground inside the walls: an earth ground (mural.js), darkened by the hall's shut-out sky like everything
+  // inside, until the walls are painted (ART.md, phase two).
   // The shut doors' leaves face the court: they take the open air's light, not the inside's (hall.js, HALL_DOORS).
   if (hp.leaves.length) root.add(mesh(merge(hp.leaves), M.woodV, { ao: () => 1 }), mesh(merge(hp.ledges), M.woodX, { ao: () => 1 }), mesh(merge(hp.iron), M.iron, { ao: () => 1, cast: false }));   // (the planks' vertical grain, the ledges across, the iron of the ring and the studs: as the prologue's shut doors, building.js)
   if (hp.windowShade.length) {   // (the windows of a shut hall: a sheet that casts the sun's shadow and draws nothing; hall.js)
     const veil = mesh(merge(hp.windowShade), new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }), { receive: false });
     veil.userData.keep = true; veil.userData.bake = false; root.add(veil);
   }
-  root.add(mesh(merge(hp.mural), M.plaster(), sh), mesh(merge(hp.floor), M.stone, sh));
+  root.add(mesh(merge(hp.mural), muralMaterial(M), sh), mesh(merge(hp.floor), M.stone, sh));   // (an earth ground of its own, darker and warm: mural.js)
   // The hall's own walls in a mesh of their own, so that their inner faces take the inside's share of the sky as the murals'
   // ground does (merged with the court's walls they were lit as out of doors: the end walls' and the front wall's inner
   // faces read eight to ten times the back wall, the art review of #481); their outer faces lie outside the shut box.
-  root.add(mesh(merge(hp.plaster), M.plaster(), sh));
+  // Their faces that look into the hall take the mural ground (./mural.js, splitInward): above the column heads the lime
+  // between the bracket sets read as a cold grey band over the seven.
+  { const [inward, lime] = splitInward(hp.plaster, hall.fogShut, HALL.wall); root.add(mesh(merge(lime), M.plaster(), sh)); if (inward.length) root.add(mesh(merge(inward), muralMaterial(M), sh)); }
+  // The sun's shadow takes a wall's faces that look away from it (three's default for a one-sided material), so the end
+  // and back walls cast from their inner faces: where the back wall meets the east end wall the back wall's last few
+  // centimetres stood within the shadow's bias of that face and took the sun through the wall, a bright seam floor to
+  // eaves (#762; gone with the shadows off). A slab inside each of the three walls' depth, a quarter of the wall in from
+  // either face, casts and draws nothing: what lies just inside the room is now shut from the sun by most of a wall.
+  root.add(wallShade(hall.fogShut, HALL.wall, HALL.floor + HALL.column));
   // The altar, the seven on it with their attendants, and the two kings at its ends (./altar.js), all in the hall's shut-out sky.
   const altar = buildAltar(), ap = altar.parts;
   walk.posts.push(...altar.walk.posts);
@@ -230,7 +241,7 @@ export function buildSite(M) {
   }
   const fills = hall.fill.map((/** @type {any[]} */ f) => {
     const [x, y, z, i, d, c] = /** @type {number[]} */ (f), aim = /** @type {number[] | undefined} */ (f[6]);
-    const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), 1, 1.6) : new THREE.PointLight(c, 0, d, 1.6);
+    const l = aim ? new THREE.SpotLight(c, 0, d, /** @type {number} */ (f[7] ?? 1.2), /** @type {number} */ (f[8] ?? 1), 1.6) : new THREE.PointLight(c, 0, d, 1.6);   // f[8]: how soft the spot's edge is (1, all soft, unless the hall says otherwise)
     l.position.set(x, y, z); l.userData.full = i; root.add(l);
     if (l instanceof THREE.SpotLight && aim) { l.target.position.set(aim[0], aim[1], aim[2]); root.add(l.target); }
     return l;
@@ -246,6 +257,7 @@ export function buildSite(M) {
     if (Math.abs(lit.k - want) < 1e-3) lit.k = want;
     for (const l of fills) l.intensity = l.userData.full * lit.k;
     figures?.tick(dt, eye);
+    MURAL_LIT.value = lit.k;   // (the mural ground's warm bounce comes up with the fill: ./mural.js)
     return lit.k;
   };
 
@@ -290,7 +302,7 @@ export function buildSite(M) {
     b: [STATION.B[0], STATION.B[1], 0, 0.244],         // cam02: out from the flight's foot, raised 14°: the steps, the platform over his head, the eave columns and the doors' dark
     c: [STATION.C[0], STATION.C[1], 0, 0.14],         // the threshold, raised 8° (cam03, PRD.md §3). Its still is taken in third person (&view=third): the following eye, a few steps behind him, has the door's jambs at the picture's edges; from his own eyes in the doorway they are beside him (DECISIONS.md, 2026-11-21)
     d: [STATION.D[0], STATION.D[1], -0.96, 0.09],      // down the east side, looking west across the hall (cam04's 305°)
-    e: [STATION.E[0], STATION.E[1], 0, 1.15],          // under the roof, raised 66° (cam05; the art director, #549: from 3 m further south the heads of the three keep to the picture's lowest 18%)
+    e: [STATION.E[0], STATION.E[1], 0, 1.40],          // under the roof, raised 80° (cam05): the frame alone, no face cut (the art director, 2026-11-26, the b2p shot of #762; before, 1.15 from #549 looked at three faces from under the chin)
     f: [STATION.F[0], STATION.F[1], 0, 0.17],
     ...ax.views,
     ...st.views,
@@ -317,3 +329,14 @@ export function buildSite(M) {
 
 /** The walker of the written plan: the one that knows no level, over this plan's rectangles (app/src/plan-walker.js). */
 export const createWalker = createPlanWalker;
+
+/** Slabs within the hall's two end walls and its back wall that only cast the sun's shadow (see buildSite: the seam at the back corners). */
+export function wallShade(b, wall, top) {
+  // (every face of it a quarter wall or a couple of centimetres from any face drawn, so that nothing lies flat on it)
+  const q = wall / 4, y0 = b.y0 + 0.02, h = top - 0.02 - y0, slab = (x0, x1, z0, z1) => { const g = new THREE.BoxGeometry(x1 - x0, h, z1 - z0); g.translate((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2); return g; };
+  const shade = new THREE.Mesh(merge([slab(b.x0 - wall + q, b.x0 - q, b.z0 - wall + q, b.z1 - q), slab(b.x1 + q, b.x1 + wall - q, b.z0 - wall + q, b.z1 - q), slab(b.x0 - wall + q, b.x1 + wall - q, b.z0 - wall + q, b.z0 - q)]),
+    new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  shade.castShadow = true; shade.receiveShadow = false; shade.name = "hallWallShade";
+  Object.assign(shade.userData, { keep: true, walk: false, bake: false, eye: false });
+  return shade;
+}
