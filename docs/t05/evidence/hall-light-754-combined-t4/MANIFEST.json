@@ -1,0 +1,66 @@
+{
+ "version": 1,
+ "dataset": "bolechen/temple-walk-evidence",
+ "files": [
+  {
+   "path": "aisleE.png",
+   "bytes": 2606573,
+   "sha256": "165b3a2ab7657d1db8bac3fd97da7f2f1681bdfb6f2212679aacf3d5d3b0945a",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "cam03.png",
+   "bytes": 2591023,
+   "sha256": "5ed7c3b35ef39d69ae0fc156e2a7a337abf1c91024d3b3905d14f926dee49b81",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "cam05-b1.png",
+   "bytes": 2564141,
+   "sha256": "105e79e7025b6be6797427c364182bedeba5acb7681599826c9a49276ed95814",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "cam05-b2p.png",
+   "bytes": 2578061,
+   "sha256": "d2214160c7daecd4c72e5fe6e6deb33895dc32812ecc0378975e5ff3105e01e2",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "cam05.png",
+   "bytes": 2549507,
+   "sha256": "b77d19227f3e5eeb44a9c1c5f27f4e0e5b11ea8a49f6fced582a7dd355ffcd97",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "cam06.png",
+   "bytes": 2679738,
+   "sha256": "df6c232b4c5a87f342bef8d3d015b2365e32f51abc7d71a78d232b03277c9f65",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "collage.jpg",
+   "bytes": 253021,
+   "sha256": "954c7b77582392fe221bbd6330a30e3c877f75682c51ffa6f7490618535e4420",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "mid10-0.png",
+   "bytes": 2429126,
+   "sha256": "c8781c31d61e66ef5cb1f38ac1f8bc6608bad3c8c9dcfa2abc155556947f4a0c",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "mid10-3.png",
+   "bytes": 2414417,
+   "sha256": "31b210d5a5e5c2ea7dea22224405b120497ea436b563469095ce8d417a6f6ffa",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  },
+  {
+   "path": "mid10-6.png",
+   "bytes": 2419384,
+   "sha256": "a395a7228d010d0e984e58f1e71879be1b02d495ac01331a573fb987108971cd",
+   "rev": "7b207246fbbd22df9a051a23addadafef4700096"
+  }
+ ]
+}
