@@ -24,6 +24,19 @@ SEO 提醒：知乎/Reddit/X 的用户内容链接多为 nofollow，收益主要
 
 重出截图：`https://temple.rushiwowen.co/?shot=1&show=<机位>&season=<季>&time=<时>&view=<视角>&body=code`，机位见 `docs/marketing/shots.json`。
 
+## 山门之外到如是我闻的归因
+
+网页版大殿的功德箱弹出护持页入口。两个链接都指向 `rushiwowen.co`，由 [`donateURL()`](../../app/src/donate.js) 生成。两处共用 `utm_source=temple-walk`、`utm_medium=game` 和 `utm_campaign=offering-box`。
+
+| 功德箱入口 | `utm_content` |
+|---|---|
+| 支持如是我闻与本游戏的制作 | `zh`、`en`、`ja`、`ko` |
+| 付款后可在护持页登记 | `zh-qr`、`en-qr`、`ja-qr`、`ko-qr` |
+
+中文打开 `/donate`，日文打开 `/ja/donate`，英文和韩文打开 `/en/donate`。复测时分别从两个入口打开护持页，在接收端的 Umami UTM 报表按上述来源、媒介和活动筛选，用内容值区分入口和游戏语言。核对报表字段见 [Umami UTM 文档](https://docs.umami.is/docs/utm)。
+
+本地用 `node --test tests/unit/{offering,wechat-qr,channel}.test.mjs` 核对链接路径、UTM 和打包渠道。两个入口仅在 Web 构建中提供。
+
 ## 待办
 
 - ~~**仓库 README 首屏链接**：PR #257 待合并，合并后生效。~~ 已合并上线，见上表。
